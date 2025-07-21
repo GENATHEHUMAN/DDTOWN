@@ -1,0 +1,18 @@
+package kr.or.ddit.ddtown.mapper.audition;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import kr.or.ddit.vo.corporate.audition.AuditionVO;
+
+
+
+@Mapper
+public interface AuditionMapper {
+	// 오디션 목록
+	public List<AuditionVO> auditionList();
+	//오디션 상세보기
+	public AuditionVO detailAudition(int audiNo);
+
+}

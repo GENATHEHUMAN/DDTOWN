@@ -1,0 +1,68 @@
+<div class="modal fade" id="postDetailModal" tabindex="-1" aria-labelledby="postDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <div class="d-flex align-items-center">
+                    <img id="modalProfileImage" src="" class="rounded-circle" alt="프로필 이미지" width="40" height="40">
+                    <div class="ms-2">
+                        <h5 class="modal-title fs-6 mb-0" id="modalNickname"></h5>
+                        <small id="modalTimestamp" class="text-muted"></small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                
+                <div id="detailImgArea" class="mb-3">
+                    </div>
+
+                <div id="detailPostContent" class="py-3">
+                    </div>
+
+                <hr>
+
+                <div class="comments-section">
+                    <h6 class="mb-3">댓글 <span id="commentCount">0</span>개</h6>
+                    
+                    <div id="commentList" class="mb-3">
+                        </div>
+
+                    <form id="commentForm">
+                        <input type="hidden" id="commentPostNo" name="comuPostNo" />
+
+                        <div class="input-group">
+                            <textarea id="commentTextarea" name="comuReplyContent" class="form-control" placeholder="댓글을 남겨보세요..." rows="1"></textarea>
+                            <button id="commentSubmitBtn" class="btn btn-primary" type="button">등록</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-danger me-auto" id="likeBtn">
+                    <i class="bi bi-heart"></i> 좋아요 <span id="likeCount">0</span>
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="replyWriterImg">
+							<img src="\${replyInfo.replyMember.comuProfileImg}">
+						</div>
+						<div class="replyWriter">
+							<span>\${replyInfo.replyMember.comuNicknm}</span>
+							<span>\${replyDate}</span>
+						</div>
+						<div class="replyContent">
+							<span>\${replyInfo.comuReplyContent}</span>
+						</div>
+						
+						<div class="postImg">
+							<img src="\${img.webPath}" >
+						</div>

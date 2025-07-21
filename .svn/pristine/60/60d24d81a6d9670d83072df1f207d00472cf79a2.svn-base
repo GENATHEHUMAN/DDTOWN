@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.orders.IPaymentMapper">
+	<update id="updatePaymentStatus" parameterType="kr.or.ddit.vo.order.PaymentVO">
+        UPDATE PAYMENT_API
+        SET
+            PAYMENT_STAT_CODE = #{paymentStatCode}
+        WHERE
+            ORDER_NO = #{orderNo}
+     </update>
+</mapper>

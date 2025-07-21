@@ -1,0 +1,115 @@
+package kr.or.ddit.ddtown.controller.chat.dm;
+
+import java.security.Principal;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.stereotype.Controller;
+
+import kr.or.ddit.ddtown.service.chat.dm.IChatChannelService;
+import kr.or.ddit.ddtown.service.chat.dm.IChatMessageService;
+import kr.or.ddit.ddtown.service.community.ICommunityProfileService;
+import kr.or.ddit.vo.chat.dm.ChatChannelVO;
+import kr.or.ddit.vo.chat.dm.ChatMessageVO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+@Controller
+public class DMChatMessageController {
+	
+	private final SimpMessageSendingOperations messagingTemplate;
+	private final IChatMessageService chatMessageService;
+	private final IChatChannelService chatChannelService;
+	private final ICommunityProfileService communityService;
+	
+	@MessageMapping("/chat/dm/message")
+	@PreAuthorize("hasAnyRole('ARTIST', 'MEMBERSHIP', 'EMPLOYEE', 'ADMIN')")
+	public void processMessage(@Payload ChatMessageVO message, Principal principal) {
+		
+		// 1. 현재 로그인한 사용자 정보 가져오기
+		String currentUser = principal.getName();
+		log.info("name : {}", currentUser);
+		
+		// 발신자 프로필 번호 가져오기
+		int comuProfileNo = chatChannelService.getComuProfileNoForChatChannel(message.getChatChannelNo(), currentUser);
+		
+		if(comuProfileNo == -1) {
+			log.warn("Invalid comuProfileNo for user {}", comuProfileNo);
+			return;
+		}
+		
+		// 커뮤니티 닉네임 가져오기
+		String comuNicknm = communityService.getComuNicknmByUsername(currentUser);
+		message.setComuNicknm(comuNicknm);
+		
+		// 권한 확인
+		Authentication authentication = (Authentication) principal;
+		// 발신자가 아티스트인지 확인
+		boolean isUsernameArtist = authentication.getAuthorities().stream()
+				.anyMatch(a -> a.getAuthority().equals("ROLE_ARTIST"));
+		
+		// 2. 메세지 전송 시각 및 발신자 설정
+		message.setChatSendDate(new Date());
+		message.setUsername(currentUser);
+		message.setComuProfileNo(comuProfileNo);
+		
+		// 3. 메세지 타입 코드 설정
+		if(ChatMessageVO.MessageType.TALK.equals(message.getType())) {
+			message.setChatMsgTypeCode("CMTC001");	// 일반 메세지 타입
+		} else if(ChatMessageVO.MessageType.FILE.equals(message.getType())) {
+			message.setChatMsgTypeCode("CMTC002");	// 첨부 파일 타입
+		} else {
+			message.setChatMsgTypeCode("CMTC001");
+		}
+		
+		try {
+			
+			// 해당 채팅방의 아티스트 username 조회
+			ChatChannelVO chatChannelInfo = chatChannelService.findChatChannelWithArtistInfo(message.getChatChannelNo());
+			String artistUsername = (chatChannelInfo != null) ? chatChannelInfo.getArtistUsername() : null;
+			
+			// 참여자 목록 조회
+			List<String> participantUsernames = chatChannelService.getChatParticipants(message.getChatChannelNo());
+			
+			// 권한 확인
+			for(String participantUsername : participantUsernames) {
+				Authentication participantAuth = chatChannelService.getAuthenticationForUser(participantUsername);
+				
+				boolean isRecipientArtist = (participantAuth != null) && participantAuth.getAuthorities().stream()
+	                    .anyMatch(a -> a.getAuthority().equals("ROLE_ARTIST"));
+				
+				// 아티스트인 경우
+				if(isRecipientArtist) {
+					messagingTemplate.convertAndSendToUser(participantUsername, "/queue/messages", message);
+					log.debug("아티스트 ({})에게 메시지 전송: {}", participantUsername, message.getChatContent());
+					
+				// 아티스트 또는 멤버십 회원인 경우
+		        } else {
+		        	if(isUsernameArtist || message.getUsername().equals(participantUsername)) {
+		        		messagingTemplate.convertAndSendToUser(participantUsername, "/queue/messages", message);
+		        		log.debug("회원 ({})에게 메시지 전송 (아티스트 또는 본인 메시지): {}", participantUsername, message.getChatContent());
+		        	}
+		        }
+			}
+			
+			// 5. 모든 메세지 db에 저장
+			chatMessageService.saveMessage(message);
+			
+			// 6. 채널 마지막 메세지 일자 업데이트
+			chatChannelService.updateChatLastDate(message.getChatChannelNo());
+			System.out.println("message db 저장 완료 : " + message.getChatContent());
+			
+		} catch (Exception e) {
+			System.err.println("message db 저장 실패 : " + e.getMessage());
+		}
+	}
+}

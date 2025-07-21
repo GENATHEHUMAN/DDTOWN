@@ -1,0 +1,205 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시물 관리 - DDTOWN 직원 포털</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .post-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: #fff; }
+        .post-table th, .post-table td { border: 1px solid #e0e0e0; padding: 12px 10px; text-align: center; font-size: 1em; }
+        .post-table th { background: #f5f5f5; font-weight: 600; }
+        .post-table td.content { text-align: left; }
+        .post-table td .detail-btn { padding: 6px 18px; border: 1.5px solid #1976d2; background: #fff; color: #1976d2; border-radius: 6px; font-size: 1em; cursor: pointer; transition: background 0.2s, color 0.2s; }
+        .post-table td .detail-btn:hover { background: #1976d2; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content" style="position:relative; min-height:600px;">
+                <h2 style="margin-bottom:18px;">게시물 관리</h2>
+                
+                <!-- 검색 영역 추가 -->
+                <div class="search-container" style="background:#fff; padding:20px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+                    <div class="search-row" style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                        <select id="postType" style="padding:8px 12px; border:1px solid #ddd; border-radius:4px; min-width:150px;">
+                            <option value="post">아티스트 게시물</option>
+                            <option value="comment">댓글</option>
+                        </select>
+                        <select id="searchType" style="padding:8px 12px; border:1px solid #ddd; border-radius:4px; min-width:150px;">
+                            <option value="content">내용</option>
+                            <option value="title">제목</option>
+                            <option value="writer">작성자</option>
+                        </select>
+                        <div class="search-input-wrapper" style="flex:1; display:flex; gap:8px;">
+                            <input type="text" id="searchInput" placeholder="검색어를 입력하세요" 
+                                   style="flex:1; padding:8px 12px; border:1px solid #ddd; border-radius:4px;">
+                            <button onclick="searchPosts()" 
+                                    style="padding:8px 24px; background:#1976d2; color:#fff; border:none; border-radius:4px; cursor:pointer;">
+                                검색
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <table class="post-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>아티스트</th>
+                            <th>내용</th>
+                            <th>작성일</th>
+                            <th>좋아요 수</th>
+                            <th>관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>P001</td>
+                            <td>윈터</td>
+                            <td class="content">팬분들 덕에 오늘 콘서트 넘 즐거웠어요</td>
+                            <td>2025-05-13 11:20</td>
+                            <td>12456</td>
+                            <td><button class="detail-btn" onclick="location.href='/emp/post/detail'">상세보기</button></td>
+                        </tr>
+                        <tr>
+                            <td>P002</td>
+                            <td>카리나</td>
+                            <td class="content">오늘 뮤직뱅크도 무사히 완료~~!</td>
+                            <td>2025-05-11 15:45</td>
+                            <td>345669</td>
+                            <td><button class="detail-btn" onclick="location.href='/emp/post/detail'">상세보기</button></td>
+                        </tr>
+                        <tr>
+                            <td>P003</td>
+                            <td>닝닝</td>
+                            <td class="content">컴백 1주차.... 1위 감사합니다....</td>
+                            <td>2025-05-13 08:10</td>
+                            <td>45768</td>
+                            <td><button class="detail-btn" onclick="location.href='/emp/post/detail'">상세보기</button></td>
+                        </tr>
+                        <tr>
+                            <td>P004</td>
+                            <td>지젤</td>
+                            <td class="content">여러분 오늘 무대 어땠나요~~~??</td>
+                            <td>2025-05-12 18:50</td>
+                            <td>897865</td>
+                            <td><button class="detail-btn" onclick="location.href='/emp/post/detail'">상세보기</button></td>
+                        </tr>
+                        <tr>
+                            <td>P005</td>
+                            <td>카리나</td>
+                            <td class="content">내일 무대도 기대해주세요~~~</td>
+                            <td>2025-05-09 12:00</td>
+                            <td>12355</td>
+                            <td><button class="detail-btn" onclick="location.href='/emp/post/detail'">상세보기</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (직원 전용)</p>
+        </footer>
+    </div>
+</body>
+<script>
+        // 로그아웃 기능
+        const logoutButton = document.querySelector('.emp-logout-btn');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('로그아웃 하시겠습니까?')) {
+                    alert('로그아웃 되었습니다.');
+                }
+            });
+        }
+    
+        // 직원 이름 등 동적 데이터 로드 (예시)
+        const employeeNameSpan = document.getElementById('employee-name');
+        if (employeeNameSpan) {
+            employeeNameSpan.textContent = "홍길동";
+        }
+    
+        // 게시물 검색 기능
+        function searchPosts() {
+            const postType = document.getElementById('postType').value;
+            const searchType = document.getElementById('searchType').value;
+            const searchInput = document.getElementById('searchInput').value;
+            alert(`검색 요청:\n- 구분: ${postType}\n- 검색 유형: ${searchType}\n- 검색어: ${searchInput}\n\n(실제 검색 기능 미구현)`);
+        }
+        
+        // DOMContentLoaded 이벤트 내에서 사이드바 관련 스크립트 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            // 사이드바 메뉴 토글 기능
+            const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+            navItemsWithSubmenu.forEach(item => {
+                const arrow = item.querySelector('.submenu-arrow');
+                item.addEventListener('click', function(event) {
+                    if (this.getAttribute('href') === '#') {
+                        event.preventDefault();
+                    }
+                    const parentLi = this.parentElement;
+                    const submenu = this.nextElementSibling;
+    
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        const parentUl = parentLi.parentElement;
+                        if (parentUl) {
+                            Array.from(parentUl.children).forEach(siblingLi => {
+                                if (siblingLi !== parentLi) {
+                                    const siblingSubmenuControl = siblingLi.querySelector('.emp-nav-item.has-submenu.open');
+                                    if (siblingSubmenuControl) {
+                                        const siblingSubmenuElement = siblingSubmenuControl.nextElementSibling;
+                                        siblingSubmenuControl.classList.remove('open');
+                                        if (siblingSubmenuElement && siblingSubmenuElement.classList.contains('emp-submenu')) {
+                                            siblingSubmenuElement.style.display = 'none';
+                                        }
+                                        const siblingArrow = siblingSubmenuControl.querySelector('.submenu-arrow');
+                                        if (siblingArrow) siblingArrow.style.transform = 'rotate(0deg)';
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    
+                    this.classList.toggle('open');
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                        if (arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+                    }
+                });
+            });
+    
+            // 현재 페이지 URL 기반으로 사이드바 메뉴 활성화 및 펼침
+            const currentFullHref = window.location.href;
+            document.querySelectorAll('.emp-sidebar .emp-nav-item[href]').forEach(link => {
+                const linkHrefAttribute = link.getAttribute('href');
+                if (linkHrefAttribute && linkHrefAttribute !== "#" && currentFullHref.endsWith(linkHrefAttribute)) {
+                    link.classList.add('active');
+                    let currentActiveElement = link;
+                    while (true) {
+                        const parentLi = currentActiveElement.parentElement;
+                        if (!parentLi) break;
+                        const parentSubmenuUl = parentLi.closest('ul.emp-submenu');
+                        if (parentSubmenuUl) {
+                            parentSubmenuUl.style.display = 'block';
+                            const controllingAnchor = parentSubmenuUl.previousElementSibling;
+                            if (controllingAnchor && controllingAnchor.tagName === 'A' && controllingAnchor.classList.contains('has-submenu')) {
+                                controllingAnchor.classList.add('active', 'open');
+                                const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                                if (arrow) arrow.style.transform = 'rotate(90deg)';
+                                currentActiveElement = controllingAnchor;
+                            } else { break; }
+                        } else { break; }
+                    }
+                }
+            });
+        });
+    </script>
+</html> 

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.goods.IGoodsNoitceMapper">
+	 <select id="noticeList" resultType="kr.or.ddit.vo.goods.goodsNoticeVO">
+	 	select 
+		 	goods_noti_no, 
+		 	emp_username, 
+		 	file_group_no, 
+		 	goods_noti_title, 
+		 	goods_noti_content, 			
+		 	goods_reg_date, 
+		 	goods_mod_date
+		from goods_notice
+		order by goods_noti_no desc
+	 </select>
+	 
+	 <select id="search" parameterType="kr.or.ddit.vo.goods.goodsNoticeVO" resultType="kr.or.ddit.vo.goods.goodsNoticeVO">
+	 	select
+	 		goods_noti_no, 
+		 	emp_username, 
+		 	file_group_no, 
+		 	goods_noti_title, 
+		 	goods_noti_content, 			
+		 	goods_reg_date, 
+		 	goods_mod_date
+		 from goods_notice
+		 where 1=1
+		 <if test="title != null and title != ''">
+			and goods_noti_title like '%' || #{title} || '%'
+		</if>
+		order by goods_noti_no desc
+	 </select>
+	 
+	 <select id="selectMainNotice" resultType="kr.or.ddit.vo.goods.goodsNoticeVO">
+	 	select
+	 		goods_noti_no,
+	 		goods_noti_title
+	 	from goods_notice
+	 	order by goods_reg_date DESC
+	 	fetch first 1 rows only
+	 </select>
+	 
+	 <select id="selectTotalGoodsNoticeCount" resultType="int" parameterType="paginationInfoVO">
+        SELECT COUNT(*)
+        FROM GOODS_NOTICE
+        <where>
+            <if test="searchType != null and searchType == 'title'">
+                AND GOODS_NOTI_TITLE LIKE '%' || #{searchWord} || '%'
+            </if>
+            <if test="searchType != null and searchType == 'content'">
+                AND GOODS_NOTI_CONTENT LIKE '%' || #{searchWord} || '%'
+            </if>
+        </where>
+    </select>
+
+    <select id="selectAllGoodsNotices" resultType="goodsNoticeVO" parameterType="paginationInfoVO">
+        SELECT
+            B.GOODS_NOTI_NO,
+            B.EMP_USERNAME,
+            B.GOODS_NOTI_TITLE,
+            B.GOODS_REG_DATE
+        FROM (
+            SELECT
+                ROW_NUMBER() OVER (ORDER BY GOODS_REG_DATE DESC) AS RNUM,
+                A.GOODS_NOTI_NO,
+                A.EMP_USERNAME,
+                A.GOODS_NOTI_TITLE,
+                A.GOODS_REG_DATE
+            FROM GOODS_NOTICE A
+            <where>
+                <if test="searchType != null and searchType == 'title'">
+                    AND A.GOODS_NOTI_TITLE LIKE '%' || #{searchWord} || '%'
+                </if>
+                <if test="searchType != null and searchType == 'content'">
+                    AND A.GOODS_NOTI_CONTENT LIKE '%' || #{searchWord} || '%'
+                </if>
+            </where>
+        ) B
+        WHERE B.RNUM BETWEEN #{startRow} AND #{endRow}
+        ORDER BY B.RNUM
+    </select>
+ </mapper>

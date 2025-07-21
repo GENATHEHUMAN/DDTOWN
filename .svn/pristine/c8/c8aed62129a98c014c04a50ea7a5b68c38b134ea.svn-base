@@ -1,0 +1,344 @@
+@charset "UTF-8";
+/* 스크롤바 숨김 (공통) */
+.post-pane-body::-webkit-scrollbar,
+.comment-pane-body::-webkit-scrollbar {
+    display: none; /* Chrome, Safari 등 */
+}
+.post-pane-body,
+.comment-pane-body {
+    scrollbar-width: none; /* Firefox */
+    -webkit-overflow-scrolling: touch; /* iOS 스크롤 부드럽게 */
+}
+
+/* 드롭다운 메뉴 z-index */
+.dropdown-menu {
+    z-index: 1100;
+    min-width: 5rem;
+}
+
+/* ========================================= */
+/* 2. 모달 컨테이너 및 기본 구조 */
+/* ========================================= */
+
+/* 전체 화면과 유사하지만, 약간의 여백을 둔 커스텀 크기 */
+#postModal .modal-dialog.modal-fullscreen-custom,
+#detailPostModal .modal-dialog.modal-fullscreen-custom {
+    width: 100vw;
+    max-width: none;
+    height: 90vh; /* 모달 전체 높이 조절 */
+    position: relative;
+    display: flex;
+    align-items: center; /* 세로 중앙 정렬 */
+    justify-content: center; /* 가로 중앙 정렬 */
+}
+
+/* 외부 닫기 버튼 */
+#postModal .modal-dialog.modal-fullscreen-custom > .btn-close,
+#detailPostModal .modal-dialog.modal-fullscreen-custom > .btn-close {
+    position: absolute;
+    top: -10px;
+    right: -25px;
+    z-index: 1070;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    padding: 0.5rem;
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* 모달 콘텐츠 */
+#postModal .modal-dialog.modal-fullscreen-custom .modal-content,
+#detailPostModal .modal-dialog.modal-fullscreen-custom .modal-content {
+    min-width: 90vw; /* 최소 너비 (필요시 유지) */
+    width: 95vw; /* 모달 전체 너비 조절 */
+    height: 100%; /* 부모(modal-dialog)의 높이를 꽉 채움 */
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 모달 바디 (Post Pane과 Comment Pane의 부모) */
+#postModal .modal-content > .modal-body,
+#detailPostModal .modal-content > .modal-body {
+    flex-grow: 1; /* 남은 공간을 모두 차지 */
+    display: flex; /* 내부 패널들을 가로로 배치 */
+    height: 100%; /* 부모(modal-content)의 높이를 꽉 채움 */
+    padding: 0;
+}
+
+/* post-pane과 comment-pane을 감싸는 div (HTML의 d-flex h-100 div) */
+#postModal .modal-content > .modal-body > div,
+#detailPostModal .modal-content > .modal-body > div {
+    flex-grow: 1;
+    display: flex;
+    /* justify-content: center; 가로 중앙 정렬이 필요 없으면 제거 */
+    height: 100%; /* 부모(modal-body)의 높이를 꽉 채움 */
+    padding: 0;
+}
+
+/* ========================================= */
+/* 3. Post Pane (왼쪽 본문 패널) */
+/* ========================================= */
+#postModal .post-pane,
+#detailPostModal .post-pane {
+    flex: 7; /* 7:3 비율의 7 */
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Post Pane 헤더 */
+#postModal .post-pane-header,
+#detailPostModal .post-pane-header {
+    flex-shrink: 0;
+    height: 60px; /* <--- 헤더 높이 고정 (수평 맞춤 핵심) */
+    display: flex;
+    justify-content: space-between; /* 사용자 정보와 드롭다운 분리 */
+    align-items: center; /* 세로 중앙 정렬 */
+    padding: 1rem;
+    border-bottom: 1px solid #efefef;
+}
+
+/* Post Pane 푸터 */
+#postModal .post-pane-footer,
+#detailPostModal .post-pane-footer {
+    flex-shrink: 0;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #efefef;
+}
+
+/* Post Pane 본문 (스크롤 영역) */
+#postModal .post-pane-body,
+#detailPostModal .post-pane-body {
+    flex-grow: 1; /* 남은 공간 모두 차지 */
+    overflow-y: auto;
+}
+
+/* ========================================= */
+/* 4. Comment Pane (오른쪽 댓글 패널) */
+/* ========================================= */
+#postModal .comment-pane,
+#detailPostModal .comment-pane {
+    flex: 3; /* 7:3 비율의 3 */
+    background-color: #f7f7f7;
+    border-left: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Comment Pane 헤더 */
+#postModal .comment-pane-header,
+#detailPostModal .comment-pane-header {
+    flex-shrink: 0;
+    height: 60px; /* <--- 헤더 높이 고정 (수평 맞춤 핵심) */
+    background-color: #fff;
+    display: flex;
+    justify-content: center; /* 댓글 수 텍스트 중앙 정렬 */
+    align-items: center; /* 세로 중앙 정렬 */
+    padding: 1rem;
+    border-bottom: 1px solid #efefef;
+}
+
+/* Comment Pane 본문 (스크롤 영역) */
+#postModal .comment-pane-body,
+#detailPostModal .comment-pane-body {
+    flex-grow: 1; /* 남은 공간 모두 차지 */
+    overflow-y: auto;
+    padding: 0; /* 개별 comment-item에서 패딩 처리 */
+}
+
+/* Comment Pane 푸터 (댓글 입력 영역) */
+#postModal .comment-pane-footer,
+#detailPostModal .comment-pane-footer {
+    flex-shrink: 0;
+    padding: 1rem;
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #efefef;
+}
+
+/* 댓글 입력 폼 (form#replyForm) */
+#postModal .comment-pane-footer form#replyForm,
+#detailPostModal .comment-pane-footer form#replyForm {
+    flex-grow: 1; /* 부모 footer의 남은 공간을 모두 차지 */
+    display: flex; /* 내부 input-group을 위한 flex 컨테이너 */
+}
+
+/* 입력 그룹 (textarea + button) */
+#postModal .comment-pane-footer form#replyForm .input-group,
+#detailPostModal .comment-pane-footer form#replyForm .input-group {
+    width: 100%; /* form 내에서 100% 너비 차지 */
+}
+
+/* 댓글 입력 textarea */
+#postModal .comment-pane-footer .input-group textarea,
+#detailPostModal .comment-pane-footer .input-group textarea {
+    flex-grow: 1; /* 가능한 많은 공간을 차지 */
+}
+
+/* 댓글 등록 버튼 */
+#postModal .comment-pane-footer .input-group #commentSubmitBtn,
+#detailPostModal .comment-pane-footer .input-group #commentSubmitBtn {
+    flex-shrink: 0; /* 버튼이 줄어들지 않도록 */
+}
+
+/* ========================================= */
+/* 5. 개별 댓글 아이템 스타일 */
+/* ========================================= */
+#postModal .comment-item,
+#detailPostModal .comment-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    padding: 0 1rem; /* 좌우 패딩 */
+}
+
+#postModal .comment-item .comment-avatar,
+#postModal .comment-item img,
+#detailPostModal .comment-item .comment-avatar,
+#detailPostModal .comment-item img { /* 이미지 관련 스타일 통합 */
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+/* 댓글 주 내용 래퍼 (닉네임+드롭다운, 댓글내용+날짜) */
+#postModal .comment-item .comment-main-wrapper,
+#detailPostModal .comment-item .comment-main-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 댓글 헤더 (닉네임 + 드롭다운) */
+#postModal .comment-item .comment-header,
+#detailPostModal .comment-item .comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+#postModal .comment-item .comment-header strong ,
+#detailPostModal .comment-item .comment-header strong {
+    font-size: 0.95rem;
+    margin-right: 1rem;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+/* 댓글 내용과 날짜 텍스트 */
+#postModal .comment-item .comment-body-text p ,
+#detailPostModal .comment-item .comment-body-text p {
+    margin-bottom: 0.25rem;
+    color: #333;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+#postModal .comment-item .comment-body-text small,
+#detailPostModal .comment-item .comment-body-text small {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+/* ========================================= */
+/* 6. 좋아요 버튼 스타일 */
+/* ========================================= */
+#postModal .btn-like,
+#detailPostModal .btn-like {
+    background-color: transparent;
+    border: none;
+    color: #555;
+    font-size: 1rem;
+    padding: 0.25rem 0.5rem;
+    transition: color 0.2s ease-in-out;
+}
+
+#postModal .btn-like:hover,
+#detailPostModal .btn-like:hover {
+    color: #000;
+}
+
+#postModal .btn-like.active ,
+#detailPostModal .btn-like.active {
+    color: #fd6083;
+    font-weight: bold;
+}
+
+#postModal .btn-like .bi-heart-fill,
+#detailPostModal .btn-like .bi-heart-fill{
+    color: #fd6083;
+}
+
+#postModal #replyForm #commentSubmitBtn {
+    background-color: #8a2be2;
+    border-color: #8a2be2;
+}
+
+#postModal #replyForm #commentSubmitBtn:hover {
+    background-color: #6e22b6;
+    border-color: #6e22b6;
+}
+
+#reportModal {
+	/* reportModal 내부에서 사용할 커스텀 색상 변수 정의 */
+	--report-primary-base: #8a2be2; /* 기본 보라색 */
+	--report-primary-light: #f5edfc; /* 연한 보라색 (배경 등) */
+	--report-primary-dark: #6e22b6;  /* 진한 보라색 (호버 등) */
+	--report-primary-rgb: 138, 43, 226; /* RGB 값 */
+
+}
+/* 모달 헤더 배경색 변경 */
+#reportModal .modal-header.bg-light { /* 기존 bg-light를 오버라이드 */
+	background-color: var(--report-primary-light) !important;
+	border-bottom-color: var(--report-primary-base) !important; /* 헤더 하단 보더 색상 조정 */
+}
+/* 모달 헤더 제목 색상 변경 */
+#reportModal .modal-title.text-primary { /* text-primary는 부트스트랩 전역 primary를 따르므로 직접 지정 */
+    color: var(--report-primary-base) !important;
+}
+/* 신고 사유 라디오 버튼 (btn-check + label) */
+/* label의 .btn-outline-primary 클래스가 전역 primary를 따르므로 직접 오버라이드 */
+#reportModal .radioArea .btn-outline-primary {
+	color: var(--report-primary-base); /* 텍스트 색상 */
+	border-color: var(--report-primary-base); /* 테두리 색상 */
+}
+#reportModal .radioArea .btn-outline-primary:hover {
+	background-color: var(--report-primary-light); /* 호버 시 연한 배경 */
+	color: var(--report-primary-dark); /* 호버 시 텍스트 색상 */
+	border-color: var(--report-primary-dark); /* 호버 시 테두리 색상 */
+}
+#reportModal .radioArea .btn-check:checked + .btn-outline-primary {
+	background-color: var(--report-primary-base); /* 선택 시 배경색 */
+	color: #fff; /* 선택 시 텍스트 흰색 */
+	border-color: var(--report-primary-base); /* 선택 시 테두리 색상 */
+}
+#reportModal .radioArea .btn-check:checked + .btn-outline-primary:hover {
+	background-color: var(--report-primary-dark); /* 선택 후 호버 시 진한 배경 */
+	border-color: var(--report-primary-dark);
+}
+
+/* "신고하기" 버튼 (.btn-primary 클래스가 전역 primary를 따르므로 직접 오버라이드) */
+#reportModal #reportSendBtn {
+	background-color: var(--report-primary-base);
+	border-color: var(--report-primary-base);
+}
+#reportModal #reportSendBtn:hover {
+	background-color: var(--report-primary-dark);
+	border-color: var(--report-primary-dark);
+}
+
+#reportModal #reportForm .form-check {
+	padding-left : 0.5em;
+
+}
+

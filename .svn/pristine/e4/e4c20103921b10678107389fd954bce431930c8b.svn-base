@@ -1,0 +1,477 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Artist A - 커뮤니티</title>
+<link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
+<script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/mainservice_common.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/artist_community.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" ></script>
+<%@ include file="../../modules/headerPart.jsp" %>
+<style>
+.membership-blur {
+    filter: blur(5px);
+    pointer-events: none;
+}
+
+.membership-only {
+    position: relative;
+}
+
+.membership-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.membership-badge {
+    background: #8a2be2;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+
+.imgDiv{
+	position :relative;
+	width: 100px;
+	height : 100px;
+}
+
+.imgDiv img{
+	width : 100%;
+	height : 100%
+}
+
+.imgDiv i{
+	position : absolute;
+	top : 5%;
+	right: 5%; /* 아이콘을 이미지의 가로 중앙에 위치 */
+    transform: translate(-10%, -10%); /* 아이콘을 중앙에 정확히 위치 */
+    font-size: 1rem; /* 아이콘 크기 조절 */
+    color: white; /* 아이콘 색상 설정 */
+}
+</style>
+</head>
+<body>
+    <!-- <header class="site-header">
+        <div class="logo">
+            <a href="../2.main/artist_community_main.html">DDTOWN SQUARE</a>
+        </div>
+        <nav class="utility-nav">
+            <ul id="loggedOutNav">
+                <li><a href="#" id="loginBtn" class="auth-link">로그인</a></li>
+                <li><a href="signup.html" class="signup-link">회원가입</a></li>
+            </ul>
+            <ul id="loggedInNav" style="display: none">
+                <li>
+                  <a href="#" id="notificationBtn" class="icon-btn" title="알림">🔔</a>
+                </li>
+                <li>
+                  <a href="#" id="myPageBtn" class="icon-btn" title="마이페이지">👤</a>
+                </li>
+                <li>
+                  <a href="#" class="icon-btn" title="고객센터">👩‍💻</a>
+                </li>
+                <li><a href="#" id="logoutBtn" class="auth-link">로그아웃</a></li>
+              </ul>
+        </nav>
+        <div class="account-switch" style="margin-top:10px; text-align:right;">
+            <button id="switchToArtist" style="margin-right:5px;">아티스트 계정</button>
+            <button id="switchToFan">팬 계정</button>
+        </div>
+    </header> -->
+    <!-- nav class="main-navigation">
+        <ul>
+            <li><a href="#">굿즈샵</a></li>
+            <li>
+                <a href="preference_vote.html">선호도 조사</a>
+                <ul class="submenu">
+                    <li><a href="preference_vote.html" style="color: #8a2be2; font-weight:bold;">인기 투표</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav> -->
+	<sec:authentication property="principal" var="user"/>
+	
+	    <c:out value="${user}"/>
+    <div class="apt-main-layout">
+        <div class="apt-container">
+            <header class="apt-header">
+                <div class="apt-header-avatar">
+                    <div class="artist-avatar-placeholder">A</div><!-- 아티스트 그룹 이미지 넣을 예정-->
+                </div>
+                <div class="apt-header-info">
+                    <h2><c:out value="${artistGroupVO.artGroupNm }" /> <span style="font-size:0.7em; color: #888;">(아티스트)</span></h2>
+                    <div class="artist-stats">
+                        <span><c:out value="${artistGroupVO.communityVO.totalArtist }"/>명</span> &bull; <span><fmt:formatNumber value="${artistGroupVO.communityVO.totalFan }" pattern="#,###"/></span> 팬
+                    </div>
+                </div>
+                <div class="apt-header-actions">
+                <button class="btn-apt-action following" id="followToggleBtn">
+                    <span class="follow-icon">✔</span> 팔로잉 </button>
+                <button class="btn-apt-action">🔔 알림 설정</button>
+            </div>
+            </header>
+
+            <ul class="nav apt-tabs" id="comuTab" role="tabList">
+            	<li class="nav-item" role="presentation">
+            		<button class="tab-item active" id="artistPost" data-bs-toggle="tab" data-bs-target="#artistPostList" type="button" role="tab" aria-controls="artistPostList" aria-selected="true">아티스트</button>
+            	</li>
+            	<li class="nav-item" role="presentation">
+            		<button class="tab-item" id="fanPost" data-bs-toggle="tab" data-bs-target="#fanPostList" type="button" role="tab" aria-controls="fanPostList" aria-selected="false">팬</button>
+            	</li>
+            	<li class="nav-item" role="presentation" >
+            		<button class="tab-item" id="live" data-bs-toggle="tab" data-bs-target="#liveList" type="button" role="tab" aria-controls="liveList" aria-selected="false">라이브</button>
+            	</li>
+            	<li class="nav-item" role="presentation">
+            		<button class="tab-item" id="schedule" data-bs-toggle="tab" data-bs-target="#scheduleList" type="button" role="tab" aria-controls="scheduleList" aria-selected="false">스케줄</button>
+            	</li>
+            	<li class="nav-item" role="presentation">
+            		<button class="tab-item" id="noticeApt" data-bs-toggle="tab" data-bs-target="#noticeAptList" type="button" role="tab" aria-controls="noticeAptList" aria-selected="false">공지사항</button>
+            	</li>
+            </ul>
+
+            <main class="apt-content-area">
+                <div class="tab-pane show active" id="artistPostList" role="tabpanel" aria-labelledby="artistPost">
+                    <div id="artistFeedSearchWrap" style="margin-bottom:10px; display:flex; gap:8px; align-items:center;">
+		            	<form action="/community/gate/${artistGroupVO.artGroupNo }/apt" id="artistSearchForm" method="get">
+			            	<input type="hidden" id="comuArtGroupNo" value="${artistGroupVO.artGroupNo }" />
+			            	<input type="hidden" name="artistTabYn" value="true" />
+			            	<input type="hidden" name="searchType" id="searchType" />
+	                        <input type="text" name="searchWord" id="artistFeedSearchInput" value="${communityVO.searchWord }" placeholder="아티스트 게시글 검색 (제목)" style="flex:1; padding:7px 10px; border:1px solid #ccc; border-radius:6px; font-size:0.95em;">
+	                        <input type="button" id="searchFormBtn" class="btn btn-primary" value="검색" />
+	                        <sec:authorize access="hasAnyRole('MEMBER','MEMBERSHIP','EMPLOYEE','ADMIN')">
+	                        	<input type="radio" class="btn-check" name="artistNm" id="all" value="" />
+	                        	<label class="btn btn-outline-primary" for="all">전체</label>
+		                        <c:forEach items="${artistGroupVO.artistList }" var="artist">
+		                        	<input type="radio" class="btn-check" name="artistNm" id="${artist.artNm }" value="${artist.memUsername }" <c:if test="${not empty communityVO.searchType and communityVO.searchType eq artist.memUsername}">checked</c:if>/>
+		                        	<label class="btn btn-outline-primary" for="${artist.artNm }">${artist.artNm }</label>
+		                        </c:forEach>
+	                        </sec:authorize>
+		            	</form>
+                    </div>
+                    
+                    <form>
+                    	<input type="hidden" name="artGroupNo" value="${artistGroupVO.artGroupNo }" />
+	                    <input type="checkbox" id="memberShipYn" name="memberShipYn" value="멤버십전용 게시물"/>
+	                    <label for="memberShipYn">멤버십전용</label>
+	                    <input type="text" id="comuPostTitle" name="comuPostTitle" style="flex:1; padding:7px 10px; border:1px solid #ccc; border-radius:6px; font-size:0.95em;" />
+	                    <div id="editor">
+	                    </div>
+	                    <div id="imgArea"></div>
+	                    <button type="button" id="artistPostInsertBtn">저장</button>
+                    </form>
+                    
+                    <div id="artistFeedList">
+                    	<c:forEach items="${artistPostVO }" var="post" >
+                    		<c:if test="${post.boardTypeCode eq 'ARTIST_BOARD'}">
+                    			<div class="feed-item" data-post-id="${post.comuPostNo }">
+                    				<div class="feed-item-header">
+                    					<div class="author-avatar" style="background-color:'#8a2be2'; color:'#fff';"><img src="${post.writerProfile.comuProfileImg }"></div>
+                    					<div class="author-info">
+                    						<span class="author-name" style="color:'#8a2be2';">${post.writerProfile.comuNicknm}</span>
+                    						<span class="post-time">
+	                    						<c:choose>
+	                    							<c:when test="${post.comuPostRegDate ne post.comuPostModDate }">
+			                    						<fmt:formatDate value="${post.comuPostModDate }" pattern="MM.dd. HH:mm"/>(수정됨)
+	                    							</c:when>
+	                    							<c:otherwise>
+	                    								<fmt:formatDate value="${post.comuPostRegDate }" pattern="MM.dd. HH:mm"/>
+	                    							</c:otherwise>
+	                    						</c:choose>
+                    						</span>
+                    						<c:if test="${post.memberShipYn }">
+                    							<span class="membership-badge" style="background:#8a2be2;color:#fff;padding:2px 6px;border-radius:10px;font-size:0.8em;margin-left:5px;">멤버십 전용</span>
+                    						</c:if>
+                    					</div>
+                    					<div class="post-options">
+                    						<button class="post-options-btn" style="background:none;border:none;font-size:1.2em;cursor:pointer;">•••</button>
+			                                <div class="post-options-menu" style="position:absolute;right:0;top:30px;background:#fff;border:1px solid #ccc;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.08);z-index:10;min-width:90px;">
+				                                <sec:authorize access="hasRole('ARTIST') and ${user.name eq post.writerProfile.memUsername }">
+				           							<div class="post-option-item" data-action="edit">수정</div>
+				           							<div class="post-option-item" data-action="delete">삭제</div>
+				                                </sec:authorize>
+			                                </div>
+                    					</div>
+                    				</div>
+                    				<div class="feed-item-content<c:if test="${post.memberShipYn }">membership-blur</c:if>" style="<c:if test="${post.memberShipYn }">'position:relative;'</c:if>">
+                    					<div class="post-title" style="font-weight:bold;font-size:1.1em;margin-bottom:5px;">${post.comuPostTitle}</div>
+                    					<p class="post-text">${post.comuPostContent}</p>
+                    				</div>
+                    				<div class="feed-item-actions">
+			                            <button class="action-btn comment-toggle-btn">💬 댓글 <span class="count"><c:out value="${post.comuPostReplyCount }" /></span></button>
+			                        </div>
+			                        <div class="comments-wrapper" style="display:block;">
+			                        	<div class="comment-form-container">
+			                        		<textarea class="comment-textarea" placeholder="댓글을 남겨보세요..."></textarea>
+                    						<button class="btn-submit-comment" disabled>등록</button>
+			                        	</div>
+			                        	<div class="comment-list">
+			                        		<c:forEach items="${post.comuPostReplyList }" var="reply">
+				                        		<div class="comment-content">
+				                        			<span class="comment-author-name"><c:out value="${reply.replyMember.comuNicknm }"/></span>
+	                                				<p class="comment-text"><c:out value="${reply.comuReplyContent }"/></p>
+				                        		</div>
+			                        		</c:forEach>
+			                        	</div>
+			                        </div>
+                    			</div>
+                    		</c:if>
+                    	</c:forEach>
+                    </div>
+                </div>
+                <div class="tab-pane" id="fanPostList" role="tabpanel" aria-labelledby="fanPost">ddd</div>
+                
+				<div class="tab-pane" id="liveList" role="tabpanel" aria-labelledby="live">..d</div>
+				
+				<div class="tab-pane" id="scheduleList" role="tabpanel" aria-labelledby="schedule">.dd</div>
+				<div class="tab-pane" id="noticeAptList" role="tabpanel" aria-labelledby="noticeApt">....</div>
+
+            </main>
+        </div>
+
+
+
+
+<!-- /////////////////////////////////////////////////////////////////////////////////////////////////////// -->
+
+
+
+
+
+
+        <aside class="apt-sidebar">
+            <div class="sidebar-widget apt-level-widget">
+                <h3>APT 현황</h3>
+                <div class="apt-floor-display" id="aptFloorDisplay">123층 APT</div>
+                <div class="fan-count-tooltip-wrapper"> <p class="fan-count-display">팬 <span id="sidebarFanCountApprox">약 12.3만</span> 명</p> <span class="fan-count-tooltip" id="sidebarFanCountExact">123,456명</span> </div>
+            </div>
+
+            <div class="sidebar-widget membership-widget">
+                <div class="membership-icon">🛡️</div>
+                <h3>Membership</h3>
+                <p>지금 멤버십에 가입하고 Artist A의 특별한 혜택을 누려보세요.</p>
+                <button class="btn-join-membership" id="openMembershipModalBtn">
+                    멤버십 가입하기 <span class="arrow">&gt;</span>
+                </button>
+            </div>
+
+             <!-- 마이 프로필 영역 추가 -->
+             <div class="sidebar-widget my-profile-widget" style="margin-bottom: 20px; text-align: center; cursor: pointer;">
+             	<div>
+             		<button type="button" class="btn btn-outline-primary" id="registProfileBtn">프로필 만들기</button>
+             	</div>
+                <div style="width: 80px; height: 80px; margin: 0 auto; border-radius: 50%; overflow: hidden; background-color: #e9ecef; display: flex; align-items: center; justify-content: center;">
+                </div>
+                <p id="myProfileNickname" style="margin-top: 8px; font-weight: bold; font-size: 1.1em;">나의멋진닉네임</p>
+            </div>
+
+        </aside>
+    </div>
+
+    <div id="footer-placeholder"></div>
+
+     <div class="modal-overlay" id="membershipModalOverlay" style="display: none;">
+        <div class="modal-content membership-modal">
+            <button class="modal-close-btn" id="closeMembershipModalBtn" title="닫기">&times;</button>
+            <div class="modal-header">
+                <h2>Artist A OFFICIAL MEMBERSHIP</h2>
+                <p class="membership-duration">이용 기간: 결제일로부터 30일</p>
+            </div>
+            <div class="modal-body">
+                <div class="membership-main-image">
+                </div>
+                <h3>주요 혜택 안내</h3>
+                <ul class="modal-benefits-list">
+                    <li>✔️ 멤버십 전용 콘텐츠 이용 가능 (일부 블러 처리된 콘텐츠 즉시 해제!)</li>
+                    <li>🗓️ APT 메인 상단에서 아티스트 구독일 D-Day 확인</li>
+                    <li>🎤 콘서트/팬미팅 선예매 및 특별 이벤트 참여 기회</li>
+                    <li>🎁 한정판 멤버십 키트 제공 (별도 구매 또는 등급에 따라)</li>
+                </ul>
+
+                <h3>이용 안내 및 유의사항</h3>
+                <ul class="modal-notes-list">
+                    <li>본 멤버십은 비용을 선지불하여 이용하는 유료 서비스입니다.</li>
+                    <li>멤버십은 아티스트(솔로, 그룹)별로 별도 운영되며, 본 멤버십은 [Artist A] 전용입니다.</li>
+                    <li>그룹 내 솔로 활동 멤버 발생 시, 해당 멤버의 커뮤니티는 별도 생성/운영될 수 있습니다.</li>
+                    <li>자세한 내용은 구매 페이지의 약관을 참고해주세요.</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <div class="membership-price">₩30,000 <span class="vat-notice">(VAT 포함)</span></div>
+                <button class="btn-modal-purchase" id="goToPurchasePageBtn">멤버십 구매하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 커뮤니티 가입 오버레이 -->
+    <div id="communityOverlay" style="display:none;">
+        <div class="community-overlay-bg"></div>
+        <button id="joinCommunityBtn" class="join-community-btn">커뮤니티 가입</button>
+    </div>
+
+    <!-- 닉네임 입력 모달 -->
+    <div id="nicknameModal" style="display:none;">
+        <div class="nickname-modal-content">
+            <h2>닉네임을 입력해 주세요</h2>
+            <input type="text" id="nicknameInput" maxlength="12" placeholder="닉네임">
+            <h2>프로필 이미지</h2>
+			<div id="previewImgBox">
+				<img alt="" src="" id="previewImg">
+			</div>            
+            <input type="file" id="profileImgBtn">
+            <button id="nicknameSubmitBtn" disabled>완료</button>
+        </div>
+    </div>
+
+    <!-- DM 모달이 삽입될 컨테이너 -->
+    <div id="weverse-dm-modal-container"></div>
+
+    <!-- DM 열기 버튼 (원하는 곳에 배치) -->
+    <button onclick="openWeverseDM()">DM 열기</button>
+
+<script>
+
+$(function(){
+	
+	let files = new Map();
+	let fileNum = 0;
+	
+	// 이미지 영역 가져오기
+	let area = $("#imgArea"); 
+	
+	const editor = new toastui.Editor({
+        el: document.querySelector('#editor'),
+        height: '200px',
+        initialEditType: 'wysiwyg',
+        previewStyle: 'vertical',
+        hideModeSwitch : true,
+        toolbarItems: [
+        	['heading','bold','italic','strike'],
+        	['hr','ul','ol','indent','outdent'],
+        	['image','link'],
+        ],
+        hooks : {
+        	addImageBlobHook(blob, callback){
+        		
+        		files.set(fileNum.toString(),blob);
+        		
+        		console.log("blob : ", blob);
+        		
+        		let reader = new FileReader();
+        		reader.onload = function(e){
+        			html = `
+    					<div class="imgDiv">
+    						<img src="\${e.target.result}"  data-fileNum='\${fileNum}' >
+    								<i class="bi bi-x-lg"></i>
+    						</img>
+    						
+    					</div>
+						`;
+   					$("#imgArea").append(html);
+	        		fileNum++;
+        		}
+        		reader.readAsDataURL(blob);
+        		
+        	}
+        },
+      });
+	
+	
+	// 이미지 삭제 시 files map에 삭제
+	area.on("click","i",function(){
+		let pr = $(this).parent("div").remove();
+		let cur = $(this).parent("div").children('img')[0].dataset.filenum;
+		
+		files.delete(cur);
+		
+	});
+	
+	// 아티스트 페이지에서 검색 버튼 클릭 시
+	$("#searchFormBtn").on("click",function(){
+		console.log($("#artistSearchForm").find("input:checked").val());
+		let selectArtist = $("#artistSearchForm").find("input:checked").val();
+		$("#searchType").val(selectArtist);
+		
+		$("#artistSearchForm").submit();
+	});
+	
+	// 아티스트가 글 등록 시
+	$("#artistPostInsertBtn").on("click",function(){
+		let artGroupNo = $("#comuArtGroupNo").val()		// 커뮤니티 아티스트 번호
+		let comuPostTitle = $("#comuPostTitle").val();	// 등록할 제목
+		let comuPostContent = editor.getHTML();			// 등록할 내용
+		let artistTabYn = true;							// 아티스트 게시물 여부
+		let fileList = [];								// 이미지 파일 리스트
+		files.forEach((v,k,map) => {		
+			fileList.push(v);							// 파일 리스트에 map에 담겨있는 값 넣기	
+		})
+		
+		console.log(fileList);
+		
+		let memberShipYn = $("#memberShipYn").is(':checked');	// 멤버십 전용 게시물 여부
+		
+		console.log("커뮤니티 번호 : " , artGroupNo);
+		console.log("제목 : ", comuPostTitle);
+		console.log("내용 : ", comuPostContent);
+		console.log("파일리스트 : ", fileList);
+		console.log("멤버십 전용 여부 : ", memberShipYn);
+		console.log("아티스트 게시물인지 : ",artistTabYn );
+		
+		let data = new FormData();
+		data.append("artGroupNo",artGroupNo);
+		data.append("comuPostTitle",comuPostTitle);
+		data.append("comuPostContent",comuPostContent);
+		data.append("memberShipYn", memberShipYn);
+		data.append("artistTabYn", artistTabYn);
+		if(fileList != null && fileList.length > 0){
+			for(let i=0; i<fileList.length; i++){
+				data.append("files", fileList[i]);
+			}
+		}
+		$.ajax({
+			url : '/community/gate/insertPost',
+			type : 'post',
+			data : data,
+			contentType : false,
+			processData : false,
+			success : function(res){
+				console.log(res);
+				if(res == "OK"){
+					
+				}
+			},
+			error : function(error){
+				console.log(error.status);
+			},
+			beforeSend : function(xhr) {
+		        xhr.setRequestHeader('${_csrf.headerName}', '${_csrf.token}');
+		    }
+		});
+		
+	});
+
+});
+
+</script>
+</body>
+</html>

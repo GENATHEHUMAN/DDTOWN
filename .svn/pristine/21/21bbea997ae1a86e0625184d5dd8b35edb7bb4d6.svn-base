@@ -1,0 +1,16 @@
+package kr.or.ddit.ddtown.mapper.emp.edms;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import kr.or.ddit.vo.edms.EdmsFormVO;
+
+@Mapper
+public interface IEdmsMapper {
+
+	public List<EdmsFormVO> getFormList();
+
+	public EdmsFormVO getForm(int formNo);
+
+}

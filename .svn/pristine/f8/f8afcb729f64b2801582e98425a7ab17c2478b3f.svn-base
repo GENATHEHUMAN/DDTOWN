@@ -1,0 +1,231 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DD TOWN 오디션 일정</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+ 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/common/reset.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/common/variables.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/common/base.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/common/layout.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/components/navigation.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/components/buttons.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/components/footer.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/audition.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+    .input-group-append.flex-buttons {
+    display: flex;
+    /* justify-content는 이미 form에 적용되었으므로 여기서는 불필요 */
+    /* 필요하다면 flex-direction: row; 도 추가할 수 있습니다. (기본값) */
+    /* align-items: center; 를 추가하면 버튼들이 세로로 정렬될 수 있습니다. */
+	}
+	.ea-pagination {
+    /* 페이징 전체를 가운데 정렬하려면 */
+    display: flex;
+    justify-content: center; /* Flexbox로 가운데 정렬 */
+    margin-top: 20px; /* 위쪽 여백 */
+    margin-bottom: 20px; /* 아래쪽 여백 */
+    width: 100%; /* 부모 너비에 맞춤 */
+}
+
+/* PaginationInfoVO에서 생성되는 ul 태그 스타일 */
+.pagination {
+    list-style: none; /* 리스트 점 제거 */
+    padding: 0; /* 기본 패딩 제거 */
+    margin: 0; /* 기본 마진 제거 */
+    display: flex; /* 자식 li 요소들을 가로로 나열 */
+    justify-content: center; /* 페이지 번호들을 가운데 정렬 (선택 사항) */
+    align-items: center; /* 세로 중앙 정렬 */
+    flex-wrap: wrap; /* 화면이 작아지면 줄바꿈 허용 */
+}
+
+/* 각 페이지 항목 (li 태그) 스타일 */
+.page-item {
+    margin: 0 5px; /* 각 페이지 항목 사이 간격 */
+}
+
+/* 페이지 링크 (a 또는 span 태그) 스타일 */
+.page-link {
+    display: block; /* 링크 영역 전체를 클릭 가능하게 */
+    padding: 8px 12px; /* 패딩 */
+    border: 1px solid #ddd; /* 테두리 */
+    border-radius: 4px; /* 모서리 둥글게 */
+    color: #007bff; /* 링크 색상 */
+    text-decoration: none; /* 밑줄 제거 */
+    transition: background-color 0.3s, color 0.3s; /* 호버 효과 */
+}
+
+/* 현재 페이지 링크 스타일 */
+.page-item.active .page-link {
+    background-color: #007bff; /* 배경색 */
+    color: #fff; /* 글자색 */
+    border-color: #007bff; /* 테두리색 */
+    cursor: default; /* 클릭 불가능하게 */
+}
+
+/* 비활성화된 페이지 링크 스타일 (있다면) */
+.page-item.disabled .page-link {
+    color: #6c757d;
+    pointer-events: none; /* 클릭 비활성화 */
+    background-color: #f8f9fa;
+    border-color: #ddd;
+}
+
+/* 호버 효과 */
+.page-link:hover:not(.active) {
+    background-color: #e9ecef;
+    color: #0056b3;
+}
+
+/* "예정" 상태 (ADSC001) */
+.audition-status.recruiting.status-scheduled {
+    background-color: #007bff; /* 연한 파란색 배경 */
+         /* 대비를 위한 어두운 글씨색 */
+}
+
+/* "진행중" 상태 (ADSC002) */
+.audition-status.recruiting.status-in-progress {
+    background-color: #2ecc40; /* 초록색 배경 (이전의 고정색이 진행중일 때 적용되도록 여기에 다시 정의) */
+
+}
+
+/* "마감" 상태 (ADSC003) */
+.audition-status.recruiting.status-closed {
+    background-color: #dc3545; /* 연한 빨간색 배경 */
+
+}
+    
+    </style>
+</head>
+<body>
+<%@ include file="./../corporate/modules/header.jsp" %>
+
+<!-- main 부분 -->
+<main>
+	<section class="audition-hero">
+        <div class="container">
+            <h2>DD TOWN 오디션</h2>
+            <p>DD TOWN과 함께 꿈을 펼칠 예비 스타를 찾습니다. 지금 바로 도전하세요!<br>
+            자세한 오디션 정보 및 일정은 '오디션 일정' 메뉴에서 확인하실 수 있습니다.</p>
+        </div>
+    </section>
+    <section class="audition-list-section">
+       <div class="container">
+       		<div style="display: flex; justify-content: flex-end; width: 100%; margin-bottom: 20px;">
+	       		<form class="input-group input-group-sm" method="get" id="searchForm" style="flex-wrap: nowrap;">
+	            	<input type="hidden" name="page" id="page"/>
+	            	<select id="filter-schedule-status" name="searchType" class="am-filter-select" onchange="this.form.submit();" style="height:40px; border-radius:5px; border:1px solid #ccc; width:220px; font-size:1em;">
+			        	<option value="all" ${searchType == 'all' ? 'selected' : ''}>전체 상태</option>			        	
+			        	<option value="ADSC001" ${searchType == 'ADSC001' ? 'selected' : ''}>예정</option>
+			        	<option value="ADSC002" ${searchType == 'ADSC002' ? 'selected' : ''}>진행중</option>
+			        	<option value="ADSC003" ${searchType == 'ADSC003' ? 'selected' : ''}>마감</option>
+	                </select>
+	                <input type="text" name="searchWord" id="search-schedule-input" placeholder="오디션명 검색" class="am-search-input" style="width:220px; height:40px; border-radius:5px; border:1px solid #ccc; padding:0 12px; font-size:1em;" value="${searchWord }">   
+					<button type="submit" id="btn-search-schedule" class="am-btn" >
+		                  <i class="fas fa-search"></i> 검색
+		            </button>
+		            <button type="button" id="resetSearchButton" class="ea-btn" style="width:90px; margin-left: 5px;">초기화</button>
+	            </form>
+            </div>
+           <div class="audition-list">	            
+               <!-- 오디션 목록 -->
+              	<tbody>
+					<c:choose>
+						<c:when test="${empty auditionList }">
+							<tr>
+								<td colspan="5">조회하신 게시글이 존재하지 않습니다.</td>
+							</tr>
+						</c:when>
+						<c:otherwise>
+							<c:forEach items="${auditionList }" var="audition">
+								<div class="audition-card">
+			                   		<div class="audition-status recruiting
+									    <c:choose>
+									        <c:when test="${audition.audiStatCode eq 'ADSC001'}">status-scheduled</c:when>
+									        <c:when test="${audition.audiStatCode eq 'ADSC002'}">status-in-progress</c:when>
+									        <c:when test="${audition.audiStatCode eq 'ADSC003'}">status-closed</c:when>
+									    </c:choose>
+									">
+									    <c:choose>
+									        <c:when test="${audition.audiStatCode eq 'ADSC001'}">예정</c:when>
+									        <c:when test="${audition.audiStatCode eq 'ADSC002'}">진행중</c:when>
+									        <c:when test="${audition.audiStatCode eq 'ADSC003'}">마감</c:when>
+									    </c:choose>
+									</div>
+			                   	<div class="audition-title">${audition.audiTitle }</div>
+			                   	<div class="audition-info">
+			                       	<strong>모집 기간:</strong> <!--split:스플릿트 -->
+		                       		<c:set value="${fn:split(audition.audiStartDate, ' ')}" var="auditionStartDate"/>
+		                       		<c:set value="${fn:split(audition.audiEndDate, ' ')}" var="auditionEndDate"/>
+		                       		${auditionStartDate[0]} ~ ${auditionEndDate[0]}<br>
+		                       		<strong>모집 분야:</strong>
+		                       		<c:choose>
+		                       			<c:when test="${audition.audiTypeCode eq 'ADTC001'}">보컬</c:when>
+		                       			<c:when test="${audition.audiTypeCode eq 'ADTC002'}">댄스</c:when>
+		                       			<c:when test="${audition.audiTypeCode eq 'ADTC003'}">연기</c:when>
+		                       		</c:choose>
+			                   	</div>
+			                   		<a href="/corporate/audition/detail.do?audiNo=${audition.audiNo }">상세보기</a>
+			                   		</div>	
+			                   </c:forEach>
+						</c:otherwise>
+					</c:choose>
+				</tbody>
+           </div></br>
+           	<div class="pagination-container" id="pagingArea">
+				${pagingVO.pagingHTML}
+			</div>
+       </div>
+   	</section>
+</main>
+
+	<%@ include file="../corporate/modules/footer.jsp" %>
+
+    <%-- JS 파일 경로를 ${pageContext.request.contextPath}/resources 로 시작하도록 수정 --%>
+    <script src="${pageContext.request.contextPath}/resources/js/common/main.js"></script>
+</body>
+</body>
+<script type="text/javascript">
+$(function(){
+	let detailBtn = $("#detailBtn");  //상세보기 버튼 Element
+	
+	detailBtn.on("click", function(){
+		location.href = "/corporate/audition/detail.do";	//상세 페이지 이동
+	});
+	
+	// 페이지네이션 로직
+	$(document).on('click', '.page-link', function(e) {
+        e.preventDefault(); // 기본 링크 동작(href="#") 방지
+
+        var page = $(this).data('page'); // data-page 속성 값 가져오기
+        
+        if (page) { // page 값이 유효한 경우에만 실행
+            $('#page').val(page); // hidden input #page의 값을 설정
+            $('#searchForm').submit(); // 검색 폼 제출
+        }
+    });
+	//초기화 버튼
+	$('#resetSearchButton').on('click', function() {
+        // 검색 필드 값 초기화
+        $('#filter-schedule-status').val('all');
+        $('#search-schedule-input').val('');
+        $('#page').val(1);             // 페이지를 1페이지로 초기화
+
+        // 폼 제출
+        $('#searchForm').submit();
+    });
+	
+	
+})
+</script>
+</html>

@@ -1,0 +1,276 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c"%>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DDTOWN 아티스트 인기 투표</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath}/resources/css/pages/mainservice_common.css" />
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath}/resources/css/pages/artist_community.css" />
+</head>
+
+<body class="vote-page">
+    <jsp:include page="/WEB-INF/views/modules/communityHeader.jsp" />
+
+	<div class="vote-container">
+        <div class="vote-header">
+            <h1>DDTOWN 아티스트 인기 투표</h1>
+            <p>당신의 최애 아티스트를 선택해주세요!</p>
+            <div class="round-info" id="roundInfo">32강</div> </div>
+
+        <div class="vote-gate" id="voteGate">
+            <div class="message" id="gateMessage">이상형 월드컵에 참여하여 DDTOWN 최고 인기 아티스트를 뽑아주세요!</div>
+            <button class="btn-start-vote" id="btnStartVote">월드컵 시작하기</button>
+            <button class="btn-view-ranking" id="btnViewLastWeekRanking" style="display: none;">지난 주 순위 보기</button>
+        </div>
+
+        <div class="vote-arena" id="voteArena" style="display: none;">
+            <div class="artist-card" id="artistCard1" data-artist-id="1">
+                <div class="artist-image-placeholder" id="artistImage1">A</div>
+                <p class="artist-name" id="artistName1">Artist A</p>
+            </div>
+            <div class="vs-text">VS</div>
+            <div class="artist-card" id="artistCard2" data-artist-id="2">
+                <div class="artist-image-placeholder" id="artistImage2">B</div>
+                <p class="artist-name" id="artistName2">Artist B</p>
+            </div>
+        </div>
+
+        <div class="vote-result" id="voteResult" style="display: none;">
+            <div class="winner-announcement" id="winnerAnnouncement">축하합니다! 당신의 최애 아티스트는...</div>
+            <div class="winner-card">
+                <div class="artist-image-placeholder" id="winnerImage">X</div>
+                <p class="artist-name" id="winnerName">Winner Artist</p>
+            </div>
+            <div class="weekly-ranking" id="weeklyRankingResult">
+                <h3>지난 주 인기 아티스트 TOP 3 (투표 수)</h3>
+                <ul>
+                    <li><span class="rank">1위</span> <span class="artist-name">Artist C</span> <span class="vote-count">1,234표</span></li>
+                    <li><span class="rank">2위</span> <span class="artist-name">Artist D</span> <span class="vote-count">1,005표</span></li>
+                    <li><span class="rank">3위</span> <span class="artist-name">Artist E</span> <span class="vote-count">876표</span></li>
+                </ul>
+            </div>
+            <button class="btn-start-vote" id="btnRestartVote" style="margin-top: 30px; display:none;">새로운 월드컵 시작하기 (관리자용/테스트용)</button>
+        </div>
+
+    </div>
+    <div id="footer-placeholder"></div>
+    <script>
+        // --- 상태 관리 변수 (실제로는 서버와 연동되어야 함) ---
+        let currentRound = 32; // 예: 32강부터 시작
+        let মোটRounds = 5; // 32강(16경기), 16강(8), 8강(4), 4강(2), 결승(1) -> 5단계의 선택
+        let currentMatch = 0;
+        let artists = []; // 전체 아티스트 목록 (서버에서 로드 또는 하드코딩)
+        let currentPair = []; // 현재 대결 중인 아티스트 쌍
+        let winners = []; // 각 라운드 승자 목록
+        let userVotedToday = false; // 오늘 투표했는지 여부 (서버에서 확인 필요)
+        let weeklyVoteActive = true; // 현재 주간 투표가 활성 상태인지 (서버에서 확인 필요)
+
+        // --- DOM 요소 가져오기 ---
+        const roundInfoEl = document.getElementById('roundInfo');
+        const voteGateEl = document.getElementById('voteGate');
+        const gateMessageEl = document.getElementById('gateMessage');
+        const btnStartVoteEl = document.getElementById('btnStartVote');
+        const btnViewLastWeekRankingEl = document.getElementById('btnViewLastWeekRanking');
+
+        const voteArenaEl = document.getElementById('voteArena');
+        const artistCard1El = document.getElementById('artistCard1');
+        const artistImage1El = document.getElementById('artistImage1');
+        const artistName1El = document.getElementById('artistName1');
+        const artistCard2El = document.getElementById('artistCard2');
+        const artistImage2El = document.getElementById('artistImage2');
+        const artistName2El = document.getElementById('artistName2');
+
+        const voteResultEl = document.getElementById('voteResult');
+        const winnerAnnouncementEl = document.getElementById('winnerAnnouncement');
+        const winnerImageEl = document.getElementById('winnerImage');
+        const winnerNameEl = document.getElementById('winnerName');
+        const weeklyRankingResultEl = document.getElementById('weeklyRankingResult');
+        const btnRestartVoteEl = document.getElementById('btnRestartVote');
+
+
+        // --- 예시 아티스트 데이터 (실제로는 서버에서 가져옴) ---
+        const sampleArtists = [
+            { id: 1, name: "Artist A", imageChar: "A" }, { id: 2, name: "Artist B", imageChar: "B" },
+            { id: 3, name: "Artist C", imageChar: "C" }, { id: 4, name: "Artist D", imageChar: "D" },
+            { id: 5, name: "Artist E", imageChar: "E" }, { id: 6, name: "Artist F", imageChar: "F" },
+            { id: 7, name: "Artist G", imageChar: "G" }, { id: 8, name: "Artist H", imageChar: "H" },
+            // ... 32명까지 채우거나, JS로 랜덤 선택하도록 구성
+        ];
+        // 간단하게 8강으로 시작하는 예시를 위해 8명만 사용
+        let tournamentParticipants = [...sampleArtists.slice(0, 8)]; // 8강 시작 예시
+
+
+        // --- 함수 정의 ---
+        function shuffleArray(array) { // 배열 섞기 (랜덤 대진)
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function setupMatch() {
+            if (tournamentParticipants.length < 2) { // 참가자가 1명 남으면 최종 우승
+                displayWinner(tournamentParticipants[0]);
+                return;
+            }
+            if (currentMatch * 2 >= tournamentParticipants.length) { // 현재 라운드 모든 경기 종료
+                currentRound = tournamentParticipants.length / 2; // 다음 라운드 (예: 8명 -> 4강)
+                tournamentParticipants = [...winners]; // 승자들로 다음 라운드 참가자 구성
+                winners = []; // 승자 목록 초기화
+                currentMatch = 0; // 경기 번호 초기화
+                if (tournamentParticipants.length < 2) { // 최종 우승자 결정
+                    displayWinner(tournamentParticipants[0]);
+                    return;
+                }
+                shuffleArray(tournamentParticipants); // 다음 라운드 대진 섞기
+            }
+
+            roundInfoEl.textContent = `\${currentRound * 2}강 \${currentMatch + 1}번째 경기`; // 8강 1경기 (2*N 형태)
+
+            currentPair = [tournamentParticipants[currentMatch * 2], tournamentParticipants[currentMatch * 2 + 1]];
+            if (!currentPair[0] || !currentPair[1]) { // 대진표 오류 또는 홀수 참가자 처리 (여기선 간단히 종료)
+                 console.error("대진표 생성 오류 또는 참가자 부족");
+                 displayWinner(tournamentParticipants[0] || {name: "오류", imageChar: "?"}); // 임시 처리
+                 return;
+            }
+
+            artistImage1El.textContent = currentPair[0].imageChar;
+            artistName1El.textContent = currentPair[0].name;
+            artistCard1El.dataset.artistId = currentPair[0].id;
+
+            artistImage2El.textContent = currentPair[1].imageChar;
+            artistName2El.textContent = currentPair[1].name;
+            artistCard2El.dataset.artistId = currentPair[1].id;
+
+            voteGateEl.style.display = 'none';
+            voteResultEl.style.display = 'none';
+            voteArenaEl.style.display = 'flex';
+        }
+
+        function handleVote(selectedArtistCard) {
+            const selectedId = parseInt(selectedArtistCard.dataset.artistId);
+            const winner = currentPair.find(artist => artist.id === selectedId);
+            winners.push(winner);
+
+            // --- 실제로는 서버에 투표 기록 전송 ---
+            console.log(`선택: \${winner.name} (ID: \${winner.id}), 현재 라운드: \${currentRound*2}강`);
+
+            currentMatch++;
+            setupMatch();
+        }
+
+        function displayWinner(winner) {
+            winnerAnnouncementEl.textContent = `🎉 최종 우승! 당신의 최애 아티스트는 🎉`;
+            winnerImageEl.textContent = winner.imageChar;
+            winnerNameEl.textContent = winner.name;
+
+            voteArenaEl.style.display = 'none';
+            voteGateEl.style.display = 'none'; // 시작 게이트도 숨김
+            voteResultEl.style.display = 'block';
+            weeklyRankingResultEl.style.display = 'block'; // 최종 우승 시에도 지난 주 랭킹 보여주기 (선택)
+            roundInfoEl.textContent = "월드컵 종료";
+            btnRestartVoteEl.style.display = 'inline-block'; // 테스트용 재시작 버튼
+            userVotedToday = true; // 투표 완료 (실제로는 서버에서 관리)
+        }
+
+        function showVoteGate() {
+            voteArenaEl.style.display = 'none';
+            voteResultEl.style.display = 'none';
+            voteGateEl.style.display = 'block';
+            roundInfoEl.textContent = `\${tournamentParticipants.length}강`; // 초기 라운드 표시 (예: 8강)
+
+            if (userVotedToday) {
+                gateMessageEl.textContent = "오늘은 이미 참여하셨습니다. 내일 다시 참여해주세요.";
+                btnStartVoteEl.style.display = 'none';
+                btnViewLastWeekRankingEl.style.display = 'inline-block';
+            } else if (!weeklyVoteActive) {
+                gateMessageEl.textContent = "이번 주 월드컵은 종료되었습니다. 다음 주 월드컵을 기대해주세요!";
+                btnStartVoteEl.style.display = 'none';
+                btnViewLastWeekRankingEl.style.display = 'inline-block';
+            } else {
+                gateMessageEl.textContent = "이상형 월드컵에 참여하여 DDTOWN 최고 인기 아티스트를 뽑아주세요!";
+                btnStartVoteEl.style.display = 'inline-block';
+                btnViewLastWeekRankingEl.style.display = 'none';
+            }
+        }
+
+        function initializeVote() {
+            // 실제로는 서버에서 userVotedToday, weeklyVoteActive, 지난주 랭킹 등 상태를 받아와야 함
+            // 여기서는 하드코딩된 값으로 시작
+            userVotedToday = false; // 테스트를 위해 false로 시작
+            weeklyVoteActive = true; // 테스트를 위해 true로 시작
+
+            currentRound = tournamentParticipants.length / 2; // 초기 라운드 설정 (예: 8명 -> 4쌍 -> 8강)
+            currentMatch = 0;
+            winners = [];
+            shuffleArray(tournamentParticipants); // 초기 대진 섞기
+            showVoteGate();
+        }
+
+
+        // --- 이벤트 리스너 ---
+        btnStartVoteEl.addEventListener('click', () => {
+            if (userVotedToday) {
+                alert("하루에 한 번만 참여할 수 있습니다.");
+                return;
+            }
+            if (!weeklyVoteActive) {
+                alert("현재는 투표 기간이 아닙니다.");
+                return;
+            }
+            setupMatch();
+        });
+
+        btnViewLastWeekRankingEl.addEventListener('click', () => {
+            voteGateEl.style.display = 'none';
+            voteArenaEl.style.display = 'none';
+            winnerAnnouncementEl.textContent = "지난 주 인기 아티스트 TOP 3"; // 제목 변경
+            winnerImageEl.style.display = 'none'; // 우승자 이미지 숨김
+            winnerNameEl.style.display = 'none';  // 우승자 이름 숨김
+            voteResultEl.style.display = 'block';
+            weeklyRankingResultEl.style.display = 'block';
+            btnRestartVoteEl.style.display = 'none';
+            roundInfoEl.textContent = "지난 주 순위";
+        });
+
+
+        artistCard1El.addEventListener('click', () => handleVote(artistCard1El));
+        artistCard2El.addEventListener('click', () => handleVote(artistCard2El));
+
+        btnRestartVoteEl.addEventListener('click', () => { // 테스트용
+             tournamentParticipants = [...sampleArtists.slice(0, 8)]; // 참가자 초기화
+             initializeVote();
+             winnerImageEl.style.display = 'flex'; // 우승자 이미지 다시 보이게
+             winnerNameEl.style.display = 'block';  // 우승자 이름 다시 보이게
+             btnRestartVoteEl.style.display = 'none';
+        });
+
+
+        // --- 페이지 로드 시 초기화 ---
+        initializeVote();
+
+        // 푸터 로드 (이전과 동일)
+        const footerPlaceholder = document.getElementById('footer-placeholder');
+        if (footerPlaceholder) {
+            fetch('footer.html')
+                .then(response => response.ok ? response.text() : Promise.reject('Footer not found'))
+                .then(data => { footerPlaceholder.innerHTML = data; })
+                .catch(error => console.error('Error loading footer:', error));
+        }
+        // 로그인 상태 (이전과 동일)
+        const authLinkVote = document.getElementById('auth-link');
+        if (authLinkVote) {
+             let isLoggedInVote = JSON.parse(localStorage.getItem('isLoggedIn')) || false;
+             authLinkVote.textContent = isLoggedInVote ? '로그아웃' : '로그인';
+             authLinkVote.addEventListener('click', function(event) { /* ...이전과 동일... */ });
+        }
+
+    </script>
+</body>
+</html>

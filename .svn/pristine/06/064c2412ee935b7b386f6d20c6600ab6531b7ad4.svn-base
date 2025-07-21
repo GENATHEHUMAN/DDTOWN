@@ -1,0 +1,24 @@
+package kr.or.ddit.ddtown.mapper.community;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import kr.or.ddit.vo.community.CommunityProfileVO;
+
+@Mapper
+public interface ICommunityFollowMapper {
+
+	/**
+	 * 팔로우 추가
+	 * @param profileVO
+	 * @return
+	 */
+	public int insertFollow(CommunityProfileVO profileVO);
+
+	/**
+	 * 팔로우 제거
+	 * @param profileVO
+	 * @return
+	 */
+	public int deleteFollow(CommunityProfileVO profileVO);
+
+}

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.inquiry.IAdminInquiryMapper">
+ 	<select id="getList" resultType="kr.or.ddit.vo.inquiry.InquiryVO">
+ 		SELECT
+		    a.inq_no
+		  , a.emp_username
+		  , a.mem_username
+		  , a.inq_type_code
+		  , b.DESCRIPTION inq_type_code_des
+		  , a.inq_stat_code
+		  , c.DESCRIPTION inq_stat_code_des
+		  , a.inq_title
+		  , a.inq_content
+		  , a.inq_reg_date
+		  , a.inq_ans_content
+		  , a.inq_ans_reg_date
+		FROM
+		    inquiry a
+		    , common_detail_code b
+		    , common_detail_code c
+		where a.INQ_TYPE_CODE = b.comm_code_det_no(+)
+		and b.USE_YN (+)= 'Y'
+		and a.INQ_STAT_CODE = c.comm_code_det_no(+)
+		and c.USE_YN (+)= 'Y'
+ 	</select>
+ </mapper>

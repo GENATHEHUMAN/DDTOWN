@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.community.ICommunityLSNMapper">
+ 	
+ 	<select id="scheduleList" parameterType="int" resultType="kr.or.ddit.vo.schedule.ScheduleVO">
+ 		select 
+ 		  ART_SCHEDULE_NO as "id"
+ 		, ART_GROUP_NO
+ 		, TITLE
+ 		, START_DATE as "start"
+ 		, END_DATE as "end"
+ 		, PLACE
+ 		, CONTENT
+ 		, TEXT_COLOR
+ 		, URL
+ 		, BACKGROUND_COLOR
+ 		, ALL_DAY as all_day_status
+		from ARTIST_SCHEDULE
+		where ART_GROUP_NO = #{artGroupNo}
+ 	</select>
+ 	
+ </mapper>

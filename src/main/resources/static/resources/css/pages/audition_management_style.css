@@ -1,0 +1,413 @@
+/* audition_management_style.css */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background-color: #f8f9fa; /* 페이지 배경색 */
+    color: #333;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.am-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* --- Header --- */
+.am-header { /* 전자결재 .ea-header 와 유사하게 */
+    background-color: #ffffff;
+    padding: 0 25px;
+    height: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+.am-logo a {
+    font-size: 1.4em; /* 전자결재보다 약간 작게 */
+    font-weight: 600;
+    color: #007bff; /* 오디션 관리 시스템 포인트 색상 (예시) */
+    text-decoration: none;
+}
+.am-user-info { /* 전자결재 .ea-user-info 와 유사하게 */
+    display: flex;
+    align-items: center;
+    font-size: 0.9em;
+}
+.am-user-info span { margin-right: 20px; color: #555; }
+.am-user-info .am-logout-btn {
+    color: #dc3545; /* 로그아웃 색상 */
+    text-decoration: none;
+    font-weight: 500;
+    padding: 6px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+.am-user-info .am-logout-btn:hover { background-color: #f8d7da; }
+.am-user-info i { margin-right: 6px; }
+
+/* --- Body Wrapper (Sidebar + Content) --- */
+.am-body-wrapper {
+    display: flex;
+    flex-grow: 1;
+}
+
+/* --- Sidebar --- */
+.am-sidebar { /* 전자결재 .ea-sidebar 와 유사하게 */
+    width: 220px; /* 사이드바 너비 */
+    background-color: #343a40; /* 어두운 사이드바 */
+    color: #f8f9fa;
+    padding: 15px 0;
+    flex-shrink: 0;
+}
+.am-nav-title {
+    font-size: 1.1em;
+    font-weight: 600;
+    padding: 10px 20px;
+    margin-bottom: 10px;
+    color: #fff;
+    /* border-bottom: 1px solid #495057; */
+}
+.am-nav ul { list-style: none; padding: 0; margin: 0; }
+.am-nav-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #adb5bd;
+    text-decoration: none;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    border-left: 3px solid transparent;
+}
+.am-nav-item i.fas { margin-right: 10px; width: 16px; text-align: center; }
+.am-nav-item:hover { background-color: #495057; color: #ffffff; }
+.am-nav-item.active {
+    background-color: #007bff; /* 활성 메뉴 배경색 (포인트 색상) */
+    color: #ffffff;
+    font-weight: 500;
+    border-left-color: #f8f9fa; /* 활성 표시줄 */
+}
+
+/* --- Content Area --- */
+.am-content { /* 전자결재 .ea-content 와 유사하게 */
+    flex-grow: 1;
+    padding: 25px;
+    background-color: #fdfdff; /* 콘텐츠 영역 배경색 약간 밝게 */
+    overflow-y: auto;
+}
+.am-section { display: none; animation: fadeInAMSection 0.4s ease-out; }
+.am-section.active-section { display: block; }
+@keyframes fadeInAMSection {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.am-section-header { /* 전자결재 .ea-section-header 와 유사하게 */
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e9ecef;
+}
+.am-section-header h2 { font-size: 1.5em; color: #343a40; margin: 0; }
+.am-filter-area { /* 일정 관리 필터 영역 */
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.am-search-input, .am-filter-select { /* 전자결재 스타일 재활용 */
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+.am-filter-select { min-width: 180px; }
+
+/* --- Table Styles --- */
+.am-table { /* 전자결재 .ea-table 과 유사하게 */
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 0.88em; /* 테이블 폰트 약간 작게 */
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.am-table th, .am-table td {
+    border: 1px solid #e9ecef;
+    padding: 10px 12px; /* 패딩 조정 */
+    text-align: left;
+    vertical-align: middle;
+}
+.am-table th {
+    background-color: #f8f9fa; /* 헤더 배경 연하게 */
+    font-weight: 600;
+    color: #495057; /* 헤더 글자색 */
+}
+.am-table tbody tr:hover { background-color: #f1f3f5; }
+.am-table .doc-link { color: #007bff; text-decoration: none; font-weight: 500; }
+.am-table .doc-link:hover { text-decoration: underline; }
+
+/* 상태 배지 (진행중, 종료, 예정) */
+.am-table .status { /* 전자결재 .ea-table .status 와 유사 */
+    padding: 4px 10px;
+    border-radius: 4px; /* 약간 각진 형태 */
+    font-size: 0.8em;
+    font-weight: 500;
+    text-align: center;
+    min-width: 65px;
+    display: inline-block;
+    color: white;
+}
+.status.ongoing { background-color: #28a745; } /* 진행중 - 초록 */
+.status.finished { background-color: #6c757d; } /* 종료 - 회색 */
+.status.upcoming { background-color: #17a2b8; } /* 예정 - 청록 */
+.status.pass { background-color: #20c997; } /* 합격 - 밝은 초록 */
+.status.fail { background-color: #dc3545; } /* 불합격 - 빨강 */
+.status.pending { background-color: #ffc107; color: #333; } /* 심사중/대기 - 노랑 */
+
+
+/* --- Form Styles (오디션 등록/수정 모달 내) --- */
+.am-form .form-group { margin-bottom: 15px; }
+.am-form label { display: block; margin-bottom: 5px; font-weight: 500; color: #444; font-size: 0.9em;}
+.am-form label .required { color: #dc3545; margin-left: 3px;}
+.am-form input[type="text"],
+.am-form input[type="date"],
+.am-form select,
+.am-form textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 0.9em;
+}
+.am-form input[type="text"]:focus, /* ... (포커스 스타일은 .ea-form 과 유사하게) ... */
+.am-form textarea { resize: vertical; min-height: 80px; }
+.am-form-actions { margin-top: 20px; text-align: right; }
+.am-form-actions button { margin-left: 8px; }
+
+
+/* --- Button Styles --- */
+.am-btn { /* 전자결재 .ea-btn 과 유사하게 */
+    padding: 7px 14px; /* 기본 버튼 패딩 */
+    font-size: 0.85em; /* 기본 버튼 폰트 크기 */
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.5; /* 버튼 내 텍스트 수직 정렬 */
+}
+.am-btn i.fas { margin-right: 6px; }
+
+.am-btn.primary { background-color: #007bff; color: white; border-color: #007bff;}
+.am-btn.primary:hover { background-color: #0069d9; border-color: #0062cc;}
+.am-btn.success { background-color: #28a745; color: white; border-color: #28a745;}
+.am-btn.success:hover { background-color: #218838; border-color: #1e7e34;}
+.am-btn.danger { background-color: #dc3545; color: white; border-color: #dc3545;}
+.am-btn.danger:hover { background-color: #c82333; border-color: #bd2130;}
+.am-btn.outline { background-color: transparent; color: #007bff; border-color: #007bff;}
+.am-btn.outline:hover { background-color: #007bff; color: white; }
+.am-btn.info { background-color: #17a2b8; color: white; border-color: #17a2b8;} /* 지원자 보기 등 */
+.am-btn.info:hover { background-color: #138496; border-color: #117a8b;}
+.am-btn.secondary { background-color: #6c757d; color: white; border-color: #6c757d;} /* 취소 등 */
+.am-btn.secondary:hover { background-color: #5a6268; border-color: #545b62;}
+
+
+.am-btn.sm { /* 작은 버튼 (테이블 내) */
+    padding: 4px 8px;
+    font-size: 0.75em;
+}
+.am-btn.sm i.fas { margin-right: 4px; }
+
+
+/* --- Pagination Styles --- */
+.am-pagination { /* 전자결재 .ea-pagination 과 유사하게 */
+    text-align: center;
+    margin-top: 20px;
+}
+.am-pagination a {
+    color: #007bff; padding: 6px 10px; text-decoration: none;
+    border: 1px solid #dee2e6; margin: 0 2px; border-radius: 4px;
+    font-size: 0.85em; transition: all 0.2s ease;
+}
+.am-pagination a:hover, .am-pagination a.active {
+    background-color: #007bff; color: white; border-color: #007bff;
+}
+
+/* --- Modal Styles (오디션 등록/수정) --- */
+.am-modal { /* 전자결재 .ea-modal 과 유사하게 */
+    display: none; position: fixed; z-index: 1001; 
+    left: 0; top: 0; width: 100%; height: 100%;
+    overflow: auto; background-color: rgba(0,0,0,0.4);
+    animation: fadeInAMSection 0.3s;
+}
+.am-modal-content {
+    background-color: #fff;
+    margin: 10% auto; /* 상단 마진 조정 */
+    padding: 20px 25px;
+    border: 1px solid #bbb;
+    width: 90%;
+    max-width: 600px; /* 폼이 길어질 수 있으므로 약간 넓게 */
+    border-radius: 6px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    position: relative;
+}
+.am-modal-close {
+    color: #888; float: right; font-size: 26px; font-weight: bold;
+    line-height: 1;
+}
+.am-modal-close:hover, .am-modal-close:focus {
+    color: #333; text-decoration: none; cursor: pointer;
+}
+.am-modal-content h3 {
+    margin-top: 0; font-size: 1.4em; color: #333; margin-bottom: 20px;
+}
+
+#applicant-list-placeholder { /* 지원자 정보 없을 때 */
+    border: 1px dashed #ddd;
+    padding: 30px;
+    text-align: center;
+    color: #777;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+}
+
+/* audition_management_style.css 에 추가 또는 수정 */
+
+/* ... (기존 am-table, status 등 스타일 유지) ... */
+
+/* 지원자 정보 테이블의 심사 단계 배지 */
+.am-table .stage {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 500;
+    text-align: center;
+    min-width: 50px; /* 최소 너비 */
+    display: inline-block;
+    color: #333; /* 기본 글자색 */
+    background-color: #e9ecef; /* 기본 배경색 */
+    border: 1px solid #ced4da;
+}
+
+/* 심사 단계별 스타일 (예시) */
+.stage.stage-document { background-color: #cfe2ff; border-color: #b6d4fe; color: #0a58ca;}
+.stage.stage-practical { background-color: #d1e7dd; border-color: #a3cfbb; color: #0a3622;}
+.stage.stage-interview { background-color: #fff3cd; border-color: #ffe69c; color: #664d03;}
+.stage.stage-final { background-color: #e2e3e5; border-color: #d3d6d8; color: #41464b;}
+
+
+/* 심사 결과 배지 (status 클래스에 result- 접두사 추가) */
+.status.result-pass { background-color: #198754; color: white; border-color: #198754;} /* 합격 - 진한 초록 */
+.status.result-hold { background-color: #6c757d; color: white; border-color: #6c757d;} /* 보류 - 회색 */
+.status.result-fail { background-color: #dc3545; color: white; border-color: #dc3545;} /* 탈락 - 빨강 */
+.status.result-pending_review { background-color: #ffc107; color: #212529; border-color: #ffc107;} /* 심사중 - 노랑 */
+
+/* 기존 .status.pending 은 일반적인 '대기' 상태에 사용 (예: 최종 결과 발표 전) */
+/* .status.pending { background-color: #0dcaf0; color: white; border-color: #0dcaf0;} */
+
+
+/* 지원자 심사 모달 스타일 */
+#evaluate-applicant-modal .am-modal-content {
+    max-width: 550px; /* 모달 너비 약간 조정 */
+}
+#evaluate-applicant-modal .form-group p { /* 지원자 정보 표시용 p 태그 */
+    font-size: 1em;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    margin: 0;
+}
+#evaluate-applicant-modal .form-group p strong {
+    color: #007bff; /* 포인트 색상 */
+}
+
+/* audition_management_style.css 에 추가 */
+
+/* 상세보기 모달 내 데이터 표시용 p 태그 스타일 */
+#audition-view-modal .form-group p {
+    padding: 6px 0; /* 레이블과의 간격 및 자체 패딩 */
+    margin: 0;
+    font-size: 0.9em; /* 기본 폼 입력 필드와 유사한 크기 */
+    line-height: 1.6;
+    color: #333;
+    min-height: 20px; /* 내용이 없을 때도 최소 높이 유지 */
+    word-break: break-word; /* 긴 텍스트 줄바꿈 */
+}
+
+/* 상세보기 모달의 진행 상태 배지 위치 조정 (필요시) */
+#audition-view-modal .form-group #view-audition-status .status {
+    display: inline-block; /* span이므로 inline-block으로 확실히 설정 */
+    margin-top: 2px; /* 미세 조정 */
+}
+
+/* 상세보기 모달의 상세 내용 스타일 */
+#audition-view-modal #view-audition-description {
+    white-space: pre-wrap; /* 줄바꿈 문자 유지 */
+    background-color: #f8f9fa; /* 약간의 배경색으로 구분 */
+    padding: 10px;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    min-height: 60px;
+}
+
+/* audition_management_style.css 에 추가 */
+
+/* 지원자 상세보기 모달 그리드 레이아웃 (선택적) */
+.applicant-detail-view-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2열 그리드 */
+    gap: 0px 20px; /* 행간격 없음, 열간격 20px */
+}
+.applicant-detail-view-grid .form-group {
+    margin-bottom: 12px; /* 항목 간 간격 약간 줄임 */
+}
+.applicant-detail-view-grid .form-group.full-width {
+    grid-column: 1 / -1; /* 전체 너비 사용 */
+}
+.applicant-detail-view-grid label {
+    font-size: 0.85em; /* 레이블 약간 작게 */
+    color: #555;
+}
+.applicant-detail-view-grid p {
+    font-size: 0.9em;
+    padding: 4px 0; /* p 태그 패딩 조정 */
+    min-height: 18px;
+    border-bottom: 1px solid #f0f0f0; /* 간단한 구분선 */
+}
+
+/* 제출 서류 목록 스타일 */
+.submitted-files-list {
+    padding: 5px 0;
+}
+.submitted-files-list .submitted-file-item {
+    display: block; /* 각 파일을 별도 줄에 표시 */
+    margin-bottom: 5px;
+    color: #007bff;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+.submitted-files-list .submitted-file-item:hover {
+    text-decoration: underline;
+}
+
+/* 심사 이력 테이블 (상세보기 모달 내) */
+#applicant-detail-view-modal .am-table.sm-table {
+    font-size: 0.85em; /* 테이블 폰트 약간 작게 */
+    margin-top: 5px;
+}
+#applicant-detail-view-modal .am-table.sm-table th,
+#applicant-detail-view-modal .am-table.sm-table td {
+    padding: 6px 8px; /* 셀 패딩 줄임 */
+} 

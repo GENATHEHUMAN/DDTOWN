@@ -1,0 +1,127 @@
+package kr.or.ddit.ddtown.controller.admin.report;
+
+import java.security.Principal;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.service.admin.report.IReportService;
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.corporate.audition.AuditionVO;
+import kr.or.ddit.vo.report.ReportVO;
+import kr.or.ddit.vo.security.CustomUser;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/admin/community/report")
+public class AdminReportController {
+
+	@Autowired
+	private IReportService reportService;
+	
+	private String getCurrentEmpUsername() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication != null && authentication.getPrincipal() instanceof CustomUser) {
+			CustomUser customUser = (CustomUser) authentication.getPrincipal();
+			if (customUser.getEmployeeVO() != null) {
+				return customUser.getEmployeeVO().getEmpUsername();
+			}
+		}
+		return null;
+	}
+	
+	//목록 이동
+	@GetMapping("/list")
+	public String ReportMain(
+			@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			@RequestParam(name = "searchType", required = false, defaultValue = "all") String searchType,
+			@RequestParam(name = "searchCode", required = false, defaultValue = "all") String searchCode,
+	        @RequestParam(name = "searchWord", required = false, defaultValue = "") String searchWord,
+	        @RequestParam(name = "badgeSearchType", required = false, defaultValue = "") String badgeSearchType,
+			Model model) {
+		log.info("currentPage: {}, searchType: {}, searchCode: {}, searchWord: {}", currentPage, searchType, searchCode, searchWord);
+		
+		PaginationInfoVO<ReportVO> pagingVO = new PaginationInfoVO<>();
+		
+		pagingVO.setSearchType(searchType);
+		pagingVO.setSearchCode(searchCode);
+		pagingVO.setSearchWord(searchWord);
+		pagingVO.setBadgeSearchType(badgeSearchType);
+		
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = reportService.selectReportCount(pagingVO);	//총 신고목록 수
+		pagingVO.setTotalRecord(totalRecord); //총 게시글 수 전달 후, 총 페이지 수 설정
+		
+		int fixedScreenSize = 10;
+		
+		int startRow = (currentPage - 1) * fixedScreenSize + 1;
+	    int endRow = currentPage * fixedScreenSize;
+		pagingVO.setStartRow(startRow); // 계산된 startRow 설정
+	    pagingVO.setEndRow(endRow);     // 계산된 endRow 설정	 
+		
+		//미처리 수
+		int reportCnt = reportService.reportCnt();
+		//신고 사유 유형별 수
+		Map<String, Integer> reportReasonCnt = reportService.reportReasonCnt();
+	        
+		log.info("report() 실행...!");
+		List<ReportVO> reportList = reportService.reportList(pagingVO);
+		pagingVO.setDataList(reportList);
+
+		
+		log.info("가져온 신고 리스트: {}", reportList);
+		model.addAttribute("reportList", reportList);
+		model.addAttribute("pagingVO", pagingVO);
+		model.addAttribute("searchType", searchType);
+        model.addAttribute("searchCode", searchCode);
+        model.addAttribute("searchWord", searchWord);
+        model.addAttribute("badgeSearchType", badgeSearchType);
+        model.addAttribute("totalReportCount", totalRecord);
+		model.addAttribute("reportCnt", reportCnt);
+		model.addAttribute("reportReasonCnt", reportReasonCnt);
+		
+		return "admin/report/reportList";
+	}
+	//상세보기 페이지
+	@GetMapping("/detail")
+	public String ReportDetail(int reportNo, Model model) {
+		ReportVO reportVO = reportService.reportDetail(reportNo);
+		
+		model.addAttribute("report", reportVO);
+	return "admin/report/reportDetail";
+	}
+	//신고처리
+	@ResponseBody
+	@PostMapping("/update")
+	public ResponseEntity<ServiceResult> reportUpdate(@RequestBody ReportVO reportVO, Principal principal){
+		log.info("신고번호->reportNo : " + reportVO.getReportNo());
+		log.info("신고처리상태->reportResultCode : " + reportVO.getReportResultCode());
+		log.info("게시글유형->reportTargetTypeCode : " + reportVO.getReportTargetTypeCode());
+		log.info("처리코드->reportResultCode : " + reportVO.getReportResultCode());
+		log.info("게시글 번호->targetComuPostNo : " + reportVO.getTargetComuPostNo());
+		log.info("댓글번호->targetComuReplyNo : " + reportVO.getTargetComuReplyNo());
+		log.info("채팅메세지 번호->targetChatNo : " + reportVO.getTargetChatNo());
+		
+		String empUsername = principal.getName();
+		log.info("auditionInsert->empUsername : {}", empUsername);
+		reportVO.setEmpUsername(empUsername);
+		
+		ServiceResult result = reportService.reportUpdate(reportVO);
+		return new ResponseEntity<ServiceResult>(result, HttpStatus.OK);
+	}
+}

@@ -1,0 +1,200 @@
+package kr.or.ddit.ddtown.controller.emp.audition;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import kr.or.ddit.ddtown.service.EmailService;
+import kr.or.ddit.ddtown.service.emp.audition.IEmpAuditionService;
+import kr.or.ddit.vo.corporate.audition.AuditionUserVO;
+import kr.or.ddit.vo.file.AttachmentFileDetailVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RestController
+@RequestMapping("/api/emp/audition")
+public class EmpAuditionAPIController {
+
+	@Autowired
+	private IEmpAuditionService empAuditionService;
+
+	@Autowired
+	private EmailService mailService;
+
+//	// 오디션 목록
+//	@GetMapping("/applicant")
+//
+//	public PaginationInfoVO<AuditionUserVO> getApplicantsList(
+//	@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+//	@RequestParam(name = "searchType", required = false, defaultValue = "all") String searchType,
+//	@RequestParam(name = "searchCode", required = false, defaultValue = "all") String searchCode,
+//	@RequestParam(name = "searchWord", required = false, defaultValue = "") String searchWord,
+////	@RequestParam(name = "auditionStatusCode", required = false, defaultValue = "all") String audiStatCode,
+//	Model model) {
+//
+//	log.info("currentPage: {}, searchType: {}, searchCode: {}, searchWord: {}", currentPage, searchType, searchCode, searchWord);
+//	List<AuditionVO> auditionDropdownList = empAuditionService.auditionDropdownList();
+//	PaginationInfoVO<AuditionUserVO> pagingVO = new PaginationInfoVO<>();
+//
+//	pagingVO.setSearchType(searchType);
+//	pagingVO.setSearchCode(searchCode);
+//	pagingVO.setSearchWord(searchWord);
+////	pagingVO.setSearchCode2(audiStatCode);
+//
+//
+//	//검색 후 목록 페이지로 이동 할 때
+//	model.addAttribute("searchType", searchType);
+//	model.addAttribute("searchCode", searchCode);
+//	model.addAttribute("searchWord", searchWord);
+//
+//
+//	pagingVO.setCurrentPage(currentPage);
+//	int totalRecord = empAuditionService.auditionUserCount(pagingVO);
+//	pagingVO.setTotalRecord(totalRecord);
+//
+//
+//	int fixedScreenSize = 10;
+//
+//	int startRow = (currentPage - 1) * fixedScreenSize + 1;
+//	int endRow = currentPage * fixedScreenSize;
+//	pagingVO.setStartRow(startRow); // 계산된 startRow 설정
+//	pagingVO.setEndRow(endRow); // 계산된 endRow 설정
+//
+//
+//	//지원자 리스트 가져오기
+//	List<AuditionUserVO> AuditionUserList = empAuditionService.auditionUserList(pagingVO);
+//
+//
+//	//페이징 객체에 결과 목록을 넣음
+//	pagingVO.setDataList(AuditionUserList);
+//
+//	//log.info("가져온 리스트: {}", AuditionUserList);
+//	model.addAttribute("AuditionUserList", AuditionUserList);
+//	model.addAttribute("pagingVO", pagingVO);
+//	model.addAttribute("searchType", searchType);
+//	model.addAttribute("searchCode", searchCode);
+//	model.addAttribute("searchWord", searchWord);
+//	
+//	model.addAttribute("auditionDropdownList", auditionDropdownList);
+//
+//	return pagingVO;
+//	}
+//	
+	
+//	//1. 전체 오디션
+//	@PostMapping("/getAllAudition")
+//	public List<AuditionVO> getAllAudition(){
+//		List<AuditionVO> auditionDropdownList = empAuditionService.getAuditionList("all");
+//		log.info("getAllAudition->auditionDropdownList : " + auditionDropdownList);
+//		
+//		return auditionDropdownList;
+//	}
+//	
+//	//2. 진행 중인 오디션
+//	@PostMapping("/getIngAudition")
+//	public List<AuditionVO> getIngAudition(){
+//		List<AuditionVO> auditionDropdownList = empAuditionService.getAuditionList("ing");
+//		log.info("getIngAudition->auditionDropdownList : " + auditionDropdownList);
+//		
+//		return auditionDropdownList;
+//	}
+//	
+//	//3. 마감된 오디션
+//	@PostMapping("/getEndAudition")
+//	public List<AuditionVO> getEndAudition(){
+//		List<AuditionVO> auditionDropdownList = empAuditionService.getAuditionList("end");
+//		log.info("getEndAudition->auditionDropdownList : " + auditionDropdownList);
+//		
+//		return auditionDropdownList;
+//	}
+	
+	
+	/*
+	 * public ResponseEntity<List<AuditionUserVO>> getApplicants(@RequestParam int
+	 * audiNo) { List<AuditionUserVO> auditionUserList =
+	 * empAuditionService.auditionUserLists(audiNo);
+	 * log.info("첫 번째 지원자 (appNo: {}), audiTypeCode: {}",
+	 * auditionUserList.get(0).getAppNo(),
+	 * auditionUserList.get(0).getAudiTypeCode()); return new
+	 * ResponseEntity<>(auditionUserList, HttpStatus.OK); }
+	 */
+
+	@GetMapping("/applicant/detail")
+	// 지원자 상세정보
+	public ResponseEntity<AuditionUserVO> getApplicantsDetail(@RequestParam int appNo) {
+		AuditionUserVO auditionUserDetail = empAuditionService.auditionUserDetail(appNo);
+		log.info("지원자 상세 정보: (appNo: {}), audiTypeCode: {}", auditionUserDetail.getAppNo(),
+				auditionUserDetail.getAudiTypeCode());
+		if (auditionUserDetail.getAudition() != null && auditionUserDetail.getAudition().getFileList() != null) {
+	        for (AttachmentFileDetailVO file : auditionUserDetail.getAudition().getFileList()) {
+	            log.info("파일 원본 이름: {}", file.getFileOriginalNm());
+	            log.info("파일 저장 경로: {}", file.getFileSavepath());
+	            // 필요한 파일 처리 로직 수행
+	        }
+	    }
+		return new ResponseEntity<>(auditionUserDetail, HttpStatus.OK);
+	}
+
+	
+	  //합격시 처리  
+	  @Transactional	  
+	  @ResponseBody
+	  @PostMapping("/StauesUpdate")
+	  public ResponseEntity<Map<String, String>>stauesPassed(@RequestBody AuditionUserVO auditionUserVO){
+		  log.info("StauesUpdate -> StauesPassed : {}", auditionUserVO);
+		  Map<String, String>map = new HashMap<>(); AuditionUserVO audiUserVO = empAuditionService.stauesUpdate(auditionUserVO);
+		  log.info("StauesPassed : {}", auditionUserVO);
+		  if(auditionUserVO == null ) {
+			  map.put("Status", "FAILED");
+		  }else {
+			  Map<String, Object> modelData = new HashMap<>();
+			  modelData.put("applicantName", auditionUserVO.getApplicantNm());
+			  modelData.put("isApproved", true);
+			  modelData.put("isApproved2", false);
+			  modelData.put("companyName", "DDTOWN");
+		  
+			  mailService.sendEmailWithThymleafTemplete(auditionUserVO.getApplicantEmail(),"[DDTOWN] 오디션 결과 안내", "audiMailTemplate", modelData);
+			  map.put("Status", "SUCCESS" );
+		  }
+		  return new ResponseEntity<Map<String,String>>(map,HttpStatus.OK);
+	  
+	  }
+	  
+   //불합격시 처리
+	  
+	  @Transactional	  
+	  @ResponseBody
+	  @PostMapping("/StauesUpdate2")
+	  public ResponseEntity<Map<String, String>>stauesFAILED(@RequestBody AuditionUserVO auditionUserVO){
+		  log.info("StauesUpdate -> StauesFailed : {}", auditionUserVO);
+		  Map<String, String>map = new HashMap<>(); AuditionUserVO audiUserVO = empAuditionService.stauesUpdate(auditionUserVO);
+		  log.info("StauesPassed : {}", auditionUserVO);
+		  if(auditionUserVO == null ) {
+			  map.put("Status", "FAILED");
+		  }else {
+			  Map<String, Object> modelData = new HashMap<>();
+			  modelData.put("applicantName", auditionUserVO.getApplicantNm());
+			  modelData.put("isApproved", false);
+			  modelData.put("isApproved2", true);
+			  modelData.put("companyName", "DDTOWN");
+		  
+			  mailService.sendEmailWithThymleafTemplete(auditionUserVO.getApplicantEmail(),"[DDTOWN] 오디션 결과 안내", "audiMailTemplate", modelData);
+			  map.put("Status", "SUCCESS" );
+		  }
+		  return new ResponseEntity<Map<String,String>>(map,HttpStatus.OK);
+	  
+	  }
+	 
+
+}

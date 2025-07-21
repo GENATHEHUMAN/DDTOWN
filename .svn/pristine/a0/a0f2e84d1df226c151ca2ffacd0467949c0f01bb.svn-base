@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.admin.blacklist.IBlacklistMapper">
+
+	<sql id="blacklistSearch">
+		<if test="searchType != null and searchType != '' and searchType != 'all'">
+        	AND BL.BAN_REASON_CODE = #{searchType}
+	    </if>
+	    <if test="searchCode != null and searchCode != '' and searchCode != 'all'">
+        	AND BL.BAN_ACT_YN = #{searchCode}
+	    </if>
+	    <if test="searchWord != null and searchWord != ''">
+	        AND (BL.MEM_USERNAME LIKE '%' || #{searchWord} || '%'
+	        OR (P.PEO_LAST_NM || P.PEO_FIRST_NM) LIKE '%' || #{searchWord} || '%'
+	        )
+	    </if>
+	</sql>
+	
+<!-- 목록페이지 -->
+	<select id="blackList" resultType="kr.or.ddit.vo.blacklist.BlacklistVO">
+		 SELECT A.*
+        FROM (
+            SELECT
+                ROWNUM AS RNUM,
+                B.*
+            FROM (
+                SELECT
+                    BL.BAN_NO,
+                    BL.MEM_USERNAME,
+                    BL.EMP_USERNAME,
+                    BL.BAN_REASON_CODE,
+                    BL.BAN_REASON_DETAIL,
+                    BL.BAN_START_DATE,
+                    BL.BAN_END_DATE,
+                    BL.BAN_REG_DATE,
+                    BL.BAN_ACT_YN,
+                    P.PEO_FIRST_NM,
+                	P.PEO_LAST_NM
+                FROM BLACKLIST BL
+                LEFT JOIN PEOPLE P ON BL.MEM_USERNAME = P.USERNAME
+                WHERE 1=1
+                <include refid="blacklistSearch"/>
+                ORDER BY                	
+                	CASE BL.BAN_ACT_YN
+                		 WHEN 'Y' THEN 1
+                		 WHEN 'N' THEN 2
+                	END,
+                	BL.BAN_NO DESC ) B
+        ) A
+        WHERE A.RNUM BETWEEN #{startRow} AND #{endRow} </select>
+	<!-- 총 목록 수(페이징 관련) -->	
+	<select id="selectBlacklistCount" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+ 		select count(BL.BAN_NO)
+ 		from BLACKLIST BL
+ 		LEFT JOIN PEOPLE P ON BL.MEM_USERNAME = P.USERNAME
+ 		where 1=1
+ 		<include refid="blacklistSearch"/>
+ 	</select>
+<!-- 상세페이지 -->
+	<select id="blackDetail" parameterType="int" resultType="kr.or.ddit.vo.blacklist.BlacklistVO">
+		select BAN_NO
+			 , MEM_USERNAME
+			 , EMP_USERNAME
+			 , BAN_REASON_CODE
+			 , BAN_REASON_DETAIL
+			 , BAN_START_DATE
+			 , BAN_END_DATE
+			 , BAN_REG_DATE
+			 , BAN_ACT_YN
+		from BLACKLIST
+		where BAN_NO = #{banNo}
+	</select>
+	<!-- 블랙 리스트 등록시 회원아이디가 가입이 되어있는 아이디인지 확인 -->
+	<select id="checkMemberId" parameterType="string" resultType="int">
+		select count(*) 
+		  from MEMBER
+		  where MEM_USERNAME = #{memUsername}
+	</select>
+	<!-- 블랙리스트에 등록이 되어있는지 확인 -->
+	<select id="checkIdBlacklist" parameterType="string" resultType="int">
+		SELECT COUNT(*)
+          FROM BLACKLIST
+         WHERE MEM_USERNAME = #{memUsername} AND BAN_ACT_YN = 'Y'
+	</select>
+	<!--블랙 리스트 등록하기 -->
+	<insert id="blackSignup" parameterType="kr.or.ddit.vo.blacklist.BlacklistVO" useGeneratedKeys="true">
+		<selectKey keyProperty="banNo" resultType="int" order="BEFORE">
+			SELECT BLACKLIST_SEQ.NEXTVAL FROM DUAL
+	    </selectKey>
+		insert into BLACKLIST(
+			BAN_NO, MEM_USERNAME, EMP_USERNAME, BAN_REASON_CODE, BAN_REASON_DETAIL, BAN_START_DATE, BAN_END_DATE, BAN_REG_DATE, BAN_ACT_YN
+		)values(
+			#{banNo}, #{memUsername}, #{empUsername}, #{banReasonCode}, #{banReasonDetail}, sysdate, #{banEndDate}, sysdate, 'Y'
+		)
+	</insert>
+	<!-- 블랙리스트 활성화시 접속제한 하기 -->
+	<update id="disablePeopleAccount" parameterType="string">
+		UPDATE PEOPLE
+		SET
+			   PEO_ENABLED = 'N'
+		WHERE
+			   USERNAME = #{memUsername}
+	</update>
+
+	<!-- 수정하기 -->
+	<update id="blackUpdate" parameterType="kr.or.ddit.vo.blacklist.BlacklistVO">
+	 	update BLACKLIST
+	 	   set EMP_USERNAME  = #{empUsername}
+			 , BAN_REASON_CODE = #{banReasonCode}
+			 , BAN_REASON_DETAIL = #{banReasonDetail}
+			 , BAN_END_DATE = #{banEndDate}
+			 , BAN_ACT_YN = 'Y'
+		 where BAN_NO = #{banNo}
+	</update>
+	<!-- 해제하기 -->
+	<update id="blackDelete"  parameterType="kr.or.ddit.vo.blacklist.BlacklistVO">
+		update BLACKLIST
+		   set BAN_ACT_YN = 'N'
+		 where BAN_NO = #{banNo}
+	</update>
+	<!-- 해제하기2 계정 사용으로 변환하기 -->
+	 <update id="blackDelete2" parameterType="String">
+        update PEOPLE
+           set PEO_ENABLED = 'Y'
+         where USERNAME = #{memUsername}
+    </update>
+<!-- 활성환된 블랙리스트 수 -->
+    <select id="blacklistCnt" resultType="int">
+        SELECT COUNT(*)
+        FROM BLACKLIST
+        WHERE BAN_ACT_YN = 'Y' 
+    </select>
+  <!--  사유별 블랙리스트 수  -->
+    <select id="blackReasonCnts" resultType="map">
+    SELECT
+        BAN_REASON_CODE AS reasonCode,
+        COUNT(*) AS count
+    FROM BLACKLIST
+    WHERE BAN_ACT_YN = 'Y'
+    GROUP BY BAN_REASON_CODE
+</select>
+<!-- 블랙리스트 자동 해제 -->
+<update id="uploadBlackScheduler" parameterType="java.time.LocalDate">
+	UPDATE BLACKLIST
+           SET BAN_ACT_YN = 'N'
+         WHERE BAN_ACT_YN = 'Y'
+           AND BAN_END_DATE <![CDATA[ <= ]]> #{today}
+</update>
+ <!-- 블랙리스트 자동해제 회원 조회 -->
+<select id="getAutoReleaseTargetUsernames" resultType="String">
+    SELECT MEM_USERNAME
+    FROM BLACKLIST
+    WHERE BAN_ACT_YN = 'Y'
+      AND BAN_END_DATE <![CDATA[ <= ]]> #{today}
+</select>
+ <!-- 블랙리스트 자동해제 계정활성화  -->  
+<update id="enablePeopleAccountsBatch" parameterType="map">
+    UPDATE PEOPLE
+       SET PEO_ENABLED = 'Y'
+     WHERE USERNAME IN
+     <foreach item="username" index="index" collection="usernames"
+              open="(" separator="," close=")">
+         #{username}
+     </foreach>
+</update>
+
+</mapper>

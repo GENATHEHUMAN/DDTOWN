@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.file.IAttachmentFileMapper">
+ 	
+ 	<insert id="insertFileGroup" parameterType="kr.or.ddit.vo.file.AttachmentFileGroupVO">
+ 		<selectKey keyProperty="fileGroupNo" resultType="int" order="BEFORE">
+ 			SELECT ATTACHMENT_FILE_SEQ.NEXTVAL FROM DUAL
+ 		</selectKey>
+ 		INSERT INTO ATTACHMENT_FILE(
+ 			file_group_no,  file_reg_date, file_type_code, file_type_nm
+ 		) VALUES (
+ 			#{fileGroupNo}, sysdate,
+ 			#{fileTypeCode, jdbcType=VARCHAR}, #{fileTypeNm, jdbcType=VARCHAR}
+ 		)
+ 		
+ 	</insert>
+ 	
+ 	<insert id="insertFileDetail" parameterType="kr.or.ddit.vo.file.AttachmentFileDetailVO">
+        <selectKey keyProperty="attachDetailNo" resultType="int" order="BEFORE">
+            SELECT ATTACH_FILE_DETAIL_SEQ.NEXTVAL FROM DUAL </selectKey>
+        INSERT INTO ATTACHMENT_FILE_DETAIL (
+            attach_detail_no, file_group_no, file_original_nm, file_save_nm,
+            file_savepath, file_ext, file_mime_type, file_fancysize, file_save_date
+            ) VALUES (
+            #{attachDetailNo}, #{fileGroupNo}, #{fileOriginalNm}, #{fileSaveNm},
+            #{fileSavepath}, #{fileExt}, #{fileMimeType}, #{fileFancysize}, SYSDATE
+            )
+    </insert>
+
+    <select id="selectFileDetailsByGroupNo" parameterType="int" resultType="kr.or.ddit.vo.file.AttachmentFileDetailVO">
+        SELECT
+            attach_detail_no, file_group_no, file_original_nm, file_save_nm,
+            file_savepath, file_ext, file_mime_type, file_fancysize, file_save_date
+            FROM ATTACHMENT_FILE_DETAIL
+        WHERE file_group_no = #{value}
+        ORDER BY attach_detail_no ASC
+    </select>
+    
+    <select id="selectFileDetail" parameterType="int" resultType="kr.or.ddit.vo.file.AttachmentFileDetailVO">
+        SELECT
+            attach_detail_no, file_group_no, file_original_nm, file_save_nm,
+            file_savepath, file_ext, file_mime_type, file_fancysize, file_save_date
+        FROM ATTACHMENT_FILE_DETAIL
+        WHERE attach_detail_no = #{value}
+    </select>
+
+    <select id="selectRepresentativeFileByGroupNo" parameterType="int" resultType="kr.or.ddit.vo.file.AttachmentFileDetailVO">
+        SELECT * FROM (
+            SELECT
+                attach_detail_no, file_group_no, file_original_nm, file_save_nm,
+                file_savepath, file_ext, file_mime_type, file_fancysize, file_save_date
+                FROM ATTACHMENT_FILE_DETAIL
+            WHERE file_group_no = #{value}
+            ORDER BY attach_detail_no ASC )
+        WHERE ROWNUM = 1
+    </select>
+
+    <delete id="deleteFileDetail" parameterType="int">
+        DELETE FROM ATTACHMENT_FILE_DETAIL WHERE attach_detail_no = #{value}
+    </delete>
+
+    <delete id="deleteFileDetailsByGroupNo" parameterType="int">
+        DELETE FROM ATTACHMENT_FILE_DETAIL WHERE file_group_no = #{value}
+    </delete>
+
+    <delete id="deleteFileGroup" parameterType="int">
+        DELETE FROM ATTACHMENT_FILE WHERE file_group_no = #{value}
+    </delete>
+        
+    <select id="countFilesInGroup" parameterType="int" resultType="int">
+    	select
+    		count(attach_detail_no)
+    	from
+    		attachment_file_detail
+    	where
+    		file_group_no = #{fileGroupNo}
+    </select>
+    
+    <select id="getFileInfo" parameterType="int" resultType="kr.or.ddit.vo.file.AttachmentFileDetailVO">
+		select
+			ATTACH_DETAIL_NO, FILE_GROUP_NO, FILE_ORIGINAL_NM, FILE_SAVE_NM, FILE_SAVEPATH, FILE_EXT
+		from attachment_file_detail
+		where ATTACH_DETAIL_NO = #{attachDetailNo}
+	</select>
+ 	
+ </mapper>

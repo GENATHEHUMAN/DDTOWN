@@ -1,0 +1,19 @@
+package kr.or.ddit.ddtown.service.kakaopay;
+
+import java.util.Map;
+
+import kr.or.ddit.dto.kakaopay.KakaoPayApproveResponseDTO;
+
+public interface IKakaoPayService {
+	
+	//카카오페이 ready API 호출
+	public Map<String, String> kakaoPayReady(String goodsName, Integer totalAmount, Integer totalQuantity, String username,
+			String valueOf) throws Exception;
+	
+	//가맹점 번호 가져오기
+	public String getCid();
+
+	public KakaoPayApproveResponseDTO kakaoPayApprove(String tid, String partnerOrderId, String partnerUserId, String pgToken)
+			throws Exception;
+
+}

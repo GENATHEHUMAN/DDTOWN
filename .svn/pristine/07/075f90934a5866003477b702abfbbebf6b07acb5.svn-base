@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.member.membership.MembershipMapper">
+
+	<!-- 멤버십 구독 여부 확인 --> 
+ 	<select id="hasValidMembershipSubscription" resultType="boolean">
+ 		select count(*)
+ 		from  membership_subscription ms
+ 		join  membership_description md
+ 		on	  ms.mbsp_no = md.mbsp_no
+ 		where ms.mem_username = #{username}
+ 		and   md.art_group_no = #{artGroupNo}
+ 		and   ms.mbsp_sub_stat_code = 'MSSC001'
+ 		and	  ms.mbsp_sub_end_date > systimestamp
+ 	</select>
+ 
+ </mapper>

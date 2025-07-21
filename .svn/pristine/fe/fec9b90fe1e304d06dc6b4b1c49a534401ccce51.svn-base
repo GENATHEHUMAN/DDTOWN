@@ -1,0 +1,5 @@
+package kr.or.ddit.ddtown.mapper;
+
+public class AttachmentFileDetailMapper {
+
+}

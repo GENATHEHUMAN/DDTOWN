@@ -1,0 +1,42 @@
+package kr.or.ddit.ddtown.controller.admin;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.google.gson.Gson;
+
+import kr.or.ddit.ddtown.service.stat.IStatService;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RestController
+@RequestMapping("/api/admin")
+public class AdminAPIViewController {
+
+	@Autowired
+	private IStatService statService;
+
+	/**
+	 * 일간 주간 월별 신규 가입자 및 가장 많이 구매한 사용자 데이터 가져오기
+	 * @param searchType
+	 * @return
+	 */
+	@GetMapping("/getUserStatData")
+	public ResponseEntity<Object> getUserStatData(@RequestParam String searchType){
+		Gson gson = new Gson();
+
+		List<Map<String, Object>> data = statService.getUserSignupData(searchType);
+		String jsonData = gson.toJson(data);
+		log.info("data : {}", data);
+
+		return new ResponseEntity<Object>(jsonData,HttpStatus.OK);
+	}
+}

@@ -1,0 +1,50 @@
+/* --- 공통 컴포넌트: 취소/환불 상태 뱃지 (Refund Status Badge) --- */
+.refund-status-badge {
+    padding: 3px 8px;
+    border-radius: 10px; /* `admin_items.css`와 동일하게 둥근 모양으로 */
+    font-size: 0.8em;
+    color: white; /* 기본 글자색은 흰색 */
+    display: inline-block;
+    min-width: 70px; /* 취소/환불 상태는 조금 더 길 수 있으니 넉넉하게 */
+    text-align: center;
+}
+
+/* ⭐⭐⭐ 여기에 !important를 추가합니다 ⭐⭐⭐ */
+
+/* 취소/환불 상태 코드별 색상 (cancelStatCode 값 기준) */
+.refund-status-badge.status-CSC001 { /* 'CSC001' : 취소 요청 접수 */
+    background-color: #dc3545 !important; /* 주황색 (요청 접수) */
+}
+
+.refund-status-badge.status-CSC002 { /* 'CSC002' : 취소 처리중 */
+    background-color: #2196F3 !important; /* 파란색 (처리중) */
+}
+
+.refund-status-badge.status-CSC003 { /* 'CSC003' : 취소 완료 */
+    background-color: #28a745 !important; /* 초록색 (완료) */
+}
+
+/* ⭐ (선택 사항) 취소 유형 뱃지 스타일 (cancelType 코드 값 기준) ⭐ */
+/* 만약 취소 유형에도 뱃지를 적용한다면 아래 클래스를 추가하세요. */
+.refund-type-badge {
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 0.8em;
+    color: white;
+    display: inline-block;
+    min-width: 60px;
+    text-align: center;
+}
+
+/* 취소 유형 코드별 색상 (cancelType 값 기준) */
+.refund-type-badge.type-CT001 { /* 예: "전체 취소" */
+    background-color: #6fb7ff!important; /* Green */
+}
+
+.refund-type-badge.type-CT002 { /* 예: "부분 취소" */
+    background-color: #ff6868!important; /* Red */
+}
+
+.refund-type-badge.type-CT003 { /* 예: "배송 지연" */
+    background-color: #6770d6!important; /* Purple */
+}

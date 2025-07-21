@@ -1,0 +1,102 @@
+package kr.or.ddit.ddtown.controller.community;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.service.community.ICommunityLSNService;
+import kr.or.ddit.ddtown.service.community.ICommunityMainPageService;
+import kr.or.ddit.ddtown.service.community.notice.ICommunityNoticeService;
+import kr.or.ddit.ddtown.service.emp.schedule.IScheduleService;
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+import kr.or.ddit.vo.community.CommunityNoticeVO;
+import kr.or.ddit.vo.concert.ConcertNoticeVO;
+import kr.or.ddit.vo.schedule.ScheduleVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/community")
+public class CommunityLSNController {
+
+	@Autowired
+	private ICommunityNoticeService noticeService;
+	
+	@Autowired
+	private ICommunityLSNService lSNService;
+	
+	@Autowired
+	private ICommunityMainPageService communityMainService;
+	
+	@GetMapping("/schedule/{artGroupNo}")
+	public String scheduleComuMain(@PathVariable int artGroupNo, Model model) {
+		
+		log.info("커뮤니티에서 스케줄을 요청함...");
+		
+		ArtistGroupVO artistGroupVO = communityMainService.getCommunityInfo(artGroupNo);
+		
+		model.addAttribute("artistGroupVO", artistGroupVO);
+		
+		return "community/apt/main";
+	}
+	
+	@GetMapping("/fullcalendar/event/{artGroupNo}")
+	public ResponseEntity<List<ScheduleVO>> scheduleList(@PathVariable int artGroupNo){
+		
+		log.info("커뮤니티에서 스케줄을 요청함...");
+		
+		List<ScheduleVO> list = lSNService.scheduleList(artGroupNo);
+		
+		log.info("요청한 list : " + list);
+		
+		return new ResponseEntity<List<ScheduleVO>>(list,HttpStatus.OK);
+	}
+	
+	@GetMapping("/notice/{artGroupNo}")
+	public String noticeCall(
+			@ModelAttribute("pagingVO") PaginationInfoVO<CommunityNoticeVO> pagingVO,
+			@PathVariable int artGroupNo, Model model){
+		
+		pagingVO.setArtGroupNo(artGroupNo);
+		
+		if(pagingVO.getCurrentPage() == 0) {
+			pagingVO.setCurrentPage(1);
+		}
+		
+		try {
+			
+			int totalRecord = noticeService.selectNoticeCount(pagingVO);
+			pagingVO.setTotalRecord(totalRecord);
+			
+			List<CommunityNoticeVO> noticeList = noticeService.clientPointOfViewCommunityNoticeList(pagingVO);
+			
+			pagingVO.setDataList(noticeList);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		log.info("공지사항 목록요청함 : " + pagingVO.getDataList());
+		ArtistGroupVO artistGroupVO = communityMainService.getCommunityInfo(artGroupNo);
+		
+		model.addAttribute("artistGroupVO", artistGroupVO);
+		
+		return "community/apt/main";
+	}
+}

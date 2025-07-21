@@ -1,0 +1,23 @@
+package kr.or.ddit.ddtown.mapper.community;
+
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface CommunityProfileMapper {
+
+	// 아티스트 회원 아이디 조회
+	String getMemUsernameByComuProfile(int comuProfileNo);
+
+	// 프로필 번호 이용해 아티스트 그룹 번호 조회
+	Integer selectArtistGroupNoByComuProfileNo(Integer comuProfileNo);
+
+	// 사용자 커뮤니티 프로필 번호 조회
+	Integer selectComuprofileNoByMember(String memUsername, Integer artGroupNo);
+
+	// 로그인한 유저의 커뮤니티 이름
+	String getComuNicknmByUsername(String currentUser);
+	
+	// 프로필 이미지 URL 가져오기
+	String selectProfileImgPathByUsername(String msgUsername);
+
+}

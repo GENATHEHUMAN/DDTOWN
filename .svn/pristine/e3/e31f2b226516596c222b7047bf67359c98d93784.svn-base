@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.chat.dm.ChatMessageMapper">
+
+	<!-- 채팅방 메세지 저장 -->
+	<insert id="insertMessage" parameterType="kr.or.ddit.vo.chat.dm.ChatMessageVO">
+		<selectKey keyProperty="chatNo" resultType="int" order="BEFORE">
+			SELECT CHAT_MESSAGE_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO CHAT_MESSAGE (
+			CHAT_NO
+		    , CHAT_CHANNEL_NO
+		    , USERNAME
+		    , ATTACH_DETAIL_NO
+		    , CHAT_MSG_TYPE_CODE
+		    , CHAT_CONTENT
+		    , CHAT_SEND_DATE
+		    , COMU_PROFILE_NO
+		) VALUES (
+			#{chatNo}
+			, #{chatChannelNo}
+			, #{username}
+			, #{attachDetailNo}
+			, #{chatMsgTypeCode}
+			, #{chatContent}
+			, #{chatSendDate}
+			, #{comuProfileNo}
+		)
+	</insert>
+	
+	<!-- 채팅방 과거 메세지 조회 -->
+	<select id="selectChatMessageByChannelNo" resultType="kr.or.ddit.vo.chat.dm.ChatMessageVO">
+		SELECT
+			cm.CHAT_NO
+			, cm.CHAT_CHANNEL_NO
+			, cm.USERNAME
+		    , cp.COMU_NICKNM as comuNicknm
+		    , cp.COMU_PROFILE_IMG as userProfileImgPath
+		    , cm.ATTACH_DETAIL_NO
+		    , cm.CHAT_MSG_TYPE_CODE
+		    , cm.CHAT_CONTENT
+		    , cm.CHAT_SEND_DATE
+		    , cm.COMU_PROFILE_NO
+		    , afd.FILE_SAVEPATH || '/' || afd.FILE_SAVE_NM as fileUrl
+		FROM
+			CHAT_MESSAGE cm
+		JOIN
+			COMMUNITY_PROFILE cp ON cm.USERNAME = cp.MEM_USERNAME
+		LEFT OUTER JOIN
+			ATTACHMENT_FILE_DETAIL afd ON cm.ATTACH_DETAIL_NO = afd.ATTACH_DETAIL_NO
+		WHERE
+			cm.CHAT_CHANNEL_NO = #{chatChannelNo}
+		AND
+			cm.COMU_PROFILE_NO = cp.COMU_PROFILE_NO
+		ORDER BY
+			cm.CHAT_SEND_DATE DESC, CHAT_NO DESC
+		OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+	</select>
+	
+	<!--  파일 첨부 상세 추가 -->
+	<insert id="insertAttachFileDetail" parameterType="kr.or.ddit.vo.file.AttachmentFileDetailVO">
+		<selectKey keyProperty="attachDetailNo" resultType="int" order="BEFORE">
+			SELECT ATTACHMENT_FILE_DETAIL_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO ATTACHMENT_FILE_DETAIL (
+			ATTACH_DETAIL_NO
+		    , FILE_GROUP_NO
+		    , FILE_ORIGINAL_NM
+		    , FILE_SAVE_NM
+		    , FILE_SAVEPATH
+		    , FILE_EXT
+		    , FILE_MIME_TYPE
+		    , FILE_FANCYSIZE
+		    , FILE_SAVE_DATE
+		) VALUES (
+			   #{attachDetailNo}
+	         , #{attachDetailNo}
+	         , #{fileOriginalNm}
+	         , #{fileSaveNm}
+	         , #{fileSavepath}
+	         , #{fileExt}
+	         , #{fileMimeType}
+	         , #{fileFancysize}
+	         , SYSDATE
+		)
+	</insert>
+	
+	<!--  읽지 않은 메세지 조회 -->
+	<select id="selectUnreadMessageCount" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			CHAT_MESSAGE cm
+		WHERE
+			cm.CHAT_CHANNEL_NO = #{chatChannelNo}
+		AND
+			cm.CHAT_NO > (
+				SELECT
+					NVL(p.LAST_READ_CHAT_NO, 0)
+				FROM
+					PARTICIPANTS p
+				WHERE
+					p.CHAT_CHANNEL_NO = #{chatChannelNo}
+				AND
+					p.MEM_USERNAME = #{username}
+			)
+		AND
+			cm.USERNAME != #{username}
+	</select>
+	
+	<!--  마지막 메세지 번호 조회 -->
+	<select id="selectLastMessageNo" parameterType="int" resultType="int">
+		SELECT
+			NVL(MAX(CHAT_NO), 0)
+		FROM
+			CHAT_MESSAGE
+		WHERE
+			CHAT_CHANNEL_NO = #{chatChannelNo}
+	</select>
+	
+	<!-- 가장 최근 메세지 1개 조회 -->
+	<select id="selectLastChatMessage" parameterType="int" resultType="kr.or.ddit.vo.chat.dm.ChatMessageVO">
+		SELECT
+			cm.CHAT_CONTENT
+			, cm.CHAT_SEND_DATE
+			, cm.USERNAME
+			, cm.CHAT_MSG_TYPE_CODE
+			, cp.COMU_NICKNM
+		FROM
+			CHAT_MESSAGE cm
+		LEFT OUTER JOIN
+			COMMUNITY_PROFILE cp ON cm.COMU_PROFILE_NO = cp.COMU_PROFILE_NO
+		WHERE
+			cm.CHAT_CHANNEL_NO = #{chatChannelNo}
+		ORDER BY
+			cm.CHAT_NO DESC
+		FETCH FIRST 1 ROW ONLY
+	</select>
+	
+	<!-- 더보기 : 페이지네이션 조회 -->
+	<select id="selectChatMessagesByChannelPaged" resultType="kr.or.ddit.vo.chat.dm.ChatMessageVO">
+		SELECT
+			cm.CHAT_NO
+			, cm.CHAT_CHANNEL_NO
+			, cm.USERNAME
+			, cm.ATTACH_DETAIL_NO
+			, cm.CHAT_MSG_TYPE_CODE
+			, cm.CHAT_CONTENT
+			, cm.CHAT_SEND_DATE
+			, cm.COMU_PROFILE_NO
+			, cp.COMU_NICKNM AS comuNicknm
+			, cp.COMU_PROFILE_IMG AS userProfileImgPath
+		FROM
+			CHAT_MESSAGE cm
+		LEFT JOIN
+			COMMUNITY_PROFILE cp ON cm.COMU_PROFILE_NO = cp.COMU_PROFILE_NO
+		WHERE
+			cm.CHAT_CHANNEL_NO = #{chatChannelNo}
+		AND
+			cm.COMU_PROFILE_NO = cp.COMU_PROFILE_NO
+		ORDER BY
+			CHAT_SEND_DATE DESC, CHAT_NO DESC
+		OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+	</select>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

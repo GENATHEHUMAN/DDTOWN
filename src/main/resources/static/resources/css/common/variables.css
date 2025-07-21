@@ -1,0 +1,79 @@
+:root {
+    /* 색상 팔레트 */
+    --primary-color: #6A0DAD;
+    --primary-color-dark: #4A0A7A;
+    --primary-color-light: #8B3FD9;
+    
+    --secondary-color: #2C3E50;
+    --secondary-color-dark: #1A252F;
+    --secondary-color-light: #34495E;
+    
+    --accent-color: #E74C3C;
+    --accent-color-dark: #C0392B;
+    --accent-color-light: #F1948A;
+    
+    /* 텍스트 색상 */
+    --text-color-primary: #2C3E50;
+    --text-color-secondary: #7F8C8D;
+    --text-color-light: #ECF0F1;
+    
+    /* 배경 색상 */
+    --background-color: #FFFFFF;
+    --background-color-dark: #2C3E50;
+    --background-color-light: #F8F9FA;
+    
+    /* 테두리 색상 */
+    --border-color: #E0E0E0;
+    --border-color-dark: #BDBDBD;
+    --border-color-light: #F5F5F5;
+    
+    /* 폰트 */
+    --font-family-base: 'Noto Sans KR', sans-serif;
+    --font-family-headings: 'Montserrat', sans-serif;
+    
+    /* 폰트 크기 */
+    --font-size-base: 1rem;
+    --font-size-small: 0.875rem;
+    --font-size-large: 1.25rem;
+    --font-size-xlarge: 1.5rem;
+    --font-size-xxlarge: 2rem;
+    
+    /* 폰트 두께 */
+    --font-weight-light: 300;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 700;
+    --font-weight-black: 900;
+    
+    /* 간격 */
+    --spacing-unit: 8px;
+    --spacing-xs: calc(var(--spacing-unit) * 0.5);
+    --spacing-sm: var(--spacing-unit);
+    --spacing-md: calc(var(--spacing-unit) * 2);
+    --spacing-lg: calc(var(--spacing-unit) * 3);
+    --spacing-xl: calc(var(--spacing-unit) * 4);
+    
+    /* 테두리 반경 */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 16px;
+    
+    /* 그림자 */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    
+    /* 컨테이너 최대 너비 */
+    --container-max-width: 1200px;
+    
+    /* 반응형 브레이크포인트 */
+    --breakpoint-sm: 576px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 992px;
+    --breakpoint-xl: 1200px;
+    
+    /* 트랜지션 */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+} 

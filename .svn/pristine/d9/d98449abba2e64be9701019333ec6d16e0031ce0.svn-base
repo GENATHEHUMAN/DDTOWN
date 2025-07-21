@@ -1,0 +1,12 @@
+package kr.or.ddit.ddtown.mapper;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import kr.or.ddit.vo.AttachmentFileVO;
+
+@Mapper
+public interface AttachmentFileMapper {
+
+	public int insertFileGroup(AttachmentFileVO groupVO);
+
+}

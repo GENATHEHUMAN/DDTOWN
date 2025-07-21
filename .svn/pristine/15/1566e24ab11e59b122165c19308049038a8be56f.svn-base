@@ -1,0 +1,29 @@
+package kr.or.ddit.vo.member.membership;
+
+import java.util.Date;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class MembershipSubscriptionsVO {
+	
+	private Date mbspSubModDate;		// 구독/갱신 일시
+	private String mbspSid;				// 정기결제 고유 번호
+	private String mbspCid;				// 가맹점 번호
+	private int mbspSubNo;				// 구독 번호
+	private int mbspNo;					// 멤버십 번호
+	private String memUsername;			// 회원 아이디
+	private int orderDetNo;				// 주문 상세 번호
+	private String mbspSubStatCode;		// 구독 상태 코드
+	private Date mbspSubStartDate;	// 멤버십 시작 일시
+	private Date mbspSubEndDate;		// 멤버십 종료 일시
+	
+	private String mbspNm;				// 멤버십명
+
+}

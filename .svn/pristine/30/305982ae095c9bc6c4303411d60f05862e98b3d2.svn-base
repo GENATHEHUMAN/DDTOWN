@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.goods.IGoodsMapper">
+ 
+ 	<select id="goodsList" resultType="kr.or.ddit.vo.goods.goodsVO">
+		select
+			goods_no,
+			art_group_no,
+			goods_stat_code,
+			file_group_no,
+			goods_nm,
+			goods_price,
+			goods_content,
+			goods_reg_date,
+			goods_mod_date,
+			goods_code,
+			goods_multi_opt_yn
+		from goods
+		order by goods_no desc
+ 	</select>
+ 
+ </mapper>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.goods.IGoodsSearchMapper">
+	
+	<select id="selectGoodsCount" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+		SELECT COUNT(G.goods_no)
+		FROM GOODS G
+		<include refid="goodsSearch" />
+	</select>
+
+	<select id="selectGoodsList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="kr.or.ddit.vo.goods.goodsVO">
+		SELECT
+			b.*
+		FROM (
+			SELECT
+				a.*, ROWNUM as rnum
+			FROM (
+				SELECT
+					G.goods_no, G.goods_nm, G.goods_price, G.goods_reg_date, G.goods_mod_date,
+					G.goods_stat_code, G.file_group_no, G.goods_code,
+
+					AG.art_group_nm AS artGroupName,
+					CDC.comm_code_det_no AS statusEngKey,
+					CDC.description AS statusKorName,
+
+					(SELECT COALESCE(SUM(GS.stock_remain_qty), 0) FROM GOODS_STOCK GS WHERE GS.goods_no = G.goods_no) AS stockRemainQty,
+					(SELECT '/upload/' || AFD.file_savepath || '/' || AFD.file_save_nm FROM ATTACHMENT_FILE_DETAIL AFD WHERE AFD.file_group_no = G.file_group_no AND ROWNUM = 1) AS representativeImageUrl
+				FROM
+					GOODS G
+				LEFT JOIN
+					ARTIST_GROUP AG ON G.art_group_no = AG.art_group_no
+				LEFT JOIN
+					COMMON_DETAIL_CODE CDC ON G.goods_stat_code = CDC.comm_code_det_no AND CDC.comm_code_grp_no = 'GOODS_STAT_CODE'
+				
+				<include refid="goodsSearch" />
+				
+				ORDER BY
+				<choose>
+					<when test="searchType == 'mod_desc'"> G.goods_mod_date DESC </when>
+					<when test="searchType == 'price_asc'"> G.goods_price ASC </when>
+					<when test="searchType == 'price_desc'"> G.goods_price DESC </when>
+					<when test="searchType == 'stock_desc'"> stockRemainQty DESC </when>
+					<when test="searchType == 'stock_asc'"> stockRemainQty ASC </when>
+					<otherwise> G.goods_reg_date DESC </otherwise>
+				</choose>
+			) a
+		) b
+		<![CDATA[
+		WHERE rnum >= #{startRow} AND rnum <= #{endRow}
+		]]>
+	</select>
+	
+	<sql id="goodsSearch">
+		<if test="searchWord != null and !searchWord.equals('')">
+			WHERE (G.goods_nm LIKE '%' || #{searchWord} || '%' OR G.goods_code LIKE '%' || #{searchWord} || '%')
+		</if>
+	</sql>
+	
+	<select id="selectUserGoodsList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="kr.or.ddit.vo.goods.goodsVO">
+	    SELECT
+	        b.*
+	    FROM (
+	        SELECT
+	            a.*, ROWNUM as rnum
+	        FROM (
+	            SELECT
+	                G.goods_no, G.goods_nm, G.goods_price, G.goods_reg_date, G.goods_mod_date,
+	                G.goods_stat_code, G.file_group_no, G.goods_code,
+	                G.ART_GROUP_NO, AG.art_group_nm AS artGroupName,
+	                CDC.comm_code_det_no AS statusEngKey,
+	                CDC.description AS statusKorName,
+	
+	                (SELECT COALESCE(SUM(GS.stock_remain_qty), 0) FROM GOODS_STOCK GS WHERE GS.goods_no = G.goods_no) AS stockRemainQty,
+	                (SELECT '/upload/' || AFD.file_savepath || '/' || AFD.file_save_nm FROM ATTACHMENT_FILE_DETAIL AFD WHERE AFD.file_group_no = G.file_group_no AND ROWNUM = 1) AS representativeImageUrl
+	            FROM
+	                GOODS G
+	            LEFT JOIN
+	                ARTIST_GROUP AG ON G.art_group_no = AG.art_group_no
+	            LEFT JOIN
+	                COMMON_DETAIL_CODE CDC ON G.goods_stat_code = CDC.comm_code_det_no AND CDC.comm_code_grp_no = 'GOODS_STAT_CODE'
+	
+	            <where> 
+	                <if test="artGroupNo != null and artGroupNo != 0">
+	                    G.ART_GROUP_NO = #{artGroupNo}
+	                </if>
+	                <if test="searchWord != null and searchWord != '' and searchType == 'goodsNm'">
+	                    G.GOODS_NM LIKE '%' || #{searchWord} || '%'
+	                </if>
+	            </where>
+	
+	            ORDER BY
+	            <choose>
+	                <when test="searchType == 'popularity'">
+	                    G.GOODS_REG_DATE DESC </when>
+	                <when test="searchType == 'priceLowHigh'">
+	                    G.GOODS_PRICE ASC
+	                </when>
+	                <when test="searchType == 'priceHighLow'">
+	                    G.GOODS_PRICE DESC
+	                </when>
+	                <otherwise> G.GOODS_REG_DATE DESC
+	                </otherwise>
+	            </choose>
+	        ) a
+	    ) b
+	    <![CDATA[
+	    WHERE rnum >= #{startRow} AND rnum <= #{endRow}
+	    ]]>
+	</select>
+	
+	<select id="selectUserGoodsListCount" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+		SELECT COUNT(G.goods_no)
+		FROM GOODS G
+		<where> 
+			<if test="artGroupNo != null and artGroupNo != 0">
+				G.ART_GROUP_NO = #{artGroupNo}
+			</if>
+			<if test="searchWord != null and searchWord != '' and searchType == 'goodsNm'">
+				G.GOODS_NM LIKE '%' || #{searchWord} || '%'
+			</if>
+		</where>
+	</select>
+</mapper>

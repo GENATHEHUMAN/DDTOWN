@@ -1,0 +1,23 @@
+package kr.or.ddit.ddtown.controller.admin.goods;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/admin/goods/cancelRefund")
+public class AdminGoodsCancelRefundController {
+
+	@GetMapping("/list")
+	public String goodsCancelRefundList() {
+		return "admin/goods/cancelRefund/cancel_refund_list";
+	}
+	
+	@GetMapping("/detail")
+	public String goodsgoodsCancelRefundDetail() {
+		return "admin/goods/cancelRefund/cancel_refund_detail";
+	}
+}

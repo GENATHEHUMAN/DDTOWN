@@ -1,0 +1,35 @@
+package kr.or.ddit.ddtown.mapper.goods;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import kr.or.ddit.vo.goods.GoodsCartVO;
+
+@Mapper
+public interface IGoodsCartMapper {
+	
+	//카트에 회원마다 다르게 담아올 리스트!~
+	public List<GoodsCartVO> selectCartItemsUsername(String userId);
+	
+	//카트에 있는 상품 중복인지 확인하려고 가져오기!
+	public GoodsCartVO selectCartItem(GoodsCartVO cart);
+	
+	//카트에 상품 담아서 정보 넘기기~~!!
+	public void insertCartItem(GoodsCartVO cart);
+	
+	//카트에 담긴 상품 재고 업뎃하기!!
+	public void updateCartItemQuantity(GoodsCartVO existingCartItem);
+	
+	//카트에 담긴 상품 삭제하기!
+	public int deleteCartItem(int cartNo);
+	
+	//카트에 선택된 상품 일괄 삭제하기!
+	public int deleteSelectedCartItems(List<Integer> cartNoList);
+	
+	//장바구니에 담긴 상품 수량 변경하기!!
+	public int updateCartQuantity(GoodsCartVO cart);
+
+	public int deleteCartByUsername(String username);
+	
+}

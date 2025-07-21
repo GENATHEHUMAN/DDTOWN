@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.admin.group.IAdminArtistGroupMapper">
+
+ 	<sql id="searchGroup">
+ 		<if test="searchWord != null and searchType == 'group'">
+ 			and art_group_nm like '%' || #{searchWord} || '%'
+ 		</if>
+ 	</sql>
+
+ 	<resultMap type="kr.or.ddit.vo.artist.ArtistGroupVO" id="artistGroupMap">
+		<id property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artGroupTypeCode" column="ART_GROUP_TYPE_CODE"/>
+		<result property="empUsername" column="EMP_USERNAME"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artGroupContent" column="ART_GROUP_CONTENT"/>
+		<result property="artGroupProfileImg" column="ART_GROUP_PROFILE_IMG"/>
+		<result property="artGroupDebutdate" column="ART_GROUP_DEBUTDATE"/>
+		<result property="artGroupDelYn" column="ART_GROUP_DEL_YN"/>
+	 	<result property="artGroupRegDate" column="ART_GROUP_REG_DATE"/>
+		<result property="artGroupModDate" column="ART_GROUP_MOD_DATE"/>
+		<result property="empName" column="empName"/>
+
+		<collection property="artistList" resultMap="artistMap" />
+ 	</resultMap>
+
+ 	<resultMap type="kr.or.ddit.vo.artist.ArtistVO" id="artistMap">
+ 		<id property="artNo" column="ART_NO"/>
+ 		<result property="artNo" column="ART_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="memUsername" column="MEM_USERNAME"/>
+		<result property="artNm" column="ART_NM"/>
+		<result property="artContent" column="ART_CONTENT"/>
+		<result property="artRegDate" column="ART_REG_DATE"/>
+		<result property="artModDate" column="ART_MOD_DATE"/>
+		<result property="artProfileImg" column="ART_PROFILE_IMG"/>
+		<result property="empUsername" column="EMP_USERNAME"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artGroupDebutdate" column="ART_GROUP_DEBUTDATE"/>
+		<result property="empName" column="empName"/>
+		<result property="artDebutdate" column="ART_DEBUTDATE"/>
+ 	</resultMap>
+
+ 	<resultMap type="kr.or.ddit.vo.artist.AlbumVO" id="albumMap">
+ 		<id property="albumNo" column="ALBUM_NO"/>
+ 		<result property="albumNo" column="ALBUM_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="albumImg" column="ALBUM_IMG"/>
+		<result property="albumNm" column="ALBUM_NM"/>
+		<result property="albumDetail" column="ALBUM_DETAIL"/>
+		<result property="albumRegDate" column="ALBUM_REG_DATE"/>
+
+		<collection property="albumSongs" resultMap="albumSongMap"/>
+ 	</resultMap>
+
+ 	<resultMap type="kr.or.ddit.vo.artist.AlbumSongVO" id="albumSongMap">
+ 		<id property="songNo" column="SONG_NO"/>
+ 		<result property="songNo" column="SONG_NO"/>
+		<result property="albumNo" column="ALBUM_NO"/>
+		<result property="songNm" column="SONG_NM"/>
+		<result property="songTitleYn" column="SONG_TITLE_YN"/>
+ 	</resultMap>
+
+ 	<select id="getGroupList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultMap="artistGroupMap">
+ 		select b.*
+		from (select a.*, row_number() over(order by a.art_group_no) as rnum
+		  from
+		        (SELECT
+				  emp_username
+				  , art_group_no
+				  , art_group_nm
+				  , art_group_content
+				  , art_group_type_code
+				  , art_group_profile_img
+				  , art_group_reg_date
+				  , art_group_mod_date
+				  , art_group_debutdate
+				  , art_group_del_yn
+				  , (select peo_last_nm || peo_first_nm from people where username = emp_username) as empName
+				FROM
+				    artist_group
+				WHERE 1=1
+				<include refid="searchGroup" />
+				ORDER BY art_group_no
+				) a
+			)b
+		<![CDATA[
+			where b.rnum >= #{startRow} and b.rnum <= #{endRow}
+		]]>
+    </select>
+
+ 	<select id="getTotalRecord" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+ 		select count(*)
+ 		from artist_group
+ 		where 1=1
+ 		and art_group_del_yn = 'N'
+ 		<include refid="searchGroup" />
+ 	</select>
+
+	<select id="getGroupDetailWithArtist" parameterType="int" resultMap="artistGroupMap">
+		SELECT
+		    ag.art_group_no
+		  , ag.art_group_type_code
+		  , ag.emp_username
+		  , ag.art_group_debutdate
+		  , ag.art_group_nm
+		  , ag.art_group_content
+		  , ag.art_group_reg_date
+		  , ag.art_group_del_yn
+		  , ag.art_group_profile_img
+		  , ag.art_group_mod_date
+		  , art.art_no
+		  , agm.art_group_no
+		  , art.mem_username
+		  , art.art_nm
+		  , art.art_content
+		  , art.art_reg_date
+		  , art.art_mod_date
+		  , art.art_profile_img
+		  , art.art_debutdate
+		  , art.art_del_yn
+		  , (select peo_last_nm || peo_first_nm from people where username = ag.emp_username) as empName
+		FROM
+		    artist_group ag
+		 left outer join artist_group_map agm on (ag.art_group_no = agm.art_group_no)
+		 left outer join artist art on (agm.art_no = art.art_no)
+		where ag.art_group_no = #{artGroupNo}
+	</select>
+
+	<select id="getAlbumList" parameterType="int" resultMap="albumMap" >
+		SELECT
+		    a.album_no
+		  , a.art_group_no
+		  , a.album_img
+		  , a.album_nm
+		  , a.album_detail
+		  , a.album_reg_date
+		  , b.song_no
+		  , b.album_no
+		  , b.song_nm
+		  , b.song_title_yn
+		FROM
+		  	artist_album a
+		    left join album_song b on(a.album_no = b.album_no)
+		WHERE
+		    a.art_group_no = #{artGroupNo}
+	</select>
+
+	<select id="getAlbumListAll" resultType="kr.or.ddit.vo.artist.AlbumVO">
+		SELECT
+	    	album_no
+		  , art_group_no
+		  , album_img
+		  , album_nm
+		  , album_detail
+		  , album_reg_date
+		FROM
+		    artist_album
+		where
+			art_group_no is null
+	</select>
+
+	<update id="deleteAlbumGroup" parameterType="int">
+		update
+			album
+		set
+			art_group_no = null
+		where
+			album_no = #{albumNo}
+	</update>
+
+	<select id="checkAlbumGroupNo" parameterType="kr.or.ddit.vo.artist.AlbumVO" resultType="int">
+		select
+			count(*)
+		from
+			artist_album
+		where
+			album_no = #{albumNo}
+		and art_group_no = #{artGroupNo}
+	</select>
+
+	<update id="insertArtistGroupNo" parameterType="kr.or.ddit.vo.artist.AlbumVO">
+		update artist_album
+		set
+			art_group_no = #{artGroupNo}
+		where
+			album_no = #{albumNo}
+	</update>
+
+	<update id="updateGroup" parameterType="kr.or.ddit.vo.artist.ArtistGroupVO">
+		update artist_group
+		set
+			  art_group_type_code = #{artGroupTypeCode}
+			, emp_username = #{empUsername}
+			, art_group_debutdate = #{artGroupDebutdate}
+			, art_group_nm = #{artGroupNm}
+			, art_group_content = #{artGroupContent}
+			, art_group_profile_img = #{artGroupProfileImg}
+			, art_group_mod_date = sysdate
+		where
+			art_group_no = #{artGroupNo}
+	</update>
+
+	<insert id="registArtistGroup" parameterType="kr.or.ddit.vo.artist.ArtistGroupVO" useGeneratedKeys="true">
+		<selectKey keyProperty="artGroupNo" order="BEFORE" resultType="int">
+				select artist_group_seq.nextval from dual
+		</selectKey>
+		INSERT INTO artist_group (
+		    art_group_no
+		    , art_group_type_code
+		    , emp_username
+		    , art_group_debutdate
+		    , art_group_nm
+		    , art_group_content
+		    , art_group_reg_date
+		    , art_group_del_yn
+		    , art_group_profile_img
+		    , art_group_mod_date
+		) VALUES (
+		    #{artGroupNo}
+		  , #{artGroupTypeCode}
+		  , #{empUsername}
+		  , #{artGroupDebutdate}
+		  , #{artGroupNm}
+		  , #{artGroupContent}
+		  , sysdate
+		  , 'N'
+		  , #{artGroupProfileImg}
+		  , sysdate
+		)
+	</insert>
+
+	<insert id="registArtistGroupMap" parameterType="kr.or.ddit.vo.artist.ArtistGroupMapVO">
+		INSERT INTO artist_group_map (
+		    art_group_no
+		    , art_no
+		    , art_group_map_debutdate
+		    , art_del_yn
+		) VALUES (
+		    #{artGroupNo}
+		  , #{artNo}
+		  , to_char(sysdate,'YYYY/MM/DD')
+		  , 'N'
+		)
+	</insert>
+
+	<update id="deleteArtistGroup" parameterType="int">
+		UPDATE artist_group
+		SET
+		      art_group_del_yn = 'Y'
+		    , art_group_mod_date = sysdate
+		WHERE
+		        art_group_no = #{artGroupNo}
+	</update>
+
+	<update id="deleteArtistGroupMap" parameterType="int">
+		UPDATE artist_group_map
+		SET
+		    art_del_yn = 'Y'
+		WHERE
+		        art_group_no = #{artGroupNo}
+	</update>
+ </mapper>

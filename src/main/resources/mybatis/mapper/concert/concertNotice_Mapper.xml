@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.concert.notice.IConcertNoticeMapper">
+
+    <select id="selectNoticeCount" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+        SELECT COUNT(*)
+        FROM CONCERT_NOTICE cn <where>
+            <if test="searchWord != null and searchWord != ''">
+                <choose>
+                    <when test="searchType == 'title'"> AND cn.concert_noti_title LIKE '%' || #{searchWord} || '%'
+                    </when>
+                    <when test="searchType == 'content'"> AND cn.concert_noti_content LIKE '%' || #{searchWord} || '%'
+                    </when>
+                    <otherwise> AND (
+                            cn.concert_noti_title LIKE '%' || #{searchWord} || '%'
+                            OR cn.concert_noti_content LIKE '%' || #{searchWord} || '%'
+                        )
+                    </otherwise>
+                </choose>
+            </if>
+        </where>
+    </select>
+
+    <select id="selectNoticeList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="kr.or.ddit.vo.concert.ConcertNoticeVO">
+        SELECT b.*
+        FROM (
+            SELECT a.*, ROWNUM AS rnum
+            FROM (
+                SELECT
+                    cn.concert_noti_no, cn.emp_username, cn.file_group_no,
+                    cn.concert_noti_title, cn.concert_noti_content,
+                    cn.concert_reg_date, cn.concert_mod_date
+                    FROM CONCERT_NOTICE cn
+                <where>
+                    <if test="searchWord != null and searchWord != ''">
+                        <choose>
+                            <when test="searchType == 'title'">
+                                AND cn.concert_noti_title LIKE '%' || #{searchWord} || '%'
+                            </when>
+                            <when test="searchType == 'content'">
+                                AND cn.concert_noti_content LIKE '%' || #{searchWord} || '%'
+                            </when>
+                            <otherwise>
+                                AND (
+                                    cn.concert_noti_title LIKE '%' || #{searchWord} || '%'
+                                    OR cn.concert_noti_content LIKE '%' || #{searchWord} || '%'
+                                )
+                            </otherwise>
+                        </choose>
+                    </if>
+                </where>
+                ORDER BY cn.concert_noti_no DESC ) a
+        ) b
+        <![CDATA[
+        WHERE rnum >= #{startRow} AND rnum <= #{endRow}
+        ]]>
+    </select>
+
+    <insert id="insertNotice" parameterType="kr.or.ddit.vo.concert.ConcertNoticeVO">
+        <selectKey keyProperty="concertNotiNo" resultType="int" order="BEFORE">
+            SELECT CONCERT_NOTICE_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO CONCERT_NOTICE(
+            concert_noti_no, emp_username, file_group_no,
+            concert_noti_title, concert_noti_content, concert_reg_date, concert_mod_date
+        ) VALUES (
+            #{concertNotiNo},
+            #{empUsername, jdbcType=VARCHAR},
+            #{fileGroupNo, jdbcType=NUMERIC}, #{concertNotiTitle, jdbcType=VARCHAR},
+            #{concertNotiContent, jdbcType=CLOB}, SYSDATE, SYSDATE
+        )
+    </insert>
+
+    <select id="selectNotice" parameterType="int" resultType="kr.or.ddit.vo.concert.ConcertNoticeVO">
+        SELECT
+            cn.concert_noti_no, cn.emp_username, cn.file_group_no,
+            cn.concert_noti_title, cn.concert_noti_content,
+            cn.concert_reg_date, cn.concert_mod_date
+            FROM CONCERT_NOTICE cn
+        WHERE cn.concert_noti_no = #{concertNotiNo}
+    </select>
+
+    <update id="updateNotice" parameterType="kr.or.ddit.vo.concert.ConcertNoticeVO">
+        UPDATE CONCERT_NOTICE
+        SET
+            emp_username = #{empUsername, jdbcType=VARCHAR},
+            file_group_no = #{fileGroupNo, jdbcType=NUMERIC},
+            concert_noti_title = #{concertNotiTitle, jdbcType=VARCHAR},
+            concert_noti_content = #{concertNotiContent, jdbcType=CLOB},
+            concert_mod_date = SYSDATE WHERE concert_noti_no = #{concertNotiNo}
+    </update>
+
+    <delete id="deleteNotice" parameterType="int">
+        DELETE FROM CONCERT_NOTICE
+        WHERE concert_noti_no = #{concertNotiNo}
+    </delete>
+</mapper>

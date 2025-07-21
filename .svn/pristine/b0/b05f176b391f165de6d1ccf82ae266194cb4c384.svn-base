@@ -1,0 +1,28 @@
+package kr.or.ddit.ddtown.controller.corporate.audition;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
+import kr.or.ddit.ddtown.service.file.IFileService;
+
+//@Controller
+/*public class ImageUploadController {
+
+	@Autowired
+    private IFileService fileService; 
+	
+	@ResponseBody
+	@PostMapping("/api/ckeditor/imageUpload")
+	public ResponseEntity<?> uploadImage(@RequestParam("upload") MultipartFile file){
+		Map<String, Object> responseData = new HashMap<>();
+		
+	}
+}*/

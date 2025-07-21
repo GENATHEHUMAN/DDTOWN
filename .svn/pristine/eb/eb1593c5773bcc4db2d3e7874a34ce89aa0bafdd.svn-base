@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.chat.dm.ChatMessageMapper">
+
+	<insert id="insertMessage">
+		insert into chat_message (
+			chat_no
+		    , chat_channel_no
+		    , username
+		    , attach_detail_no
+		    , chat_msg_type_code
+		    , chat_content
+		    , chat_send_date		
+		) values (
+			CHAT_MESSAGE_SEQ.nextval
+			, #{chatChannelNo}
+			, #{username}
+			, null
+			, #{chatMsgTypeCode}
+			, #{chatContent}
+			, #{chatSendDate}
+		)
+	</insert>
+	
+	<!-- 채팅방 과거 메세지 조회 -->
+	<select id="selectChatMessageByChannelNo" resultType="kr.or.ddit.vo.chat.dm.ChatMessageVO">
+		select
+			cm.chat_no
+			, cm.chat_channel_no
+			, cm.username
+		    , cp.comu_nicknm
+		    , cm.attach_detail_no
+		    , cm.chat_msg_type_code
+		    , cm_chat_content
+		    , cm.chat_send_date
+		from 
+			chat_message cm
+		join
+			comu_profile cp
+		on 
+			cm.username = cp.mem_username
+		where 
+			cm.chat_channel_no = #{chatChannelNo}
+		order by 
+			cm.chat_send_date desc
+		fetch first #{limit} rows only
+	</select>
+	
+	<insert id="insertAttachFileDetail" parameterType="kr.or.ddit.vo.file.AttachmentFileDetailVO">
+		<selectKey keyProperty="attachDetailNo" resultType="int" order="BEFORE">
+			select attachment_file_detail_seq.nextval from dual
+		</selectKey>
+		insert into attachment_file_detail (
+			attach_detail_no
+		    , file_group_no
+		    , file_original_nm
+		    , file_save_nm
+		    , file_savepath
+		    , file_ext
+		    , file_mime_type
+		    , file_fancysize
+		    , file_save_date
+		) values (
+			   #{attachDetailNo}
+	         , 5
+	         , #{fileOriginalNm}
+	         , #{fileSaveNm}
+	         , #{fileSavepath}
+	         , #{fileExt}
+	         , #{fileMimeType}
+	         , #{fileFancysize}
+	         , sysdate
+		)
+	</insert>
+	
+</mapper>

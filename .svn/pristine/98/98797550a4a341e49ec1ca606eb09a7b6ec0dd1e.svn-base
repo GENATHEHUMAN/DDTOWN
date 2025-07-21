@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.stat.IStatMapper">
+
+	<sql id="userSignupData">
+		<if test="searchType == 'daily'">
+			select
+			    to_char(sevenday.dt,'YYYY/MM/DD') as tdate
+			    , nvl(a.count,0) as count
+			from
+			    (
+			        select
+			            trunc(sysdate) - level + 1 as dt
+			        from
+			            dual
+			        connect by
+			        <![CDATA[
+			            level <= 7
+			        ]]>
+			    ) sevenday
+			left join
+			        (
+			            select
+			                trunc(m.mem_reg_date) as sortdate
+			                ,count(m.mem_username) as count
+			            from
+			                people p
+			            inner join
+			                member m on (p.username = m.mem_username)
+			            where
+			                p.user_type_code != 'UTC002'
+			            group by
+			                trunc(m.mem_reg_date)
+			    ) a on (sevenday.dt = a.sortdate)
+			order by sevenday.dt
+		</if>
+		<if test="searchType == 'weekly'">
+			select
+			    to_char(four_week.dt,'YYYY/MM/DD') as tdate,
+			    nvl(a.count,0) as count
+			from
+			    (
+			        select
+			            trunc(sysdate,'IW') - (level-1) * 7 as dt
+			        from
+			            dual
+			        connect by
+			        <![CDATA[
+			            level <= 7
+			        ]]>
+			    ) four_week
+			left join
+			    (
+			    select
+			         trunc(m.mem_reg_date,'IW') as sortdate
+			         , count(m.mem_username) as count
+			    from
+			        people p
+			    inner join
+			        member m on (p.username = m.mem_username)
+			    where
+			        p.user_type_code != 'UTC002'
+			    group by trunc(mem_reg_date,'IW')
+			    )a on(four_week.dt = a.sortdate)
+			order by tdate
+		</if>
+		<if test="searchType=='monthly'">
+			select
+			    to_char(allMonth.dt,'YYYY"년"MM"월"') as tdate,
+			    nvl(a.count,0) as count
+			from
+			    (
+			        select
+			            trunc(add_months(sysdate,- (level-1)),'MM') as dt
+			        from
+			            dual
+			        connect by
+			        <![CDATA[
+			            level <= 7
+			        ]]>
+			    ) allMonth
+			left join
+			    (
+			    select
+			         trunc(m.mem_reg_date,'MM') as sortdate
+			         , count(m.mem_username) as count
+			    from
+			        people p
+			    inner join
+			        member m on (p.username = m.mem_username)
+			    where
+			        p.user_type_code != 'UTC002'
+			    group by trunc(mem_reg_date,'MM')
+			    )a on(allMonth.dt = a.sortdate)
+			order by tdate
+		</if>
+	</sql>
+
+ 	<select id="getUserSignupData" parameterType="string" resultType="map">
+		<include refid="userSignupData"/>
+ 	</select>
+ </mapper>

@@ -1,0 +1,435 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec"%> 
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%-- Assuming product object is set in request scope --%>
+	<title>DDTOWN 굿즈샵 - ${not empty goods.goodsNm ? goods.goodsNm : "상품 상세"}</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+ 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/goods.css">
+ 	 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+ 	
+</head>
+<body class="product-detail-page-body">
+    <header class="site-header">
+        <div class="logo">
+            <a href="../2.main/artist_community_main.html">DDTOWN SQUARE</a>
+        </div>
+        <nav class="utility-nav">
+            <ul id="loggedOutNav">
+                <li><a href="../login.html" class="auth-link">로그인</a></li>
+                <li><a href="../signup.html" class="signup-link">회원가입</a></li>
+            </ul>
+            <ul id="loggedInNav" style="display: none">
+                <li><a href="#" class="icon-btn" title="알림">🔔</a></li>
+                <li><a href="../mypage.html" class="icon-btn" title="마이페이지">👤</a></li>
+                <li><a href="#" class="icon-btn" title="고객센터">👩‍💻</a></li>
+                <li><a href="#" id="logoutBtn" class="auth-link">로그아웃</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <nav class="main-navigation">
+        <ul>
+            <li><a href="goods_shop.html">굿즈샵</a></li>
+            <li>
+                <a href="#">선호도 조사</a>
+                <ul class="submenu">
+                    <li><a href="#">인기 투표</a></li>
+                </ul>
+            </li>
+            <li><a href="#">콘서트</a></li>
+        </ul>
+    </nav>
+
+    <div class="detail-container">
+        <c:if test="${not empty goods}">
+            <div class="product-main-info-wrapper">
+				<section class="product-image-gallery">
+				    <%-- goods 객체가 유효한지 먼저 확인 --%>
+				    <c:if test="${not empty goods}">
+				        <div class="product-main-image-detail">
+				            <%-- 메인 이미지: goodsVO의 representativeImageUrl 필드를 사용 --%>
+				            <img src="${not empty goods.representativeImageUrl ? goods.representativeImageUrl : 'https://via.placeholder.com/550x550/E6E6FA/000000?text=Album+Main'}" 
+				                 alt="상품 메인 이미지" id="mainProductImageDetail">
+				        </div>
+				        <div class="product-thumbnail-images-detail">
+				            <%-- 썸네일 이미지: goodsVO의 attachmentFileList를 순회하며 AttachmentFileDetailVO의 webPath 사용 --%>
+				            <%-- attachmentFileList가 비어있지 않은 경우에만 반복 --%>
+				            <c:if test="${not empty goods.attachmentFileList}">
+				                <c:forEach var="file" items="${goods.attachmentFileList}" varStatus="loop">
+				                    <%-- 대표 이미지와 썸네일 이미지가 중복되지 않도록 필요하다면 조건을 추가할 수 있습니다.
+				                         예: <c:if test="${file.fileNo ne goods.representativeImageFile.fileNo}"> --%>
+				                    <img src="${file.webPath}" 
+				                         alt="썸네일 ${loop.count}" 
+				                         class="${loop.first ? 'active' : ''}" <%-- 첫 번째 이미지만 'active' 클래스 부여 --%>
+				                         onclick="changeDetailMainImage('${file.webPath}', '550x550', this)">
+				                </c:forEach>
+				            </c:if>
+				            
+				            <%-- 첨부파일(썸네일 포함)이 아예 없거나, 모든 파일이 필터링되어 썸네일로 표시할 것이 없는 경우의 폴백 이미지 --%>
+				            <%-- 여기서는 goods.attachmentFileList가 비어있을 때만 폴백 처리합니다. --%>
+				            <c:if test="${empty goods.attachmentFileList}">
+				                <img src="https://via.placeholder.com/70x70/E6E6FA/000000?text=Thumb1" alt="썸네일 1" class="active" onclick="changeDetailMainImage(this.src, '550x550', this)">
+				                <img src="https://via.placeholder.com/70x70/D8BFD8/000000?text=Thumb2" alt="썸네일 2" onclick="changeDetailMainImage(this.src, '550x550', this)">
+				            </c:if>
+				        </div>
+				    </c:if>
+				    <%-- goods 객체가 아예 없는 경우 (상품 번호가 잘못되었거나 삭제된 경우 등) --%>
+				    <c:if test="${empty goods}">
+				        <div style="text-align: center; padding: 50px;">
+				            <p>상품 정보를 찾을 수 없습니다.</p>
+				            <img src="https://via.placeholder.com/550x550/E6E6FA/000000?text=Product+Not+Found" alt="상품 찾을 수 없음" style="max-width: 100%;">
+				        </div>
+				    </c:if>
+				</section>
+
+                <section class="product-purchase-info">
+                        <%-- 컨트롤러에서 "goods"라는 이름으로 넘겨준 객체를 사용합니다. --%>
+					    <div class="artist-tag">${goods.artGroupNo}</div>
+					    <h1 class="product-name-detail">${not empty goods.goodsNm ? goods.goodsNm : "상품명 없음"}</h1>
+					    <p class="product-short-description">${not empty goods.goodsContent ? goods.goodsContent : "상품 설명이 없습니다."}</p>
+
+                    <div class="product-price-detail-area">
+                        <%-- Initial price set to 0, will be updated by JS if an option is selected --%>
+                        <div class="product-price-detail" id="productPrice">${goods.goodsPrice }<span class="currency">원</span></div>
+                        <div class="shipping-info-summary">배송비 3,000원 (50,000원 이상 구매 시 무료)</div>
+                    </div>
+				
+					
+					<div class="product-options-detail">
+					    <div class="option-group">
+					        <label for="productOption">옵션 선택</label>
+					        <select id="productOption" name="productOption">
+					            <option value="">옵션을 선택해주세요</option>
+					            <c:forEach var="option" items="${optionList}">
+					                <option value="${option.goodsOptNo}" data-price="${option.goodsOptPrice}" data-name="<c:out value='${option.goodsOptNm}'/>">
+					                    <c:out value="${option.goodsOptNm}"/> - <fmt:formatNumber value="${option.goodsOptPrice}" type="number" groupingUsed="true" />원
+					                </option>
+					            </c:forEach>
+					        </select>
+					    </div>
+	
+						<div id="selectedOptionArea" style="margin-top: 10px; margin-bottom: 15px;">
+						    	
+						</div>
+					</div>
+				
+					<div class="total-price-summary">
+					    <span class="total-label">총 상품금액:</span>
+					    <span class="total-amount" id="totalProductPriceDetail">
+					        <c:choose>
+					            <c:when test="${not empty optionList}">0</c:when>
+					            <c:otherwise><fmt:formatNumber value="${goods.goodsPrice}" type="number" groupingUsed="true" /></c:otherwise>
+					        </c:choose>
+					         원
+					    </span>
+					</div>
+
+                    <div class="product-actions-detail">
+						<button class="wish-button" data-goods-no="${goods.goodsNo}">
+						    <i class="far fa-heart"></i> 찜하기
+						</button>
+						<form id="addToCartForm" action="/goods/cart" method="post">
+							<button type="button" class="btn-action-detail cart" id="addToCartBtnDetail">장바구니</button>
+							<input type="hidden" name="goodsNo" value="${goods.goodsNo}">
+							<sec:csrfInput/>
+						</form>
+                        <button class="btn-action-detail order" id="orderNowBtnDetail">주문하기</button>
+                    </div>
+                </section>
+            </div>
+
+            <div class="product-info-tabs-container">
+                <nav class="product-info-tabs">
+                    <a href="#" class="tab-link active" data-tab-target="productDescription">상품 상세</a>
+                    <a href="#" class="tab-link" data-tab-target="shippingGuide">배송/교환/환불 안내</a>
+                </nav>
+					<div id="productDescription" class="tab-pane active">
+					    <h4>상품 정보</h4>
+					    <p>${not empty goods.goodsContent ? goods.goodsContent : "상세 상품 정보가 없습니다."}</p>
+					
+					    <%-- 상품 상세 이미지 출력 --%>
+					    <c:set var="hasDetailImages" value="false"/>
+					    <c:forEach var="file" items="${goods.attachmentFileList}">
+					        <c:if test="${file.webPath ne goods.representativeImageUrl}">
+					            <img src="${file.webPath}" alt="상품 상세 이미지 - ${file.fileOriginalNm}" style="max-width: 100%; height: auto; display: block; margin: 10px 0;">
+					            <c:set var="hasDetailImages" value="true"/>
+					        </c:if>
+					    </c:forEach>
+
+					    <c:if test="${empty goods.attachmentFileList or not hasDetailImages}">
+					         <img src="https://via.placeholder.com/700x400/f0f0f0/333?text=상품+상세+이미지+없음" alt="상품 상세 이미지 없음" style="max-width: 100%; height: auto; display: block; margin: 10px 0;">
+					    </c:if>
+					</div>
+                    <div id="shippingGuide" class="tab-pane">
+                        <h4>배송/교환/환불 안내</h4>
+                        <p><strong>배송 안내</strong><br> - 기본 배송비는 3,000원이며, 50,000원 이상 구매 시 무료배송입니다.<br> - 주문일로부터 평균 2~5 영업일 이내 발송됩니다. (예약 상품 제외)</p>
+                        <p><strong>교환/환불 안내</strong><br> - 상품 수령 후 7일 이내에 신청 가능합니다.<br> - 단순 변심의 경우 왕복 배송비가 부과됩니다.<br> - 상품 불량 및 오배송의 경우 배송비는 판매자 부담입니다.</p>
+                    </div>
+                </div>
+            </div>
+        </c:if>
+        <c:if test="${empty goodsList}">
+            <p style="text-align: center; padding: 50px;">상품 정보를 불러올 수 없습니다.</p>
+        </c:if>
+    </div>
+
+    <nav class="floating-nav">
+        <a href="goods_cart.html" class="floating-btn" title="장바구니">
+            🛒
+            <span class="item-count-badge" id="cartItemCount" style="display: none;">0</span>
+        </a>
+        <a href="goods_wishlist.html" class="floating-btn" title="찜목록">
+            ❤️
+            <span class="item-count-badge" id="wishlistItemCount" style="display: none;">0</span>
+        </a>
+    </nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    console.log("스크립트 실행 시작");
+
+    // --- 1. CSRF 및 로그인 상태 설정 ---
+    let csrfTokenValue;
+    let csrfHeaderName;
+    const csrfInput = document.querySelector("input[name='_csrf']");
+    if (csrfInput) {
+        csrfTokenValue = csrfInput.value;
+        csrfHeaderName = "X-CSRF-TOKEN";
+        console.log("CSRF 토큰 로드 성공");
+    } else {
+        console.error("CSRF 토큰 input을 찾을 수 없습니다.");
+    }
+    
+    const isLoggedIn = ${isLoggedIn ? 'true' : 'false'};
+    console.log("로그인 상태:", isLoggedIn);
+    
+    // --- 2. 네비게이션 및 로그아웃 버튼 설정 ---
+    const loggedOutNav = document.getElementById('loggedOutNav');
+    const loggedInNav = document.getElementById('loggedInNav');
+    if (isLoggedIn) {
+        if(loggedOutNav) loggedOutNav.style.display = 'none';
+        if(loggedInNav) loggedInNav.style.display = 'flex';
+    } else {
+        if(loggedOutNav) loggedOutNav.style.display = 'flex';
+        if(loggedInNav) loggedInNav.style.display = 'none';
+    }
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(event) {
+            event.preventDefault(); 
+            // 'logoutForm'은 body 태그가 닫히기 직전에 있어야 합니다.
+            const logoutForm = document.getElementById('logoutForm');
+            if(logoutForm) logoutForm.submit();
+        });
+    }
+
+ // --- 3. 찜하기 기능 (최종 디버깅 버전) ---
+    const wishlistButtonEl = document.querySelector('.product-actions-detail .wish-button');
+    if (wishlistButtonEl) {
+        // 버튼의 모양(UI)을 상태에 따라 바꿔주는 함수
+        const updateWishButtonUI = (isWished) => {
+            if (isWished) {
+                wishlistButtonEl.innerHTML = '<i class="fas fa-heart"></i> 찜 완료';
+                wishlistButtonEl.classList.add('wished');
+            } else {
+                wishlistButtonEl.innerHTML = '<i class="far fa-heart"></i> 찜하기';
+                wishlistButtonEl.classList.remove('wished');
+            }
+        };
+
+        // 페이지가 로딩되면, 가장 먼저 현재 찜 상태를 서버에 물어보는 함수
+        const checkInitialStatus = () => {
+            if (!isLoggedIn) {
+                updateWishButtonUI(false);
+                return;
+            }
+            
+            // ★★★ fetch를 보내는 바로 이 순간에 HTML 속성을 직접 다시 읽어옵니다. ★★★
+            const currentGoodsNo = wishlistButtonEl.getAttribute('data-goods-no');
+            console.log("fetch 직전, getAttribute로 직접 읽은 goodsNo: " + currentGoodsNo); // 새로운 디버깅 로그
+
+            if (!currentGoodsNo) {
+                 console.error("getAttribute로도 goodsNo를 읽을 수 없습니다!");
+                 return; // 여기서 멈춤
+            }
+
+            fetch(`${pageContext.request.contextPath}/goods/wishlist/status?goodsNo=\${currentGoodsNo}`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`서버 응답 오류 (${response.status})`);
+                    return response.json();
+                })
+                .then(data => {
+                    updateWishButtonUI(data.isWished);
+                })
+                .catch(error => {
+                    console.error('초기 찜 상태 확인 중 에러:', error);
+                    updateWishButtonUI(false);
+                });
+        };
+
+        // 찜 버튼 클릭 이벤트 설정
+        wishlistButtonEl.addEventListener('click', function() {
+            if (!isLoggedIn) {
+                alert('로그인이 필요한 기능입니다.');
+                window.location.href = '${pageContext.request.contextPath}/login';
+                return;
+            }
+            
+            // ★★★ 클릭하는 순간에도 속성을 직접 다시 읽어옵니다. ★★★
+            const currentGoodsNo = this.getAttribute('data-goods-no');
+            if (!currentGoodsNo) {
+                 console.error("클릭 시점, getAttribute로도 goodsNo를 읽을 수 없습니다!");
+                 return;
+            }
+
+            fetch('${pageContext.request.contextPath}/goods/wishlist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', [csrfHeaderName]: csrfTokenValue },
+                body: JSON.stringify({ goodsNo: parseInt(currentGoodsNo) })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.message) alert(data.message);
+                if (data.status === 'success') {
+                    updateWishButtonUI(data.action === 'added');
+                }
+            })
+            .catch(error => console.error('찜 처리 에러:', error));
+        });
+
+        // 스크립트가 준비되면, 최초 상태 확인 함수를 바로 실행!
+        checkInitialStatus();
+    }
+    
+    // --- 4. 상품 옵션 기능 ---
+    const productOptionSelect = document.getElementById('productOption');
+    const selectedOptionArea = document.getElementById('selectedOptionArea');
+    const totalProductPriceDetailSpan = document.getElementById('totalProductPriceDetail');
+
+    function updateTotalPrice() {
+        let currentTotal = 0;
+        const selectedItems = selectedOptionArea.querySelectorAll('.selected-option-item');
+        selectedItems.forEach(item => {
+            const price = parseFloat(item.dataset.optionPrice);
+            const quantity = parseInt(item.querySelector('.quantity').value);
+            currentTotal += price * quantity;
+        });
+        totalProductPriceDetailSpan.textContent = currentTotal.toLocaleString('ko-KR');
+    }
+
+    if(productOptionSelect) { // 옵션 select가 있을 때만 이벤트 리스너 등록
+        productOptionSelect.addEventListener('change', function () {
+            let list = document.getElementsByClassName("selected-option-item");
+            const selectedOption = this.options[this.selectedIndex];
+            const optionValue = selectedOption.value; 
+            const optionName = selectedOption.dataset.name;
+            
+            for(let i=0; i<list.length; i++){
+                if(optionName && optionName.trim() == list[i].dataset.optionName.trim()){
+                    alert("이미 선택하신 상품입니다.");
+                    this.value = '';
+                    return false;
+                }
+            }
+
+            if (!optionValue || !optionName) return;
+            
+            const optionPrice = parseFloat(selectedOption.dataset.price);
+            const optionItemDiv = document.createElement('div');
+            optionItemDiv.classList.add('selected-option-item');
+            optionItemDiv.dataset.optionId = optionValue;    
+            optionItemDiv.dataset.optionName = optionName;
+            optionItemDiv.dataset.optionPrice = optionPrice; 
+
+            optionItemDiv.innerHTML = `
+                <span class="option-name">\${optionName}</span>
+                <span class="option-price-display">(\${optionPrice.toLocaleString('ko-KR')}원)</span>
+                <div>
+                    <label for="quantity-${optionValue}" class="visually-hidden">\${optionName} 수량</label>
+                    <input type="number" id="quantity-${optionValue}" class="quantity" value="1" min="1">
+                </div>
+                <button type="button" class="remove-option-btn" title="옵션 삭제">&times;</button>
+            `;
+            selectedOptionArea.appendChild(optionItemDiv);
+
+            optionItemDiv.querySelector('.quantity').addEventListener('input', updateTotalPrice);
+            optionItemDiv.querySelector('.remove-option-btn').addEventListener('click', function () {
+                this.parentElement.remove();
+                updateTotalPrice();
+            });
+
+            updateTotalPrice();
+            this.value = '';
+        });
+    }
+
+    // --- 5. 장바구니 버튼 클릭 이벤트 ---
+    const addToCartBtn = document.getElementById('addToCartBtnDetail');
+    if(addToCartBtn) { // 장바구니 버튼이 있을 때만 이벤트 리스너 등록
+        addToCartBtn.addEventListener('click', function() {
+            const form = document.getElementById('addToCartForm');
+            const goodsNo = form.querySelector('input[name="goodsNo"]').value;
+            const csrfTokenForCart = form.querySelector('input[name="_csrf"]').value;
+            
+            const cartItems = [];
+            const selectedOptionElements = selectedOptionArea.querySelectorAll('.selected-option-item');
+
+            if (selectedOptionElements.length === 0) {
+                alert("장바구니에 담을 옵션을 선택해주세요.");
+                return;
+            }
+
+            selectedOptionElements.forEach(item => {
+                const goodsOptNo = parseInt(item.dataset.optionId);
+                const cartQty = parseInt(item.querySelector('.quantity').value);
+
+                if (isNaN(goodsOptNo) || goodsOptNo <= 0 || isNaN(cartQty) || cartQty < 1) {
+                    alert("유효하지 않은 상품 옵션 또는 수량이 있습니다. 다시 확인해주세요.");
+                    cartItems.length = 0; 
+                    return; 
+                }
+                cartItems.push({ goodsNo: goodsNo, goodsOptNo: goodsOptNo, cartQty: cartQty });
+            });
+
+            if (cartItems.length === 0) return;
+
+            fetch('/goods/cart/addMultiple', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfTokenForCart },
+                body: JSON.stringify(cartItems)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => { throw new Error(errorData.message || '장바구니 추가 중 오류 발생'); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) { 
+                    alert("상품이 장바구니에 추가되었습니다!");
+                    if(confirm("장바구니로 이동하시겠습니까?")) {
+                       window.location.href = "/goods/cart/list";
+                    }
+                } else {
+                    alert(data.message || "장바구니 추가 실패!");
+                }
+            })
+            .catch(error => {
+                console.error('장바구니 추가 에러:', error);
+                alert("장바구니 추가 중 알 수 없는 오류가 발생했습니다: " + error.message);
+            });
+        });
+    }
+
+    console.log("모든 스크립트 리스너 설정 시도 완료.");
+});
+</script>
+</body>
+</html>

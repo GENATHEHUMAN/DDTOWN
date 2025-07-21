@@ -1,0 +1,42 @@
+package kr.or.ddit.ddtown.service.stat;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.ddtown.mapper.stat.IStatMapper;
+
+@Service
+public class StatServiceImpl implements IStatService {
+
+	@Autowired
+	private IStatMapper statMapper;
+
+	/**
+	 * 일간 주간 월별 가입자 수 가져오기
+	 */
+	@Override
+	public List<Map<String, Object>> getUserSignupData(String searchType) {
+		return statMapper.getUserSignupData(searchType);
+	}
+
+	/**
+	 *	일간 주간 월별 가장 많이 구매한 사람
+	 */
+	@Override
+	public List<Map<String, Object>> getMostBuyUserData(String searchType) {
+		return statMapper.getMostBuyUserData(searchType);
+	}
+
+	/**
+	 * 전체 굿즈샵 멤버쉽 콘서트 별 수익 통계
+	 *
+	 */
+	@Override
+	public List<Map<String, Object>> getRevenueBySector(String searchType) {
+		return statMapper.getRevenueBySector(searchType);
+	}
+
+}

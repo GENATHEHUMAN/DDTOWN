@@ -1,0 +1,38 @@
+package kr.or.ddit.ddtown.controller.emp.edms;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import kr.or.ddit.ddtown.service.emp.edms.IEdmsService;
+import kr.or.ddit.vo.edms.EdmsFormVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/edms")
+public class EDMSFormController {
+
+	@Autowired
+	private IEdmsService edmsService;
+	
+	@GetMapping("/form")
+	public String EDMSFormCreate(Model model) {
+		List<EdmsFormVO> formList = edmsService.getFormList();
+		log.info("formList : {}",formList);
+		model.addAttribute("formList", formList);
+		return "emp/edms/formTemplate";
+	}
+	
+	
+	@PostMapping("/form")
+	public String EDMSForm() {
+		return "redirect:/edms/form";
+	}
+}

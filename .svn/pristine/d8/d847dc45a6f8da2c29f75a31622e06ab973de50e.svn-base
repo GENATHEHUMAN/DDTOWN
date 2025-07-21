@@ -1,0 +1,140 @@
+package kr.or.ddit.ddtown.service.emp.artist;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.ddtown.mapper.emp.artist.ArtistGroupMapper;
+import kr.or.ddit.vo.artist.AlbumVO;
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class ArtistGroupServiceImpl implements IArtistGroupService{
+	
+	@Autowired
+	private ArtistGroupMapper artistGroupMapper;
+	
+	public List<ArtistGroupVO> retrieveArtistGroupList() {
+		log.info("retrieveArtistGroupList() 메소드 실행");
+		
+		List<ArtistGroupVO> groupList = artistGroupMapper.retrieveArtistGroupList();
+		for(ArtistGroupVO group : groupList) {
+			List<AlbumVO> albumList = artistGroupMapper.getGroupAlbum(group.getArtGroupNo());
+			group.setAlbumList(albumList);
+		}
+		
+		if (groupList == null || groupList.isEmpty()) {
+            log.info("조회된 아티스트 그룹 목록이 없습니다.");
+        } else {
+            log.info("조회된 아티스트 그룹 수: {}", groupList.size());
+        }
+
+        return groupList;
+	}
+
+
+	@Override
+	public ArtistGroupVO retrieveArtistGroup(int artGroupNo) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Transactional // 이 메서드 전체를 하나의 트랜잭션으로 묶음. 런타임 예외 발생 시 롤백.
+    @Override
+    public int updateArtistGroupAndMembersAndAlbums(ArtistGroupVO groupToUpdate) {
+        log.info("updateArtistGroupAndMembers 서비스 실행. 대상 그룹: {}", groupToUpdate.getArtGroupNo());
+
+        // 1. 기본 그룹 정보 업데이트
+        int groupUpdateCount = artistGroupMapper.updateArtistGroup(groupToUpdate);
+        if (groupUpdateCount == 0) {
+            log.warn("그룹 기본 정보 업데이트 실패 또는 변경된 내용 없음: 그룹번호 {}", groupToUpdate.getArtGroupNo());
+            // 0을 반환하여 컨트롤러에서 실패로 처리하도록 합니다.
+            return 0;
+        }
+        log.info("그룹 기본 정보 업데이트 성공: {}개 행 업데이트", groupUpdateCount);
+
+        // 2. 기존 멤버들의 그룹 연결 해제 (artGroupNo를 NULL로 설정)
+        //    이 작업은 해당 그룹에 속해있던 모든 아티스트들의 ART_GROUP_NO를 NULL로 만듭니다.
+        //    특정 아티스트가 다른 그룹으로 바로 이동하는 경우는 고려하지 않고, 일단 모두 해제 후 재배정하는 방식입니다.
+        int membersUnassignedCount = artistGroupMapper.unassignArtistsFromGroup(groupToUpdate.getArtGroupNo());
+        log.info("{}번 그룹의 기존 멤버 {}명 연결 해제 (artGroupNo = NULL 처리)", groupToUpdate.getArtGroupNo(), membersUnassignedCount);
+
+        // 3. 새로운 멤버 리스트 파싱 및 그룹에 배정
+        String memberArtNosStr = groupToUpdate.getMemberArtNos();
+        if (memberArtNosStr != null && !memberArtNosStr.isEmpty()) {
+            List<Integer> newMemberArtNoList = Arrays.stream(memberArtNosStr.split(","))
+                                                   .map(String::trim)
+                                                   .filter(s -> !s.isEmpty())
+                                                   .map(Integer::parseInt)
+                                                   .collect(Collectors.toList());
+
+            if (!newMemberArtNoList.isEmpty()) {
+                // 여러 아티스트의 artGroupNo를 한 번에 업데이트
+                int membersAssignedCount = artistGroupMapper.assignArtistsToGroup(groupToUpdate.getArtGroupNo(), newMemberArtNoList);
+                log.info("{}번 그룹에 새로운 멤버 {}명 배정", groupToUpdate.getArtGroupNo(), membersAssignedCount);
+                if (membersAssignedCount != newMemberArtNoList.size()) {
+                    // 요청된 수만큼 배정되지 않은 경우, 문제가 있을 수 있음 (예: 존재하지 않는 artNo)
+                    // 이 경우 트랜잭션을 롤백하기 위해 예외를 발생시킬 수 있습니다.
+                    log.warn("요청된 새 멤버 수({})와 실제 배정된 멤버 수({})가 일치하지 않음.", newMemberArtNoList.size(), membersAssignedCount);
+                    // throw new RuntimeException("새 멤버 배정 중 오류 발생. 요청된 수와 실제 배정 수가 다릅니다.");
+                    // 또는 0을 반환하여 실패로 처리
+                    return 0; 
+                }
+            } else {
+                log.info("{}번 그룹에 배정할 새 멤버가 없습니다 (입력된 ID 목록이 비어있음).", groupToUpdate.getArtGroupNo());
+            }
+        } else {
+            log.info("{}번 그룹에 배정할 새 멤버가 없습니다 (memberArtNos 문자열이 비어있음).", groupToUpdate.getArtGroupNo());
+        }
+        
+        // 4. 앨범 처리: 기존 앨범들의 그룹 연결 해제 (ARTIST_ALBUM 테이블의 ART_GROUP_NO를 NULL로 설정)
+        int albumsUnassignedCount = artistGroupMapper.unassignAlbumsFromGroup(groupToUpdate.getArtGroupNo());
+        log.info("{}번 그룹의 기존 연결된 앨범 {}개 연결 해제 (ART_GROUP_NO = NULL 처리)", groupToUpdate.getArtGroupNo(), albumsUnassignedCount);
+
+        // 5. 앨범 처리: 새로운 앨범 리스트 파싱 및 그룹에 배정
+        String selectedAlbumNosStr = groupToUpdate.getSelectedAlbumNos(); 
+        List<Integer> newAlbumIdList = Collections.emptyList(); 
+
+        if (selectedAlbumNosStr != null && !selectedAlbumNosStr.trim().isEmpty()) {
+            try {
+                newAlbumIdList = Arrays.stream(selectedAlbumNosStr.split(","))
+                                     .map(String::trim)
+                                     .filter(s -> !s.isEmpty())
+                                     .map(Integer::parseInt)
+                                     .collect(Collectors.toList());
+            } catch (NumberFormatException e) {
+                log.error("{}번 그룹의 앨범 ID 파싱 중 오류 발생: {}", groupToUpdate.getArtGroupNo(), selectedAlbumNosStr, e);
+                throw new IllegalArgumentException("앨범 ID 목록 형식이 잘못되었습니다.", e);
+            }
+        }
+
+        if (!newAlbumIdList.isEmpty()) {
+            // 여러 앨범의 artGroupNo를 한 번에 업데이트
+            int albumsAssignedCount = artistGroupMapper.assignAlbumsToGroup(groupToUpdate.getArtGroupNo(), newAlbumIdList);
+            log.info("{}번 그룹에 새로운 앨범 {}개 배정 (ART_GROUP_NO 업데이트)", groupToUpdate.getArtGroupNo(), albumsAssignedCount);
+            if (albumsAssignedCount != newAlbumIdList.size()) {
+                log.warn("요청된 새 앨범 수({})와 실제 배정된 앨범 수({})가 일치하지 않음. 그룹번호: {}", newAlbumIdList.size(), albumsAssignedCount, groupToUpdate.getArtGroupNo());
+                // throw new RuntimeException("새 앨범 배정 중 오류 발생. 요청된 수와 실제 배정 수가 다릅니다.");
+                return 0; // 실패로 처리
+            }
+        } else {
+            log.info("{}번 그룹에 배정할 새 앨범이 없습니다 (입력된 ID 목록이 비어있거나 파싱 후 비어있음).", groupToUpdate.getArtGroupNo());
+        }
+
+        log.info("그룹 정보, 멤버 정보, 앨범 정보 업데이트 트랜잭션 완료. 그룹번호: {}", groupToUpdate.getArtGroupNo());
+        return 1; // 모든 작업이 성공적으로 완료되었다고 가정
+    }
+
+
+	@Override
+	public List<AlbumVO> getAllAlbums() {
+		return artistGroupMapper.getAllAlbums();
+	}
+}

@@ -1,0 +1,187 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+
+<header class="main-header">
+    <nav class="header-nav">
+        <div class="header-left">
+		    <a href="${pageContext.request.contextPath}/" class="home-link">
+		        <img src="${pageContext.request.contextPath}/resources/img/ddtownlogo.png" alt="DD 로고" class="header-logo">
+		        DDTOWN SQUARE
+		    </a>
+		</div>
+       <div class="header-right">
+            <li><a href="${pageContext.request.contextPath}/notifications" class="icon-btn" title="알림">🔔</a></li>
+            <li><a href="<c:url value='/mypage'/>" class="icon-btn active" title="마이페이지">👤</a></li>
+            <li><a href="${pageContext.request.contextPath}/cart" class="icon-btn" aria-label="장바구니">🛒</a></li>
+            <li><a href="${pageContext.request.contextPath}/customerService" class="icon-btn" title="고객센터">👩‍💻</a></li>
+            <sec:authorize access="isAuthenticated()">
+                <form id="logoutForm" action="<c:url value='/logout'/>" method="post" style="display:inline;">
+                    <sec:csrfInput/>
+                    <button type="button" onclick="document.getElementById('logoutForm').submit(); return false;" class="auth-link">로그아웃</button>
+                </form>
+            </sec:authorize>
+            <sec:authorize access="isAnonymous()">
+                 <a href="${pageContext.request.contextPath}/login" class="auth-link">로그인</a>
+            </sec:authorize>
+        </div>
+    </nav>
+    <nav class="main-navigation">
+        <ul class="menu-list">
+            <li><a href="${pageContext.request.contextPath}/goods" class="menu-item">굿즈샵</a></li>
+            <li>
+                <a href="${pageContext.request.contextPath}/survey" class="menu-item">선호도 조사</a>
+                <ul class="submenu">
+                    <li><a href="${pageContext.request.contextPath}/survey/vote" class="menu-item">인기 투표</a></li>
+                </ul>
+            </li>
+            <li><a href="${pageContext.request.contextPath}/concerts" class="menu-item">콘서트</a></li>
+        </ul>
+    </nav>
+</header>
+
+<style type="text/css">
+/* communityHeader.jsp 전용 스타일 */
+.main-header {
+    background-color: #fff;
+    border-bottom: 1px solid #eee;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    position: sticky; /* 스크롤 시 상단 고정 */
+    top: 0;
+    z-index: 1000;
+}
+
+.header-nav {
+    display: flex;
+    justify-content: space-between; /* 양쪽 끝으로 정렬 */
+    align-items: center;
+    max-width: 100%; /* 최대 너비 설정 */
+    margin: 0 0; /* 중앙 정렬 */
+}
+
+/* .header-logo { ... 이 스타일은 더 이상 사용되지 않을 수 있습니다. } */
+
+.home-link {
+    font-size: 1.6em; /* 텍스트 로고 크기 조정 */
+    font-weight: bold;
+    color: #8a2be2; /* 보라색으로 변경 */
+    text-decoration: none;
+    padding-left: 10px; /* 왼쪽 여백 추가 */
+    display: flex; /* 이미지와 텍스트를 가로로 정렬하기 위해 추가 */
+    align-items: center; /* 이미지와 텍스트를 세로로 가운데 정렬하기 위해 추가 */
+}
+
+/* 텍스트 옆에 오는 로고 이미지 스타일 */
+.header-logo {
+    height: 2.5em; /* 부모 폰트 사이즈에 맞춰 이미지 높이 조절 */
+    vertical-align: middle; /* 텍스트와 세로 가운데 정렬 */
+}
+
+.header-right {
+    display: flex;
+    align-items: center; /* 아이콘과 텍스트 수직 정렬 */
+    gap: 15px; /* 버튼 간격 */
+    list-style: none; /* li 태그의 기본 불릿 제거 */
+    padding: 0;
+    margin: 0;
+    padding-right: 0px;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex; /* 내부 요소 (이모지) 정렬을 위해 flex 사용 */
+    align-items: center;
+    justify-content: center;
+    text-decoration: none; /* 링크 버튼에 밑줄 제거 */
+    color: inherit; /* 기본 글자색 상속 */
+    font-size: 2.0em; /* 아이콘 크기 유지 */
+}
+
+/* 로그인/로그아웃 텍스트 링크 스타일 */
+.auth-link {
+    background: none; /* 버튼 기본 배경 제거 */
+    border: none; /* 버튼 기본 테두리 제거 */
+    cursor: pointer;
+    text-decoration: none;
+    color: #555;
+    font-weight: bold;
+    padding: 5px 10px;
+    transition: color 0.3s ease;
+    font-size: 1.0em; /* 텍스트 크기 조정 */
+    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+}
+
+.auth-link:hover {
+    color: #8a2be2; /* 호버 시 보라색으로 변경 */
+}
+
+/* 메인 내비게이션 (굿즈샵, 선호도 조사, 콘서트) 스타일 */
+.main-navigation {
+    background-color: #f8f8f8;
+    padding: 10px 0;
+    border-top: 1px solid #eee; /* 상단 헤더와 분리 */
+    margin-top: 10px; /* 상단 헤더와의 간격 */
+}
+
+.main-navigation .menu-list {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 30px; /* 메뉴 항목 간 간격 */
+}
+
+.main-navigation .menu-item {
+    text-decoration: none;
+    color: #555;
+    font-weight: bold;
+    padding: 5px 10px;
+    transition: color 0.3s ease;
+    position: relative; /* 서브메뉴 기준점 */
+    display: block; /* 링크 영역 확장 */
+}
+
+.main-navigation .menu-item:hover {
+    color: #8a2be2; /* 호버 시 보라색으로 변경 */
+}
+
+/* 서브메뉴 스타일 */
+.main-navigation .submenu {
+    display: none; /* 기본 숨김 */
+    position: absolute;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    min-width: 120px;
+    z-index: 1001;
+    list-style: none;
+    padding: 10px 0;
+    margin: 0;
+    border-radius: 4px;
+    top: 100%; /* 부모 메뉴 아래 위치 */
+    left: 50%; /* 가운데 정렬 */
+    transform: translateX(-50%);
+}
+
+.main-navigation li:hover > .submenu {
+    display: block; /* 부모 메뉴 호버 시 서브메뉴 표시 */
+}
+
+.main-navigation .submenu li {
+    padding: 0;
+}
+
+.main-navigation .submenu .menu-item {
+    padding: 8px 15px;
+    color: #333;
+    white-space: nowrap; /* 줄바꿈 방지 */
+}
+
+.main-navigation .submenu .menu-item:hover {
+    background-color: #f0f0f0;
+    color: #8a2be2; /* 호버 시 보라색으로 변경 */
+}
+</style>

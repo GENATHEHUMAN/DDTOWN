@@ -1,0 +1,1025 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/emp_common.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/resources/ckeditorInquiry/ckeditor.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/js/adminlte.min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js'></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" >
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"></script>
+<script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+<style type="text/css">
+.calendar-header-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.calendar-header-bar .calendar-title { font-size: 1.5em; font-weight: 700; color: #234aad; }
+.calendar-header-bar .calendar-add-btn { background: #1976d2; color: #fff; border: none; border-radius: 5px; padding: 8px 22px; font-size: 1em; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+.calendar-header-bar .calendar-add-btn:hover { background: #1451a3; }
+.calendar-info-box { background: #e3f0ff; color: #234aad; border-radius: 6px; padding: 12px 18px; margin-bottom: 18px; font-size: 1em; display: flex; align-items: center; gap: 8px; }
+
+
+
+.mb-3 .form-control {
+    resize: none;
+}
+
+.mb-3 .form-control:disabled .form-control-color{
+	background-color : #ffffff;
+}
+
+.popper,
+.tooltip {
+  position: absolute;
+  z-index: 9999;
+  background: #FFC107;
+  color: black;
+  width: 150px;
+  border-radius: 3px;
+  box-shadow: 0 0 2px rgba(0,0,0,0.5);
+  padding: 10px;
+  text-align: center;
+}
+.style5 .tooltip {
+  background: #1E252B;
+  color: #FFFFFF;
+  max-width: 200px;
+  width: auto;
+  font-size: .8rem;
+  padding: .5em 1em;
+}
+.popper .popper__arrow,
+.tooltip .tooltip-arrow {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  position: absolute;
+  margin: 5px;
+}
+
+.tooltip .tooltip-arrow,
+.popper .popper__arrow {
+  border-color: #FFC107;
+}
+.style5 .tooltip .tooltip-arrow {
+  border-color: #1E252B;
+}
+.popper[x-placement^="top"],
+.tooltip[x-placement^="top"] {
+  margin-bottom: 5px;
+}
+.popper[x-placement^="top"] .popper__arrow,
+.tooltip[x-placement^="top"] .tooltip-arrow {
+  border-width: 5px 5px 0 5px;
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  bottom: -5px;
+  left: calc(50% - 5px);
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.popper[x-placement^="bottom"],
+.tooltip[x-placement^="bottom"] {
+  margin-top: 5px;
+}
+.tooltip[x-placement^="bottom"] .tooltip-arrow,
+.popper[x-placement^="bottom"] .popper__arrow {
+  border-width: 0 5px 5px 5px;
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-top-color: transparent;
+  top: -5px;
+  left: calc(50% - 5px);
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.tooltip[x-placement^="right"],
+.popper[x-placement^="right"] {
+  margin-left: 5px;
+}
+.popper[x-placement^="right"] .popper__arrow,
+.tooltip[x-placement^="right"] .tooltip-arrow {
+  border-width: 5px 5px 5px 0;
+  border-left-color: transparent;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  left: -5px;
+  top: calc(50% - 5px);
+  margin-left: 0;
+  margin-right: 0;
+}
+.popper[x-placement^="left"],
+.tooltip[x-placement^="left"] {
+  margin-right: 5px;
+}
+.popper[x-placement^="left"] .popper__arrow,
+.tooltip[x-placement^="left"] .tooltip-arrow {
+  border-width: 5px 0 5px 5px;
+  border-top-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  right: -5px;
+  top: calc(50% - 5px);
+  margin-left: 0;
+  margin-right: 0;
+}
+
+</style>
+</head>
+
+<body>
+<main class="emp-content" style="position:relative; min-height:600px;">
+	<div class="calendar-header-bar">
+        <div class="calendar-title">아티스트 일정 관리</div>
+        <button class="calendar-add-btn" id="addScheduleBtn"><i class="fas fa-calendar-plus"></i> 새 일정 등록</button>
+    </div>
+    <div id="calendar"></div>
+</main>
+
+<!-- 등록 모달 시작 -->
+<div class="modal fade" id="scheduleAddModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="scheduleAddModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="scheduleAddModalLabel">일정등록</h5>
+				<button type="button" class="btn-close" aria-label="Close" id="addCloseBtn"></button>
+			</div>
+			<div class="modal-body">
+	        	<div class="mb-3">
+	        		 <label for="addTitle" class="form-label">일정명</label>
+	        		 <input type="text" class="form-control-plaintext" id="addTitle" name="title">
+	        		 <input type="color" class="form-control-color" id="addTextColor">
+	        		 <input type="hidden" id="artGroupNo" name="artGroupNo"  />
+	        	</div>
+	        	<div class="mb-3">
+					<label for="addContent" class="col-form-label">내용</label>
+					<textarea class="form-control" id="addContent" ></textarea>
+				</div>
+				<div class="mb-3">
+					<label for="addPlace" class="col-form-label">장소</label>
+					<input type="text" name="place" id="addPlace" class="form-control"/>
+				</div>
+				<div class="mb-3">
+					<label for="addDateUrl" class="col-form-label">경로</label><br/>
+					<input type="text" name="url" id="addDateUrl" class="form-control" />
+				</div>
+				<div class="mb-3">
+					<label for="addAllDayStatus" class="col-form-label">하루일정여부</label>
+					<input type="checkbox" id="addAllDayStatus" name="allDayStatus" /> 
+				</div>
+				<div class="mb-3">
+					<label for="date" class="col-form-label">일정</label>
+					<input type="text" name="addDatetimes" id="date" class="form-control"/>
+					<input type="hidden" name="start" id="addStartDate" />
+					<input type="hidden" name="end" id="addEndDate" />
+					<input type="hidden" name="start" id="addAllStartDate" />
+					<input type="hidden" name="end" id="addAllEndDate" />
+				</div>
+				<div class="mb-3" id="addBackgroundColorDiv">
+					<label for="addBackgroundColor" class="form-label">일정 배경색</label>
+					<input type="color" class="form-control form-control-color" id="addBackgroundColor" >
+				</div>
+	        </div>
+	        <div class="modal-footer">
+			  <button type="button" class="btn btn-primary" id="addBtn">추가</button>
+			  <button type="button" class="btn btn-secondary" id="addCancelBtn">취소</button>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- 등록 모달 끝 -->
+
+<!-- 상세, 수정 모달 창 -->
+<div class="modal fade" id="scheduleModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="scheduleModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="scheduleModalLabel">일정상세</h5>
+				<button type="button" class="btn-close" aria-label="Close" id="closeBtn"></button> 
+			</div>
+			<div class="modal-body">
+	        	<div class="mb-3">
+	        		 <label for="일정명" class="form-label">일정명</label>
+	        		 <input type="text" class="form-control-plaintext" id="title" name="title" disabled="disabled">
+	        		 <input type="color" class="form-control-color" id="textColor" style="display:none">
+	        		 <input type="hidden" id="dateId" name="dateId" />
+	        	</div>
+	        	<div class="mb-3">
+					<label for="content" class="col-form-label">내용</label>
+					<textarea class="form-control" id="content" disabled="disabled"></textarea>
+				</div>
+				<div class="mb-3">
+					<label for="place" class="col-form-label">장소</label>
+					<input type="text" name="place" id="place" class="form-control" disabled="disabled"/>
+				</div>
+				<div class="mb-3">
+					<label for="dateUrl" class="col-form-label">경로</label><br/>
+					<a href="" id="datelink"></a>
+					<input type="text" name="url" id="dateUrl" class="form-control" style="display:none"/>
+				</div>
+				<div class="mb-3">
+					<label for="allDayCheck" class="col-form-label">하루일정여부</label>
+					<input type="checkbox"  id="allDayStatus" name="allDayStatus" disabled="disabled"> 
+				</div>
+				<div class="mb-3">
+					<label for="date" class="col-form-label">일정</label>
+					<input type="text" name="datetimes" id="date" class="form-control" disabled="disabled"/>
+					<input type="hidden" name="start" id="startDate" />
+					<input type="hidden" name="end" id="endDate" />
+					<input type="hidden" name="start" id="allStartDate" />
+					<input type="hidden" name="end" id="allEndDate" />
+				</div>
+				<div class="mb-3" style="display:none" id="backgroundColorDiv" name="backgroundColorDiv">
+					<label for="backgroundColor" class="form-label">일정 배경색</label>
+					<input type="color" class="form-control form-control-color" id="backgroundColor" >
+				</div>
+	        </div>
+	        <div class="modal-footer">
+	          <button type="button" class="btn btn-danger" id="delete" style="display:none">삭제</button>
+			  <button type="button" class="btn btn-warning" id="updateBtn">수정</button>
+			  <button type="button" class="btn btn-secondary" id="cancelBtn">닫기</button>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- 수정 상세 모달 창 끝 -->
+
+</body>
+<script type="text/javascript">
+
+function checkBtn(e){
+	
+	
+	let flag = false;
+	let checkYn = $("#addAllDayStatus").is(":checked");
+	
+	if($("#addStartDate").val() == "" && $("#addAllStartDate").val() == ""){
+		$("#addStartDate").val(e.start);
+		$("#addEndDate").val(e.end);
+		
+		$("#addAllStartDate").val(formatDate(e.start,true));
+		$("#addAllEndDate").val(formatDate(e.end,true));
+		
+	}
+	
+	
+	if(checkYn){
+		console.log("체크가 되었을 때 : ", e);
+		$("#addAllDayStatus").val('Y')
+		let newE = {
+			start : $("#addAllStartDate").val(),
+			end : $("#addAllEndDate").val()
+		}
+		
+		datePicker(newE,checkYn, flag)
+	}else{
+		console.log("체크가 안되었을 때 : ",e);
+		$("#addAllDayStatus").val('N')
+		let newE = {
+			start : $("#addStartDate").val(),
+			end : $("#addEndDate").val()
+		}
+		
+		datePicker(newE,checkYn, flag);
+	}
+	
+}
+
+$(function(){
+	fullCalendar();
+	
+	// 새 일정 등록 버튼 클릭 했을 시
+	$("#addScheduleBtn").on("click",function(){
+		let modalId = document.getElementById("scheduleAddModal");	// 등록 모달 아이디
+		let modal = new bootstrap.Modal(modalId);	// 등록 모달 요소
+		
+		modal.show();	// 등록 모달 열기
+	});
+	// 등록 모달 창이 열렸을 시 
+	$("#scheduleAddModal").on("show.bs.modal",function(){
+		
+		// 기존에 있던 내용들 지우기
+		$("#addAllDayStatus").prop('checked',false);
+		$("#addTitle").val("");
+		$("#addTextColor").val("");
+		$("#addContent").val("");
+		$("#addPlace").val("");
+		$("#addDateUrl").val("");
+		$("#addBackgroundColor").val("");
+		$("#addStartDate").val("");
+		$("#addEndDate").val("");
+		$("#addAllStartDate").val("");
+		$("#addAllEndDate").val("");
+		
+		let currentTime = moment()		// 모달창이 열렸을 떄 현재 시간
+		
+		let date = formatDate(currentTime);	// 현재 시간을 일정에 표시하기 위해 날짜 형식을 변경
+		console.log("현재 날짜 : ",date)
+		
+		// datePicker에게 일정을 주기 위한 객체 생성
+		let e = {
+			start : date,
+			end : date
+		}
+		
+		checkBtn(e);
+		
+	});
+	
+	// 등록 모달에 있는 체크박스 클릭 시
+	$("#addAllDayStatus").on("click",function(){
+		checkBtn();
+		
+	});
+	
+	$("#addBtn").on("click",function(){
+		
+		let data = new FormData();
+		data.append("artGroupNo",$("#artGroupNo").val());
+		data.append("title",$("#addTitle").val());
+		data.append("content",$("#addContent").val());
+		data.append("place",$("#addPlace").val());
+		data.append("url",$("#addDateUrl").val());
+		data.append("textColor",$("#addTextColor").val());
+		data.append("backgroundColor",$("#addBackgroundColor").val());
+		data.append("allDayStatus",$("#addAllDayStatus").val());
+		
+		// 등록 버튼 클릭 시 시작 종료 일정을 보내는 것을 선택
+		// 만약 하루 일정이 체크가 되어있다면 상태는 Y
+		// 시작 일정 형식은 2025-05-30T00:00:00
+		// 종료 일정 형식은 2025-05-31T00:00:00
+		// 로 보내줌
+		if($("#addAllDayStatus").is(':checked')){
+			data.append("start",$("#addAllStartDate").val());
+			data.append("end",$("#addAllEndDate").val());
+		}else{
+			// 만약 하루 일정이 체크가 되어있다면 상태는 N
+			// 시작 일정 형식은 2025-05-30T12:20:40
+			// 종료 일정 형식은 2025-05-31T15:10:20
+			// 로 보내줌
+			data.append("start",$("#addStartDate").val());
+			data.append("end",$("#addEndDate").val());
+		}
+		
+		$.ajax({
+			url : "/emp/schedule/insert",
+			type : "post",
+			data : data,
+			processData : false,
+			contentType : false,
+			success : function(res){
+				if(res == "OK"){
+					Swal.fire({
+						title : "등록완료!",
+						text : "정상적으로 등록이 완료되었습니다.",
+						icon : "success",
+						showConfirmButton : true
+					}).then((result) => {
+						location.href = "/emp/schedule/main";
+					});
+				}else{
+					Swal.fire({
+						title : "등록실패",
+						text : "등록이 실패되었습니다. 다시 시도해주세요!",
+						icon : "error",
+						showConfirmButton : true
+					}).then((result) => {
+						location.href = "/emp/schedule/main";
+					});
+				}
+			},
+			error : function(error, status, thrown){
+				console.log(error.status);
+			},
+			beforeSend : function(xhr) {
+		        xhr.setRequestHeader('${_csrf.headerName}', '${_csrf.token}');
+		    }
+		});
+	});
+	
+	$("#scheduleModal").on("show.bs.modal",function(e){
+		
+		let flag = true;	// 상세일정이라는 의미
+		
+		let modalTitle = $("#title");		// 상세 모달 제목
+    	let modalContent = $("#content");	// 상세 모달 내용
+    	let modalPlace = $("#place");		// 상세 모달 장소
+    	let modalUrl = $("#dateUrl");		// 상세 모달 
+    	let modalTextColor = $("#textColor");	// 상세 모달 제목 색상
+    	let modalBackgroundColor = $("#backgroundColor");	// 일정 배경 색
+    	let modalDateId = $("#dateId");		// 일정 번호
+    	let link = $("#datelink");			// url태그
+    	let modalAllDayStatus = $("#allDayStatus");
+    	
+		let target = e.relatedTarget;
+		
+		console.log("상세모달", target);
+		
+		let { title, url, textColor, backgroundColor, id, allDay } = target.event;
+		let { allDayStatus, content, place } = target.event.extendedProps;
+		
+		modalTitle.val(title);
+    	modalContent.html(content);
+    	modalPlace.val(place);
+    	modalUrl.val(url);
+    	modalTextColor.val(textColor);
+    	modalBackgroundColor.val(backgroundColor);
+    	modalDateId.val(id);
+    	modalAllDayStatus.val(allDayStatus)
+    	
+    	link.attr("href",url);
+    	link.html(title+"바로가기");
+    	
+    	if(allDay){
+    		$("#allDayStatus").prop("checked",true);
+    	}else{
+    		$("#allDayStatus").prop("checked",false);
+    	}
+		
+    	detailCheckBtn(target);
+    	
+	});
+	
+	// 상세 모달에 있는 수정 버튼 클릭 시
+	$("#updateBtn").on("click",function(){
+		if($("#updateBtn").html() === '수정'){
+			$("#datelink").attr("style","display:none");
+			
+			$("#textColor").attr("style","display:block");
+			$("#dateUrl").attr("style","display:block");
+			$("div[name='backgroundColorDiv']").attr("style","display:block");
+			
+			$("input").attr("disabled",false);
+			$("#content").attr("disabled",false);
+			
+			$("#delete").attr("style","display:block");
+			
+			$("#updateBtn").html("저장");
+			$("#updateBtn").attr("class","btn btn-primary");
+			
+			$("#cancelBtn").html("취소");
+		}else{
+			let id = $("#dateId").val();
+			
+			console.log("등록중 : ",$("#endDate").val())
+			
+			let data = new FormData();
+			
+			data.append("title",$("#title").val());
+			data.append("content",$("#content").val());
+			data.append("place",$("#place").val());
+			data.append("url",$("#dateUrl").val());
+			data.append("allDayStatus",$("#allDayStatus").val());
+			data.append("textColor",$("#textColor").val());
+			data.append("backgroundColor",$("#backgroundColor").val());
+			
+			if($("#allDayStatus").val() === 'Y'){
+				data.append("start",$("#allStartDate").val());
+				data.append("end",$("#allEndDate").val());
+			}else{
+				data.append("start",$("#startDate").val());
+				data.append("end",$("#endDate").val());
+			}
+			
+			$.ajax({
+				url : "/emp/schedule/dateUpdate/" + id,
+				type : "post",
+				data : data,
+				processData : false,
+				contentType : false,
+				success : function(res){
+					if(res == "OK"){
+						Swal.fire({
+							title : "수정 완료!",
+							text : "정상적으로 수정이 완료되었습니다.",
+							icon : "success",
+							showConfirmButton : true
+						}).then((result) => {
+							location.href = "/emp/schedule/main";
+						});
+					}
+				},
+				error : function(error, status, thrown){
+					console.log(error.status);
+				},
+				beforeSend : function(xhr) {
+			        xhr.setRequestHeader('${_csrf.headerName}', '${_csrf.token}');
+			    }
+			});
+		}
+	
+	});
+	
+	// 상세 모달에 있는 하루 일정 여부 클릭 시
+	$("#allDayStatus").on("click",function(){
+		detailCheckBtn();
+	});
+	
+	// 상세 모달 닫혔을 때 이벤트
+	$("#scheduleModal").on("hidden.bs.modal",function(){
+		$("#datelink").attr("style","display:block");
+		
+		$("#textColor").attr("style","display:none");
+		$("#dateUrl").attr("style","display:none");
+		$("#backgroundColorDiv").attr("style","display:none");
+		
+		$("#delete").attr("style","display:none");
+		
+		$("#title").attr("disabled",true);
+		$("#place").attr("disabled",true);
+		$("#allDayStatus").attr("disabled",true);
+		$("input[name='datetimes']").attr("disabled",true);
+		$("#content").attr("disabled",true);
+		
+		$("#updateBtn").html("수정");
+		$("#updateBtn").attr("class","btn btn-warning");
+		
+		$("#startDate").val("");
+		$("#endDate").val("");
+		$("#allStartDate").val("");
+		$("#allEndDate").val("");
+	});
+	
+	// 취소버튼 클릭 시
+	$("#cancelBtn").on("click", function(){
+		
+		if($("#cancelBtn").html() === '닫기'){
+			console.log("123");
+			$("#scheduleModal").modal('hide');
+		}else{
+			Swal.fire({
+				title : "취소요청",
+				text : "수정중인 정보는 저장되지 않습니다. 정말로 취소하시겠습니까?",
+				icon : "question",
+				showCancelButton : true,
+				cancelButtonText : "아니오",
+				confirmButtonText : "예",
+			}).then((result) => {
+				if(result.isConfirmed){
+					$("#scheduleModal").modal('hide');
+				}else{
+					return false;
+				}
+			});
+		}
+	});
+	
+	// 상세 모달 상단에 x버튼 클릭 시
+	$("#closeBtn").on("click", function(){
+		
+		if($("#updateBtn").html() === '수정'){
+			$("#scheduleModal").modal('hide');
+		}else{
+			Swal.fire({
+				title : "취소요청",
+				text : "수정중인 정보는 저장되지 않습니다. 정말로 취소하시겠습니까?",
+				icon : "question",
+				showCancelButton : true,
+				cancelButtonText : "아니오",
+				confirmButtonText : "예",
+			}).then((result) => {
+				if(result.isConfirmed){
+					$("#scheduleModal").modal('hide');
+				}else{
+					return false;
+				}
+			});
+		}
+	});
+	
+	// 상세 모달 삭제 버튼 클릭 시
+	$("#delete").on("click",function(){
+		let id = $("#dateId").val();
+		
+		Swal.fire({
+			title : "삭제하시겠습니까?",
+			text : "삭제시 복구하실 수 없습니다.",
+			icon : "question",
+			showCancelButton : true,
+			cancelButtonText : "아니오",
+			confirmButtonText : "예",
+		}).then((result) => {
+			if(result.isConfirmed){
+				$.ajax({
+					url : "/emp/schedule/delete/" + id,
+					type : "post",
+					success : function(res){
+						if(res == "OK"){
+							Swal.fire({
+								title : "삭제완료!",
+								text : "정상적으로 삭제가 완료되었습니다.",
+								icon : "success",
+								showConfirmButton : true
+							}).then((result) => {
+								location.href = "/emp/schedule/main";
+							});
+						}else{
+							Swal.fire({
+								title : "삭제실패",
+								text : "삭제가 실패되었습니다. 다시 시도해주세요!",
+								icon : "error",
+								showConfirmButton : true
+							}).then((result) => {
+								location.href = "/emp/schedule/main";
+							});
+						}
+					},
+					error : function(error, status, thrown){
+						console.log(error.status);
+					},
+					beforeSend : function(xhr) {
+				        xhr.setRequestHeader('${_csrf.headerName}', '${_csrf.token}');
+				    }
+				});
+			}else{
+				return false;
+			}
+		});
+	});
+	
+	// 등록 모달에서 취소 버튼 클릭 시
+	$("#addCancelBtn").on("click",function(){
+		Swal.fire({
+			title : "취소요청",
+			text : "작성중인 정보는 저장되지 않습니다. 정말로 취소하시겠습니까?",
+			icon : "question",
+			showCancelButton : true,
+			cancelButtonText : "아니오",
+			confirmButtonText : "예",
+		}).then((result) => {
+			if(result.isConfirmed){
+				$('#scheduleAddModal').modal('hide');
+			}else{
+				return false;
+			}
+		});
+	});
+	
+	$("#addCloseBtn").on("click",function(){
+		Swal.fire({
+			title : "취소요청",
+			text : "작성중인 정보는 저장되지 않습니다. 정말로 취소하시겠습니까?",
+			icon : "question",
+			showCancelButton : true,
+			cancelButtonText : "아니오",
+			confirmButtonText : "예",
+		}).then((result) => {
+			if(result.isConfirmed){
+				$('#scheduleAddModal').modal('hide');
+			}else{
+				return false;
+			}
+		});
+	});
+	
+	$("#my-today-button").on("click",function(){
+		console.log("오늘 버튼 클릭 됨");
+	});
+});
+
+function detailCheckBtn(e){
+	
+	let flag = true;
+	let checkYn = $("#allDayStatus").is(":checked");
+	
+	console.log("상세버튼 이벤트 : ", e)
+	console.log("상세버튼 하루여부 : ", checkYn)
+	console.log("상세버튼 상세여부 : ", flag)
+	
+	if(e != null){
+		let {start, end} = e.event;
+		
+		if(checkYn){
+			let editDate = dayjs(end);
+			end = editDate.subtract(1,'day');
+		}
+	
+		if($("#startDate").val() == "" && $("#allStartDate").val() == ""){
+			$("#startDate").val(formatDate(start,checkYn));
+			$("#endDate").val(dateFormat(end,checkYn));
+			
+			$("#allStartDate").val(formatDate(start,true));
+			$("#allEndDate").val(formatDate(end,true));
+		}
+	}
+	
+	if(checkYn){
+		$("#allDayStatus").val('Y');
+		let end = $("#allEndDate").val();
+		
+		let newE = {
+			start : $("#allStartDate").val(),
+			end : end
+		}
+		console.log("상세 : ", newE);
+		datePicker(newE,checkYn, flag)
+	}else{
+		$("#allDayStatus").val('N');
+		let end = $("#endDate").val();
+		let newE = {
+			start : $("#startDate").val(),
+			end : end
+		}
+		
+		datePicker(newE,checkYn, flag)
+	}
+}
+
+// 풀캘린더 영역 시작
+function fullCalendar(){
+	var calendarEl = document.getElementById("calendar");
+	var calendar = new FullCalendar.Calendar(calendarEl,{
+		height : 'auto',
+		initialView : 'dayGridMonth',
+		handleWindowResize : true,
+		nowIndicator : true,
+		eventOverlap : true,
+		editable : true,
+		selectable : true,
+		buttonText : {
+			today : '오늘',
+			month : '달',
+			week : '이번주'
+		},
+		
+		eventDidMount: function(info) {
+			console.log(info);
+			
+			let { place, content } = info.event.extendedProps;
+			
+			tooltipHtml = `
+				<div> 장 소 : \${place}</div>
+				<div> 내 용 : \${content}</div>
+			`;
+			var tooltip = new bootstrap.Tooltip(info.el, {
+			   title : tooltipHtml,
+			html : true,
+			   placement: 'top',
+			   trigger: 'hover',
+			   container: 'body'
+			});
+	    },
+		
+		locale : 'ko',
+		headerToolbar : {
+			start : 'prevYear,prev,next,nextYear today',
+			center : 'title',
+			end : 'dayGridMonth,dayGridWeek'
+		},
+		events : {
+			url : "/emp/schedule/list",
+			type : "get",
+			success : function(res){
+				$("#artGroupNo").val(res[0].artGroupNo);
+				return res;
+			}
+		},
+		
+		
+        // 달력에 있는 일정을 클릭 시 하루에 대한 일정 상세로 이동
+        select : function(e){
+        	console.log(e.startStr);
+        	let editDate = dayjs(e.startStr);
+        	let endStr = editDate.add(7,'day').format('YYYY-MM-DD');
+        	console.log(endStr)
+        	calendar.changeView('timeGrid',{
+        		start : e.startStr,
+        		end : endStr
+        	})
+        },
+        // 일정 클릭 시 이벤트
+        eventClick : function(e){
+        	e.jsEvent.cancelBubble = true;		// 일정에 있는 url 막기
+        	e.jsEvent.preventDefault();
+        	
+        	const detailModal = new bootstrap.Modal(document.getElementById('scheduleModal'));
+        	
+        	detailModal.show(e);
+        },
+        eventDrop : function(e){
+        	dragDropAfter(e);
+        }
+	});
+	calendar.render();
+}
+// 풀 캘린더 영역 끝
+
+function dragDropAfter(e){
+	console.log(e);
+	detailCheckBtn(e);
+	
+	let id = e.event.id;
+	
+	let allDay = e.event.allDay;
+	let allDayStatus = e.event.extendedProps.allDayStatus;
+	
+	let data = new FormData();
+	data.append("allDayStatus",allDayStatus);
+	if(allDay){
+		data.append("start",$("#allStartDate").val());
+		data.append("end",$("#allEndDate").val());
+		
+	}else{
+		data.append("start",$("#startDate").val());
+		data.append("end",$("#endDate").val());
+	}
+	
+	$.ajax({
+		url : "/emp/schedule/dateMove/" + id,
+		type : "post",
+		data : data,
+		processData : false,
+		contentType : false,
+		success : function(res){
+			location.href="/emp/schedule/main";
+		},
+		error : function(error, status, thrown){
+			console.log(error.status);
+		},
+		beforeSend : function(xhr) {
+	        xhr.setRequestHeader('${_csrf.headerName}', '${_csrf.token}');
+	    }
+	});
+	
+}
+
+// flag : 상세일정인지, 등록일정인지 판단
+// e : 선택한 일정 정보
+// checkYn : 하루 일정인지
+function datePicker(e,checkYn, flag){
+	console.log("datePicker 정보: ", e);
+	console.log("datePicker 하루일정여부: ", checkYn);
+	console.log("datePicker 상세여부: ", flag);
+	
+	let datePickerFormat = '';	// 화면 상 날짜 표현방식
+	
+	let timeSet = false;		// 시간 사용 여부
+	
+	// 하루 일정이면
+	if(checkYn){
+		datePickerFormat = 'YYYY-MM-DD';
+		timeSet = false;
+		
+	// 하루 일정이 아니라면
+	}else{
+		datePickerFormat = 'YYYY-MM-DD HH:mm';
+		timeSet = true;
+	}
+	
+	let detail = "";
+	
+	// 상세 일정이 아니면 즉 등록 일정이라면
+	if(!flag){
+		detail = "input[name='addDatetimes']";
+	}else{
+		detail = "input[name='datetimes']";
+	}
+	$(detail).daterangepicker({
+		timePicker : timeSet,
+		startDate: e.start,
+		endDate : e.end,
+	    locale: {
+	      format: datePickerFormat,
+	      applyLabel : "적용",
+	      cancelLabel : "취소",
+	      daysOfWeek : [
+	    	  "일","월","화","수","목","금","토"
+	      ],
+	      monthNames : [
+	    	  "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"
+	      ],
+	      separator : " ~ "
+	    },
+	    drops : 'up'
+	},function(start,end,label){
+		let sV, eV;
+		if(!flag){
+			// 등록페이지 일정일 때
+			if(checkYn){
+				allStartVal = formatDate(start, checkYn);
+				allEndVal = formatDate(end, checkYn);
+				$("#addAllStartDate").val(allStartVal);
+				$("#addAllEndDate").val(allEndVal);
+				
+				startVal = formatDate(start);
+				endVal = formatDate(end);
+				$("#addStartDate").val(startVal);
+				$("#addEndDate").val(endVal);
+			}else{
+				allStartVal = formatDate(start, !checkYn);
+				allEndVal = formatDate(end, !checkYn);
+				$("#addAllStartDate").val(allStartVal);
+				$("#addAllEndDate").val(allEndVal);
+				
+				startVal = formatDate(start);
+				endVal = formatDate(end);
+				$("#addStartDate").val(startVal);
+				$("#addEndDate").val(endVal);
+			}
+		}else{
+			// 상세페이지 일정일 때
+			if(checkYn){
+				allStartVal = formatDate(start, checkYn);
+				let allEndVal = formatDate(end,checkYn);
+				
+				$("#allStartDate").val(allStartVal);
+				$("#allEndDate").val(allEndVal);
+				
+				startVal = formatDate(start);
+				endVal = formatDate(end);
+				$("#startDate").val(startVal);
+				$("#endDate").val(endVal);
+			}else{
+				allStartVal = formatDate(start, !checkYn);
+				let allEndVal = formatDate(end,!checkYn);
+				
+				
+				$("#allStartDate").val(allStartVal);
+				$("#allEndDate").val(allEndVal);
+				
+				
+				startVal = formatDate(start);
+				endVal = formatDate(end);
+				$("#startDate").val(startVal);
+				$("#endDate").val(endVal);
+			}
+		}
+		
+		console.log("날짜 선택 후 addStartDate의 값 : ", sV);
+		console.log("날짜 선택 후 addEndDate의 값 : ", eV);
+	});
+};
+
+function dateFormat(updateDate, checkYn){
+	if (!updateDate) return "";
+	
+	let date = new Date(updateDate);
+	
+	let year = date.getFullYear();
+	let month = date.getMonth() + 1;
+    let day = date.getDate();
+    let hour = date.getHours();
+    let minute = date.getMinutes();
+    let second = date.getSeconds();
+
+    month = month >= 10 ? month : '0' + month;
+    day = day >= 10 ? day : '0' + day;
+    hour = hour >= 10 ? hour : '0' + hour;
+    minute = minute >= 10 ? minute : '0' + minute;
+    second = second >= 10 ? second : '0' + second;
+    
+    // 하루 일정이라면
+    if(checkYn){
+    	hour = "23";
+		minute = "59";
+		second = "59";
+    }
+	
+    // 하루 일정이면 일정 : 2025-05-30T00:00:00 으로 return
+    // 하루 일정이 아니면 : 2025-05-30T15:15:15 으로 return
+	return year + '-' + month + '-' + day + 'T' + hour + ':' + minute + ':' + second;
+}
+
+function formatDate(updateDate, checkYn){
+	
+	if (!updateDate) return "";
+	
+	let date = new Date(updateDate);
+	
+	let year = date.getFullYear();
+	let month = date.getMonth() + 1;
+    let day = date.getDate();
+    let hour = date.getHours();
+    let minute = date.getMinutes();
+    let second = date.getSeconds();
+
+    month = month >= 10 ? month : '0' + month;
+    day = day >= 10 ? day : '0' + day;
+    hour = hour >= 10 ? hour : '0' + hour;
+    minute = minute >= 10 ? minute : '0' + minute;
+    second = second >= 10 ? second : '0' + second;
+    
+    // 하루 일정이라면
+    if(checkYn){
+    	hour = "00";
+		minute = "00";
+		second = "00";
+    }
+	
+    // 하루 일정이면 일정 : 2025-05-30T00:00:00 으로 return
+    // 하루 일정이 아니면 : 2025-05-30T15:15:15 으로 return
+	return year + '-' + month + '-' + day + 'T' + hour + ':' + minute + ':' + second;
+};
+
+</script>
+</html>

@@ -1,0 +1,293 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt"%>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn"%>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDTOWN 전자결재 - 기안서 상세</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/approval_draft_style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+<sec:authentication property="principal" var="user"/>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+
+            <main class="approval-content">
+                <div class="approval-detail-wrap" style="max-width:800px;margin:0 auto;">
+                    <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+						<ol class="breadcrumb">
+						  <li class="breadcrumb-item"><a href="#" style="color:black;">전자결재</a></li>
+						  <li class="breadcrumb-item location"><a href="#" style="color:black;">결재문서함</a></li>
+						  <li class="breadcrumb-item active" aria-current="page">기안서 상세</li>
+						</ol>
+					</nav>
+                    <div class="approval-detail-card" style="background:#fff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08); padding:32px 28px 24px 28px;">
+                        <div class="approval-detail-title" style="font-size:1.4em;font-weight:700;color:#2c3e50;margin-bottom:18px;">${edmsVO.edmsTitle}</div>
+                        	<div id="approval-line-box">
+                        		<table >
+	                        		<tr>
+	                        			<td style="border-color: white;">
+					                        <div class="approval-detail-row" style="display:flex;gap:18px;margin-bottom:12px;">
+					                            <div style="flex:1;"><strong>문서번호</strong> <br> ${edmsVO.edmsManageNo}</div>
+					                            <div style="flex:1;"><strong>긴급도</strong> <br>
+					                            	<c:if test="${edmsVO.edmsUrgenYn eq 'Y'}">
+					                            		<span style="color:#ec841a;">긴급</span>
+					                            	</c:if>
+					                            	<c:if test="${edmsVO.edmsUrgenYn eq 'N'}">
+					                            		<span style="color:#000; ">일반</span>
+					                            	</c:if>
+					                             </div>
+					                             <div style="flex:1;"><strong>결재상태</strong> <br>
+							                       	<c:choose>
+							                       		<c:when test="${edmsVO.edmsStatCode eq 'ESC001'}"><span style="color : #818681;">결재 대기</span></c:when>
+							                       		<c:when test="${edmsVO.edmsStatCode eq 'ESC002'}"><span style="color : #4caf50;">결재 진행</span></c:when>
+							                       		<c:when test="${edmsVO.edmsStatCode eq 'ESC003'}"><span style="color : #007bff;">승인</span></c:when>
+							                       		<c:when test="${edmsVO.edmsStatCode eq 'ESC004'}"><span style="color : #b71c1c;">반려</span></c:when>
+							                       		<c:when test="${edmsVO.edmsStatCode eq 'ESC005'}"><span style="color : #ec841a;">회수</span></c:when>
+							                       	</c:choose>
+							                      </div>
+					                        </div>
+	                        			</td>
+	                        		</tr>
+	                        		<tr>
+	                        			<td style="border-color: white;">
+					                        <div class="approval-detail-row" style="display:flex;gap:18px;margin-bottom:12px;">
+					                            <div style="flex:1;"><strong>기안자</strong> <br> ${edmsVO.empName}</div>
+					                            <div style="flex:1;"><strong>기안일</strong> <br> <fmt:formatDate value="${edmsVO.edmsReqDate}" type="date" pattern="yyyy년 MM월 dd일"/></div>
+					                        </div>
+	                        			</td>
+	                        		</tr>
+		                        </table>
+	                        	<c:set value="${edmsVO.approverList}" var="approverList"/>
+	                        	<c:set var="mySec" value="true"/>
+	                        	<table class="table">
+                        		<tr>
+                        			<c:forEach items="${approverList}" var="approver" varStatus="vs">
+                        				<c:if test="${ vs.last and approver.empUsername eq user.username and approver.apvSec eq 2 and edmsVO.edmsStatCode eq 'ESC001'}">
+                        					<c:set var="mySec" value="false"/>
+                        				</c:if>
+	                        			<th style="text-align: center; font-weight: bold;">${approver.empName} ${approver.empPositionNm }</th>
+                        			</c:forEach>
+                        		</tr>
+                        		<tr>
+                        			<c:forEach items="${approverList}" var="approver">
+	                        			<td>
+	                        				<c:choose>
+		                        				<c:when test="${approver.apvStatCode eq 'ASC003'}">
+		                        					<div class="d-flex justify-content-center align-items-center">
+				                        				<img alt="승인" src="${pageContext.request.contextPath}/resources/img/approved.png" width="50px" height="50px">
+		                        					</div>
+		                        				</c:when>
+		                        				<c:when test="${approver.apvStatCode eq 'ASC004'}">
+		                        					<div class="d-flex justify-content-center align-items-center">
+				                        				<img alt="반려" src="${pageContext.request.contextPath}/resources/img/rejected.png" width="50px" height="50px">
+		                        					</div>
+		                        				</c:when>
+	                        					<c:otherwise>
+	                        						<div style="width:50px; height:50px;">
+	                        							&nbsp;
+	                        						</div>
+	                        					</c:otherwise>
+	                        				</c:choose>
+	                        			</td>
+                        			</c:forEach>
+                        		</tr>
+                        	</table>
+                        </div>
+                        <div class="approval-detail-row" style="margin-bottom:12px;"><strong>내용</strong>
+                            <div class="approval-detail-content-box" style="border-radius:6px;padding:16px 14px;margin-top:6px;">
+								${edmsVO.edmsContent}
+                            </div>
+                            <div class="mb-2 align-items-center">
+	                            <label class="col-lg-2 col-md-3 col-form-label col-form-label-sm fw-semibold text-dark">첨부파일 리스트</label>
+	                            <div class="col-lg-10 col-md-9">
+	                            	<c:choose>
+	                            		<c:when test="${empty edmsVO.fileList}">
+	                            			첨부된 파일이없습니다.
+	                            		</c:when>
+	                            		<c:otherwise>
+		                            		<c:forEach items="${edmsVO.fileList}" var="file">
+		                            			<div class="p-1" >
+													<a href="${pageContext.request.contextPath}/emp/edms/file/download/${file.attachDetailNo}" >${file.fileOriginalNm}</a>
+												</div>
+		                            		</c:forEach>
+	                            		</c:otherwise>
+	                            	</c:choose>
+	                            </div>
+	                        </div>
+                        </div>
+                        <div class="approval-detail-row" style="margin-bottom:12px;"><strong>참조자:</strong>
+                        	<c:forEach items="${edmsVO.referenceList}" var="reference">
+                        		${reference.empName} ${reference.empPositionNm}
+                        	</c:forEach>
+                        </div>
+
+                        <c:if test="${edmsVO.edmsStatCode eq 'ESC004' and edmsVO.empUsername eq user.username}">
+	                        <h6>문서 반려 사유</h4>
+						    <hr>
+
+						    <c:forEach items="${approverList}" var="approver">
+						        <c:if test="${approver.apvStatCode eq 'ASC004'}">
+						            <div class="card mb-3 shadow-sm">
+						                <div class="card-body">
+						                    <strong class="mb-0">
+						                        <i class="bi bi-x-circle-fill me-2"></i>
+						                        ${approver.empName} (${approver.empPositionNm})
+						                    </strong>
+						                    <small>
+						                        <c:if test="${not empty approver.apvResDate}">
+						                            <span class="float-end"><fmt:formatDate value="${approver.apvResDate}" pattern="yyyy/MM/dd"/></span>
+						                        </c:if>
+						                    </small>
+						                    <p class="card-text">${approver.apvRejectReason}</p>
+						                </div>
+						            </div>
+						        </c:if>
+						    </c:forEach>
+                        </c:if>
+                        <div class="approval-detail-actions" style="display:flex;justify-content:flex-end;gap:12px;margin-top:24px;">
+    	                    <c:if test="${(edmsVO.edmsStatCode eq 'ESC001' or edmsVO.edmsStatCode eq 'ESC002') and edmsVO.empUsername ne user.username}">
+    	                    	<c:if test="${mySec}">
+		                            <button class="approval-btn submit" id="approveBtn" data-edms-no="${edmsVO.edmsNo}" data-emp-username="${user.username}"><i class="fas fa-check"></i> 승인</button>
+		                            <button class="approval-btn" id="rejectBtn" data-bs-target="#rejectModal" data-bs-toggle="modal" style="background:#e53935;color:#fff;"><i class="fas fa-times"></i> 반려</button>
+    	                    	</c:if>
+	                        </c:if>
+	                        <c:if test="${edmsVO.edmsStatCode eq 'ESC001' and edmsVO.empUsername eq user.username}">
+		                    	<button class="approval-btn" id="cancelBtn">회수</button>
+	                        </c:if>
+	                    	<button class="approval-btn btn btn-primary" id="listBtn">목록</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+<!-- 반려 사유 입력 모달 -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-md modal-dialog-centered">
+	    <div class="modal-content">
+
+	        <div class="modal-header bg-light">
+	            <h5 class="modal-title fw-bold" id="rejectModalLabel">반려 사유 입력</h5>
+	            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+	        </div>
+
+	        <div class="modal-body">
+	            <textarea class="form-control" id="apvRejectReason" rows="4" placeholder="반려 사유를 입력하세요 (필수)" maxlength="300" required></textarea>
+	            <div class="invalid-feedback">
+	                반려 사유를 입력해주세요.
+	            </div>
+	        </div>
+
+	        <div class="modal-footer justify-content-center border-top-0">
+	            <button type="button" class="btn btn-primary px-4" id="rejectModalBtn" data-edms-no="${edmsVO.edmsNo}" data-emp-username="${user.username}">확인</button>
+                <button type="button" class="btn btn-outline-secondary px-4" id="reject-modal-cancel" data-bs-dismiss="modal">취소</button>
+           	</div>
+        </div>
+    </div>
+</div>
+</body>
+<%@ include file="../../modules/footerPart.jsp" %>
+
+<%@ include file="../../modules/sidebar.jsp" %>
+<script>
+$(function(){
+	const listBtn = $("#listBtn"); // 목록가기 버튼
+	let baseurl = sessionStorage.getItem("baseurl") || "/emp/edms/approvalBox";
+	let breadcrumb = $("ol.breadcrumb");
+	let locationItem = breadcrumb.find("li.location").find("a");
+	if(baseurl == "/emp/edms/approvalBox"){
+		locationItem.text("결재문서함")
+		locationItem.attr("href","${pageContext.request.contextPath}/emp/edms/approvalBox");
+	}else{
+		locationItem.text("결재요청함")
+		locationItem.attr("href","${pageContext.request.contextPath}/emp/edms/requestList");
+	}
+
+	listBtn.on("click",function(){
+		let searchWord = sessionStorage.getItem("searchWord") || "";
+		let searchType = sessionStorage.getItem("searchType") || "";
+		let currentPage = sessionStorage.getItem("currentPage") || 1;
+
+		sessionStorage.removeItem("baseurl");
+		sessionStorage.removeItem("currentPage");
+		sessionStorage.removeItem("searchWord");
+		sessionStorage.removeItem("searchType");
+
+		location.href="${pageContext.request.contextPath}"+baseurl+"?currentPage="+currentPage+"&searchType="+searchType+"&searchWord="+searchWord;
+	})
+
+
+	let flag = ${mySec};
+	console.log(flag)
+	$("#rejectModalBtn").on("click",function(){
+		let edmsNo = $(this).data("edmsNo");
+		let empUsername = $(this).data("empUsername");
+		let apvRejectReason = $("#apvRejectReason").val();
+
+		if(apvRejectReason == null || apvRejectReason.trim() == ""){
+			sweetAlert("error","사유를 입력해주세요");
+			return false;
+		}
+		let data = {
+			edmsNo, empUsername, apvRejectReason
+		}
+
+		$.ajax({
+			url : "/api/emp/edms/reject",
+			type : "post",
+			contentType : "application/json; charset=utf-8",
+			data : JSON.stringify(data),
+			beforeSend : function(xhr){
+				xhr.setRequestHeader("${_csrf.headerName}","${_csrf.token}")
+			},
+			success : function(res){
+				if(res == 'OK'){
+					sweetAlert("success","해당 결재문서를 반려했습니다.")
+					location.reload();
+				}
+			},
+			error : function(err){
+				sweetAlert("error","해당 결재문서를 반려하는 도중 문제가 발생했습니다. 다시 시도해주세요")
+			}
+		})
+	});
+
+	$("#approveBtn").on("click",function(){
+
+		let edmsNo = $(this).data("edmsNo");
+		let empUsername = $(this).data("empUsername");
+
+		data = {edmsNo, empUsername};
+
+		$.ajax({
+			url : "/api/emp/edms/approve",
+			type : "post",
+			contentType : "application/json; charset=utf-8",
+			data : JSON.stringify(data),
+			beforeSend : function(xhr){
+				xhr.setRequestHeader("${_csrf.headerName}","${_csrf.token}")
+			},
+			success : function(res){
+				if(res == 'OK'){
+					sweetAlert("success","해당 결재문서를 승인했습니다.")
+					location.reload();
+				}
+			},
+			error : function(err){
+				sweetAlert("error","해당 결재문서를 승인하는 도중 문제가 발생했습니다. 다시 시도해주세요")
+			}
+		})
+	})
+
+});
+</script>
+</html>

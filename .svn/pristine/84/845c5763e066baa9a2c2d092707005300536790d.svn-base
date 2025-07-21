@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.goods.IWishlistMapper">
+	<select id="checkWishlist" resultType="int">
+		select count(*)
+		from goods_wishlist
+		where mem_username = #{username} and goods_no = #{goodsNo}
+	</select>
+	
+	<delete id="deleteWishlist">
+		delete from goods_wishlist
+		where mem_username = #{username} and goods_no = #{goodsNo}
+	</delete>
+	
+	<insert id="insertWishlist" parameterType="kr.or.ddit.vo.goods.GoodsWishListVO">
+		insert into goods_wishlist (mem_username, goods_no, wish_reg_date)
+		values (#{memUsername}, #{goodsNo}, SYSDATE)
+	</insert>
+	
+	<select id="getWishlistByUsername" parameterType="kr.or.ddit.vo.goods.GoodsWishListVO">
+		select 
+	            mem_username,
+	            goods_no, 
+	            wish_reg_date 
+	        from 
+	            goods_wishlist
+	        where 
+	            mem_username = #{username}
+	        order by 
+	            wish_reg_date desc
+	</select>
+	
+	<delete id="deleteWishlistByGoodsNo" parameterType="int">
+    		DELETE FROM GOODS_WISHLIST WHERE GOODS_NO = #{goodsNo}
+	</delete>
+	
+<select id="selectTotalWishedGoodsCount" parameterType="string" resultType="int">
+        SELECT
+            COUNT(W.GOODS_NO)
+        FROM
+            goods_wishlist W
+        JOIN
+            GOODS G ON W.GOODS_NO = G.GOODS_NO
+        WHERE
+            W.MEM_USERNAME = #{username}
+            AND G.GOODS_STAT_CODE = 'GSC001'
+    </select>
+
+    <select id="selectWishedGoodsPagingList" resultType="kr.or.ddit.vo.goods.goodsVO">
+        SELECT
+            b.*
+        FROM (
+            SELECT
+                a.*, ROWNUM as rnum
+            FROM (
+                SELECT
+                    G.goods_no, G.goods_nm, G.goods_price, G.goods_reg_date, G.goods_mod_date,
+                    G.goods_stat_code, G.file_group_no, G.goods_code,
+                    G.ART_GROUP_NO, AG.art_group_nm AS artGroupName,
+                    CDC.comm_code_det_no AS statusEngKey,
+                    CDC.description AS statusKorName,
+
+                    (SELECT COALESCE(SUM(GS.stock_remain_qty), 0) FROM GOODS_STOCK GS WHERE GS.goods_no = G.goods_no) AS stockRemainQty,
+                    (SELECT '/upload/' || AFD.file_savepath || '/' || AFD.file_save_nm FROM ATTACHMENT_FILE_DETAIL AFD WHERE AFD.file_group_no = G.FILE_GROUP_NO AND ROWNUM = 1) AS representativeImageUrl
+                FROM
+                    GOODS G  INNER JOIN
+                    goods_wishlist W ON G.goods_no = W.goods_no
+                LEFT JOIN
+                    ARTIST_GROUP AG ON G.art_group_no = AG.art_group_no  LEFT JOIN
+                    COMMON_DETAIL_CODE CDC ON G.goods_stat_code = CDC.comm_code_det_no AND CDC.comm_code_grp_no = 'GOODS_STAT_CODE'
+                WHERE
+                    W.MEM_USERNAME = #{username}
+                    AND G.goods_stat_code = 'GSC001'
+                ORDER BY
+                    W.WISH_REG_DATE DESC
+            ) a
+        ) b
+        <![CDATA[
+        WHERE rnum >= #{pagingVO.startRow} AND rnum <= #{pagingVO.endRow}
+        ]]>
+    </select>
+
+</mapper>

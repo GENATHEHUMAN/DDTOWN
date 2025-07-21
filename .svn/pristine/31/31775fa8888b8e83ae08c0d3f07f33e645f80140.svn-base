@@ -1,0 +1,51 @@
+package kr.or.ddit.ddtown.mapper.admin.member;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.member.MemCodeListVO;
+import kr.or.ddit.vo.member.MemberAdminVO;
+import kr.or.ddit.vo.member.PeopleAdminVO;
+
+@Mapper
+public interface IMemberAdminMapper {
+
+	public List<MemberAdminVO> getMemberList();
+
+	public MemberAdminVO getMember(String memUsername);
+
+	public List<MemCodeListVO> getCodeList();
+
+	public int updateMember(MemberAdminVO memberVO);
+
+	public int updatePeople(PeopleAdminVO peopleVO);
+
+	public int deleteMember(String memUsername);
+
+	public int deletePeople(String memUsername);
+
+	public int getTotalRecord(@Param("paging") PaginationInfoVO<MemberAdminVO> pagingVO,@Param("searchCode") String searchCode);
+
+	public List<MemberAdminVO> getDataList(@Param("paging") PaginationInfoVO<MemberAdminVO> pagingVO,@Param("searchCode") String searchCode);
+
+	/**
+	 * 신규 가입자 수 구하기
+	 * @return
+	 */
+	public int getTodayRegisterUser();
+
+	// 전체 회원 수 가져오기
+	public int getTotalMemCnt();
+
+	// 정상 회원 수 가져오기
+	public int getGeneralMemCnt();
+
+	// 탈퇴 회원 수 가져오기
+	public int getOutMemCnt();
+
+	// 블랙리스트 회원 수 가져오기
+	public int getBlackMemCnt();
+}

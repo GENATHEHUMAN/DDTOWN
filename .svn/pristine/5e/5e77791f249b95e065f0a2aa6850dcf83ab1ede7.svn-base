@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.chat.dm.ChatChannelMapper">
+	
+	<resultMap type="kr.or.ddit.vo.chat.dm.ChatChannelVO" id="chatChannelMap">
+		<id property="chatChannelNo" column="CHAT_CHANNEL_NO"/>
+		<result property="comuProfileNo" column="COMU_PROFILE_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="chatTypeCode" column="CHAT_TYPE_CODE"/>
+		<result property="chatChannelOpenDate" column="CHAT_CHANNEL_OPEN_DATE"/>
+		<result property="chatLastDate" column="CHAT_LAST_DATE"/>
+		<result property="artistUsername" column="ARTIST_USERNAME"/>
+		<result property="artistComuNicknm" column="ARTIST_COMU_NICKNM"/>
+		<result property="chatDelYn" column="CHAT_DEL_YN"/>
+	</resultMap>
+	
+	<!-- 모든 채팅방 조회 (사용자별) -->
+	<select id="findAllChannels" resultMap="chatChannelMap">
+	SELECT
+        cc.CHAT_CHANNEL_NO,
+        cc.COMU_PROFILE_NO,
+        cc.ART_GROUP_NO,
+        cc.CHAT_TYPE_CODE,
+        cc.CHAT_CHANNEL_OPEN_DATE,
+        cc.CHAT_LAST_DATE,
+        cc.CHAT_DEL_YN,
+        cp.MEM_USERNAME AS ARTIST_USERNAME,
+        cp.COMU_NICKNM AS ARTIST_COMU_NICKNM
+    FROM
+        CHAT_CHANNELS cc  JOIN
+        COMMUNITY_PROFILE cp ON cc.COMU_PROFILE_NO = cp.COMU_PROFILE_NO 
+   	WHERE
+        EXISTS (
+            SELECT 1 FROM PARTICIPANTS p  WHERE p.CHAT_CHANNEL_NO = cc.CHAT_CHANNEL_NO
+            AND p.MEM_USERNAME = #{currentUser}
+        )
+   	AND
+    	cc.CHAT_DEL_YN = 'N'
+    ORDER BY
+        cc.CHAT_LAST_DATE DESC, cc.ART_GROUP_NO, cc.CHAT_CHANNEL_OPEN_DATE DESC
+	</select>
+	
+	<!-- 새로운 채팅방 저장 -->
+	<insert id="insertChatChannel" parameterType="kr.or.ddit.vo.chat.dm.ChatChannelVO"
+		useGeneratedKeys="true" keyProperty="chatChannelNo">
+		<selectKey keyProperty="chatChannelNo" resultType="int" order="BEFORE">
+			SELECT CHAT_CHANNELS_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO CHAT_CHANNELS (
+			CHAT_CHANNEL_NO
+		    , COMU_PROFILE_NO
+		    , ART_GROUP_NO
+		    , CHAT_TYPE_CODE
+		    , CHAT_CHANNEL_OPEN_DATE
+		    , CHAT_LAST_DATE
+		) VALUES (
+		 	#{chatChannelNo}
+	        , #{comuProfileNo}
+	        , #{artGroupNo}
+	        , #{chatTypeCode}
+	        , SYSDATE
+	        , SYSDATE
+		)
+	</insert>
+	
+	<!-- 참여자 저장 -->
+	<insert id="insertParticipant" parameterType="kr.or.ddit.vo.chat.dm.ParticipantsVO">
+		INSERT INTO PARTICIPANTS (
+		    MEM_USERNAME
+		    , CHAT_CHANNEL_NO
+		    , PACI_ROLE_CODE
+		    , PACI_JOIN_DATE
+		    , LAST_READ_CHAT_NO
+		) VALUES ( 
+			#{memUsername}
+	        , #{chatChannelNo}
+	        , #{paciRoleCode}
+	        , sysdate
+	        , #{lastReadChatNo}
+	    )
+	</insert>
+	
+	<!-- 채널 상세 정보 가져오기 ( + 아티스트 정보 ) -->
+	<select id="selectChatChannelDetailByChannelNo" parameterType="int" resultMap="chatChannelMap">
+		SELECT
+			cc.CHAT_CHANNEL_NO
+			, cc.COMU_PROFILE_NO
+			, cc.ART_GROUP_NO
+			, cc.CHAT_TYPE_CODE
+			, cc.CHAT_CHANNEL_OPEN_DATE
+			, cc.CHAT_LAST_DATE
+			, cp.MEM_USERNAME AS ARTIST_USERNAME
+			, cp.COMU_NICKNM AS ARTIST_COMU_NICKNM
+		FROM
+				CHAT_CHANNELS cc
+		JOIN
+				COMMUNITY_PROFILE cp ON cc.COMU_PROFILE_NO = cp.COMU_PROFILE_NO
+		WHERE
+				cc.CHAT_CHANNEL_NO = #{chatChannelNo}
+	</select>
+	
+	<!-- 마지막 일자 업데이트 (채팅 메세지 전송 시 사용) -->
+	<update id="updateChatLastDate">
+		UPDATE
+				CHAT_CHANNELS
+		SET
+				CHAT_LAST_DATE = #{chatLastDate}
+		WHERE
+				CHAT_CHANNEL_NO = #{chatChannelNo}
+	</update>
+	
+	<!-- 채널 기본 정보 가져오기 -->
+	<select id="selectChatChannelInfoByChannelNo" parameterType="int" resultMap="chatChannelMap">
+		SELECT
+				CHAT_CHANNEL_NO
+				, COMU_PROFILE_NO
+				, ART_GROUP_NO
+				, CHAT_TYPE_CODE
+				, CHAT_CHANNEL_OPEN_DATE
+				, CHAT_LAST_DATE
+		FROM
+				CHAT_CHANNELS
+		WHERE
+				CHAT_CHANNEL_NO = #{chatChannelNo}
+	</select>
+	
+	<!-- 로그인한 사용자(아티스트)의 해당 채널 닉네임 가져오기) -->
+	<select id="selectMyNicknmForChannel" resultType="String">
+		SELECT
+			cp.COMU_NICKNM
+		FROM
+			MEMBER m
+		JOIN
+			PARTICIPANTS p ON m.MEM_USERNAME = p.MEM_USERNAME
+		JOIN
+			CHAT_CHANNELS cc ON p.CHAT_CHANNEL_NO = cc.CHAT_CHANNEL_NO
+		JOIN
+			COMMUNITY_PROFILE cp ON m.MEM_USERNAME = cp.MEM_USERNAME AND cp.ART_GROUP_NO = cc.ART_GROUP_NO
+		WHERE
+			m.MEM_USERNAME = #{username}
+		AND
+			cc.CHAT_CHANNEL_NO = #{chatChannelNo}
+		AND
+			cp.COMU_DEL_YN = 'N'
+	</select>
+	
+	
+	<!-- 참여자 권한 조회 -->
+	<select id="selectChatParticipants" parameterType="int" resultType="String">
+		SELECT
+			MEM_USERNAME
+		FROM
+			PARTICIPANTS
+		WHERE
+			CHAT_CHANNEL_NO = #{chatChannelNo}
+	</select>
+	
+	<!-- 채널 논리적 삭제 -->
+	<update id="deleteChannels" parameterType="int">
+		UPDATE chat_channels
+		SET
+		    chat_del_yn = 'Y'
+		WHERE
+		    art_group_no = #{artGroupNo}
+	</update>
+	
+	<!-- 참여자 권한 코드 조회 -->
+	<select id="selectUserRoleCodesByUsername" resultType="String">
+		SELECT
+			PACI_ROLE_CODE
+		FROM
+			PARTICIPANTS
+		WHERE
+			MEM_USERNAME = #{participantUsername}
+		AND
+			CHAT_CHANNEL_NO = #{chatChannelNo}
+	</select>
+	
+	<!-- 마지막으로 읽은 메세지 번호 업데이트 -->
+	<update id="updateLastReadChatNo">
+		UPDATE
+			PARTICIPANTS
+		SET
+			LAST_READ_CHAT_NO = ${lastReadChatNo}
+		WHERE
+			CHAT_CHANNEL_NO = #{chatChannelNo}
+		AND
+			MEM_USERNAME = #{username}
+	</update>
+	
+	<!-- 해당 아티스트 채널 번호 조회 -->
+	<select id="getChatChannelNo" parameterType="String" resultType="int">
+		SELECT
+			c.CHAT_CHANNEL_NO
+		FROM
+			CHAT_CHANNELS c
+		JOIN
+			COMMUNITY_PROFILE cp ON c.COMU_PROFILE_NO = cp.COMU_PROFILE_NO
+		JOIN
+			ARTIST a ON cp.MEM_USERNAME = a.MEM_USERNAME
+		WHERE
+			a.MEM_USERNAME = #{memUsername}
+		AND
+			c.CHAT_TYPE_CODE = 'CTC001'
+	</select>
+	
+	<!-- 읽지 않은 메세지 전체 카운트 -->
+	<select id="getTotalUnreadMessageCount" parameterType="map" resultType="int">
+		SELECT COALESCE(SUM(sub.unread_count), 0)
+        FROM (
+            SELECT 
+                COUNT(cm.CHAT_NO) AS unread_count
+            FROM CHAT_MESSAGE cm
+            JOIN PARTICIPANTS p ON cm.CHAT_CHANNEL_NO = p.CHAT_CHANNEL_NO
+            JOIN CHAT_CHANNELS cc ON p.CHAT_CHANNEL_NO = cc.CHAT_CHANNEL_NO
+            WHERE p.MEM_USERNAME = #{username}
+            AND cm.CHAT_NO > p.LAST_READ_CHAT_NO
+            AND p.LAST_READ_CHAT_NO IS NOT NULL
+            AND cm.USERNAME != p.MEM_USERNAME
+            <if test="isArtist == false">
+            	AND cm.COMU_PROFILE_NO = cc.COMU_PROFILE_NO
+            </if>
+            GROUP BY p.CHAT_CHANNEL_NO
+        ) sub
+	</select>
+	
+ </mapper>

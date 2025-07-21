@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.admin.faqInquiry.IAdminInquiryMapper">
+ 	
+ 	<sql id="inqSearch">
+ 		<if test="searchCode != null and searchCode != ''">
+ 			and inq_stat_code like '%'||#{searchCode}||'%'
+ 		</if>
+ 		<if test="pagingVO.searchWord != null and pagingVO.searchWord != ''">
+ 			and inq_title like '%'||#{searchWord}||'%'
+ 		</if>
+ 		<if test="pagingVO.searchType != null and pagingVO.searchType != ''">
+ 			and inq_type_code like '%'||#{pagingVO.searchType}||'%'
+ 		</if>
+ 	</sql>
+ 
+ 	<select id="getList" resultType="kr.or.ddit.vo.inquiry.InquiryVO" >
+ 		select *
+		from (
+		    select
+		            inq_no
+				  , emp_username
+				  , mem_username
+				  , inq_type_code
+				  , inq_type_code_des
+				  , inq_stat_code
+				  , inq_stat_code_des
+				  , inq_title
+				  , inq_content
+				  , inq_reg_date
+				  , inq_ans_content
+				  , inq_ans_reg_date
+		          , rownum inqRownum
+		    from(
+		        SELECT
+				    a.inq_no
+				  , a.emp_username
+				  , a.mem_username
+				  , a.inq_type_code
+				  , b.DESCRIPTION inq_type_code_des
+				  , a.inq_stat_code
+				  , c.DESCRIPTION inq_stat_code_des
+				  , a.inq_title
+				  , a.inq_content
+				  , a.inq_reg_date
+				  , a.inq_ans_content
+				  , a.inq_ans_reg_date
+
+				FROM
+				    inquiry a
+				    , common_detail_code b
+				    , common_detail_code c
+				where a.INQ_TYPE_CODE = b.comm_code_det_no(+)
+				and b.USE_YN (+)= 'Y'
+				and a.INQ_STAT_CODE = c.comm_code_det_no(+)
+				and c.USE_YN (+)= 'Y'
+		        and 1=1
+		        <include refid="inqSearch" />
+		    order by inq_no desc, inq_reg_date desc
+		   	 )
+		    )
+		    where inqRownum between #{pagingVO.startRow} and #{pagingVO.endRow}
+ 	</select>
+ 	
+ 	
+ 	<select id="getData" parameterType="int" resultType="kr.or.ddit.vo.inquiry.InquiryVO">
+ 		SELECT
+		    inq_no
+		  , emp_username
+		  , mem_username
+		  , inq_type_code as typeDetailCode
+		  , b.DESCRIPTION inq_type_code_des
+		  , inq_stat_code as statDetailCode
+		  , c.description inq_stat_code_des
+		  , inq_title
+		  , inq_content
+		  , inq_reg_date
+		  , inq_ans_content
+		  , inq_ans_reg_date
+		  , p.peo_email user_email
+		  , p.peo_phone phone
+		FROM
+		    inquiry i, common_detail_code b, common_detail_code c, people p
+		where inq_no = #{inqNo}
+		and i.inq_type_code = b.comm_code_det_no (+)
+		and i.inq_stat_code = c.comm_code_det_no (+)
+		and i.mem_username = p.username
+ 	</select>
+ 	
+ 	<update id="updateAnswer" parameterType="kr.or.ddit.vo.inquiry.InquiryVO">
+ 		update inquiry set
+ 			inq_ans_content = #{inqAnsContent},
+ 			inq_ans_reg_date = sysdate,
+ 			emp_username = #{empUsername},
+			inq_stat_code = #{statDetailCode}
+ 		where inq_no = #{inqNo}
+ 	</update>
+ 	
+ 	<select id="getTypeCodeList" resultType="kr.or.ddit.vo.inquiry.InquiryCodeVO">
+ 		select 
+			  COMM_CODE_DET_NO
+			, COMM_CODE_GRP_NO
+			, COMM_CODE_DET_NM
+			, USE_YN
+			, DESCRIPTION
+		from common_detail_code  
+		WHERE COMM_CODE_GRP_NO='INQ_TYPE_CODE'
+ 	</select>
+ 	<select id="getStatCodeList" resultType="kr.or.ddit.vo.inquiry.InquiryCodeVO">
+ 		select 
+			  COMM_CODE_DET_NO
+			, COMM_CODE_GRP_NO
+			, COMM_CODE_DET_NM
+			, USE_YN
+			, DESCRIPTION
+		from common_detail_code  
+		WHERE COMM_CODE_GRP_NO='INQ_STAT_CODE'
+ 	</select>
+ 	
+ 	<select id="getCnt" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+ 		select count(inq_no) as total_record
+	     from inquiry
+	     where 1=1
+	     <include refid="inqSearch" />
+ 	</select>
+ 	
+ 	<select id="getTotalState" resultType="kr.or.ddit.vo.common.CommonCodeDetailVO">
+ 		select count(inq_no) as codeCnt, cdc.comm_code_det_no
+		from inquiry i inner join common_detail_code cdc on i.inq_stat_code = cdc.comm_code_det_no
+		group by cdc.comm_code_det_no
+ 	</select>
+ 	
+ 	<select id="getTotalInq" resultType="int">
+ 		select count(inq_no)
+ 		from inquiry
+ 	</select>
+ </mapper>

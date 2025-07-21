@@ -1,0 +1,381 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주문 상세 정보 - DDTOWN 관리자 시스템</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <%@ include file="../../../modules/headerPart.jsp" %>
+    <style>
+        .card-section {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            padding: 28px 28px 18px 28px;
+            margin-bottom: 28px;
+            border: 1px solid #e7eaf3;
+        }
+        .section-title {
+            font-size: 1.25em;
+            color: #2c3e50;
+            margin-bottom: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px 32px;
+            margin-bottom: 0;
+        }
+        .info-item {
+            background: #f8f9fa;
+            border-radius: 7px;
+            padding: 16px 18px 10px 18px;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            border: 1px solid #e0e0e0;
+        }
+        .info-item dt {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 4px;
+            font-size: 0.98em;
+        }
+        .info-item dd {
+            margin: 0;
+            color: #222;
+            font-size: 1.08em;
+            word-break: break-all;
+        }
+        .info-item[style*="grid-column"] {
+            grid-column: 1 / -1 !important;
+        }
+        .ordered-items-table {
+            margin: 18px 0 18px 0;
+        }
+        .order-totals {
+            margin-top: 18px;
+            padding: 18px 30px;;
+            border-top: 1px solid #e0e0e0;
+            background: #f8f9fa;
+            border-radius: 7px;
+            max-width: 320px;
+            margin-left: auto;
+        }
+        .order-totals dl {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 0;
+        }
+        .order-totals dt, .order-totals dd {
+            display: inline-block;
+            font-size: 1.08em;
+            margin: 0;
+        }
+        .order-totals dt {
+            color: #444;
+            font-weight: 600;
+            width: 140px;
+            text-align: left;
+        }
+        .order-totals dd {
+            color: #222;
+            text-align: right;
+            width: 120px;
+            font-weight: 500;
+        }
+        .order-totals .grand-total dt, .order-totals .grand-total dd {
+            font-size: 1.18em;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .order-totals .grand-total {
+            margin-top: 10px;
+            border-top: 1.5px solid #e0e0e0;
+            padding-top: 10px;
+        }
+        .admin-memo-section {
+            background: #f8f9fa;
+            border-radius: 7px;
+            border: 1px solid #e0e0e0;
+            padding: 18px 18px 10px 18px;
+            margin-bottom: 0;
+        }
+        .admin-memo-section textarea {
+            background: #fff;
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+            min-height: 80px;
+            font-size: 1em;
+            padding: 10px;
+        }
+        .detail-actions {
+            margin-top: 32px;
+            text-align: right;
+        }
+        @media (max-width: 900px) {
+            .info-grid { grid-template-columns: 1fr; }
+            .order-totals { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section class="ea-section">
+                    <div class="order-detail-container">
+                        <div class="ea-section-header" style="margin-bottom:10px; padding-bottom:10px;">
+                            <h2 id="orderDetailTitle">주문 상세 정보 (주문번호: <span id="orderIdTitle">ORDXXXX</span>)</h2>
+                            <div class="ea-header-actions">
+                                <button id="saveOrderChangesBtn" class="ea-btn primary"><i class="fas fa-save"></i> 변경사항 저장</button>
+                            </div>
+                        </div>
+                        <div class="card-section">
+                            <div class="section-title"><i class="fas fa-receipt"></i> 주문 기본 정보</div>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <dt>주문번호</dt>
+                                    <dd id="orderIdDisplay">데이터 없음</dd>
+                                </div>
+                                <div class="info-item">
+                                    <dt>주문일시</dt>
+                                    <dd id="orderDateDisplay">데이터 없음</dd>
+                                </div>
+                                <div class="info-item">
+                                    <dt>결제상태</dt>
+                                    <dd id="paymentStatusDisplay">데이터 없음</dd>
+                                </div>
+                                <div class="info-item">
+                                    <dt>주문상태</dt>
+                                    <dd>
+                                        <select id="overallOrderStatus" name="overallOrderStatus">
+                                            <option value="pending_payment">입금대기</option>
+                                            <option value="payment_completed">결제완료</option>
+                                            <option value="preparing">배송준비중</option>
+                                            <option value="shipping">배송중</option>
+                                            <option value="delivered">배송완료</option>
+                                            <option value="cancelled">주문취소</option>
+                                            <option value="exchange_request">교환요청</option>
+                                            <option value="refund_request">환불요청</option>
+                                            <option value="exchange_completed">교환완료</option>
+                                            <option value="refund_completed">환불완료</option>
+                                        </select>
+                                    </dd>
+                                </div>
+                                <div class="info-item">
+                                    <dt>결제수단</dt>
+                                    <dd id="paymentMethodDisplay">데이터 없음</dd>
+                                </div>
+                                <div class="info-item">
+                                    <dt>결제일시</dt>
+                                    <dd id="paymentDateDisplay">데이터 없음</dd>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-section">
+                            <div class="section-title"><i class="fas fa-user"></i> 주문자 정보</div>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <dt>주문자명</dt>
+                                    <dd id="customerNameDisplay">데이터 없음</dd>
+                                </div>
+                                <div class="info-item">
+                                    <dt>아이디</dt>
+                                    <dd id="customerIdDisplay">데이터 없음</dd>
+                                </div>
+                                <div class="info-item">
+                                    <dt>연락처</dt>
+                                    <dd id="customerPhoneDisplay">데이터 없음</dd>
+                                </div>
+                                <div class="info-item">
+                                    <dt>이메일</dt>
+                                    <dd id="customerEmailDisplay">데이터 없음</dd>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-section">
+                            <div class="section-title"><i class="fas fa-truck"></i> 배송 정보</div>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <dt>수령인명</dt>
+                                    <dd id="recipientNameDisplay">데이터 없음</dd>
+                                </div>
+                                <div class="info-item">
+                                    <dt>수령인 연락처</dt>
+                                    <dd id="recipientPhoneDisplay">데이터 없음</dd>
+                                </div>
+                                <div class="info-item" style="grid-column: 1 / -1;">
+                                    <dt>배송주소</dt>
+                                    <dd id="shippingAddressDisplay">데이터 없음</dd>
+                                </div>
+                                <div class="info-item" style="grid-column: 1 / -1;">
+                                    <dt>배송메모</dt>
+                                    <dd id="shippingMemoDisplay">데이터 없음</dd>
+                                </div>
+                                <div class="info-item">
+                                    <dt>운송장번호</dt>
+                                    <dd id="trackingNumberDisplay">-</dd>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-section">
+                            <div class="section-title"><i class="fas fa-boxes"></i> 주문 상품 목록</div>
+                            <table class="ea-table ordered-items-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:8%;">이미지</th>
+                                        <th>상품명/SKU</th>
+                                        <th style="width:10%;">옵션</th>
+                                        <th style="width:8%;">수량</th>
+                                        <th style="width:10%;">판매가</th>
+                                        <th style="width:10%;">합계</th>
+                                        <th style="width:12%;">상품상태</th>
+                                        <th style="width:15%;">비고(관리자용)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orderedItemsTableBody">
+                                </tbody>
+                            </table>
+                            <div class="order-totals">
+                                <dl>
+                                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                                        <dt>총 상품금액:</dt><dd id="itemsSubtotal">0 원</dd>
+                                    </div>
+                                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                                        <dt>배송비:</dt><dd id="shippingFee">3,000 원</dd>
+                                    </div>
+                                    <div class="grand-total" style="display:flex;justify-content:space-between;align-items:center;">
+                                        <dt>최종 결제금액:</dt><dd class="grand-total" id="grandTotal">0 원</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+                        <div class="card-section">
+                            <div class="section-title"><i class="fas fa-sticky-note"></i> 관리자 주문 메모</div>
+                            <div class="admin-memo-section form-group">
+                                <textarea id="adminOrderMemo" name="adminOrderMemo" placeholder="이 주문에 대한 내부 관리용 메모를 남기세요..." readonly></textarea>
+                            </div>
+                        </div>
+                        <div class="detail-actions">
+                            <button id="saveOrderChangesBtn2" class="ea-btn primary"><i class="fas fa-save"></i> 변경사항 저장</button>
+                            <a href="/admin/goods/orders/list" class="ea-btn">목록으로</a>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (관리자 전용)</p>
+        </footer>
+    </div>
+    <script>
+    // 샘플 데이터 및 상세 정보 채우기 (실제 연동시 서버에서 데이터 받아서 처리)
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('orderId');
+        document.getElementById('orderIdTitle').textContent = orderId || 'N/A';
+        // 샘플 데이터 (실제 연동시 서버에서 받아옴)
+        const sampleOrderData = {
+            id: orderId,
+            orderDate: "2025-05-13 10:30:25",
+            paymentStatus: "결제완료",
+            overallStatus: "preparing",
+            paymentMethod: "신용카드",
+            paymentDate: "2025-05-13 10:30:50",
+            customer: { name: "홍길동", id: "user123", phone: "010-1234-5678", email: "hong@example.com" },
+            shipping: {
+                recipientName: "홍길동",
+                phone: "010-1234-5678",
+                address: "(12345) 서울시 강남구 테헤란로 123, DDTOWN빌딩 5층",
+                memo: "문 앞에 놓아주세요.",
+                trackingNumber: ""
+            },
+            items: [
+                {
+                    productId: "G000123",
+                    imageUrl: "https://via.placeholder.com/40x40.png?text=P1",
+                    name: "아티스트 A 포토카드 세트 V.2",
+                    sku: "ARTISTA-PC-V2",
+                    options: "단품",
+                    quantity: 2,
+                    price: 15000,
+                    itemStatus: "preparing",
+                    remarks: "재고확인필요"
+                },
+                {
+                    productId: "G000088",
+                    imageUrl: "https://via.placeholder.com/40x40.png?text=P2",
+                    name: "DDTOWN 스페셜 키링",
+                    sku: "DDTOWN-KR-SP",
+                    options: "골드",
+                    quantity: 1,
+                    price: 13000,
+                    itemStatus: "preparing",
+                    remarks: ""
+                }
+            ],
+            totals: { itemsSubtotal: 43000, shippingFee: 3000, grandTotal: 43000 },
+            adminMemo: "VIP 고객 요청사항 확인."
+        };
+        if (orderId && sampleOrderData.id === orderId) {
+            document.getElementById('orderIdDisplay').textContent = sampleOrderData.id;
+            document.getElementById('orderDateDisplay').textContent = sampleOrderData.orderDate;
+            document.getElementById('paymentStatusDisplay').innerHTML = `<span class="order-status-badge status-payment-completed">${sampleOrderData.paymentStatus}</span>`;
+            document.getElementById('overallOrderStatus').value = sampleOrderData.overallStatus;
+            document.getElementById('paymentMethodDisplay').textContent = sampleOrderData.paymentMethod;
+            document.getElementById('paymentDateDisplay').textContent = sampleOrderData.paymentDate || '-';
+            document.getElementById('customerNameDisplay').textContent = sampleOrderData.customer.name;
+            document.getElementById('customerIdDisplay').textContent = sampleOrderData.customer.id;
+            document.getElementById('customerPhoneDisplay').textContent = sampleOrderData.customer.phone;
+            document.getElementById('customerEmailDisplay').textContent = sampleOrderData.customer.email;
+            document.getElementById('recipientNameDisplay').textContent = sampleOrderData.shipping.recipientName;
+            document.getElementById('recipientPhoneDisplay').textContent = sampleOrderData.shipping.phone;
+            document.getElementById('shippingAddressDisplay').textContent = sampleOrderData.shipping.address;
+            document.getElementById('shippingMemoDisplay').textContent = sampleOrderData.shipping.memo || '-';
+            document.getElementById('trackingNumberDisplay').textContent = sampleOrderData.shipping.trackingNumber || '-';
+            const itemsTableBody = document.getElementById('orderedItemsTableBody');
+            itemsTableBody.innerHTML = '';
+            sampleOrderData.items.forEach(item => {
+                const row = itemsTableBody.insertRow();
+                row.innerHTML = `
+                    <td><img src="\${item.imageUrl}" alt="\${item.name}" class="item-thumbnail-small"></td>
+                    <td class="item-name-sku">
+                        <a href="../admin_goods_items_detail.html?id=\${item.productId}" target="_blank">\${item.name}</a>
+                        <span>SKU: \${item.sku}</span>
+                    </td>
+                    <td>\${item.options}</td>
+                    <td>\${item.quantity}</td>
+                    <td>\${item.price.toLocaleString()} 원</td>
+                    <td>\${(item.quantity * item.price).toLocaleString()} 원</td>
+                    <td><span class="order-status-badge status-preparing">상품준비중</span></td>
+                    <td><span>\${item.remarks || '-'}</span></td>
+                `;
+            });
+            document.getElementById('itemsSubtotal').textContent = sampleOrderData.totals.itemsSubtotal.toLocaleString() + " 원";
+            document.getElementById('shippingFee').textContent = sampleOrderData.totals.shippingFee.toLocaleString() + " 원";
+            document.getElementById('grandTotal').textContent = sampleOrderData.totals.grandTotal.toLocaleString() + " 원";
+            document.getElementById('adminOrderMemo').value = sampleOrderData.adminMemo;
+        } else if (orderId) {
+            document.querySelector('.order-detail-container').innerHTML =
+                '<p>주문 정보를 불러올 수 없습니다 (ID: ' + orderId + '). <a href="orders_list.html">목록으로 돌아가기</a></p>';
+        } else {
+            document.querySelector('.order-detail-container').innerHTML =
+                '<p>잘못된 접근입니다. 주문 ID가 제공되지 않았습니다. <a href="orders_list.html">목록으로 돌아가기</a></p>';
+        }
+        // 저장 버튼 (실제 연동시 서버로 변경사항 전송)
+        document.getElementById('saveOrderChangesBtn').onclick = document.getElementById('saveOrderChangesBtn2').onclick = function() {
+            alert('주문 상태 변경이 저장되었습니다. (서버 연동 필요)');
+        };
+    });
+    </script>
+</body>
+</html> 

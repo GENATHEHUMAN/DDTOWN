@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.admin.faqInquiry.IAdminFaqMapper">
+ 
+ 	<select id="faqAdminMain" resultType="kr.or.ddit.vo.faq.FaqVO">
+ 		SELECT
+		    faq_no
+		  , emp_username
+		  , faq_category
+		  , faq_title
+		  , faq_answer
+		  , faq_reg_date
+		  , faq_mod_date
+		  , cdc.description
+		FROM
+		    faq f, common_detail_code cdc
+		where f.faq_category = cdc.comm_code_det_no (+)
+ 	</select>
+ 	
+ 	<select id="getFaqDetail" parameterType="int" resultType="kr.or.ddit.vo.faq.FaqVO">
+ 		SELECT
+		    faq_no
+		  , emp_username
+		  , faq_category
+		  , faq_title
+		  , faq_answer
+		  , faq_reg_date
+		  , faq_mod_date
+		  , cdc.description
+		FROM
+		    faq f, common_detail_code cdc
+		where f.faq_category = cdc.comm_code_det_no (+)
+		and f.faq_no = #{faqNo}
+ 	</select>
+ 
+ </mapper>

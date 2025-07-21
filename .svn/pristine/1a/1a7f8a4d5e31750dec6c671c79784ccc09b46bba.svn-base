@@ -1,0 +1,416 @@
+/* --- Notice List Page Specific Styles --- */
+
+.notice-list-container {
+    width: 90%;
+    max-width: 1000px; /* Limit width for better readability on large screens */
+    margin: 40px auto; /* Center the container */
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.notice-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #eee;
+}
+
+.notice-list-header h1 {
+    font-size: 2.2em;
+    color: #333;
+    margin: 0;
+    font-weight: 700;
+}
+
+.notice-search {
+    display: flex;
+    gap: 10px;
+}
+
+.notice-search input[type="text"] {
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+    width: 250px;
+    transition: border-color 0.3s ease;
+}
+
+.notice-search input[type="text"]:focus {
+    border-color: #88aaff; /* A pleasant blue for focus */
+    outline: none;
+    box-shadow: 0 0 5px rgba(136, 170, 255, 0.4);
+}
+
+.notice-search input[type="submit"] {
+    padding: 10px 20px;
+    background-color: #6a5acd; /* A soft purple */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.notice-search input[type="submit"]:hover {
+    background-color: #5342b3; /* Darker purple on hover */
+    transform: translateY(-2px);
+}
+
+/* --- Table Styles --- */
+.notice-list table {
+    width: 100%;
+    border-collapse: separate; /* Allows for border-radius on cells */
+    border-spacing: 0; /* Remove space between cell borders */
+    margin-top: 20px;
+    font-size: 1em;
+    background-color: #fcfcfc;
+    border-radius: 8px;
+    overflow: hidden; /* Ensures rounded corners on the table */
+}
+
+.notice-list th,
+.notice-list td {
+    padding: 15px 20px;
+    text-align: left; /* Align text left by default, adjust as needed */
+    border-bottom: 1px solid #eee; /* Light separator */
+}
+
+.notice-list th {
+    background-color: #eef1f7; /* Light blue-grey header */
+    color: #555;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.notice-list th:first-child {
+    border-top-left-radius: 8px; /* Top-left corner for first header */
+}
+
+.notice-list th:last-child {
+    border-top-right-radius: 8px; /* Top-right corner for last header */
+}
+
+.notice-list tr:last-child td {
+    border-bottom: none; /* No border for the last row */
+}
+
+.notice-list td {
+    background-color: #fff;
+    color: #444;
+    vertical-align: middle;
+}
+
+.notice-list tr:hover td {
+    background-color: #f9f9f9; /* Subtle hover effect */
+}
+
+
+
+/* Specific styling for the '제목' (Title) column */
+.notice-list td:nth-child(1) {
+    font-weight: 500;
+}
+
+.notice-list td a {
+    color: #3f51b5; /* A vibrant blue for links */
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.notice-list td a:hover {
+    color: #283593; /* Darker blue on hover */
+    text-decoration: underline;
+}
+
+/* Style for the '작성일' (Date) column */
+.notice-list td:nth-child(2) {
+    text-align: center; /* Center the date */
+    color: #777;
+    font-size: 0.95em;
+}
+
+/* No posts found message */
+.notice-list td[colspan="4"] {
+    text-align: center;
+    padding: 30px;
+    color: #888;
+    font-style: italic;
+    background-color: #f5f5f5;
+    border-radius: 0 0 8px 8px; /* Rounded bottom corners for this cell */
+}
+
+/* --- Pagination Styles --- */
+.pagination {
+    margin-top: 30px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px; /* Space between pagination buttons */
+}
+
+.pagination .btn-page {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    color: #555;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1em;
+    transition: all 0.3s ease;
+    background-color: #fff;
+}
+
+.pagination .btn-page:hover:not(.active):not([disabled]) {
+    background-color: #f0f0f0;
+    border-color: #bbb;
+    color: #333;
+    transform: translateY(-1px);
+}
+
+.pagination .btn-page.active {
+    background-color: #6a5acd; /* Active page color */
+    color: white;
+    border-color: #6a5acd;
+    cursor: default;
+    box-shadow: 0 2px 8px rgba(106, 90, 205, 0.3);
+}
+
+.pagination .btn-page[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #f5f5f5;
+}
+
+.pagination .btn-page.prev,
+.pagination .btn-page.next {
+    font-size: 1.2em; /* Slightly larger arrows */
+}
+
+/* Ensure body has some padding if needed */
+.notice-list-page-body {
+    background-color: #f4f6f9; /* Light background for the whole page */
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern font */
+}
+
+/* General layout adjustments if needed */
+.site-header, .main-navigation {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+/* goods_notice.css */
+
+/* 기존 공지사항 목록 관련 스타일은 그대로 유지하거나 필요에 따라 조정하세요. */
+
+/* --- 공지사항 상세 페이지 (goods_notice_detail.jsp) 스타일 --- */
+
+.notice-detail-page-body {
+    font-family: 'Noto Sans KR', sans-serif; /* 한국어 폰트 추가 */
+    background-color: #f8f8f8; /* 은은한 배경색 */
+    color: #333;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+.notice-detail-container {
+    max-width: 960px; /* 컨텐츠 최대 너비 설정 */
+    margin: 40px auto; /* 중앙 정렬 및 상하 여백 */
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 10px; /* 부드러운 모서리 */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* 은은한 그림자 */
+    border: 1px solid #eee; /* 얇은 경계선 */
+}
+
+.notice-detail-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #ddd; /* 하단 구분선 */
+}
+
+.notice-detail-header h1 {
+    font-size: 2.2em; /* 제목 크기 */
+    color: #222;
+    font-weight: 700; /* 볼드 */
+    margin: 0;
+    letter-spacing: -0.5px; /* 글자 간격 조정 */
+}
+
+.notice-detail-content-wrap {
+    margin-bottom: 40px;
+}
+
+.notice-detail-title {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0; /* 제목과 정보 사이 구분선 */
+}
+
+.notice-detail-title h2 {
+    font-size: 1.8em; /* 공지 제목 크기 */
+    color: #333;
+    font-weight: 600;
+    margin: 0;
+    word-break: break-word; /* 긴 단어 줄바꿈 */
+}
+
+.notice-detail-info {
+    font-size: 0.95em;
+    color: #777;
+    margin-bottom: 25px;
+    text-align: right; /* 작성일 우측 정렬 */
+}
+
+.notice-detail-body {
+    font-size: 1.1em;
+    color: #444;
+    padding: 20px 0;
+    line-height: 1.8;
+}
+
+.notice-detail-body p {
+    margin-bottom: 1em; /* 단락 하단 여백 */
+    white-space: pre-wrap; /* 공백과 줄바꿈 유지 */
+}
+
+.notice-detail-attachments {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px dashed #e0e0e0; /* 첨부파일 섹션 구분선 */
+}
+
+.notice-detail-attachments h3 {
+    font-size: 1.2em;
+    color: #555;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.notice-detail-attachments ul {
+    list-style: none; /* 기본 리스트 스타일 제거 */
+    padding: 0;
+    margin: 0;
+}
+
+.notice-detail-attachments li {
+    margin-bottom: 10px;
+}
+
+.notice-detail-attachments a {
+    color: #007bff; /* 링크 색상 */
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.notice-detail-attachments a:hover {
+    color: #0056b3; /* 호버 시 색상 변경 */
+    text-decoration: underline;
+}
+
+.notice-detail-attachments a .fas {
+    margin-right: 8px; /* 아이콘과 텍스트 간격 */
+    color: #6c757d; /* 아이콘 색상 */
+    font-size: 1.1em;
+}
+
+.no-notice-found {
+    text-align: center;
+    padding: 50px;
+    font-size: 1.2em;
+    color: #777;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+}
+
+/* --- 액션 버튼 스타일 --- */
+.notice-detail-actions {
+    text-align: center; /* 버튼 가운데 정렬 */
+    margin-top: 40px;
+    padding-top: 25px;
+    border-top: 1px solid #ddd; /* 상단 구분선 */
+}
+
+.notice-detail-actions button {
+    padding: 12px 25px;
+    margin: 0 8px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    font-weight: 600;
+}
+
+.notice-detail-actions .btn-list {
+    background-color: #6c757d; /* 회색 계열 */
+    color: #fff;
+}
+
+.notice-detail-actions .btn-list:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+
+.notice-detail-actions .btn-edit {
+    background-color: #007bff; /* 파란색 계열 */
+    color: #fff;
+}
+
+.notice-detail-actions .btn-edit:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+.notice-detail-actions .btn-delete {
+    background-color: #dc3545; /* 빨간색 계열 */
+    color: #fff;
+}
+
+.notice-detail-actions .btn-delete:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+}
+
+/* Responsive design (선택 사항) */
+@media (max-width: 768px) {
+    .notice-detail-container {
+        margin: 20px auto;
+        padding: 20px;
+    }
+    .notice-detail-header h1 {
+        font-size: 1.8em;
+    }
+    .notice-detail-title h2 {
+        font-size: 1.5em;
+    }
+    .notice-detail-body {
+        font-size: 1em;
+    }
+    .notice-detail-actions button {
+        padding: 10px 20px;
+        margin: 5px;
+        display: block; /* 모바일에서 버튼 세로 정렬 */
+        width: calc(100% - 10px); /* 너비 조절 */
+    }
+}

@@ -1,0 +1,1435 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.community.ICommunityMainPageMapper">
+
+	<resultMap type="kr.or.ddit.vo.artist.ArtistGroupVO" id="artistGroup">
+		<id property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artGroupRegDate" column="ART_GROUP_REG_DATE"/>
+		<result property="artGroupDelYn" column="ART_GROUP_DEL_YN"/>
+		<result property="artGroupProfileImg" column="ART_GROUP_PROFILE_IMG"/>
+		<result property="artGroupModDate" column="ART_GROUP_MOD_DATE"/>
+		<result property="artGroupTypeCode" column="ART_GROUP_TYPE_CODE"/>
+		<result property="empUsername" column="EMP_USERNAME"/>
+		<result property="artGroupDebutdate" column="ART_GROUP_DEBUTDATE"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artGroupContent" column="ART_GROUP_CONTENT"/>
+
+		<collection property="artistList" resultMap="artist"></collection>
+	</resultMap>
+
+	 <resultMap type="kr.or.ddit.vo.artist.ArtistVO" id="artist">
+ 		<id property="artNo" column="ART_NO"/>
+		<result property="memUsername" column="MEM_USERNAME"/>
+		<result property="artNm" column="ART_NM"/>
+		<result property="artContent" column="ART_CONTENT"/>
+		<result property="artRegDate" column="ART_REG_DATE"/>
+		<result property="artModDate" column="ART_MOD_DATE"/>
+		<result property="artProfileImg" column="ART_PROFILE_IMG"/>
+		<result property="artDebutdate" column="ART_DEBUTDATE"/>
+		<result property="artDelYn" column="ART_DEL_YN"/>
+ 	</resultMap>
+
+ 	<resultMap type="kr.or.ddit.vo.artist.AlbumVO" id="album">
+ 		<id property="albumNo" column="ALBUM_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="albumImg" column="ALBUM_IMG"/>
+		<result property="albumNm" column="ALBUM_NM"/>
+		<result property="albumDetail" column="ALBUM_DETAIL"/>
+		<result property="albumRegDate" column="ALBUM_REG_DATE"/>
+
+		<collection property="albumSongs" resultMap="songs"></collection>
+ 	</resultMap>
+
+	 <resultMap type="kr.or.ddit.vo.artist.AlbumSongVO" id="songs">
+	 	<id property="songNo" column="SONG_NO"/>
+		<result property="albumNo" column="ALBUM_NO"/>
+		<result property="songNm" column="SONG_NM"/>
+		<result property="songTitleYn" column="SONG_TITLE_YN"/>
+	 </resultMap>
+
+ 	<select id="getGroupLists" resultType="kr.or.ddit.vo.artist.ArtistGroupVO">
+ 		SELECT
+		    ART_GROUP_NO
+		  , ART_GROUP_NM
+		  , ART_GROUP_CONTENT
+		  , ART_GROUP_DEBUTDATE
+		  , ART_GROUP_PROFILE_IMG
+		  , ART_GROUP_DEL_YN
+		FROM
+		    ARTIST_GROUP
+		WHERE
+			ART_GROUP_DEL_YN = 'N'
+		ORDER BY
+			ART_GROUP_NO DESC
+ 	</select>
+
+ 	<select id="getGroupInfo" parameterType="int" resultMap="artistGroup">
+ 		SELECT
+		  	AG.ART_GROUP_NO
+		  , AG.ART_GROUP_TYPE_CODE
+		  , AG.EMP_USERNAME
+		  , AG.ART_GROUP_DEBUTDATE
+		  , AG.ART_GROUP_NM
+		  , AG.ART_GROUP_CONTENT
+		  , AG.ART_GROUP_REG_DATE
+		  , AG.ART_GROUP_DEL_YN
+		  , AG.ART_GROUP_PROFILE_IMG
+		  , AG.ART_GROUP_MOD_DATE
+
+		  , AT.ART_NO
+		  , AT.MEM_USERNAME
+		  , AT.ART_NM
+		  , AT.ART_CONTENT
+		  , AT.ART_REG_DATE
+		  , AT.ART_MOD_DATE
+		  , AT.ART_PROFILE_IMG
+		  , AT.ART_DEBUTDATE
+		  , AT.ART_DEL_YN
+
+		  , AGM.ART_GROUP_MAP_DEBUTDATE
+		  , AGM.ART_DEL_YN
+		FROM
+		    ARTIST_GROUP AG
+		LEFT JOIN
+		    ARTIST_GROUP_MAP AGM ON AG.ART_GROUP_NO = AGM.ART_GROUP_NO
+		LEFT JOIN
+		    ARTIST AT ON AGM.ART_NO = AT.ART_NO
+		WHERE
+		    AG.ART_GROUP_NO = #{artGroupNo}
+		AND AG.ART_GROUP_DEL_YN = 'N'
+		AND AGM.ART_DEL_YN = 'N'
+		ORDER BY
+				AG.ART_GROUP_NO DESC
+ 	</select>
+
+ 	<select id="getGroupAlbum" parameterType="int" resultMap="album">
+ 		SELECT
+		  A.ALBUM_NO
+		  , A.ART_GROUP_NO
+		  , A.ALBUM_IMG
+		  , A.ALBUM_NM
+		  , A.ALBUM_DETAIL
+		  , A.ALBUM_REG_DATE
+
+		  , B.SONG_NO
+		  , B.ALBUM_NO
+		  , B.SONG_NM
+		  , B.SONG_TITLE_YN
+		FROM
+		    ARTIST_ALBUM A
+		LEFT JOIN
+		    ALBUM_SONG B ON A.ALBUM_NO = B.ALBUM_NO
+		WHERE
+		    A.ART_GROUP_NO = #{artGroupNo}
+		ORDER BY
+			A.ALBUM_REG_DATE DESC
+ 	</select>
+
+
+ 	<resultMap type="kr.or.ddit.vo.community.CommunityPostVO" id="post">
+ 		<result property="comuPostNo" column="COMU_POST_NO"/>
+		<result property="boardTypeCode" column="BOARD_TYPE_CODE"/>
+		<result property="comuProfileNo" column="COMU_PROFILE_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="comuPostStatCode" column="COMU_POST_STAT_CODE"/>
+		<result property="comuPostContent" column="COMU_POST_CONTENT"/>
+		<result property="comuPostRegDate" column="COMU_POST_REG_DATE"/>
+		<result property="comuPostModDate" column="COMU_POST_MOD_DATE"/>
+		<result property="comuPostMbspYn" column="COMU_POST_MBSP_YN"/>
+		<result property="comuPostDelYn" column="COMU_POST_DEL_YN"/>
+
+		<result property="comuPostLike" column="COMU_POST_LIKE_COUNT"/>
+
+		<result property="comuPostReplyCount" column="COMU_POST_REPLY_COUNT" />
+
+		<result property="btBoardTypeCode" column="BT_BOARD_TYPE_CODE"/>
+		<result property="boardNm" column="BT_BOARD_NM"/>
+		<result property="boardRegDate" column="BT_BOARD_REG_DATE"/>
+		<result property="boardReplyYn" column="BT_BOARD_REPLY_YN"/>
+
+		<result property="likeYn" column="LIKE_YN"/>
+
+		<collection property="writerProfile" resultMap="writerInfo" />
+
+		<collection property="comuPostReplyList" resultMap="reply" />
+ 	</resultMap>
+
+ 	<resultMap type="kr.or.ddit.vo.community.CommunityProfileVO" id="writerInfo">
+ 		<result property="comuProfileNo" column="WRITER_PROFILE_NO"/>
+		<result property="artGroupNo" column="WRITER_ART_GROUP_NO"/>
+		<result property="memUsername" column="WRITER_MEM_USERNAME"/>
+		<result property="comuMemCatCode" column="WRITER_MEM_CAT_CODE"/>
+		<result property="comuProfileImg" column="WRITER_COMU_PROFILE_IMG"/>
+		<result property="comuNicknm" column="WRITER_COMU_NICKNM"/>
+		<result property="comuRegDate" column="WRITER_COMU_REG_DATE"/>
+		<result property="comuDelYn" column="WRITER_COMU_DEL_YN"/>
+ 	</resultMap>
+
+ 	<resultMap type="kr.or.ddit.vo.community.CommunityReplyVO" id="reply">
+ 		<result property="comuReplyNo" column="REPLY_COMU_REPLY_NO"/>
+		<result property="comuPostNo" column="REPLY_COMU_POST_NO"/>
+		<result property="boardTypeCode" column="REPLY_BOARD_TYPE_CODE"/>
+		<result property="comuProfileNo" column="REPLY_COMU_PROFILE_NO"/>
+		<result property="comuReplyContent" column="REPLY_COMU_REPLY_CONTENT"/>
+		<result property="comuReplyRegDate" column="REPLY_COMU_REPLY_REG_DATE"/>
+		<result property="comuReplyModDate" column="REPLY_COMU_REPLY_MOD_DATE"/>
+		<result property="comuReplyDelYn" column="REPLY_COMU_REPLY_DEL_YN"/>
+		<result property="artGroupNo" column="REPLY_ART_GROUP_NO"/>
+
+		<collection property="replyMember" resultMap="replyWriterInfo" />
+ 	</resultMap>
+
+ 	<resultMap type="kr.or.ddit.vo.community.CommunityProfileVO" id="replyWriterInfo">
+ 		<result property="comuProfileNo" column="REPLY_WRITER_PROFILE_NO"/>
+		<result property="artGroupNo" column="REPLY_WRITER_ART_GROUP_NO"/>
+		<result property="memUsername" column="REPLY_WRITER_MEM_USERNAME"/>
+		<result property="comuMemCatCode" column="REPLY_WRITER_MEM_CAT_CODE"/>
+		<result property="comuProfileImg" column="REPLY_WRITER_PROFILE"/>
+		<result property="comuNicknm" column="REPLY_WRITER_NICKNM"/>
+		<result property="comuRegDate" column="REPLY_WRITER_REG_DATE"/>
+		<result property="comuDelYn" column="REPLY_WRITER_DEL_YN"/>
+ 	</resultMap>
+
+ 	<sql id="communityTable">
+ 		  cp.comu_post_no
+	    , cp.board_type_code
+	    , cp.comu_profile_no
+	    , cp.art_group_no
+	    , cp.file_group_no
+	    , cp.comu_post_stat_code
+	    , cp.comu_post_content
+	    , cp.comu_post_reg_date
+	    , cp.comu_post_mod_date
+	    , cp.comu_post_mbsp_yn
+	    , cp.comu_post_del_yn
+ 	</sql>
+
+ 	<sql id="writerProfileTable">
+ 		, cpro.comu_profile_no as writer_profile_no
+	    , cpro.art_group_no as writer_art_group_no
+	    , cpro.mem_username as writer_mem_username
+	    , cpro.comu_mem_cat_code as writer_mem_cat_code
+	    , cpro.comu_profile_img as writer_comu_profile_img
+	    , cpro.comu_nicknm as writer_comu_nicknm
+	    , cpro.comu_reg_date as writer_comu_reg_date
+	    , cpro.comu_del_yn as writer_comu_del_yn
+ 	</sql>
+
+ 	<sql id="boardTypeTable">
+ 		, bt.board_type_code as bt_board_type_code
+	    , bt.board_nm as bt_board_nm
+	    , bt.board_reg_date as bt_board_reg_date
+	    , bt.board_reply_yn as bt_board_reply_yn
+ 	</sql>
+
+ 	<sql id="replyListTable">
+ 		, cr.comu_reply_no as reply_comu_reply_no
+	    , cr.comu_post_no as reply_comu_post_no
+	    , cr.board_type_code as reply_board_type_code
+	    , cr.comu_profile_no as reply_comu_profile_no
+	    , cr.comu_reply_content as reply_comu_reply_content
+	    , cr.comu_reply_reg_date as reply_comu_reply_reg_date
+	    , cr.comu_reply_mod_date as reply_comu_reply_mod_date
+	    , cr.comu_reply_del_yn as reply_comu_reply_del_yn
+	    , cr.art_group_no as reply_art_group_no
+ 	</sql>
+
+ 	<sql id="replyWriterProfileTable">
+ 		, recpro.comu_profile_no as reply_writer_profile_no
+	    , recpro.art_group_no as reply_writer_art_group_no
+	    , recpro.mem_username as reply_writer_mem_username
+	    , recpro.comu_mem_cat_code as reply_writer_mem_cat_code
+	    , recpro.comu_profile_img as reply_writer_profile
+	    , recpro.comu_nicknm as reply_writer_nicknm
+	    , recpro.comu_reg_date as reply_writer_reg_date
+	    , recpro.comu_del_yn as reply_writer_del_yn
+ 	</sql>
+
+ 	<sql id="mainPostJoinTable">
+ 		from
+	        community_post cp
+	    left outer JOIN
+	        community_profile cpro ON cp.comu_profile_no = cpro.comu_profile_no
+	    LEFT outer JOIN
+	        board_type bt ON cp.board_type_code = bt.board_type_code
+	    LEFT outer JOIN
+	        (SELECT comu_post_no, COUNT(*) AS like_count
+	         FROM community_like
+	         GROUP BY comu_post_no) cl_count ON cp.comu_post_no = cl_count.comu_post_no
+	    left outer join
+	        (select COMU_POST_NO, count(comu_reply_no) as reply_count
+	            from community_reply
+	         where comu_reply_del_yn = 'N'
+	         group by  COMU_POST_NO) rc on cp.comu_post_no = rc.comu_post_no
+	    left outer join
+	    	(select cc.comu_like_no as yn, cc.comu_post_no
+		        from community_like cc
+		      where cc.comu_profile_no = #{myComuProfileNo}) lk on cp.comu_post_no = lk.comu_post_no
+	    WHERE
+	        cp.art_group_no = #{artGroupNo}
+	    and cp.comu_post_del_yn = 'N'
+	    <if test="searchWord != null and searchWord != ''">
+		    and cp.comu_post_content like '%'||#{searchWord}||'%'
+	    </if>
+	    <if test="searchType != null and searchType != ''">
+		    and cpro.MEM_USERNAME like '%'||#{searchType}||'%'
+	    </if>
+	    <if test="boardTypeCode.equals('ARTIST_BOARD') or boardTypeCode == 'ARTIST_BOARD'">
+	    	and cp.board_type_code = #{boardTypeCode}
+	    </if>
+	    <if test="boardTypeCode.equals('FAN_BOARD') or boardTypeCode == 'FAN_BOARD'">
+	    	and cp.board_type_code = #{boardTypeCode}
+	    </if>
+
+ 	</sql>
+
+ 	<sql id="replyJoinTable">
+ 		LEFT outer JOIN
+	        community_reply cr ON a.comu_post_no = cr.comu_post_no and cr.comu_reply_del_yn = 'N'
+	    left outer join
+	        community_profile recpro on cr.comu_profile_no = recpro.comu_profile_no
+	    where a.rn between #{startRow} and #{endRow}
+ 	</sql>
+
+ 	<select id="getPostList" parameterType="kr.or.ddit.vo.community.CommunityVO" resultMap="post">
+ 		select *
+		from(
+			select
+			    a.*
+			    <include refid="replyListTable" />
+
+			    <include refid="replyWriterProfileTable" />
+
+			from(
+			    select
+			    	<include refid="communityTable" />
+
+			        <include refid="writerProfileTable" />
+
+			        <include refid="boardTypeTable" />
+
+			        , COALESCE(cl_count.like_count, 0) AS comu_post_like_count
+
+			        , COALESCE(rc.reply_count, 0) AS comu_post_reply_count
+
+			        , ROW_NUMBER() OVER (ORDER BY cp.comu_post_reg_date DESC, cp.comu_post_no DESC) AS rn
+
+
+			        , nvl2(lk.yn , 'Y', 'N') as like_yn
+
+			    <include refid="mainPostJoinTable" />
+			    order by cp.comu_post_reg_date desc
+			    ) a
+		    <include refid="replyJoinTable" />
+		    order by cr.COMU_REPLY_NO desc, cr.COMU_REPLY_REG_DATE)b
+		    order by b.comu_post_reg_date desc
+
+ 	</select>
+
+ 	<select id="getFanPostList" parameterType="kr.or.ddit.vo.community.CommunityVO" resultMap="post">
+ 		select *
+		from(
+			select
+			    a.*,
+			    <include refid="replyListTable" />
+
+			    <include refid="replyWriterProfileTable" />
+
+			from(
+			    select
+			    	<include refid="communityTable" />
+
+			        <include refid="writerProfileTable" />
+
+			        <include refid="boardTypeTable" />
+
+			        , COALESCE(cl_count.like_count, 0) AS comu_post_like_count
+
+			        , COALESCE(rc.reply_count, 0) AS comu_post_reply_count
+
+			        , ROW_NUMBER() OVER (ORDER BY cp.comu_post_no DESC, cp.comu_post_reg_date DESC) AS rn
+
+			    <include refid="mainPostJoinTable" />
+			    and cp.board_type_code = 'Fan_BOARD'
+			    order by cp.comu_post_no desc, cp.comu_post_reg_date desc
+			    ) a
+		    <include refid="replyJoinTable" />
+		    order by cr.COMU_REPLY_NO desc, cr.COMU_REPLY_REG_DATE)
+ 	</select>
+
+ 	<resultMap type="kr.or.ddit.vo.artist.ArtistGroupVO" id="artGroup">
+ 		<result property="artGroupRegDate" column="ART_GROUP_REG_DATE"/>
+		<result property="artGroupDelYn" column="ART_GROUP_DEL_YN"/>
+		<result property="artGroupProfileImg" column="ART_GROUP_PROFILE_IMG"/>
+		<result property="artGroupModDate" column="ART_GROUP_MOD_DATE"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artGroupTypeCode" column="ART_GROUP_TYPE_CODE"/>
+		<result property="empUsername" column="EMP_USERNAME"/>
+		<result property="artGroupDebutdate" column="ART_GROUP_DEBUTDATE"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artGroupContent" column="ART_GROUP_CONTENT"/>
+
+		<collection property="communityVO" resultMap="comu" />
+
+		<collection property="artistList" resultMap="artist" />
+ 	</resultMap>
+
+ 	<resultMap type="kr.or.ddit.vo.community.CommunityVO" id="comu">
+ 		<result property="totalFan" column="total_fan"/>
+ 		<result property="totalArtist" column="total_artist"/>
+ 	</resultMap>
+
+ 	<select id="getCommunityInfo" parameterType="int" resultMap="artGroup">
+ 		SELECT
+		    ag.art_group_no
+		  , ag.art_group_type_code
+		  , ag.emp_username
+		  , ag.art_group_debutdate
+		  , ag.art_group_nm
+		  , ag.art_group_content
+		  , ag.art_group_reg_date
+		  , ag.art_group_del_yn
+		  , ag.art_group_profile_img
+		  , ag.art_group_mod_date
+
+		  , tf.totalfan - ta.totalArtist as total_fan
+		  , ta.totalArtist as total_artist
+
+		  , a.ART_NO
+		  , a.MEM_USERNAME
+		  , a.ART_NM
+		  , a.ART_CONTENT
+		  , a.ART_REG_DATE
+		  , a.ART_MOD_DATE
+		  , a.ART_PROFILE_IMG
+		  , a.ART_DEBUTDATE
+		  , a.ART_DEL_YN
+		FROM
+		    artist_group ag
+		left outer join
+		    (select
+		      art_group_no
+		    , count(comu_profile_no)as totalFan
+		    , comu_del_yn
+		    from community_profile
+		    group by art_group_no, comu_del_yn) tf
+		    on ag.art_group_no = tf.art_group_no and tf.comu_del_yn = 'N'
+		left outer join
+		    (select
+		        art_group_no
+		        , count(ART_NO) as totalArtist
+		    from artist_group_map
+		    group by art_group_no) ta
+		    on ag.art_group_no = ta.art_group_no
+		left outer join
+		    artist_group_map am on ag.art_group_no = am.art_group_no
+		left outer join
+		    artist a on a.art_no = am.art_no and a.art_del_yn = 'N'
+		where ag.art_group_no = #{artGroupNo}
+ 	</select>
+
+ 	<select id="getArtistPostTotal" parameterType="kr.or.ddit.vo.community.CommunityVO" resultType="int">
+ 		select count(*)
+		from community_post cp
+			left outer join community_profile cpro
+			on cp.comu_profile_no = cpro.comu_profile_no
+		where cp.art_group_no = #{artGroupNo}
+		and cp.board_type_code = 'ARTIST_BOARD'
+		and cp.comu_post_del_yn = 'N'
+		<if test="searchWord != null and searchWord != ''">
+		    and cp.comu_post_content like '%'||#{searchWord}||'%'
+	    </if>
+	    <if test="searchType != null and searchType != ''">
+		    and cpro.mem_username like '%'||#{searchType}||'%'
+	    </if>
+ 	</select>
+
+ 	<select id="getFanPostTotal" parameterType="kr.or.ddit.vo.community.CommunityVO" resultType="int">
+ 		select count(*)
+		from community_post cp
+			left outer join community_profile cpro
+			on cp.comu_profile_no = cpro.comu_profile_no
+		where cp.art_group_no = #{artGroupNo}
+		and cp.board_type_code = 'FAN_BOARD'
+		and cp.comu_post_del_yn = 'N'
+		<if test="searchWord != null and searchWord != ''">
+		    and cp.comu_post_content like '%'||#{searchWord}||'%'
+	    </if>
+ 	</select>
+
+ 	<select id="currentUserComufollowing" parameterType="kr.or.ddit.vo.community.CommunityPostVO" resultType="kr.or.ddit.vo.community.CommunityProfileVO">
+ 		select
+		  comu_profile_no
+		, art_group_no
+		, mem_username
+		, comu_mem_cat_code
+		, comu_profile_img
+		, comu_nicknm
+		, comu_reg_date
+		, comu_del_yn
+		from
+		    community_profile
+		where art_group_no = #{artGroupNo}
+		and mem_username = #{memUsername}
+		and comu_del_yn = 'N'
+ 	</select>
+
+ 	<select id="getComuProfile" parameterType="map" resultType="kr.or.ddit.vo.community.CommunityProfileVO">
+ 		select
+		  comu_profile_no
+		, art_group_no
+		, mem_username
+		, comu_mem_cat_code
+		, comu_profile_img
+		, comu_nicknm
+		, comu_reg_date
+		, comu_del_yn
+		from
+		    community_profile
+		where art_group_no = #{artGroupNo}
+		and mem_username = #{memUsername}
+		and comu_del_yn = 'N'
+ 	</select>
+
+ 	<insert id="postInsert" parameterType="kr.or.ddit.vo.community.CommunityPostVO">
+ 		<selectKey keyProperty="comuPostNo" resultType="int" order="BEFORE">
+ 			select community_post_seq.nextval from dual
+ 		</selectKey>
+ 		insert into community_post
+ 		( comu_post_no
+ 		, board_type_code
+ 		, comu_profile_no
+ 		, art_group_no
+ 		, file_group_no
+ 		, comu_post_stat_code
+	    , comu_post_content
+	    , comu_post_reg_date
+	    , comu_post_mod_date
+	    <if test="comuPostMbspYn != null and comuPostMbspYn != ''">
+	    , comu_post_mbsp_yn
+	    </if>
+	    )
+	    values
+	    ( #{comuPostNo}
+	    , #{boardTypeCode}
+	    , #{comuProfileNo}
+	    , #{artGroupNo}
+	    , #{fileGroupNo}
+	    , #{comuPostStatCode}
+	    , #{comuPostContent}
+	    , sysdate
+	    , sysdate
+	    <if test="comuPostMbspYn != null and comuPostMbspYn != ''">
+		    , #{comuPostMbspYn}
+	    </if>
+	    )
+ 	</insert>
+
+ 	<select id="getPost" parameterType="kr.or.ddit.vo.community.CommunityPostVO" resultMap="post">
+ 		select
+		      cp.comu_post_no
+		    , cp.board_type_code
+		    , cp.comu_profile_no
+		    , cp.art_group_no
+		    , cp.file_group_no
+		    , cp.comu_post_stat_code
+		    , cp.comu_post_content
+		    , cp.comu_post_reg_date
+		    , cp.comu_post_mod_date
+		    , cp.comu_post_mbsp_yn
+		    , cp.comu_post_del_yn
+
+		    , cpro.comu_profile_no as writer_profile_no
+		    , cpro.art_group_no as writer_art_group_no
+		    , cpro.mem_username as writer_mem_username
+		    , cpro.comu_mem_cat_code as writer_mem_cat_code
+		    , cpro.comu_profile_img as writer_comu_profile_img
+		    , cpro.comu_nicknm as writer_comu_nicknm
+		    , cpro.comu_reg_date as writer_comu_reg_date
+		    , cpro.comu_del_yn as writer_comu_del_yn
+
+		    , bt.board_type_code as bt_board_type_code
+		    , bt.board_nm as bt_board_nm
+		    , bt.board_reg_date as bt_board_reg_date
+		    , bt.board_reply_yn as bt_board_reply_yn
+
+		    , cr.comu_reply_no as reply_comu_reply_no
+		    , cr.comu_post_no as reply_comu_post_no
+		    , cr.board_type_code as reply_board_type_code
+		    , cr.comu_profile_no as reply_comu_profile_no
+		    , cr.comu_reply_content as reply_comu_reply_content
+		    , cr.comu_reply_reg_date as reply_comu_reply_reg_date
+		    , cr.comu_reply_mod_date as reply_comu_reply_mod_date
+		    , cr.comu_reply_del_yn as reply_comu_reply_del_yn
+		    , cr.art_group_no as reply_art_group_no
+
+		    , recpro.comu_profile_no as reply_writer_profile_no
+		    , recpro.art_group_no as reply_writer_art_group_no
+		    , recpro.mem_username as reply_writer_mem_username
+		    , recpro.comu_mem_cat_code as reply_writer_mem_cat_code
+		    , recpro.comu_profile_img as reply_writer_profile
+		    , recpro.comu_nicknm as reply_writer_nicknm
+		    , recpro.comu_reg_date as reply_writer_reg_date
+		    , recpro.comu_del_yn as reply_writer_del_yn
+
+		    , COALESCE(cl_count.like_count, 0) AS comu_post_like_count
+
+		    , COALESCE(rc.reply_count, 0) AS comu_post_reply_count
+
+		    , nvl2(lk.yn , 'Y', 'N') as like_yn
+
+		from
+		    community_post cp
+		left outer JOIN
+		    community_profile cpro ON cp.comu_profile_no = cpro.comu_profile_no
+		LEFT outer JOIN
+		    board_type bt ON cp.board_type_code = bt.board_type_code
+		LEFT outer JOIN
+		    community_reply cr ON cp.comu_post_no = cr.comu_post_no and cr.comu_reply_del_yn = 'N'
+		left outer join
+		    community_profile recpro on cr.comu_profile_no = recpro.comu_profile_no
+		LEFT outer JOIN
+		    (SELECT comu_post_no, COUNT(*) AS like_count
+		     FROM community_like
+		     GROUP BY comu_post_no) cl_count ON cp.comu_post_no = cl_count.comu_post_no
+		left outer join
+		    (select COMU_POST_NO, count(comu_reply_no) as reply_count
+		        from community_reply
+		     group by  COMU_POST_NO, COMU_REPLY_DEL_YN
+		     having COMU_REPLY_DEL_YN = 'N') rc on cp.comu_post_no = rc.comu_post_no
+		left outer join
+	    	(select cc.comu_like_no as yn, cc.comu_post_no
+		        from community_like cc
+		      where cc.comu_profile_no = #{comuProfileNo}) lk on cp.comu_post_no = lk.comu_post_no
+		where cp.comu_post_no = #{comuPostNo}
+
+		order by cr.comu_reply_reg_date desc
+ 	</select>
+
+ 	<select id="selectPostList" parameterType="kr.or.ddit.vo.community.CommunityProfileVO" resultType="kr.or.ddit.vo.community.CommunityPostVO">
+ 		SELECT
+		    comu_post_no
+		  , board_type_code
+		  , comu_profile_no
+		  , art_group_no
+		  , file_group_no
+		  , comu_post_stat_code
+		  , comu_post_content
+		  , comu_post_reg_date
+		  , comu_post_mod_date
+		  , comu_post_mbsp_yn
+		  , comu_post_del_yn
+		FROM
+		    community_post
+		where
+			comu_profile_no = #{comuProfileNo}
+		and
+			art_group_no = #{artGroupNo}
+		and
+			comu_post_del_yn = 'N'
+ 	</select>
+
+ 	<select id="selectReplyList" parameterType="kr.or.ddit.vo.community.CommunityProfileVO" resultType="kr.or.ddit.vo.community.CommunityReplyVO">
+ 		SELECT
+		    comu_reply_no
+		  , comu_post_no
+		  , board_type_code
+		  , comu_profile_no
+		  , comu_reply_content
+		  , comu_reply_reg_date
+		  , comu_reply_mod_date
+		  , comu_reply_del_yn
+		  , art_group_no
+		FROM
+		    community_reply
+		where
+			comu_profile_no = #{comuProfileNo}
+		and
+			art_group_no = #{artGroupNo}
+		and
+			comu_reply_del_yn = 'N'
+ 	</select>
+
+ 	<resultMap type="kr.or.ddit.vo.community.CommunityProfileVO" id="profileMap">
+ 		<result property="comuProfileNo" column="COMU_PROFILE_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="memUsername" column="MEM_USERNAME"/>
+		<result property="comuMemCatCode" column="COMU_MEM_CAT_CODE"/>
+		<result property="comuProfileImg" column="COMU_PROFILE_IMG"/>
+		<result property="comuNicknm" column="COMU_NICKNM"/>
+		<result property="comuRegDate" column="COMU_REG_DATE"/>
+		<result property="comuDelYn" column="COMU_DEL_YN"/>
+		<collection property="postList" resultMap="postMap"/>
+		<collection property="replyList" resultMap="replyMap"/>
+ 	</resultMap>
+ 	<resultMap type="kr.or.ddit.vo.community.CommunityPostVO" id="postMap">
+ 		<result property="comuPostNo" column="COMU_POST_NO"/>
+		<result property="boardTypeCode" column="BOARD_TYPE_CODE"/>
+		<result property="comuProfileNo" column="post_COMU_PROFILE_NO"/>
+		<result property="artGroupNo" column="post_ART_GROUP_NO"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="comuPostStatCode" column="COMU_POST_STAT_CODE"/>
+		<result property="comuPostContent" column="COMU_POST_CONTENT"/>
+		<result property="comuPostRegDate" column="COMU_POST_REG_DATE"/>
+		<result property="comuPostModDate" column="COMU_POST_MOD_DATE"/>
+		<result property="comuPostMbspYn" column="COMU_POST_MBSP_YN"/>
+		<result property="comuPostDelYn" column="COMU_POST_DEL_YN"/>
+		<result property="likeYn" column="comu_post_like_yn"/>
+		<result property="comuPostReplyCount" column="comu_post_reply_cnt"/>
+		<result property="comuPostLike" column="comu_post_like_cnt"/>
+		<association property="writerProfile" javaType="kr.or.ddit.vo.community.CommunityProfileVO">
+			<result property="comuProfileNo" column="COMU_PROFILE_NO"/>
+			<result property="artGroupNo" column="ART_GROUP_NO"/>
+			<result property="memUsername" column="MEM_USERNAME"/>
+			<result property="comuMemCatCode" column="COMU_MEM_CAT_CODE"/>
+			<result property="comuProfileImg" column="COMU_PROFILE_IMG"/>
+			<result property="comuNicknm" column="COMU_NICKNM"/>
+			<result property="comuRegDate" column="COMU_REG_DATE"/>
+			<result property="comuDelYn" column="COMU_DEL_YN"/>
+		</association>
+		<collection property="postFiles" resultMap="fileMap"/>
+ 	</resultMap>
+ 	<resultMap type="kr.or.ddit.vo.community.CommunityReplyVO" id="replyMap">
+ 		<result property="comuReplyNo" column="COMU_REPLY_NO"/>
+		<result property="comuPostNo" column="reply_COMU_POST_NO"/>
+		<result property="boardTypeCode" column="reply_BOARD_TYPE_CODE"/>
+		<result property="comuProfileNo" column="reply_COMU_PROFILE_NO"/>
+		<result property="comuReplyContent" column="COMU_REPLY_CONTENT"/>
+		<result property="comuReplyRegDate" column="COMU_REPLY_REG_DATE"/>
+		<result property="comuReplyModDate" column="COMU_REPLY_MOD_DATE"/>
+		<result property="comuReplyDelYn" column="COMU_REPLY_DEL_YN"/>
+		<result property="artGroupNo" column="reply_art_group_no"/>
+		<result property="comuPostContent" column="reply_comu_post_content"/>
+		<association property="replyMember" javaType="kr.or.ddit.vo.community.CommunityProfileVO">
+			<result property="comuProfileNo" column="reply_comu_profile_no"/>
+			<result property="artGroupNo" column="reply_art_group_no"/>
+			<result property="memUsername" column="reply_mem_username"/>
+			<result property="comuMemCatCode" column="reply_comu_mem_cat_code"/>
+			<result property="comuProfileImg" column="reply_comu_profile_img"/>
+			<result property="comuNicknm" column="reply_comu_nicknm"/>
+			<result property="comuRegDate" column="reply_comu_reg_date"/>
+			<result property="comuDelYn" column="reply_comu_del_yn"/>
+		</association>
+		<association property="postMember" javaType="kr.or.ddit.vo.community.CommunityProfileVO">
+			<result property="comuProfileNo" column="writer_comu_profile_no"/>
+			<result property="artGroupNo" column="writer_art_group_no"/>
+			<result property="memUsername" column="writer_mem_username"/>
+			<result property="comuMemCatCode" column="writer_comu_mem_cat_code"/>
+			<result property="comuProfileImg" column="writer_comu_profile_img"/>
+			<result property="comuNicknm" column="writer_comu_nicknm"/>
+			<result property="comuRegDate" column="writer_comu_reg_date"/>
+			<result property="comuDelYn" column="writer_comu_del_yn"/>
+		</association>
+ 	</resultMap>
+ 	<resultMap type="kr.or.ddit.vo.community.CommunityPostVO" id="apiPostMap">
+ 		<result property="comuPostNo" column="COMU_POST_NO"/>
+		<result property="boardTypeCode" column="BOARD_TYPE_CODE"/>
+		<result property="comuProfileNo" column="post_COMU_PROFILE_NO"/>
+		<result property="artGroupNo" column="post_ART_GROUP_NO"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="comuPostStatCode" column="COMU_POST_STAT_CODE"/>
+		<result property="comuPostContent" column="COMU_POST_CONTENT"/>
+		<result property="comuPostRegDate" column="COMU_POST_REG_DATE"/>
+		<result property="comuPostModDate" column="COMU_POST_MOD_DATE"/>
+		<result property="comuPostMbspYn" column="COMU_POST_MBSP_YN"/>
+		<result property="comuPostDelYn" column="COMU_POST_DEL_YN"/>
+		<result property="comuPostLike" column="comu_post_like_cnt"/>
+		<result property="comuPostReplyCount" column="comu_post_reply_cnt"/>
+		<result property="likeYn" column="comu_post_like_yn"/>
+		<result property="comuPostReplyCount" column="comu_post_reply_cnt"/>
+		<association property="writerProfile" javaType="kr.or.ddit.vo.community.CommunityProfileVO">
+			<result property="comuProfileNo" column="COMU_PROFILE_NO"/>
+			<result property="artGroupNo" column="ART_GROUP_NO"/>
+			<result property="memUsername" column="MEM_USERNAME"/>
+			<result property="comuMemCatCode" column="COMU_MEM_CAT_CODE"/>
+			<result property="comuProfileImg" column="COMU_PROFILE_IMG"/>
+			<result property="comuNicknm" column="COMU_NICKNM"/>
+			<result property="comuRegDate" column="COMU_REG_DATE"/>
+			<result property="comuDelYn" column="COMU_DEL_YN"/>
+		</association>
+		<collection property="comuPostReplyList" resultMap="replyMap"/>
+		<collection property="postFiles" resultMap="fileMap"/>
+ 	</resultMap>
+
+ 	<resultMap type="kr.or.ddit.vo.file.AttachmentFileDetailVO" id="fileMap">
+ 		<result property="attachDetailNo" column="ATTACH_DETAIL_NO"/>
+		<result property="fileGroupNo" column="detail_FILE_GROUP_NO"/>
+		<result property="fileOriginalNm" column="FILE_ORIGINAL_NM"/>
+		<result property="fileSaveNm" column="FILE_SAVE_NM"/>
+		<result property="fileSavepath" column="FILE_SAVEPATH"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMimeType" column="FILE_MIME_TYPE"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+		<result property="webPath" column="file_web_path"/>
+ 	</resultMap>
+
+ 	<select id="selectProfile" parameterType="kr.or.ddit.vo.community.CommunityProfileVO" resultMap="profileMap">
+ 		SELECT
+		    cprofile.comu_profile_no
+		  , cprofile.art_group_no
+		  , cprofile.mem_username
+		  , cprofile.comu_mem_cat_code
+		  , cprofile.comu_profile_img
+		  , cprofile.comu_nicknm
+		  , cprofile.comu_reg_date
+		  , cprofile.comu_del_yn
+		  , cpost.comu_post_no
+		  , cpost.board_type_code
+		  , cpost.comu_profile_no as post_COMU_PROFILE_NO
+		  , cpost.art_group_no as post_ART_GROUP_NO
+		  , cpost.file_group_no
+		  , cpost.comu_post_stat_code
+		  , cpost.comu_post_content
+		  , cpost.comu_post_reg_date
+		  , cpost.comu_post_mod_date
+		  , cpost.comu_post_mbsp_yn
+		  , cpost.comu_post_del_yn
+		  <if test="myComuProfileNo != null and myComuProfileNo != ''">
+		  , (select
+                case
+                    when (select count(*) from community_like lk where lk.comu_post_no = cpost.comu_post_no and comu_profile_no = #{myComuProfileNo}) = 1
+                    then 'Y'
+                    else 'N'
+                end
+                from dual
+             ) as comu_post_like_yn
+		  </if>
+		  , creply.comu_reply_no
+		  , creply.comu_post_no as reply_COMU_POST_NO
+		  , creply.board_type_code as reply_BOARD_TYPE_CODE
+		  , creply.comu_profile_no as reply_COMU_PROFILE_NO
+		  , creply.comu_reply_content
+		  , creply.comu_reply_reg_date
+		  , creply.comu_reply_mod_date
+		  , creply.comu_reply_del_yn
+		  , creply.art_group_no as reply_art_group_no
+		  , (select comu_post_content from community_post comupost where comupost.comu_post_no = creply.comu_post_no) as reply_comu_post_content
+		  , (select count(*) from community_like cl where cpost.comu_post_no = cl.comu_post_no) as comu_post_like_cnt
+		  , (select count(*) from community_reply cr where cpost.comu_post_no = cr.comu_post_no and cr.comu_reply_del_yn = 'N') as comu_post_reply_cnt
+		  , wprofile.comu_profile_no as writer_comu_profile_no
+		  , wprofile.comu_profile_img as writer_comu_profile_img
+		  , wprofile.comu_nicknm as writer_comu_nicknm
+		  , wprofile.comu_del_yn as writer_comu_del_yn
+		  , afd.attach_detail_no
+		  , afd.file_group_no as detail_file_group_no
+		  , afd.file_original_nm
+		  , afd.file_save_nm
+		  , afd.file_savepath
+		  , afd.file_ext
+		  , afd.file_mime_type
+		  , afd.file_fancysize
+		  , afd.file_save_date
+		FROM
+		    community_profile cprofile
+		LEFT OUTER JOIN
+		    community_post cpost on (cprofile.comu_profile_no = cpost.comu_profile_no)
+		LEFT OUTER JOIN
+		    community_reply creply on (cprofile.comu_profile_no = creply.comu_profile_no)
+		left join
+			community_post wpost on (creply.comu_post_no = wpost.comu_post_no)
+		left join
+			community_profile wprofile on (wpost.comu_profile_no = wprofile.comu_profile_no)
+		left join
+			attachment_file_detail afd on (cpost.file_group_no = afd.file_group_no)
+		WHERE
+		    cprofile.comu_profile_no = #{comuProfileNo}
+		and
+		    cprofile.art_group_no = #{artGroupNo}
+		and
+		    cprofile.comu_del_yn = 'N'
+		and
+		    (cpost.comu_post_del_yn = 'N' or cpost.comu_post_del_yn is null)
+		and
+		    (creply.comu_reply_del_yn = 'N' or creply.comu_reply_del_yn is null)
+		order by
+			cpost.comu_post_no desc, creply.comu_reply_reg_date desc
+ 	</select>
+
+ 	<select id="selectPostOne" parameterType="kr.or.ddit.vo.community.CommunityPostVO" resultMap="apiPostMap">
+ 		SELECT
+		    cpost.comu_post_no
+		  , cpost.board_type_code
+		  , cpost.comu_profile_no as post_COMU_PROFILE_NO
+		  , cpost.art_group_no as post_ART_GROUP_NO
+		  , cpost.file_group_no
+		  , cpost.comu_post_stat_code
+		  , cpost.comu_post_content
+		  , cpost.comu_post_reg_date
+		  , cpost.comu_post_mod_date
+		  , cpost.comu_post_mbsp_yn
+		  , cpost.comu_post_del_yn
+		  , (select count(*) from community_like clike where clike.comu_post_no = cpost.comu_post_no ) as comu_post_like_cnt
+		  , creply.comu_reply_no
+		  , creply.comu_post_no as reply_COMU_POST_NO
+		  , creply.board_type_code as reply_BOARD_TYPE_CODE
+		  , creply.comu_profile_no as reply_COMU_PROFILE_NO
+		  , creply.comu_reply_content
+		  , creply.comu_reply_reg_date
+		  , creply.comu_reply_mod_date
+		  , creply.comu_reply_del_yn
+		  , (select count(*) from community_reply core where core.comu_post_no = cpost.comu_post_no and core.comu_reply_del_yn = 'N') as comu_post_reply_cnt
+		  , creply.art_group_no as reply_art_group_no
+		  , cprofile.comu_profile_no
+		  , cprofile.art_group_no
+		  , cprofile.mem_username
+		  , cprofile.comu_mem_cat_code
+		  , cprofile.comu_profile_img
+		  , cprofile.comu_nicknm
+		  , cprofile.comu_reg_date
+		  , cprofile.comu_del_yn
+		  , crp.comu_profile_no as reply_comu_profile_no
+		  , crp.art_group_no as reply_art_group_no
+		  , crp.mem_username as reply_mem_username
+		  , crp.comu_mem_cat_code as reply_comu_mem_cat_code
+		  , crp.comu_profile_img as reply_comu_profile_img
+		  , crp.comu_nicknm as reply_comu_nicknm
+		  , crp.comu_reg_date as reply_comu_reg_date
+		  , crp.comu_del_yn as reply_comu_del_yn
+		  , (select
+                case
+                    when (select count(*) from community_like lk where lk.comu_post_no = #{comuPostNo} and comu_profile_no = #{myComuProfileNo}) = 1
+                    then 'Y'
+                    else 'N'
+                end
+                from dual
+             ) as comu_post_like_yn
+          , afd.attach_detail_no
+		  , afd.file_group_no as detail_file_group_no
+		  , afd.file_original_nm
+		  , afd.file_save_nm
+		  , afd.file_savepath
+		  , afd.file_ext
+		  , afd.file_mime_type
+		  , afd.file_fancysize
+		  , afd.file_save_date
+		FROM
+		    community_post cpost
+		left outer join community_reply creply on (cpost.comu_post_no = creply.comu_post_no)
+		left join community_profile cprofile on (cpost.comu_profile_no = cprofile.comu_profile_no)
+		left outer join community_profile crp on (creply.comu_profile_no = crp.comu_profile_no)
+		left join attachment_file_detail afd on (cpost.file_group_no = afd.file_group_no)
+		where
+			cpost.comu_post_no = #{comuPostNo}
+		and
+			(creply.comu_reply_del_yn = 'N' or creply.comu_reply_del_yn is null)
+		order by cpost.comu_post_no desc, creply.comu_reply_reg_date desc
+ 	</select>
+
+ 	<select id="getUpdatePost" parameterType="int" resultMap="apiPostMap">
+ 		SELECT
+		    cpost.comu_post_no
+		  , cpost.board_type_code
+		  , cpost.comu_profile_no as post_COMU_PROFILE_NO
+		  , cpost.art_group_no as post_ART_GROUP_NO
+		  , cpost.file_group_no
+		  , cpost.comu_post_stat_code
+		  , cpost.comu_post_content
+		  , cpost.comu_post_reg_date
+		  , cpost.comu_post_mod_date
+		  , cpost.comu_post_mbsp_yn
+		  , cpost.comu_post_del_yn
+		  , afd.attach_detail_no
+		  , afd.file_group_no as detail_file_group_no
+		  , afd.file_original_nm
+		  , afd.file_save_nm
+		  , afd.file_savepath
+		  , afd.file_ext
+		  , afd.file_mime_type
+		  , afd.file_fancysize
+		  , afd.file_save_date
+		FROM
+			community_post cpost
+		left join
+			attachment_file_detail afd on (cpost.file_group_no = afd.file_group_no)
+		where
+			cpost.comu_post_no = #{comuPostNo}
+ 	</select>
+
+ 	<select id="getMyComuProfileNo" parameterType="kr.or.ddit.vo.community.CommunityProfileVO" resultType="int">
+ 		select
+ 			comu_profile_no
+ 		from
+ 			community_profile
+ 		where
+ 			art_group_no = #{artGroupNo}
+ 		and
+ 			mem_username = #{memUsername}
+ 		and
+ 			comu_del_yn = 'N'
+ 	</select>
+
+
+ 	<insert id="fileReUpload" parameterType="kr.or.ddit.vo.file.AttachmentFileDetailVO">
+ 		<selectKey keyProperty="attachDetailNo" order="BEFORE" resultType="int">
+ 			select attach_file_detail_seq.nextval from dual
+ 		</selectKey>
+ 		insert into attachment_file_detail (
+		    attach_detail_no,
+		    file_group_no,
+		    file_original_nm,
+		    file_save_nm,
+		    file_savepath,
+		    file_ext,
+		    file_mime_type,
+		    file_fancysize,
+		    file_save_date
+		) values (
+		 #{attachDetailNo}
+		,#{fileGroupNo}
+		,#{fileOriginalNm}
+		,#{fileSaveNm}
+		,#{fileSavepath}
+		,#{fileExt}
+		,#{fileMimeType}
+		,#{fileFancysize}
+		,sysdate)
+ 	</insert>
+
+ 	<update id="updatePost" parameterType="kr.or.ddit.vo.community.CommunityPostVO">
+ 		update community_post
+ 		set
+ 			  file_group_no = #{fileGroupNo}
+ 			, comu_post_content = #{comuPostContent}
+ 			, comu_post_mod_date = sysdate
+ 			, comu_post_mbsp_yn = #{comuPostMbspYn}
+ 		where
+ 			comu_post_no = #{comuPostNo}
+ 	</update>
+
+ 	<update id="postDeleteUpdate" parameterType="kr.or.ddit.vo.community.CommunityPostVO">
+ 		update community_post
+ 		set
+ 			comu_post_del_yn = #{comuPostDelYn}
+ 		where
+ 			comu_post_no = #{comuPostNo}
+ 	</update>
+
+ 	<insert id="replyInsert" parameterType="kr.or.ddit.vo.community.CommunityReplyVO" useGeneratedKeys="true">
+ 		<selectKey keyProperty="comuReplyNo" order="BEFORE" resultType="int">
+ 			select community_reply_seq.nextval from dual
+ 		</selectKey>
+ 		insert into community_reply(
+	      comu_reply_no
+	    , comu_post_no
+	    , board_type_code
+	    , comu_profile_no
+	    , comu_reply_content
+	    , comu_reply_reg_date
+	    , comu_reply_mod_date
+	    , comu_reply_del_yn
+	    , art_group_no
+		)values(
+			  #{comuReplyNo}
+			, #{comuPostNo}
+			, #{boardTypeCode}
+			, #{comuProfileNo}
+			, #{comuReplyContent}
+			, sysdate
+			, sysdate
+			, 'N'
+			, #{artGroupNo}
+		)
+ 	</insert>
+
+ 	<select id="getReplyCount" parameterType="kr.or.ddit.vo.community.CommunityReplyVO" resultType="int">
+ 		select
+		    count(COMU_REPLY_NO)
+		from community_reply
+		where COMU_POST_NO = #{comuPostNo}
+		and COMU_REPLY_DEL_YN = 'N'
+ 	</select>
+
+ 	<update id="replyUpdate" parameterType="kr.or.ddit.vo.community.CommunityReplyVO">
+ 		update community_reply
+ 		set
+ 			  comu_reply_content = #{comuReplyContent}
+ 			, comu_reply_mod_date = sysdate
+ 		where comu_reply_no = #{comuReplyNo}
+ 	</update>
+
+ 	<update id="replyDelete" parameterType="int">
+ 		update community_reply
+ 		set
+ 			comu_reply_del_yn = 'Y'
+ 		where comu_reply_no = #{replyNo}
+ 	</update>
+
+ 	<insert id="likeInsert" parameterType="kr.or.ddit.vo.community.CommunityLikeVO">
+ 		<selectKey keyProperty="comuLikeNo" order="BEFORE" resultType="int">
+ 			select community_like_seq.nextval from dual
+ 		</selectKey>
+ 		insert into community_like(
+ 			comu_like_no
+		  , comu_post_no
+		  , board_type_code
+		  , comu_profile_no
+		  , art_group_no
+		  , comu_like_reg_date)
+		values(
+			#{comuLikeNo}, #{comuPostNo}, #{boardTypeCode}, #{comuProfileNo}, #{artGroupNo}, systimestamp
+		)
+ 	</insert>
+
+ 	<delete id="likeDelete" parameterType="kr.or.ddit.vo.community.CommunityLikeVO">
+ 		delete
+ 		from community_like
+ 		where comu_like_no = #{comuLikeNo}
+ 	</delete>
+
+ 	<select id="getLikeInfo" parameterType="kr.or.ddit.vo.community.CommunityLikeVO" resultType="kr.or.ddit.vo.community.CommunityLikeVO">
+ 		select
+		    comu_like_no
+		  , comu_post_no
+		  , board_type_code
+		  , comu_profile_no
+		  , art_group_no
+		  , comu_like_reg_date
+		from
+		    community_like
+		where comu_post_no = #{comuPostNo}
+		and comu_profile_no = #{comuProfileNo}
+ 	</select>
+
+	<sql id="codeSql">
+		<if test="reasonCodeGroupNo != null and reasonCodeGroupNo != ''">
+			and comm_code_grp_no = #{reasonCodeGroupNo}
+		</if>
+		<if test="reportTarCodeGroupNo != null and reasonCodeGroupNo != ''">
+			and comm_code_grp_no = #{reasonCodeGroupNo}
+		</if>
+		<if test="reportStatCodeGroupNo != null and reasonCodeGroupNo != ''">
+			and comm_code_grp_no = #{reasonCodeGroupNo}
+		</if>
+	</sql>
+ 	<select id="getCodeDetail" parameterType="String" resultType="kr.or.ddit.vo.common.CommonCodeDetailVO">
+ 		SELECT
+		    comm_code_det_no
+		  , comm_code_grp_no
+		  , comm_code_det_nm
+		  , use_yn
+		  , description
+		FROM
+		    common_detail_code
+		 where 1=1
+		<include refid="codeSql" />
+ 	</select>
+
+ 	<insert id="report" parameterType="kr.or.ddit.vo.community.CommunityReportVO" useGeneratedKeys="true">
+ 		<selectKey keyProperty="reportNo" resultType="int" order="BEFORE">
+ 			select reports_seq.nextval from dual
+ 		</selectKey>
+ 		insert into reports
+ 		( report_no
+	    , art_group_no
+	    , mem_username
+	    , target_mem_username
+	    , report_reason_code
+	    , report_target_type_code
+	    , report_stat_code
+	    , report_result_code
+	    , target_comu_post_no
+	    , target_board_type_code
+	    , target_comu_reply_no
+	    , target_chat_no)
+	    values
+	    ( #{reportNo}
+	    , #{artGroupNo}
+	    , #{memUsername}
+	    , #{targetMemUsername}
+	    , #{reportReasonCode}
+	    , #{reportTargetTypeCode}
+	    , #{reportStatCode}
+	    , #{reportResultCode}
+	    , #{targetComuPostNo}
+	    , #{targetBoardTypeCode}
+	    , #{targetComuReplyNo}
+	    , #{targetChatNo}
+	    )
+ 	</insert>
+
+ 	<insert id="reportDetailInsert" parameterType="kr.or.ddit.vo.report.ReportVO">
+ 		<selectKey keyProperty="reportDetNo" order="BEFORE" resultType="int">
+ 			select reports_detail_seq.nextval from dual
+ 		</selectKey>
+ 		insert into reports_detail
+ 		(  report_det_no
+		 , report_no)
+		 values
+		 ( #{reportDetNo}
+		 , #{reportNo})
+ 	</insert>
+
+ 	<select id="getFileGroupNo" resultType="integer">
+ 		select attachment_file_seq.nextval from dual
+ 	</select>
+
+ 	<insert id="insertFileGroup" parameterType="kr.or.ddit.vo.file.AttachmentFileGroupVO">
+ 		<selectKey keyProperty="fileGroupNo" resultType="int" order="BEFORE">
+ 			SELECT ATTACHMENT_FILE_SEQ.NEXTVAL FROM DUAL
+ 		</selectKey>
+ 		INSERT INTO ATTACHMENT_FILE(
+ 			file_group_no,  file_reg_date, file_type_code, file_type_nm
+ 		) VALUES (
+ 			#{fileGroupNo}, sysdate,
+ 			#{fileTypeCode, jdbcType=VARCHAR}, #{fileTypeNm, jdbcType=VARCHAR}
+ 		)
+
+ 	</insert>
+
+ 	<sql id="reportSql">
+ 		<if test="targetComuPostNo != null and targetComuPostNo != ''">
+ 			and TARGET_COMU_POST_NO = #{targetComuPostNo}
+ 		</if>
+ 		<if test="targetComuReplyNo != null and targetComuReplyNo != ''">
+ 			and target_comu_reply_no = #{targetComuReplyNo}
+ 		</if>
+ 	</sql>
+ 	<select id="getReprot" parameterType="kr.or.ddit.vo.community.CommunityReportVO" resultType="kr.or.ddit.vo.community.CommunityReportVO">
+ 		select
+		    nvl2(
+		    	(select
+		            report_no
+		          from reports
+		          where MEM_USERNAME = #{memUsername}
+		          <include refid="reportSql" />
+		          ),'Y','N') AS reportYn
+		  FROM DUAL
+
+ 	</select>
+
+ 	<select id="getLiveBroadcastInfo" parameterType="int" resultType="kr.or.ddit.vo.live.LiveVO">
+	    SELECT
+	        L.LIVE_NO,
+	        L.LIVE_TITLE,
+	        L.LIVE_CONTENT,
+	        L.LIVE_THMIMG_URL,
+	        L.LIVE_HIT,
+        	L.LIVE_URL AS "id",
+	        C.ART_GROUP_NO,
+	        AG.ART_GROUP_NM
+	    FROM
+	        LIVE L
+	   INNER JOIN
+	    	CHAT_CHANNELS C ON (L.CHAT_CHANNEL_NO = C.CHAT_CHANNEL_NO)
+	    LEFT JOIN ARTIST_GROUP AG ON (C.ART_GROUP_NO = AG.ART_GROUP_NO)
+	    WHERE
+	        C.ART_GROUP_NO = #{artGroupNo}
+	        AND L.LIVE_STATUS = 'LS001'
+	</select>
+
+	<select id="getProfileByComuProfileNo" parameterType="int" resultType="kr.or.ddit.vo.community.CommunityProfileVO">
+		SELECT
+			comu_profile_no
+			, art_group_no
+			, mem_username
+			, comu_mem_cat_code
+			, comu_profile_img
+			, comu_nicknm
+			, comu_reg_date
+			, comu_del_yn
+		 FROM community_profile
+		WHERE comu_profile_no = #{comuProfileNo}
+		  AND comu_del_yn = 'N'
+	</select>
+
+	<select id="getMemberUsernameByComuProfileNo" parameterType="int" resultType="string">
+		SELECT
+			mem_username
+		 FROM community_profile
+		WHERE comu_profile_no = #{comuProfileNo}
+		  AND comu_del_yn = 'N'
+	</select>
+
+	<select id="comuMemberShipYn" parameterType="map" resultType="String">
+		SELECT
+		    CASE
+		        WHEN count(ms.mbsp_no) > 0 THEN 'Y' 
+		        ELSE 'N'                                         
+		    END AS has_active_subscription
+		FROM
+		    membership_description md
+		LEFT JOIN
+		    membership_subscriptions ms ON md.mbsp_no = ms.mbsp_no
+		    AND ms.mem_username = #{memUsername} -- (1) 조인 조건으로 이동
+		WHERE
+		    md.art_group_no = #{artGroupNo} and
+		    ms.MBSP_SUB_STAT_CODE = 'MSSC001'
+	</select>
+
+	<select id="getMembershipGoodsNo" parameterType="int" resultType="int">
+		SELECT
+			GOODS_NO
+		FROM
+			GOODS
+		WHERE
+			ART_GROUP_NO = #{artGroupNo}
+		AND
+			GOODS_STAT_CODE = 'GSC001'
+		AND
+			GOODS_DIV_CODE = 'GDC002'
+	</select>
+
+	<select id="getMyMemberShipYn" parameterType="kr.or.ddit.vo.community.CommunityProfileVO">
+		select
+			count(*)
+		from
+			membership_subscriptions ms
+		left join
+			membership_description md on (ms.mbsp_no = md.mbsp_no)
+		where
+			ms.mem_username = #{memUsername}
+		and
+			md.art_group_no = #{artGroupNo}
+		<![CDATA[
+		and
+			systimestamp <= ms.mbsp_sub_end_date
+		]]>
+	</select>
+
+	<select id="getLiveHistory" parameterType="int" resultType="kr.or.ddit.vo.live.LiveVO">
+		SELECT
+	        L.LIVE_NO,
+	        L.LIVE_TITLE,
+	        L.LIVE_CONTENT,
+	        L.LIVE_HIT,
+	        L.LIVE_QTY,
+	        L.LIVE_START_DATE,
+	        L.LIVE_END_DATE,
+	        C.ART_GROUP_NO
+	    FROM
+	        LIVE L
+	    JOIN
+	        CHAT_CHANNELS C ON L.CHAT_CHANNEL_NO = C.CHAT_CHANNEL_NO
+	    WHERE
+	        C.ART_GROUP_NO = #{artGroupNo}
+	    ORDER BY
+	        L.LIVE_START_DATE DESC
+	</select>
+	
+	<select id="thumbnailInfo" parameterType="int" resultType="kr.or.ddit.vo.goods.goodsVO">
+		select b.file_group_no, b.goods_no, b.goods_nm, b.rnum
+		from (
+			select a.file_group_no,a.goods_no, a.goods_nm, rownum rnum
+			from(
+				select 
+				    file_group_no,
+				    goods_no,
+				    goods_nm
+				from goods
+				where art_group_no = #{artGroupNo}
+				and goods_div_code = 'GDC003'
+				order by GOODS_REG_DATE desc
+				)a
+			)b
+		<![CDATA[
+		where rnum >= 1 and rnum <=3
+		]]>
+	</select>
+	
+	<select id="getFansWithoutDel" parameterType="int" resultType="int">
+		select 
+		    COUNT(*)
+		FROM 
+		    COMMUNITY_PROFILE
+		WHERE
+		    ART_GROUP_NO = #{artGroupNo}
+		AND
+		    COMU_MEM_CAT_CODE IN ('CMCC001', 'CMCC002')
+		AND 
+		    COMU_DEL_YN = 'N'
+	</select>
+	
+	<select id="artistList" resultType="kr.or.ddit.vo.artist.ArtistVO">
+		select
+		    art_no
+		  , mem_username
+		  , art_nm
+		  , art_content
+		  , art_reg_date
+		  , art_mod_date
+		  , art_profile_img
+		  , art_debutdate
+		  , art_del_yn
+		from
+		    artist
+	</select>
+	
+	<insert id="worldcupWinner" parameterType="kr.or.ddit.vo.community.WorldcupVO">
+		<selectKey keyProperty="worldcupVoteNo" order="BEFORE" resultType="int">
+			select worldcup_votes_seq.nextval from dual
+		</selectKey>
+		insert into worldcup_votes
+		(worldcup_vote_no
+	    , art_no
+	    , mem_username
+	    , worldcup_vote_date)
+	    values(
+	    #{worldcupVoteNo}
+	    , #{artNo}
+	    , #{memUsername}
+	    , sysdate
+	    )
+	</insert>
+	
+	<resultMap type="kr.or.ddit.vo.community.WorldcupVO" id="winner">
+		<result property="artNo" column="worldArtNo"/>
+		<result property="voteCnt" column="cnt"/>
+		<result property="rank" column="cntDenseRank"/>
+		
+		<collection property="artistVO" resultMap="winnerArtist" />
+	</resultMap>
+	
+	<resultMap type="kr.or.ddit.vo.artist.ArtistVO" id="winnerArtist">
+		<result property="artDebutdate" column="ART_DEBUTDATE"/>
+		<result property="artDelYn" column="ART_DEL_YN"/>
+		<result property="artNo" column="ART_NO"/>
+		<result property="memUsername" column="MEM_USERNAME"/>
+		<result property="artNm" column="ART_NM"/>
+		<result property="artContent" column="ART_CONTENT"/>
+		<result property="artRegDate" column="ART_REG_DATE"/>
+		<result property="artModDate" column="ART_MOD_DATE"/>
+		<result property="artProfileImg" column="ART_PROFILE_IMG"/>
+	</resultMap>
+	
+	<select id="winnerList" resultMap="winner">
+		select
+		      b.worldArtNo
+	        , b.cnt
+	        , b.cntDenseRank
+	        , b.art_no
+	        , b.mem_username
+	        , b.art_nm
+	        , b.art_content
+	        , b.art_reg_date
+	        , b.art_mod_date
+	        , b.art_profile_img
+	        , b.art_debutdate
+	        , b.art_del_yn
+		from(
+		    select
+		          a.art_no as worldArtNo
+		        , a.cnt
+		        , dense_rank() over(order by cnt desc) as cntDenseRank
+		        , ar.ART_NO
+		        , MEM_USERNAME
+		        , ART_NM
+		        , ART_CONTENT
+		        , ART_REG_DATE
+		        , ART_MOD_DATE
+		        , ART_PROFILE_IMG
+		        , ART_DEBUTDATE
+		        , ART_DEL_YN
+		    from(
+		        select
+		            art_no,
+		            count(art_no) as cnt
+		        from worldcup_votes
+		        group by art_no) a left join artist ar on a.art_no = ar.art_no
+		    ) b 
+		<![CDATA[
+		where b.cntDenseRank <=3
+		]]>
+	</select>
+ </mapper>

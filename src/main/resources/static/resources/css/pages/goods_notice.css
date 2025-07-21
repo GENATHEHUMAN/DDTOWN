@@ -1,0 +1,550 @@
+@charset "UTF-8";
+
+/* --- Common Body & Page Layout --- */
+/* goods_main.css의 body 스타일과 유사하게 맞춤 */
+body.notice-list-page-body,
+body.notice-detail-page-body {
+    font-family: 'Noto Sans KR', sans-serif;
+    margin: 0;
+    padding-top: 60px; /* 고정 헤더 높이 고려 */
+    background-color: #f5f5f5; /* 메인 페이지와 유사한 배경색 */
+    color: #333;
+    line-height: 1.6;
+}
+
+/* --- Main Containers for List and Detail Pages --- */
+.notice-list-container,
+.notice-detail-container {
+    max-width: 1000px; /* 메인 페이지 컨테이너와 유사한 최대 너비 */
+    margin: 40px auto; /* 중앙 정렬 및 상하 여백 */
+    padding: 30px; /* 내부 여백 */
+    background-color: #fff;
+    border-radius: 8px; /* 메인 페이지 아이템과 유사한 둥근 모서리 */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* 메인 페이지 아이템과 유사한 그림자 */
+}
+
+/* --- Header Section (for notice list page) --- */
+.notice-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #eee; /* 메인 페이지 섹션 구분선과 유사 */
+}
+
+.notice-list-header h1 {
+    font-size: 2.2em;
+    color: #333;
+    margin: 0;
+    font-weight: 700;
+}
+
+/* --- Search Form Styles (Main Page Filter Bar / Sort Option과 유사하게) --- */
+.notice-search {
+    display: flex;
+    gap: 10px; /* 요소 간 간격 */
+    align-items: center;
+    flex-wrap: wrap; /* 작은 화면에서 줄 바꿈 허용 */
+}
+
+.notice-search select,
+.notice-search input[type="text"] {
+    padding: 8px 12px; /* 메인 페이지 필터 버튼과 유사한 패딩 */
+    border: 1px solid #ddd; /* 메인 페이지 필터 버튼과 유사한 테두리 */
+    border-radius: 5px; /* 메인 페이지 필터 버튼과 유사한 둥근 모서리 */
+    font-size: 0.95em; /* 글꼴 크기 조정 */
+    transition: all 0.2s ease; /* 부드러운 전환 효과 */
+    background-color: #fff; /* 배경색 */
+    outline: none; /* 포커스 시 기본 아웃라인 제거 */
+    /* select 드롭다운 아이콘 커스텀 (main.css sort-options select와 유사) */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 0.9em; /* 아이콘 크기 */
+    padding-right: 28px; /* 아이콘 공간 확보 */
+}
+
+.notice-search input[type="text"] {
+    width: 200px; /* 적절한 너비 */
+}
+
+.notice-search select:focus,
+.notice-search input[type="text"]:focus {
+    border-color: #007bff; /* 메인 페이지 활성 버튼 색상 */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3); /* 메인 페이지 활성 버튼 그림자 유사 */
+}
+
+.notice-search input[type="submit"] {
+    padding: 8px 18px; /* 메인 페이지 필터 버튼과 유사한 패딩 */
+    background-color: #007bff; /* 메인 페이지 활성 버튼 색상 */
+    color: white;
+    border: 1px solid #007bff; /* 메인 페이지 활성 버튼 테두리 */
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 600;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.notice-search input[type="submit"]:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+    transform: translateY(-1px); /* 살짝 올라오는 효과 */
+}
+
+/* --- Notice List Table Styles --- */
+.notice-list table {
+    width: 100%;
+    border-collapse: separate; /* border-radius 적용을 위해 */
+    border-spacing: 0;
+    margin-top: 20px;
+    font-size: 1em;
+    background-color: #fcfcfc;
+    border-radius: 8px;
+    overflow: hidden; /* 테이블의 둥근 모서리 보장 */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* 메인 페이지 아이템과 유사한 그림자 */
+}
+
+.notice-list th,
+.notice-list td {
+    padding: 15px 20px;
+    text-align: left;
+    border-bottom: 1px solid #eee; /* 옅은 구분선 */
+}
+
+.notice-list th {
+    background-color: #f0f0f0; /* 메인 페이지 태그 배경색과 유사 */
+    color: #666; /* 메인 페이지 태그 글자색과 유사 */
+    font-weight: 600;
+}
+
+/* 테이블 상단 모서리 둥글게 */
+.notice-list th:first-child { border-top-left-radius: 8px; }
+.notice-list th:last-child { border-top-right-radius: 8px; }
+
+/* 마지막 행 하단 테두리 제거 */
+.notice-list tr:last-child td {
+    border-bottom: none;
+}
+
+.notice-list td {
+    background-color: #fff;
+    color: #444;
+    vertical-align: middle;
+}
+
+.notice-list tr:hover td {
+    background-color: #f8f8f8; /* 호버 시 배경색 */
+}
+
+/* 제목 (Title) 컬럼 */
+.notice-list td:nth-child(1) {
+    font-weight: 500;
+}
+
+.notice-list td a {
+    color: #333; /* 기본 글자색 (메인 페이지 상품 이름과 유사) */
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.notice-list td a:hover {
+    color: #007bff; /* 호버 시 메인 페이지 링크 색상과 유사 */
+    text-decoration: underline;
+}
+
+/* 작성일 (Date) 컬럼 */
+.notice-list td:nth-child(2) {
+    text-align: center;
+    color: #777;
+    font-size: 0.9em;
+    white-space: nowrap; /* 날짜가 줄바꿈되지 않도록 */
+}
+
+/* 게시글 없음 메시지 */
+.notice-list td[colspan="2"] { /* HTML에 맞춰 colspan을 2로 수정 */
+    text-align: center;
+    padding: 30px;
+    color: #888;
+    font-style: italic;
+    background-color: #fdfdfd;
+    border-radius: 0 0 8px 8px;
+}
+
+
+/* --- Pagination Styles (Main Page Paging과 유사하게) --- */
+.pagination {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px; /* 버튼 간격 */
+}
+
+.pagination .btn-page {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid #ddd; /* 메인 페이지 페이징 버튼과 유사 */
+    border-radius: 5px; /* 메인 페이지 페이징 버튼과 유사 */
+    color: #555;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1em;
+    transition: all 0.2s ease;
+    background-color: #fff;
+}
+
+.pagination .btn-page:hover:not(.active):not([disabled]) {
+    background-color: #f0f0f0; /* 메인 페이지 페이징 호버와 유사 */
+    border-color: #bbb;
+    color: #333;
+}
+
+.pagination .btn-page.active {
+    background-color: #007bff; /* 메인 페이지 활성 버튼 색상과 유사 */
+    color: white;
+    border-color: #007bff;
+    cursor: default;
+}
+
+.pagination .btn-page[disabled] {
+    opacity: 0.6; /* 약간 투명하게 */
+    cursor: not-allowed;
+    background-color: #eee; /* 비활성화 배경색 */
+    border-color: #ddd;
+    color: #999;
+}
+
+.pagination .btn-page.prev,
+.pagination .btn-page.next {
+    font-size: 1.2em;
+}
+
+/* --- Notice Detail Page Specific Styles (이전 제공 코드 유지) --- */
+/*
+    공지사항 상세 페이지 스타일은 이전 답변에서 드린 코드를 그대로 유지하거나,
+    필요에 따라 위에 정의된 컨테이너, 버튼 등의 공통 스타일을 활용하여
+    더 통일성 있게 조정할 수 있습니다.
+    현재는 목록 페이지 스타일과 충돌을 최소화하며 상세 페이지 스타일을 독립적으로 유지합니다.
+*/
+
+.notice-detail-page-body {
+    /* 이미 상단 공통 body 스타일에 포함 */
+}
+
+.notice-detail-container {
+    /* 이미 상단 공통 컨테이너 스타일에 포함 */
+}
+
+.notice-detail-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #ddd;
+}
+
+.notice-detail-header h1 {
+    font-size: 2.2em;
+    color: #222;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.notice-detail-content-wrap {
+    margin-bottom: 40px;
+    padding-top: 10px; /* 추가 */
+}
+
+.notice-detail-title {
+    margin-bottom: 20px; /* 조정 */
+    padding-bottom: 20px; /* 조정 */
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.notice-detail-title h2 {
+    font-size: 2em; /* 조정 */
+    color: #333;
+    font-weight: 600;
+    margin: 0;
+    word-break: break-word;
+}
+
+.notice-detail-info {
+    font-size: 0.95em;
+    color: #777;
+    margin-top: 10px; /* 조정 */
+    text-align: right;
+}
+
+.notice-detail-body {
+    font-size: 1.1em;
+    color: #444;
+    padding: 20px 0;
+    line-height: 1.8;
+    min-height: 200px; /* 최소 높이 설정 */
+}
+
+.notice-detail-body p {
+    margin-bottom: 1em;
+    white-space: pre-wrap;
+}
+
+.notice-detail-attachments {
+    margin-top: 30px;
+    padding-top: 25px; /* 조정 */
+    border-top: 1px dashed #e0e0e0;
+}
+
+.notice-detail-attachments h3 {
+    font-size: 1.3em; /* 조정 */
+    color: #555;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.notice-detail-attachments ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.notice-detail-attachments li {
+    margin-bottom: 10px;
+}
+
+.notice-detail-attachments a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.notice-detail-attachments a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.notice-detail-attachments a .fas {
+    margin-right: 10px; /* 조정 */
+    color: #6c757d;
+    font-size: 1.2em; /* 조정 */
+}
+
+.no-notice-found {
+    text-align: center;
+    padding: 50px;
+    font-size: 1.2em;
+    color: #777;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+}
+
+/* --- Action Buttons (List/Edit/Delete) --- */
+.notice-detail-actions {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 25px;
+    border-top: 1px solid #ddd;
+}
+
+.notice-detail-actions button {
+    padding: 12px 25px;
+    margin: 0 8px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    font-weight: 600;
+}
+
+.notice-detail-actions .btn-list {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+.notice-detail-actions .btn-list:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+
+.notice-detail-actions .btn-edit {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.notice-detail-actions .btn-edit:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+.notice-detail-actions .btn-delete {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.notice-detail-actions .btn-delete:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 992px) {
+    .notice-list-container,
+    .notice-detail-container {
+        width: 95%;
+        padding: 25px;
+    }
+    .notice-list-header h1 {
+        font-size: 2em;
+    }
+}
+
+@media (max-width: 768px) {
+    .notice-list-container,
+    .notice-detail-container {
+        margin: 20px auto;
+        padding: 20px;
+    }
+    .notice-list-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+    }
+    .notice-list-header h1 {
+        font-size: 1.8em;
+    }
+    .notice-search {
+        flex-direction: column; /* 세로 정렬 */
+        width: 100%;
+        gap: 8px;
+    }
+    .notice-search select,
+    .notice-search input[type="text"],
+    .notice-search input[type="submit"] {
+        width: 100%; /* 너비 꽉 채우기 */
+        padding: 10px;
+        box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
+    }
+
+    /* 테이블 조정 */
+    .notice-list table,
+    .notice-list th,
+    .notice-list td,
+    .notice-list tr {
+        display: block; /* 모바일에서 블록 레벨로 변경하여 세로 스택 */
+        width: 100%;
+    }
+    .notice-list thead {
+        display: none; /* 헤더 숨김 */
+    }
+    .notice-list tr {
+        margin-bottom: 15px; /* 행 간격 */
+        border: 1px solid #eee;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .notice-list td {
+        border-bottom: 1px solid #f0f0f0;
+        text-align: right !important; /* 오른쪽 정렬 */
+        padding-left: 50%; /* 제목을 위한 공간 확보 */
+        position: relative;
+    }
+    .notice-list td::before { /* 가상 요소로 헤더 텍스트 표시 */
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        width: calc(50% - 30px);
+        text-align: left;
+        font-weight: 600;
+        color: #777;
+    }
+    .notice-list td:nth-child(1)::before { content: "제목"; }
+    .notice-list td:nth-child(2)::before { content: "작성일"; }
+    .notice-list tr:last-child {
+        border-bottom: 1px solid #eee; /* 마지막 행 테두리 다시 추가 */
+    }
+    .notice-list td:last-child {
+        border-bottom: none;
+    }
+    .notice-list td[colspan="2"] { /* 게시글 없음 메시지 */
+        text-align: center;
+        padding: 30px;
+        border-radius: 8px;
+        display: block; /* 블록 레벨로 변경 */
+        width: auto;
+        padding-left: 15px; /* 가상 요소 패딩 제거 */
+    }
+    .notice-list td[colspan="2"]::before { content: none; } /* 가상 요소 숨김 */
+
+    .notice-detail-actions button {
+        padding: 10px 20px;
+        margin: 5px;
+        display: block;
+        width: calc(100% - 20px);
+    }
+}
+
+@media (max-width: 480px) {
+    .notice-list-container,
+    .notice-detail-container {
+        padding: 15px;
+    }
+    .notice-list-header h1 {
+        font-size: 1.5em;
+    }
+    .notice-search input[type="text"] {
+        width: 100%;
+    }
+    .notice-detail-title h2 {
+        font-size: 1.3em;
+    }
+    .notice-detail-actions button {
+        font-size: 0.9em;
+        padding: 8px 15px;
+    }
+}
+
+/* ⭐ 기존 .notice-btn-list 스타일은 유지하되, 새로운 컨테이너에 맞게 수정 ⭐ */
+.notice-btn-list {
+    background-color: #6c757d; /* 회색 배경 */
+    color: white;
+    padding: 10px 20px; /* 패딩 좀 더 크게 */
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 1em; /* 글자 크기 조정 */
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    white-space: nowrap;
+    display: inline-flex; /* 아이콘과 텍스트 중앙 정렬 */
+    align-items: center;
+    gap: 8px; /* 아이콘과 텍스트 사이 간격 */
+}
+
+.notice-btn-list:hover {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+}
+
+/* ⭐ NEW: 버튼을 담을 액션 영역 스타일 ⭐ */
+.notice-detail-actions {
+    margin-top: 30px; /* 본문 내용과의 상단 간격 */
+    padding-top: 20px; /* 상단 패딩 */
+    border-top: 1px solid #eee; /* 상단 구분선 */
+    display: flex;
+    justify-content: flex-end; /* 오른쪽 정렬 (혹은 center로 가운데 정렬) */
+}
+

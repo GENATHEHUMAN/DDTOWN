@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.emp.artist.IArtistMapper">
+ 
+ 	<select id="getAllArtists" resultType="kr.or.ddit.vo.artist.ArtistVO">
+ 		select ART_NO
+	 		, ART_GROUP_NO
+	 		, MEM_USERNAME
+	 		, ART_NM
+	 		, ART_CONTENT
+	 		, ART_REG_DATE
+	 		, ART_MOD_DATE
+	 		, ART_PROFILE_IMG
+	 	  from 
+	 	  	artist 
+	 	  order by 
+	 	  	art_no asc
+ 	</select>
+ 	
+ </mapper>

@@ -1,0 +1,336 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDTOWN - 오디션 일정 관리</title>
+    
+    <%-- 기존 포털 공통 CSS --%>
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/resources/css/pages/emp_common.css">
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/resources/css/pages/emp_portal_style.css">
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/resources/css/pages/audition_management_style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+</head>
+<body>
+오디션 목록
+
+     <div class="emp-container">
+        <header class="emp-header">
+            <div class="emp-logo">
+                <a href="<%=request.getContextPath()%>/emp_portal.jsp">DDTOWN 직원 포털</a>
+            </div>
+            <div class="emp-user-info">
+                <span><i class="fas fa-user-circle"></i> 안녕하세요, <strong id="employee-name">홍길동</strong>님</span>
+                <a href="#logout" class="emp-logout-btn"><i class="fas fa-sign-out-alt"></i> 로그아웃</a>
+            </div>
+        </header>
+        <div class="emp-body-wrapper">
+            <aside class="emp-sidebar">
+                <nav class="emp-nav">
+                    <ul>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="approval">
+                                <i class="fas fa-file-signature"></i> 전자결재 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-approval">
+                                <li><a href="<%=request.getContextPath()%>/1.approval/approval_draft.jsp" class="emp-nav-item">기안서 작성</a></li>
+                                <li><a href="<%=request.getContextPath()%>/1.approval/approval_request_list.jsp" class="emp-nav-item">결재 요청 리스트</a></li>
+                                <li><a href="<%=request.getContextPath()%>/1.approval/approval_box.jsp" class="emp-nav-item">결재 문서함</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="audition">
+                                <i class="fas fa-microphone-alt"></i> 오디션 관리 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-audition">
+                                <li><a href="<%=request.getContextPath()%>/2.audition/schedule_management.jsp" class="emp-nav-item">일정 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/2.audition/applicant_info.jsp" class="emp-nav-item">지원자 정보</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="community">
+                                <i class="fas fa-users"></i> 아티스트 커뮤니티 관리 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-community">
+                                <li>
+                                    <a href="#" class="emp-nav-item has-submenu" data-menu="artist-mgmt">아티스트 관리 <span class="submenu-arrow">&gt;</span></a>
+                                    <ul class="emp-submenu" id="submenu-artist-mgmt">
+                                        <li><a href="<%=request.getContextPath()%>/emp/group/group-management" class="emp-nav-item">그룹 관리</a></li>
+                                        <li><a href="<%=request.getContextPath()%>/emp/artist/individual-management" class="emp-nav-item">아티스트 관리</a></li>
+                                    </ul>
+                                </li>
+                                다른 커뮤니티 관련 링크들도 실제 경로에 맞게 수정
+                                <li><a href="<%=request.getContextPath()%>/community/notice_management.jsp" class="emp-nav-item">공지사항 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/community/post_management.jsp" class="emp-nav-item">게시물 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/community/live_management.jsp" class="emp-nav-item">라이브 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/community/schedule_management.jsp" class="emp-nav-item">일정 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/community/membership_management.jsp" class="emp-nav-item">멤버십 관리</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="concert">
+                                <i class="fas fa-ticket-alt"></i> 콘서트 관리 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-concert">
+                                <li><a href="<%=request.getContextPath()%>/4.concert/schedule_management.jsp" class="emp-nav-item">콘서트 일정 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/4.concert/notice_management.jsp" class="emp-nav-item">콘서트 공지사항 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/4.concert/seat_management.jsp" class="emp-nav-item">콘서트 좌석 관리</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="<%=request.getContextPath()%>/email_tool.jsp" class="emp-nav-item" data-menu="email">
+                                <i class="fas fa-envelope-open-text"></i> 이메일 전송
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+            
+<!-- main 페이지 -->
+            <main class="emp-content">
+                <section id="schedule-management-section" class="am-section active-section">
+                    <div class="am-section-header">
+                        <h2>오디션 일정 관리</h2>
+                        <button type="button" id="btn-add-audition" class="am-btn primary"><i class="fas fa-plus-circle"></i> 새 오디션 등록</button>
+                    </div>
+                    <div class="am-section-content">
+                        <div class="am-filter-area">
+                            <input type="text" id="search-schedule-input" placeholder="오디션명 검색" class="am-search-input">
+                            <select id="filter-schedule-status" class="am-filter-select">
+                                <option value="all">전체 상태</option>
+                                <option value="upcoming">예정</option>
+                                <option value="ongoing">진행중</option>
+                                <option value="finished">종료</option>
+                            </select>
+                            <button type="button" id="btn-search-schedule" class="am-btn"><i class="fas fa-search"></i> 검색</button>
+                        </div>
+                        <table class="am-table" id="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th>오디션 ID</th>
+                                    <th>오디션명</th>
+                                    <th>모집 기간</th>
+                                    <th>진행 상태</th>
+                                    <th>담당자</th>
+                                    <th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schedule-table-body">
+                                <c:forEach var="audition" items="${auditionList}">
+					                <tr>
+					                    <td>${audition.audiNo}</td>
+					                    <td>
+						                    <a href="#" class="detail-link aDetail"
+						                	   data-audition-id="${audition.audiNo}"
+							                   data-audition-title="${audition.audiTitle}"
+							                   data-audition-start-date="${audition.audiStartDate}"
+							                   data-audition-end-date="${audition.audiEndDate}"
+							                   data-audition-status="${audition.audiStatCode}"
+							                   data-audition-manager="${audition.empUsername}"
+							                   data-audition-type="${audition.audiTypeCode}"
+							                   data-audition-file="${audition.fileGroupNo}"
+							                   data-audition-description="${audition.audiContent}"
+							                   >
+						                    	${audition.audiTitle}
+						                    </a>
+					                    </td>
+					                    <td>
+					                    	<c:set value="${fn:split(audition.audiStartDate, ' ')}" var="auditionStartDate"/>
+		                       				<c:set value="${fn:split(audition.audiEndDate, ' ')}" var="auditionEndDate"/>
+		                       				${auditionStartDate[0]} ~ ${auditionEndDate[0]}
+		                       			</td>
+					                    <td>
+					                    	<c:choose>
+				                       			<c:when test="${audition.audiStatCode eq 'ADSC001'}">진행중</c:when>
+				                       			<c:when test="${audition.audiStatCode eq 'ADSC002'}">마감</c:when>
+				                       			<c:when test="${audition.audiStatCode eq 'ADSC003'}">예정됨</c:when>
+				                       		</c:choose>
+					                    </td>
+					                    <td>${audition.empUsername}</td>
+					                    <td></td>
+					                    </tr>
+					            </c:forEach>
+					            <c:if test="${empty auditionList}">
+					                <tr>
+					                    <td colspan="9">등록된 오디션이 없습니다.</td>
+					                </tr>
+					            </c:if>
+                            </tbody>
+                        </table>
+                        <div class="am-pagination" id="schedule-pagination">
+                            <a href="#">&laquo;</a><a href="#" class="active">1</a><a href="#">2</a><a href="#">&raquo;</a>
+                        </div>
+                    </div>
+                </section>
+                <!-- 오디션 등록/수정, 상세 모달 등은 기존 audition_management.html 구조와 동일하게 이식 -->
+                <div id="audition-form-modal" class="am-modal">
+                    <div class="am-modal-content">
+                        <span class="am-modal-close" data-modal-id="audition-form-modal">&times;</span>
+                        <!-- 오디션 등록 모달창 내용 -->
+                        <h3 id="audition-modal-title">새 오디션 등록</h3>
+                        <form id="audition-detail-form" class="am-form">
+                            <input type="hidden" id="audition-id-input">
+                            <div class="form-group">
+                                <label for="audition-name">오디션명 <span class="required">*</span></label>
+                                <input type="text" id="audition-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="audition-start-date">모집 시작일 <span class="required">*</span></label>
+                                <input type="date" id="audition-start-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="audition-end-date">모집 종료일 <span class="required">*</span></label>
+                                <input type="date" id="audition-end-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="audition-fields">모집 분야 (쉼표로 구분)</label>
+                                <input type="text" id="audition-fields" placeholder="예: 보컬, 댄스, 연기">
+                            </div>
+                            <div class="form-group">
+                                <label for="audition-status-select">진행 상태</label>
+                                <select id="audition-status-select">
+                                    <option value="upcoming">예정</option>
+                                    <option value="ongoing">진행중</option>
+                                    <option value="finished">종료</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="audition-manager">담당자</label>
+                                <input type="text" id="audition-manager">
+                            </div>
+                            <div class="form-group">
+                                <label for="audition-description">상세 내용</label>
+                                <textarea id="audition-description" rows="5"></textarea>
+                            </div>
+                            <div class="am-form-actions">
+                                <button type="button" class="am-btn secondary btn-close-modal" data-modal-id="audition-form-modal">취소</button>
+                                <button type="submit" class="am-btn success">저장</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- 오디션 상세정보 모달창 내용 -->
+                <div id="audition-view-modal" class="am-modal">
+                    <div class="am-modal-content">
+                        <span class="am-modal-close" id="detailXClose" data-modal-id="audition-view-modal">&times;</span>
+                        
+                        <h3 id="audition-view-modal-title">오디션 상세 정보</h3>
+                        <div class="am-form"> 
+                            <div class="form-group">
+                                <label>오디션 ID</label>
+                                <p id="view-audition-id"></p>
+                            </div>
+                            <div class="form-group">
+                                <label>오디션명</label>
+                                <p id="view-audition-name"></p>
+                            </div>
+                            <div class="form-group">
+                                <label>모집 기간</label>
+                                <p id="view-audition-period"></p>
+                            </div>
+                            <div class="form-group">
+                                <label>진행 상태</label>
+                                <p id="view-audition-status"></p>
+                            </div>
+                            <div class="form-group">
+                                <label>담당자</label>
+                                <p id="view-audition-manager"></p>
+                            </div>
+                            <div class="form-group">
+                                <label>모집 분야</label>
+                                <p id="view-audition-type-code"></p>
+                            </div>
+                            <div class="form-group">
+                                <label>첨부 파일</label>
+                                <p id="view-audition-file"></p>
+                            </div>
+                            <div class="form-group">
+                                <label>상세 내용</label>
+                                <p id="view-audition-description"></p>
+                            </div>
+                            <div class="am-form-actions">
+                                <button type="button" class="am-btn secondary btn-close-modal" id="detailClose" data-modal-id="audition-view-modal">닫기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+<!--  main 끝 -->
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (직원 전용)</p>
+        </footer>
+    </div>
+    <script src="schedule_management.js"></script> 
+     
+</body>
+<script type="text/javascript">
+$(document).ready(function(){						
+	let detailCloseBtn = $("#detailClose, #detailXClose");		// 상세보기 닫기
+	let $detailModal = $("#audition-view-modal");				// 상세보기 열기
+	
+	let auditionStatusCodeMap = {
+			'ADSC001': '진행중', 'ADSC002': '마감', 'ADSC003': '예정됨'
+	};
+	//오디션명 클릭 시 모달을 열면서 모달의 각 정보에 넣어줌
+	//<a class="... aDetail"
+	//<a class="... aDetail"
+	//<a class="... aDetail"
+	$(document).on('click', '.aDetail', function(e){
+		console.log("aDetail에 왔다");
+		//this : class속성의 값이 aDetail인 요소들 중에서 방금 클릭한 바로 그 요소(<a ..)
+		let $clickedLink = $(this);
+		// data 속성에 서 정보 가져오기
+		let auditionId = $clickedLink.data('auditionId');//data-audition-id="2"
+		let auditionTitle = $clickedLink.data('auditionTitle');//data-audition-title=".."
+		let auditionStartDate = $clickedLink.data('auditionStartDate');//data-audition-start-date=".."
+		let auditionEndDate = $clickedLink.data('auditionEndDate');//data-audition-end-date=".."
+		let auditionStatus = $clickedLink.data('auditionStatus');//data-audition-status=".."
+		let auditionManager = $clickedLink.data('auditionManager');//data-audition-manager=".."
+		let audiTypeCode = $clickedLink.data('auditionType');//data-audition-type=".."
+		let dataAuditionFile = $clickedLink.data('dataAuditionFile');
+		let auditionDescription = $clickedLink.data('auditionDescription');//data-audition-description=".."
+	
+		if(dataAuditionFile==""){		
+			dataAuditionFile =  'N/A';//data-audition-file=".."
+		}
+		
+		
+		console.log("auditionId : ", auditionId);
+		
+		// 모달 내용 채우기
+		$('#view-audition-id').text(auditionId);
+	    $('#view-audition-name').text(auditionTitle);
+	    $('#view-audition-period').text(`\${auditionStartDate} ~ \${auditionEndDate}`);
+	    $('#view-audition-status').text(auditionStatus);
+	    $('#view-audition-manager').text(auditionManager);
+	    $('#view-audition-type-code').text(audiTypeCode);
+	    $('#view-audition-file').text(dataAuditionFile);
+	    $('#view-audition-description').text(auditionDescription);
+	
+	    $detailModal.css("display","block");
+    });
+	// detail 모달창 닫기
+    detailCloseBtn.on("click", function(){
+		$detailModal.css("display", "none");
+	});
+	// 초기 모달 내용 비우기
+	$('#view-audition-id').text('');
+    $('#view-audition-name').text('');
+    $('#view-audition-period').text('');
+    $('#view-audition-status').text('');
+    $('#view-audition-manager').text('');
+    $('#view-audition-fields').text('');
+    $('#view-audition-description').text('');
+})
+</script>
+
+
+</html>

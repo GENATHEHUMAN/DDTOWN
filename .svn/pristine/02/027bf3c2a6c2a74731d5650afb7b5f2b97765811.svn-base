@@ -1,0 +1,85 @@
+:root {
+  --sidebar-width: 100px;
+  --header-height: 72px;
+  --nav-height: 48px;
+}
+.followed-artists-sidebar {
+  position: fixed;
+  top: 50%; /* 페이지 중앙으로 위치 조정 */
+  transform: translateY(-50%) translateX(-90%); /* Y축 중앙 정렬 유지하면서 X축 이동 */
+  left: 0;
+  width: calc(var(--sidebar-width) - 10px);
+  height: auto; /* 높이를 자동으로 조정 */
+  max-height: 80vh; /* 최대 높이 제한 */
+  background: #fff;
+  border-right: 1px solid #eee;
+  border-radius: 0 12px 12px 0;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+  padding: 24px 10px 24px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  z-index: 100;
+  /* 슬라이드 효과 */
+  opacity: 0.2;
+  pointer-events: none;
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1), opacity 0.3s;
+}
+.followed-artists-sidebar.active {
+  transform: translateY(-50%) translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.followed-artists-sidebar:hover {
+  transform: translateY(-50%) translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.followed-artists-sidebar .artist-icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+  text-decoration: none;
+  position: relative;
+}
+.followed-artists-sidebar .artist-avatar-placeholder {
+  width: 54px;
+  height: 54px;
+  font-size: 2em;
+  margin-bottom: 4px;
+}
+.followed-artists-sidebar .artist-tooltip-name {
+  font-size: 0.95em;
+  color: #333;
+  margin-bottom: 2px;
+}
+.followed-artists-sidebar .membership-badge {
+  position: absolute;
+  top: 0;
+  right: -8px;
+  font-size: 1.1em;
+  color: #f7b731;
+}
+@media (max-width: 900px) {
+  .followed-artists-sidebar { display: none !important; }
+  .container, .slider-section { margin-left: 0; }
+}
+.container, .slider-section {
+  margin: 0 auto;
+  align-self: center;
+}
+
+/* 배너(슬라이더) 중앙 정렬 */
+.slider-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 0 auto 30px auto;
+}
+.slider-container {
+/*   max-width: 1200px; */
+  width: 100%;
+}

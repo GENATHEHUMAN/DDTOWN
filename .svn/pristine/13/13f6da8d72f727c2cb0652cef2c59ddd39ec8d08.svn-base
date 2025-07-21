@@ -1,0 +1,742 @@
+/* 마이페이지 공통 스타일 */
+:root {
+    /* 마이페이지 고유 테마 색상 변수 (네비게이션 바는 mainservice_common.css의 색상을 따름) */
+    --primary-color: #A095C4; /* 예시: 마이페이지 주요 버튼, 활성 메뉴 등에 사용 */
+    --primary-hover-color: #8A7EB0;
+    --primary-light-bg: #E9E7F1;
+
+    --secondary-color: #87A8C7; /* 예시: 마이페이지 보조 버튼 등에 사용 */
+    --secondary-darker: #6D8BAA;
+
+    --accent-color: #FFB6C1; /* 예시: 마이페이지 내 특정 강조 요소 */
+
+    /* 배경 및 기본 텍스트/보더 색상은 mainservice_common.css를 따르거나, 필요시 여기서 덮어쓰기 */
+    --background-color: #F4F6F8; /* body 배경 */
+    --content-bg-color: #FFFFFF;   /* .mypage-content 배경 */
+    --border-color: #DDE2E6;      /* .mypage-content 내부 보더 */
+
+    --text-color: #3D3D3D;
+    --text-light: #757575;
+    --text-on-primary: #FFFFFF;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Noto Sans KR', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 네비게이션 바 관련 스타일은 mainservice_common.css 에서 가져옴 */
+
+/* 마이페이지 컨테이너 */
+.mypage-container {
+    display: flex;
+    max-width: 1200px; /* 전체 페이지 너비 제한 */
+    margin: calc(40px) auto;                                          
+    padding: 0 20px; /* 좌우 여백 */
+    gap: 30px; /* 사이드바와 콘텐츠 사이 간격 */
+    flex-grow: 1;
+    align-items: flex-start; /* 사이드바와 콘텐츠 높이가 다를 때 상단 정렬 */
+}
+
+/* 사이드바 */
+.mypage-sidebar {
+    width: 250px; /* 사이드바 고정 너비 */
+    flex-shrink: 0;
+}
+
+.mypage-sidebar h2 { /* "MY PAGE" 타이틀 */
+    font-size: 1.5em;
+    color: var(--text-color);
+    margin-top: 0;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary-color);
+    padding-left: 10px; /* 좌측 여백 추가 */
+}
+
+.mypage-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+/* (기존 .mypage-nav 관련 스타일 유지) */
+.mypage-nav .nav-depth1 {
+    margin-bottom: 5px;
+}
+
+.mypage-nav .nav-depth1 > a.depth1-menu {
+    display: block;
+    padding: 12px 15px;
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.mypage-nav .nav-depth1 > a.depth1-menu:hover {
+    background-color: var(--primary-light-bg);
+    color: var(--primary-color);
+}
+
+.mypage-nav .nav-depth1 > a.depth1-menu.active-menu {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+}
+
+.mypage-nav .nav-depth2 {
+    padding-left: 20px;
+    margin-top: 5px;
+}
+
+.mypage-nav .nav-depth2 li a {
+    display: block;
+    padding: 8px 15px;
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 0.95em;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.mypage-nav .nav-depth2 li a:hover {
+    color: var(--primary-color);
+    background-color: var(--primary-light-bg);
+}
+
+
+/* 메인 콘텐츠 ("기본 정보" 등이 들어가는 영역) */
+.mypage-content {
+    flex-grow: 1; /* 남은 공간을 모두 차지하도록 하여 폭을 확보 */
+    background-color: var(--content-bg-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    padding: 30px;
+    min-width: 600px; /* 최소 너비 예시, 필요에 따라 조절 */
+}
+
+.mypage-section {
+    display: none;
+}
+
+.mypage-section.active-section {
+    display: block;
+    animation: fadeInSection 0.3s ease;
+
+}
+
+@keyframes fadeInSection {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.mypage-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.mypage-section-header h3 {
+    font-size: 1.4em;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.required-info-guide {
+    font-size: 0.85em;
+    color: var(--text-light);
+}
+
+
+/* 버튼 스타일 (기존 스타일 유지) */
+.btn-mypage-primary,
+.btn-mypage-secondary,
+.btn-mypage-danger {
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    font-size: 0.95em;
+}
+
+.btn-mypage-primary {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+}
+.btn-mypage-primary:hover { background-color: var(--primary-hover-color); }
+
+.btn-mypage-secondary {
+    background-color: var(--secondary-color);
+    color: var(--text-on-primary);
+}
+.btn-mypage-secondary:hover { background-color: var(--secondary-darker); }
+
+.btn-mypage-secondary.small-btn {
+    padding: 6px 12px;
+    font-size: 0.85em;
+}
+
+.btn-mypage-danger {
+    background-color: #dc3545;
+    color: white;
+}
+.btn-mypage-danger:hover { background-color: #c82333; }
+
+
+/* 푸터는 footer.html 및 mainservice_common.css 에서 스타일링 */
+
+/* --- 폼 스타일 --- */
+.profile-form {
+    max-width: 700px; /* 기존 값에서 늘리거나, 상황에 따라 100% 또는 unset */
+    margin: 0 auto; /* 폼 자체를 .mypage-section.active-section 내에서 중앙 정렬 */
+}
+
+.form-group-mypage {
+    margin-bottom: 20px;
+}
+
+.form-group-mypage label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-color);
+    font-size: 0.9em;
+}
+
+.form-group-mypage input[type="text"],
+.form-group-mypage input[type="password"],
+.form-group-mypage input[type="email"],
+.form-group-mypage select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.95em;
+    box-sizing: border-box;
+}
+
+.form-group-mypage input[readonly],
+.form-group-mypage select[disabled] {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+    color: #6c757d;
+}
+
+.required-mark {
+    color: var(--accent-color);
+    margin-left: 4px;
+}
+
+/* (이하 다른 폼 그룹 가로 정렬 스타일 등 기존 유지) */
+.password-confirm-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.password-confirm-area input { flex-grow: 1; }
+.password-confirm-area button { flex-shrink: 0; }
+
+.password-field-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.password-field-area input.profile-field {
+    flex-grow: 1;
+}
+.password-field-area .small-btn {
+    flex-shrink: 0;
+}
+
+.birthdate-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.birthdate-inputs input.profile-field {
+    width: auto;
+    text-align: center;
+}
+.birthdate-inputs input.year { width: auto; }
+.birthdate-inputs input.month,
+.birthdate-inputs input.day { width: 60px; }
+
+.radio-group-mypage {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+.radio-group-mypage label {
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: normal;
+    font-size: 0.95em;
+}
+
+.address-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.address-row input.short-input {
+    width: 120px;
+}
+.address-row .btn-mypage-secondary {
+    flex-shrink: 0;
+}
+.address-group input.full-width-input {
+    margin-bottom: 10px;
+}
+.address-group input.full-width-input:last-of-type {
+    margin-bottom: 0;
+}
+
+.phone-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.phone-inputs select.profile-field {
+    width: 100px;
+}
+.phone-inputs input.short-input {
+     width: 100px;
+     text-align: center;
+}
+
+.reception-settings .reception-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+}
+.reception-settings .reception-row:not(:last-of-type){
+    border-bottom: 1px dashed #eee;
+}
+.reception-settings .reception-row > span {
+    flex-basis: 120px;
+    flex-shrink: 0;
+    font-size: 0.95em;
+}
+.reception-settings .reception-row .radio-group-mypage {
+    justify-content: flex-start;
+    gap: 15px;
+}
+.form-hint-mypage {
+    font-size: 0.85em;
+    color: var(--text-light);
+    margin-top: 15px;
+}
+.form-hint-mypage i {
+    margin-right: 5px;
+}
+
+.form-actions-mypage {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+.form-actions-mypage .main-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+    .mypage-container {
+        flex-direction: column;
+        margin-top: calc(50px + 45px + 10px); 
+    }
+
+    .mypage-sidebar {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    .mypage-sidebar h2 {
+        font-size: 1.3em;
+        padding-left: 5px; 
+    }
+
+    .mypage-content {
+        padding: 20px; 
+    }
+
+    .profile-form {
+        max-width: 100%; 
+        margin: 0; /* 중앙 정렬 해제 */
+    }
+
+    /* (기존 다른 반응형 스타일 유지) */
+    .membership-status { grid-template-columns: 1fr; }
+    .order-product { flex-direction: column; }
+    .order-product img { width: 100%; height: auto; max-width: 200px; align-self: center; }
+
+    .password-field-area,
+    .birthdate-inputs,
+    .address-row,
+    .phone-inputs,
+    .reception-settings .reception-row,
+    .form-actions-mypage {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .password-field-area input.profile-field,
+    .birthdate-inputs input.profile-field,
+    .address-row input.short-input,
+    .phone-inputs select.profile-field,
+    .phone-inputs input.short-input {
+        width: 100%;
+    }
+    .reception-settings .reception-row > span {
+        flex-basis: auto;
+        margin-bottom: 5px;
+    }
+    .form-actions-mypage {
+        align-items: center;
+    }
+    .form-actions-mypage .main-actions {
+        width: 100%;
+        justify-content: center;
+    }
+     .form-actions-mypage .btn-mypage-danger {
+        margin-bottom: 10px;
+    }
+}
+
+/* --- 알림 설정 페이지 스타일 --- */
+.alarm-settings-container {
+    margin-top: 20px;
+}
+
+.alarm-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+.alarm-option:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.alarm-option-text {
+    flex-grow: 1;
+    margin-right: 15px;
+}
+
+.option-title {
+    display: block;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-bottom: 4px;
+    font-size: 1em;
+}
+
+.option-description {
+    display: block;
+    font-size: 0.9em;
+    color: var(--text-light);
+}
+
+/* 토글 스위치 스타일 (mypage_style.css 에서 가져온 후 색상 변수 적용) */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px; /* 너비 */
+  height: 26px; /* 높이 */
+  flex-shrink: 0;
+}
+.switch input {
+  display:none; /* HTML의 input checkbox는 숨김 */
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc; /* 비활성 시 배경색 */
+  transition: .4s; /* 애니메이션 속도 */
+}
+.slider:before { /* 토글 핸들(원) */
+  position: absolute;
+  content: "";
+  height: 20px; /* 핸들 높이 */
+  width: 20px;  /* 핸들 너비 */
+  left: 3px;    /* 핸들 초기 위치 (왼쪽) */
+  bottom: 3px;  /* 핸들 초기 위치 (아래) */
+  background-color: white;
+  transition: .4s; /* 핸들 이동 애니메이션 속도 */
+}
+input:checked + .slider {
+  background-color: var(--primary-color); /* 활성화 시 배경색 (mypage_common.css의 테마색) */
+}
+input:checked + .slider:before {
+  transform: translateX(24px); /* 핸들 오른쪽으로 이동 거리 */
+}
+.slider.round { /* 스위치 전체를 둥글게 */
+  border-radius: 26px; /* height 값과 동일하게 하여 완전한 타원형 */
+}
+.slider.round:before { /* 핸들도 둥글게 */
+  border-radius: 50%;
+}
+
+
+/* 설정 저장 버튼 */
+.form-actions-mypage {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-mypage-primary {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+    border: none;
+    padding: 10px 25px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    font-size: 0.95em;
+}
+.btn-mypage-primary:hover { background-color: var(--primary-hover-color); }
+ /* 배송조회 모달을 위한 기본 스타일 (mypage_common.css로 이동 권장) */
+ .modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1001; /* Sit on top (네비게이션 바 z-index보다 높게) */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+    max-width: 500px;
+    border-radius: 8px;
+    position: relative;
+}
+
+.close-button {
+    color: #aaa;
+    float: right; /* 'X' 버튼을 오른쪽 상단으로 */
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+.delivery-status-steps {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+}
+.delivery-status-steps li {
+    padding: 10px 0;
+    border-bottom: 1px dashed #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* 세로 중앙 정렬 */
+}
+.delivery-status-steps li:last-child {
+    border-bottom: none;
+}
+.delivery-status-steps .step-time { color: #888; font-size: 0.9em; margin-left: 10px;}
+.delivery-status-steps .step-location { font-weight: bold; }
+.delivery-status-steps .step-status { color: var(--primary-color); /* mypage_common.css 변수 사용 */ }
+
+/* 카테고리 탭 스타일 (mypage_common.css로 이동 권장) */
+.order-filters {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* 요소들 사이 간격 */
+}
+.order-category-tabs {
+    display: flex;
+    gap: 5px; /* 탭 버튼 사이 간격 */
+}
+.category-tab {
+    padding: 8px 15px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    color: #555;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.9em;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+.category-tab:hover {
+    border-color: var(--primary-color, #A095C4); /* mypage_common.css 변수 또는 기본값 */
+    color: var(--primary-color, #A095C4);
+}
+.category-tab.active {
+    background-color: var(--primary-color, #A095C4);
+    color: var(--text-on-primary, #FFFFFF);
+    border-color: var(--primary-color, #A095C4);
+}
+/* 주문 아이템 하단 버튼 영역 스타일 */
+.order-footer-actions {
+    padding: 15px 0 0 0; /* 버튼 영역 상단에만 패딩 */
+    text-align: right; /* 버튼 오른쪽 정렬 */
+    border-top: 1px solid #f0f0f0; /* 내용과 구분선 */
+    margin-top: 15px; /* 내용과의 간격 */
+}
+.order-footer-actions .btn-mypage-secondary,
+.order-footer-actions .btn-mypage-primary,
+.order-footer-actions .btn-mypage-danger {
+    margin-left: 8px; /* 버튼 사이 간격 */
+}
+.order-footer-actions .btn-mypage-secondary:first-child,
+.order-footer-actions .btn-mypage-primary:first-child,
+.order-footer-actions .btn-mypage-danger:first-child {
+    margin-left: 0;
+}
+
+.cancel-item { /* 기존 .order-item과 유사한 역할 */
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    padding: 20px;
+    background-color: #fff;
+}
+.cancel-header { /* 기존 .order-header와 유사 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.cancel-info span { margin-right: 15px; color: #555; }
+.cancel-info .cancel-number { color: #888; font-size: 0.9em; }
+.cancel-status .status-badge { /* mypage_common.css에 정의된 status-badge 스타일 활용 */
+    font-size: 0.9em;
+    padding: 5px 10px;
+    border-radius: 4px;
+    color: #fff;
+}
+.status-cancelled { background-color: #6c757d; } /* 취소완료 */
+.status-refunding { background-color: #ffc107; color: #333; } /* 환불진행중 */
+.status-refunded { background-color: #28a745; } /* 환불완료 */
+.status-requested { background-color: #17a2b8; } /* 취소요청 */
+
+
+.cancel-product { /* 기존 .order-product와 유사 */
+    display: flex;
+    align-items: center;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    border-bottom: 1px dashed #eee;
+}
+.cancel-product:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+.cancel-product img {
+    width: 70px; /* 크기 조정 */
+    height: 70px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 15px;
+}
+.cancel-product .product-info h4 {
+    font-size: 1em;
+    color: #333;
+    margin: 0 0 5px 0;
+}
+.cancel-product .product-info .product-option {
+    font-size: 0.85em;
+    color: #777;
+    margin-bottom: 3px;
+}
+.cancel-product .product-info .product-price { /* 취소/환불된 상품의 원래 가격 */
+    font-size: 0.9em;
+    color: #555;
+    text-decoration: line-through; /* 취소되었으므로 취소선 */
+    margin-bottom: 5px;
+}
+.cancel-product .product-info .refund-amount { /* 실제 환불(예정) 금액 */
+    font-size: 0.95em;
+    font-weight: bold;
+    color: var(--primary-color, #A095C4); /* 테마 색상 사용 */
+}
+
+
+.cancel-item-footer { /* 주문건 하단 전체 정보 (예: 총 환불액) */
+    text-align: right;
+    font-size: 1.05em;
+    font-weight: bold;
+    color: var(--text-color, #333);
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+ .cancel-item-footer .total-label {
+    margin-right: 10px;
+    color: var(--text-light, #777);
+    font-weight: normal;
+}
+.cancel-reason-overall { /* 주문건 전체에 대한 취소 사유 (필요시) */
+    font-size: 0.9em;
+    color: #777;
+    margin-top: 10px;
+}
+
+
+.cancel-notice {
+    margin-top: 30px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #555;
+}
+.cancel-notice h4 { margin-top: 0; margin-bottom: 10px; font-size: 1.1em; color: #333;}
+.cancel-notice ul { padding-left: 20px; margin-bottom: 0;}
+.cancel-notice li { margin-bottom: 5px;}
+
+.no-cancel-history { /* 주문 내역 없을 때와 동일한 클래스 사용 가능 */
+    text-align: center;
+    padding: 50px 0;
+    color: var(--text-light, #777);
+}
+.pagination { margin-top: 30px; } /* 이전 스타일 유지 */

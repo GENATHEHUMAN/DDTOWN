@@ -1,0 +1,12 @@
+package kr.or.ddit.vo.community;
+
+import lombok.Data;
+
+@Data
+public class CommunityVO {
+	private int artGroupNo;
+	private String comuActCode;
+	private String comuNm;
+	private String comuContent;
+	private int fileGroupNo;
+}

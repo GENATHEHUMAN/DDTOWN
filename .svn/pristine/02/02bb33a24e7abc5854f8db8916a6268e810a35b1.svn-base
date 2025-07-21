@@ -1,0 +1,20 @@
+package kr.or.ddit.ddtown.controller.emp.post;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("/emp/post")
+public class PostManagementController {
+
+	@GetMapping("/list")
+	public String postList() {
+		return "emp/post/postList"; 
+	}
+	
+	@GetMapping("/detail")
+	public String postDetail() {
+		return "emp/post/postDetail"; 
+	}
+}

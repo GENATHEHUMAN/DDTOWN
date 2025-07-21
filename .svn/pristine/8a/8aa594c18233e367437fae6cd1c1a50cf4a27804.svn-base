@@ -1,0 +1,94 @@
+package kr.or.ddit.security;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.security.mapper.ISecMemberMapper;
+import kr.or.ddit.vo.security.CustomOAuth2User;
+import kr.or.ddit.vo.user.MemberVO;
+import kr.or.ddit.vo.user.PeopleAuthVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+
+	@Autowired
+	private ISecMemberMapper memberMapper;
+	
+	@Transactional
+	@Override
+	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+		DefaultOAuth2UserService dOauth2 = new DefaultOAuth2UserService();
+		OAuth2User oAuth2User = dOauth2.loadUser(userRequest);
+		String registrationId = userRequest.getClientRegistration().getRegistrationId();
+		
+		Map<String, Object> map = oAuth2User.getAttributes();
+		Set<String> keySet = map.keySet();
+		Iterator<String> ite_key = keySet.iterator();
+		while(ite_key.hasNext()) {
+			String key = ite_key.next();
+			log.info("key : {} , value : {}",key,map.get(key));
+		}
+		
+		  
+		MemberVO memberVO = new MemberVO(); 
+		PeopleAuthVO memberAuthVO = new PeopleAuthVO();
+		List<PeopleAuthVO> memberAuthList = new ArrayList<>(); 
+		memberAuthList.add(memberAuthVO);
+		memberAuthVO.setAuth("ROLE_MEMBER");
+		memberVO.setAuthList(memberAuthList);
+		
+		String username = null;
+		String nickname = null;
+		
+		if("google".equals(registrationId)) {
+			username = map.get("sub").toString();
+			nickname = map.get("name").toString();
+			memberVO.setMemRegPath("MRP001");
+			String peoFirstNm = map.get("given_name").toString();
+			String peoLastNm = map.get("family_name").toString();
+			String peoEmail = map.get("email").toString();
+			memberVO.setPeoFirstNm(peoFirstNm);
+			memberVO.setPeoLastNm(peoLastNm);
+			memberVO.setPeoEmail(peoEmail);
+			
+		}
+		else if("kakao".equals(registrationId)) {
+			Map<String, Object> kakaoAccount = (Map<String, Object>) map.get("kakao_account");
+			Map<String, Object> kakaoProfile = (Map<String, Object>) kakaoAccount.get("profile");
+			username = map.get("id").toString();
+			nickname = kakaoProfile.get("nickname").toString();
+			memberVO.setMemRegPath("MRP002");
+		}
+		  
+		memberVO.setUsername(username);
+		memberVO.setMemNicknm(nickname); 
+		  
+		MemberVO existingUser = memberMapper.selectByMemUsernameOAuth2(memberVO);
+		if(existingUser == null) { 
+			memberMapper.insertPeopleByOAuth2(memberVO);
+			memberVO.setMemUsername(username);
+			memberMapper.insertMemberByOAuth2(memberVO);
+			memberAuthVO.setUsername(memberVO.getUsername());
+			memberMapper.insertAuthByOAuth2(memberAuthVO); 
+		}else { 
+			memberVO = existingUser; 
+		}
+		  
+		return memberVO == null ? null : new CustomOAuth2User(memberVO);
+				 
+	}
+}

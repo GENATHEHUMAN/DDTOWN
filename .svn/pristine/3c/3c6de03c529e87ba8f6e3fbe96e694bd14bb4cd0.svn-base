@@ -1,0 +1,207 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c"%>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채팅방: ${chatChannelNo}</title>
+    <meta name="_csrf" content="${_csrf.token }">
+    <meta name="_csrf_header" content="${_csrf.headerName }">
+    <style>
+        body { font-family: sans-serif; margin: 20px; display: flex; flex-direction: column; height: 90vh; }
+        #chatDisplay {
+            border: 1px solid #ccc;
+            height: 70%;
+            overflow-y: auto;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+        #messageInput {
+            width: calc(100% - 80px); /* 버튼 너비 제외 */
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* 패딩 포함 너비 계산 */
+        }
+        #sendButton {
+            width: 70px;
+            padding: 8px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        #sendButton:hover {
+            background-color: #0056b3;
+        }
+        .chat-message {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .my-message {
+            text-align: right;
+            background-color: #dcf8c6;
+        }
+        .other-message {
+            text-align: left;
+            background-color: #ffffff;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+	<sec:authentication property="principal" var="d"/>
+	${d }
+    <h1>채팅방: ${chatChannelNo}</h1>
+    <div id="chatDisplay"></div>
+    <div>
+        <input type="text" id="messageInput" placeholder="메시지를 입력해주세요.">
+        <button id="sendButton">전송</button>
+    </div>
+
+    <script>
+    	
+        document.addEventListener('DOMContentLoaded', function() {
+        	
+        	// CSRF 토큰 정보 가져오기
+        	const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        	const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        	
+            const chatChannelNo = ${chatChannelNo}; // 모델에서 채널 번호 가져오기
+            const username = localStorage.getItem('wschat.username'); // room.jsp에서 저장한 대화명 가져오기
+
+            const chatDisplay = document.getElementById('chatDisplay');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+
+            let stompClient = null; // STOMP 클라이언트 변수
+            
+            // 초기 메세지 로드
+            <c:forEach var="message" items="${initialMessages}">
+            	displayMessage({
+            		username: "${message.username}",
+            		chatContent: "${message.chatContent}",
+            		chatSendDate: "${message.chatSendDate}"
+            	});
+            </c:forEach>
+
+            // 웹소켓 연결 함수
+            function connect() {
+                // /ws-stomp 엔드포인트로 SockJS 연결
+                const socket = new SockJS('/ws-stomp', null, {
+                	// CSRF 토큰 포함
+                	headers: {
+                		[csrfHeader]: csrfToken
+                	}
+                });
+                stompClient = Stomp.over(socket);
+
+                stompClient.connect({
+                	[csrfHeader]: csrfToken
+                }, function(frame) {
+                    console.log('Connected: ' + frame);
+                    
+                    // 1. 아티스트가 보낸 메세지를 받을 채널 구독
+                    stompClient.subscribe(`/sub/chat/dm/channel/\${chatChannelNo}`, function(messageOutput) {
+                    	console.log("Channel Message Received: ", messageOutput.body);
+                        const message = JSON.parse(messageOutput.body);
+                        displayMessage(message);
+                    });
+                    
+                    // 2. 개인 메세지(본인)를 받을 큐 구독
+                    stompClient.subscribe(`/user/queue/messages`, function(messageOutput) {
+                    	console.log("private message received : ", messageOutput.body);
+                    	const message = JSON.parse(messageOutput.body);
+                        displayMessage(message);
+                    });
+                }, function(error) { // 연결 실패 시 콜백
+                    console.error('STOMP 연결 오류:', error);
+                    appendMessage('시스템', '채팅방 연결에 실패했습니다. 페이지를 새로고침 해주세요.');
+                });
+            }
+
+            // 메시지 전송 함수
+            function sendMessage() {
+                const messageContent = messageInput.value.trim();
+                if (messageContent && stompClient) {
+                    const chatMessage = {
+                        username: username,
+                        chatChannelNo: chatChannelNo,
+                        chatContent: messageContent,
+                        type: 'TALK'
+                    };
+                    // /pub/chat/message로 메시지 발행
+                    stompClient.send(`/pub/chat/dm/message`, {}, JSON.stringify(chatMessage));
+                    messageInput.value = ''; // 입력 필드 초기화
+                }
+            }
+
+            // 메시지를 채팅창에 표시하는 함수
+            function displayMessage(message) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('chat-message');
+
+                if (message.username === username) {
+                    messageElement.classList.add('my-message');
+                    messageElement.textContent = `나: \${message.chatContent}`;
+                } else {
+                    messageElement.classList.add('other-message');
+                    messageElement.textContent = `\${message.username}: \${message.chatContent}`;
+                }
+                chatDisplay.appendChild(messageElement);
+                // 스크롤을 항상 아래로 내림
+                chatDisplay.scrollTop = chatDisplay.scrollHeight;
+            }
+
+            // 시스템 메시지 (연결/입장/퇴장 등)
+            function appendMessage(systemSender, systemMessage) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('chat-message');
+                messageElement.style.fontStyle = 'italic';
+                messageElement.style.color = '#555';
+                messageElement.textContent = `\${systemSender}: \${systemMessage}`;
+                chatDisplay.appendChild(messageElement);
+                chatDisplay.scrollTop = chatDisplay.scrollHeight;
+            }
+
+            // 이벤트 리스너 설정
+            sendButton.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // 페이지 로드 시 웹소켓 연결
+            connect();
+
+            /* // 페이지를 벗어날 때 웹소켓 연결 해제
+            window.addEventListener('beforeunload', function() {
+                if (stompClient) {
+                    // /pub/chat/dm/message로 EXIT 메시지 전송 (선택 사항)
+                    const leaveMessage = {
+                        sender: sender,
+                        chatChannelNo: chatChannelNo,
+                        message: `${sender}님이 퇴장했습니다.`,
+                        type: 'EXIT'
+                    };
+                    stompClient.send(`/pub/chat/message`, {}, JSON.stringify(leaveMessage));
+                    stompClient.disconnect(function() {
+                        console.log("Disconnected from STOMP broker.");
+                    });
+                }
+                localStorage.removeItem('wschat.sender');
+                localStorage.removeItem('wschat.chatChannelNo');
+            }); */
+        });
+    </script>
+</body>
+</html>

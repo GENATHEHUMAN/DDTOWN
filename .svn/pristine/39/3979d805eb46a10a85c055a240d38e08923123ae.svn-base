@@ -1,0 +1,42 @@
+package kr.or.ddit.ddtown.service.goods;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.ddtown.mapper.goods.IGoodsMapper;
+import kr.or.ddit.vo.goods.goodsNoticeVO;
+import kr.or.ddit.vo.goods.goodsOptionVO;
+import kr.or.ddit.vo.goods.goodsVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class GoodsServiceImpl implements IGoodsService {
+	
+	@Autowired
+	private IGoodsMapper mapper;
+	
+	//상품 리스트 가져오기
+	@Override
+	public List<goodsVO> goodsList() {	
+		return mapper.goodsList();
+	}
+	
+	//굿즈 개별 상세 불러오기
+	@Override
+	public goodsVO getGoodsDetail(int goodsNo) {
+		log.info("서비스 계층 getGoodsDetail - 받은 goodsNo: {}", goodsNo);
+		return mapper.getGoodsDetail(goodsNo);
+	}
+	
+	//옵션 리스트 가져오기
+	@Override
+	public List<goodsOptionVO> optionList(int goodsNo) {
+		return mapper.optionList(goodsNo);
+	}
+
+
+
+}

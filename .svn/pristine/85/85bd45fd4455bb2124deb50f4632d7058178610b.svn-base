@@ -1,0 +1,300 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1:1 문의</title>
+<%@ include file="../../modules/headerPart.jsp" %>
+
+<style type="text/css">
+body {
+    background: linear-gradient(135deg, #1a1a2e 0%, #2a1e4a 50%, #8a2be2 100%); /* 중간색을 약간 더 보라색 계열로 조정 */
+    background-attachment: fixed; /* 배경을 뷰포트에 고정 */
+    background-size: cover; /* 배경이 전체 영역을 커버하도록 */
+    min-height: 100vh;
+    margin: 0;
+    font-family: "Noto Sans KR", 돋움, Dotum, 굴림, Gulim, Tahoma, Verdana, sans-serif;
+    color: #ffffff;
+    overflow-x: hidden;
+}
+.modal_1{
+	display: none;
+	position: absolute;
+    top:0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+</style>
+<script type="text/javascript">
+
+
+
+function dateFormat(jsonDate){
+	if (!jsonDate) return "";
+	let date = new Date(jsonDate);
+	let month = date.getMonth() + 1;
+    let day = date.getDate();
+    let hour = date.getHours();
+    let minute = date.getMinutes();
+    let second = date.getSeconds();
+
+    month = month >= 10 ? month : '0' + month;
+    day = day >= 10 ? day : '0' + day;
+    hour = hour >= 10 ? hour : '0' + hour;
+    minute = minute >= 10 ? minute : '0' + minute;
+    second = second >= 10 ? second : '0' + second;
+
+    return date.getFullYear() + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second;
+}
+
+function getList(){
+	$.ajax({
+		url : "${pageContext.request.contextPath}/inquiry/list",
+		type : "get",
+		success : function(res){
+			if(res.name) {
+			    $("#inquiryName").val(res.name);
+            }
+
+			let html = ``;
+			if(res.inqVO != null && res.inqVO.length > 0){
+				for(let i=0; i<res.inqVO.length; i++){
+					let inq = res.inqVO[i];
+					let regDate = dateFormat(inq.inqRegDate);
+
+                    let statusDescription = (inq.empUsername && inq.inqAnsContent) ? inq.inqStatCodeDes : "상태 미확인";
+                    let statusClass = 'bg-secondary text-white';
+                    if (statusDescription === '답변완료') {
+                        statusClass = 'bg-success-subtle text-success-emphasis';
+                    } else if (statusDescription === '답변대기') {
+                        statusClass = 'bg-warning-subtle text-warning-emphasis';
+                    }
+
+                    let typeDescription = (inq.typeDetailCode && inq.inqTypeCodeDes) ? inq.inqTypeCodeDes : "유형 미확인";
+
+					html += `
+						<a href="${pageContext.request.contextPath}/inquiry/detail/\${inq.inqNo}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 px-3">
+                            <div>
+								<h5 class="mb-1 fw-bold text-dark fs-6">\${inq.inqTitle ? inq.inqTitle : '제목 없음'}</h5>
+								<small class="text-muted small">\${regDate} | \${typeDescription}</small>
+                            </div>
+							<span class="badge rounded-pill \${statusClass} fw-bold py-2 px-2 small">\${statusDescription}</span>
+						</a>
+					`;
+				}
+			}else{
+				html = `
+					<div class="list-group-item text-center p-5">
+	                    <p class="mb-0">등록된 1:1 문의가 없습니다.</p>
+	                </div>
+				`;
+			}
+			$("#inqList").html(html);
+
+            let option = `<option value="">문의 유형을 선택하세요</option>`;
+			if(res.codeList != null && res.codeList.length > 0){
+				for(let i=0; i<res.codeList.length; i++){
+					let code = res.codeList[i];
+					option += `
+						<option value="\${code.commCodeDetNo}">\${code.description}</option>
+					`;
+				}
+			}
+			$("#inqTypeCode").html(option);
+		},
+		error : function(error, status, xhr){
+			console.log("Error fetching list: ", error.status, xhr);
+            $("#inqList").html('<div class="list-group-item text-center p-5 text-danger"><p class="mb-0">문의 목록을 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요.</p></div>');
+		}
+	});
+}
+
+$(document).ready(function() {
+
+
+    $("#insertBtn").on("click",function(){
+    	let data = new FormData();
+
+    	data.append("inqTitle",$("#inqTitle").val());
+    	data.append("inqContent",$("#inqContent").val());
+    	data.append("typeDetailCode",$("#inqTypeCode").val());
+
+    	$.ajax({
+    		url : "/inquiry/insert",
+    		type : "post",
+    		data : data,
+    		processData : false,
+    		contentType : false,
+    		success : function(res){
+    			if(res.status == "OK"){
+    				alert("문의가 등록되었습니다!");
+    				let f = 1;
+                    modalCloseFn(f);
+    				getList();
+    			}
+    		},
+    		error : function(jqXHR, status, errorThrown){
+                let errorMessage = "문의 등록 중 오류가 발생했습니다.";
+                if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                    errorMessage = jqXHR.responseJSON.message;
+                } else if (jqXHR.statusText) {
+                    errorMessage += ` (오류: \${jqXHR.statusText})`;
+                }
+				console.log("Error inserting inquiry: ", jqXHR.status, errorThrown, jqXHR.responseText);
+                alert(errorMessage);
+			},
+			beforeSend : function(xhr) {
+		        xhr.setRequestHeader('${_csrf.headerName}', '${_csrf.token}');
+		    }
+    	});
+    });
+
+	let modalOpen = $("#modalOpen");
+	let modalClose = $("#modalClose");
+	const modal = document.querySelector('.modal_1');
+
+	modalOpen.on("click",function(){
+		modal.style.display="block";
+	});
+
+	modalClose.on("click", function(){
+		modalCloseFn();
+	});
+
+	function modalCloseFn(f){
+		if(f != null){
+			$("#inqTypeCode").val("");
+			$("#inqTitle").val("");
+			$("#inqContent").val("");
+			modal.style.display="none";
+		}else{
+			if(confirm("작성중인 정보는 저장되지 않습니다.")){
+				$("#inqTypeCode").val("");
+				$("#inqTitle").val("");
+				$("#inqContent").val("");
+				modal.style.display="none";
+			}
+		}
+	}
+});
+
+function contentLengthCheck(ele){
+	let size = ele.value.length;
+	let text = ele.value;
+
+	if(size > 1000){
+		alert("더이상 작성하실 수 없습니다.");
+		let subText = text.substring(0,1000);
+		ele.value = subText;
+
+		$(ele).parents("#contentArea").find(".cmt-sub-size").text(subText.length);
+		return false;
+	}
+
+	$(ele).parents("#contentArea").find(".cmt-sub-size").text(size);
+}
+
+function titleLengthCheck(ele){
+	let size = ele.value.length;
+	let text = ele.value;
+
+	if(size > 100){
+		alert("제목은 100자 이상을 넘길 수 없습니다.");
+		let subText = text.substring(0,100);
+		ele.value = subText;
+
+		return false;
+	}
+
+}
+
+</script>
+</head>
+<body onload="getList();">
+<%@ include file="../../modules/communityHeader.jsp" %>
+    <div class="mypage-container">
+<div class="container bg-light shadow-sm rounded-3 my-4" style="max-width: 1200px;">
+    <div class="text-center bg-white p-4 border-bottom rounded-top-3">
+        <h1 class="fs-2 text-dark fw-normal">1:1 문의</h1>
+    </div>
+    <div>
+    	<nav ></nav>
+    </div>
+
+    <div class="p-4">
+        <div class="list-group shadow-sm rounded-3" id="inqList">
+            <%-- Content populated by JavaScript --%>
+        </div>
+
+        <div class="text-center mt-4 mb-3">
+            <%-- This button correctly uses Bootstrap data attributes to toggle the modal --%>
+            <button class="btn btn-primary rounded-3 fw-bold px-4 py-2" id="modalOpen" style="font-size: 1.1em;">새 문의하기</button>
+        </div>
+    </div>
+</div>
+</div>
+<%-- Modal Definition --%>
+<div class="modal_1" id="inquiryModal" tabindex="-1">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content shadow-lg rounded-3 border-0">
+            <div class="modal-header px-4 py-3">
+                <h2 class="modal-title fs-5 text-dark" id="inquiryModalLabel">1:1 문의하기</h2>
+                <%-- Using data-bs-dismiss for the standard close button is cleaner --%>
+	            <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="modalClose"><span aria-hidden="true">x</span></button>
+            </div>
+            <div class="modal-body p-4">
+    	        <form id="inquiryForm">
+    	        	<sec:csrfInput/>
+    	            <div class="mb-3">
+    	                <label for="inquiryName" class="form-label fw-bold text-dark">이름</label>
+    	                <input type="text" class="form-control rounded-3" id="inquiryName" name="inquiryName" readonly>
+    	            </div>
+    	            <div class="mb-3">
+    	                <label for="inqTypeCode" class="form-label fw-bold text-dark">문의 유형</label>
+    	                <select class="form-control" id="inqTypeCode" name="inqTypeCode" required>
+    	                    <%-- Options populated by JavaScript --%>
+    	                </select>
+    	            </div>
+    	            <div class="mb-3">
+    	                <label for="inqTitle" class="form-label fw-bold text-dark">문의 제목</label>
+    	                <input type="text" class="form-control rounded-3" id="inqTitle" name="inqTitle" onkeyup="titleLengthCheck(this)" required>
+    	            </div>
+    	            <div class="mb-3" id="contentArea">
+    	                <label for="inqContent" class="form-label fw-bold text-dark">문의 내용</label>
+    	                <textarea class="form-control rounded-3" id="inqContent" name="inqContent" rows="5" onkeyup="contentLengthCheck(this)" required style="min-height: 150px;"></textarea>
+    	                <div class="text-right pt-2">
+							<span class="pt-1"><span class="cmt-sub-size">0</span>/1000</span>
+						</div>
+    	            </div>
+    	            <p class="text-body-secondary small mt-n2 mb-3">문의 내용에 개인정보(주민번호, 카드번호 등)가 포함되지 않도록 주의해주세요.</p>
+                </form>
+                <div class="text-center border-top pt-3 mt-3">
+   	                <input type="button" id="insertBtn" class="btn btn-primary rounded-3 fw-bold px-4 py-2" value="문의 등록" style="font-size: 1.1em;" />
+   	            </div>
+            </div>
+	    </div>
+	</div>
+</div>
+
+<%-- Ensure Bootstrap JS Bundle (and jQuery if needed by your custom scripts) is loaded.
+     It's often included in headerPart.jsp or at the end of the body.
+     Example:
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+--%>
+	<div id="footer">
+        <!-- FOOTER -->
+        <jsp:include page="/WEB-INF/views/modules/communityFooter.jsp" />
+        <script src="${pageContext.request.contextPath}/resources/js/pages/communityFooter.js"></script>
+        <!-- FOOTER END -->
+    </div>
+</body>
+</html>

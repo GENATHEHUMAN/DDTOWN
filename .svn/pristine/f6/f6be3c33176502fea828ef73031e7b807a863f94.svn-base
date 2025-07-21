@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.corporate.ICorporateMapper">
+ 
+ 	<resultMap type="kr.or.ddit.vo.artist.ArtistGroupVO" id="artistGroupResultMap">
+	    <id property="artGroupNo" column="ART_GROUP_NO"/>
+	    <result property="artGroupNm" column="ART_GROUP_NM"/>
+	    <result property="artGroupProfileImg" column="ART_GROUP_PROFILE_IMG"/>
+	    <result property="artGroupDebutdate" column="ART_GROUP_DEBUTDATE"/>
+	    <collection property="artistList" resultMap="artistResultMap"/> 
+	
+	    <collection property="albumList" resultMap="albumResultMap"/> 
+	</resultMap>
+ 	 
+ 	<resultMap type="kr.or.ddit.vo.artist.ArtistVO" id="artistResultMap">
+ 		<id property="artNo" column="ART_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="memUsername" column="MEM_USERNAME"/>
+		<result property="artNm" column="ART_NM"/>
+		<result property="artContent" column="ART_CONTENT"/>
+		<result property="artRegDate" column="ART_REG_DATE"/>
+		<result property="artModDate" column="ART_MOD_DATE"/>
+		<result property="artProfileImg" column="ART_PROFILE_IMG"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.artist.AlbumVO" id="albumResultMap">
+ 		<id property="albumNo" column="ALBUM_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="albumImg" column="ALBUM_IMG"/>
+		<result property="albumNm" column="ALBUM_NM"/>
+		<result property="albumDetail" column="ALBUM_DETAIL"/>
+		<result property="albumRegDate" column="ALBUM_REG_DATE"/>
+ 	</resultMap>
+ 	
+ 	<select id="getGroupList" resultMap="artistGroupResultMap">
+	    SELECT
+	        AG.ART_GROUP_NO
+	        , AG.ART_GROUP_TYPE_CODE
+	        , AG.EMP_USERNAME
+	        , AG.ART_GROUP_DEBUTDATE
+	        , AG.ART_GROUP_NM
+	        , AG.ART_GROUP_CONTENT
+	        , AG.ART_GROUP_REG_DATE
+	        , AG.ART_GROUP_DEL_YN
+	        , AG.ART_GROUP_PROFILE_IMG
+	        , AG.ART_GROUP_MOD_DATE
+	        
+	        , AL.ALBUM_NO
+	        , AL.ART_GROUP_NO
+	        , AL.ALBUM_IMG
+	        , AL.ALBUM_NM
+	        , AL.ALBUM_DETAIL
+	        , AL.ALBUM_REG_DATE
+	        
+	        , MB.ART_NO
+	        , MB.MEM_USERNAME
+	        , MB.ART_NM
+	        , MB.ART_CONTENT
+	        , MB.ART_REG_DATE
+	        , MB.ART_MOD_DATE
+	        , MB.ART_PROFILE_IMG
+	        
+	        , AGM.ART_GROUP_NO  
+	        , AGM.ART_NO        
+	        , AGM.ART_GROUP_MAP_DEBUTDATE
+	        , AGM.ART_DEL_YN
+	    FROM
+	        ARTIST_GROUP AG
+	    LEFT JOIN
+	        ARTIST_ALBUM AL ON AG.ART_GROUP_NO = AL.ART_GROUP_NO
+	    LEFT JOIN
+	        ARTIST_GROUP_MAP AGM ON AG.ART_GROUP_NO = AGM.ART_GROUP_NO
+	    LEFT JOIN
+	        ARTIST MB ON AGM.ART_NO = MB.ART_NO 
+	    WHERE
+	        (AG.ART_GROUP_DEL_YN = 'N' OR AG.ART_GROUP_DEL_YN IS NULL)
+	    ORDER BY
+	        AG.ART_GROUP_DEBUTDATE DESC, AG.ART_GROUP_NM ASC, AL.ALBUM_REG_DATE ASC
+	</select>
+ 	
+ 	
+ </mapper>

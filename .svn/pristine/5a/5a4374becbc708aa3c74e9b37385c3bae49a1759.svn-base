@@ -1,0 +1,47 @@
+<div class="modal fade " id="insertPostModal" tabindex="-1"
+	aria-labelledby="insertPostModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="insertPostModalLabel">
+					<c:out value="${artistGroupVO.artGroupNm }" />
+				</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal"
+					aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<form id="postForm" action="/community/insert/post"
+					enctype="multipart/form-data" method="post">
+					<input type="hidden" name="artGroupNo"
+						value="${artistGroupVO.artGroupNo }" />
+
+					<div>제목</div>
+					<input type="text" id="comuPostTitle" name="comuPostTitle"
+						style="flex: 1; padding: 7px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95em;" />
+
+					<div id="imgArea"></div>
+
+					<div>내용</div>
+					<textarea rows="5" cols="10" id="comuPostContent"
+						onkeyup="contentLengthCheck(this)" name="comuPostContent"></textarea>
+
+					<div class="text-right pt-2">
+						<span class="pt-1"><span class="cmt-sub-size">0</span>/1000</span>
+					</div>
+
+					<label for="memberShipYn"> <input type="checkbox"
+						id="postMemberShipYn" name="postMemberShipYn" value="멤버십전용 게시물" />
+						<input type="hidden" id="memberShipYn" name="memberShipYn"
+						value="" /> 멤버십전용
+					</label> <input type="file" name="files" id="insertPostFile" multiple
+						accept="image/*">
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary" id="postSendBtn">저장</button>
+				<button type="button" class="btn btn-secondary"
+					data-bs-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>

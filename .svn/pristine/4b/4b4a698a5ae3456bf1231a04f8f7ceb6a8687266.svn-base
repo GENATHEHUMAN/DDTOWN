@@ -1,0 +1,124 @@
+/* Location Page Styles */
+
+/* Hero Section */
+.location-hero {
+    background-color: var(--background-color-dark);
+    color: var(--text-color-light);
+    padding: var(--spacing-xl) 0;
+    text-align: center;
+    margin-top: 80px;
+}
+
+.location-hero h2 {
+    font-size: var(--font-size-xxlarge);
+    margin-bottom: var(--spacing-md);
+}
+
+.location-hero p {
+    font-size: var(--font-size-large);
+    color: var(--text-color-secondary);
+}
+
+/* Location Info Section */
+.location-info {
+    padding: var(--spacing-xl) 0;
+}
+
+.location-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xl);
+    align-items: start;
+}
+
+/* Map Container */
+.map-container {
+    height: 500px;
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+/* Location Details */
+.location-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+}
+
+.address-info,
+.transportation-info,
+.contact-info {
+    background-color: var(--background-color-light);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.location-details h3 {
+    color: var(--text-color-primary);
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-large);
+}
+
+.location-details p {
+    color: var(--text-color-secondary);
+    margin-bottom: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.location-details i {
+    color: var(--primary-color);
+    font-size: 1.2em;
+}
+
+.transport-item {
+    margin-bottom: var(--spacing-lg);
+}
+
+.transport-item:last-child {
+    margin-bottom: 0;
+}
+
+.transport-item h4 {
+    color: var(--text-color-primary);
+    margin-bottom: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.transport-item ul {
+    list-style: none;
+    padding-left: var(--spacing-lg);
+    margin-top: var(--spacing-sm);
+}
+
+.transport-item li {
+    color: var(--text-color-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+    .location-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .map-container {
+        height: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    .map-container {
+        height: 300px;
+    }
+} 

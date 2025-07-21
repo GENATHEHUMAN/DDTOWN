@@ -1,0 +1,235 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APT 구독 현황 - DDTOWN 직원 포털</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .membership-header-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+        .membership-header-bar .membership-title { font-size: 1.5em; font-weight: 700; color: #234aad; }
+        .membership-search-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+        .membership-search-bar select, .membership-search-bar button { padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        .membership-search-bar button { background: #1976d2; color: #fff; border: none; cursor: pointer; }
+        .membership-info-box { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 24px 30px 18px 30px; margin-bottom: 24px; }
+        .membership-info-row { display: flex; align-items: center; gap: 32px; margin-bottom: 18px; }
+        .membership-info-row .artist-name { font-size: 1.2em; font-weight: 600; color: #234aad; margin-right: 18px; }
+        .membership-info-row .info-label { color: #888; font-size: 0.98em; margin-right: 6px; }
+        .membership-info-row .info-value { font-size: 1.1em; font-weight: 600; margin-right: 18px; }
+        .membership-chart-box { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 18px 18px 8px 18px; }
+        .membership-chart-title { font-size: 1.1em; font-weight: 600; margin-bottom: 8px; color: #234aad; }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content" style="position:relative; min-height:600px;">
+                <div class="membership-header-bar">
+                    <div class="membership-title">APT 구독 현황</div>
+                </div>
+                <div class="membership-search-bar">
+                    <select id="artistSelect">
+                        <option value="">전체 아티스트</option>
+                        <option value="NCT WISH">NCT WISH</option>
+                        <option value="RIIZE">RIIZE</option>
+                        <option value="LE SSERAFIM">LE SSERAFIM</option>
+                    </select>
+                    <button id="searchBtn"><i class="fas fa-search"></i> 조회</button>
+                </div>
+                <div class="membership-info-box">
+                    <div class="membership-info-row">
+                        <span class="artist-name" id="artistName">NCT WISH</span>
+                        <span class="info-label">총 팔로워 수</span>
+                        <span class="info-value" id="followerCount">15,780 명</span>
+                        <span class="info-label">총 멤버십 가입자 수</span>
+                        <span class="info-value" id="memberCount">8,034 명</span>
+                    </div>
+                    <div class="membership-chart-box">
+                        <div class="membership-chart-title">구독자 현황 조회</div>
+                        <canvas id="membershipChart" height="120"></canvas>
+                    </div>
+                </div>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (직원 전용)</p>
+        </footer>
+    </div>
+</body>
+<script>
+        // 로그아웃 기능
+        const logoutButton = document.querySelector('.emp-logout-btn');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('로그아웃 하시겠습니까?')) {
+                    alert('로그아웃 되었습니다.');
+                }
+            });
+        }
+    
+        // 직원 이름 등 동적 데이터 로드 (예시)
+        const employeeNameSpan = document.getElementById('employee-name');
+        if (employeeNameSpan) {
+            employeeNameSpan.textContent = "홍길동";
+        }
+    
+        // 샘플 데이터
+        const artistData = {
+            'NCT WISH': {
+                followers: 15780,
+                members: 8034,
+                chart: {
+                    labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
+                    followers: [1000, 4000, 8000, 12000, 15780, 15780],
+                    members:   [200, 1500, 4000, 6000, 8034, 8034]
+                }
+            },
+            'RIIZE': {
+                followers: 11200,
+                members: 5020,
+                chart: {
+                    labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
+                    followers: [800, 3000, 6000, 9000, 11200, 11200],
+                    members:   [100, 800, 2500, 4000, 5020, 5020]
+                }
+            },
+            'LE SSERAFIM': {
+                followers: 13400,
+                members: 7200,
+                chart: {
+                    labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
+                    followers: [900, 2500, 7000, 11000, 13400, 13400],
+                    members:   [150, 1200, 3500, 6000, 7200, 7200]
+                }
+            }
+        };
+        let chartInstance = null;
+    
+        function renderMembership(artist) {
+            let dataToRender = artistData[artist] || artistData['NCT WISH']; // 기본값 설정
+            document.getElementById('artistName').textContent = artist || 'NCT WISH';
+            document.getElementById('followerCount').textContent = dataToRender.followers.toLocaleString() + ' 명';
+            document.getElementById('memberCount').textContent = dataToRender.members.toLocaleString() + ' 명';
+            
+            const ctx = document.getElementById('membershipChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dataToRender.chart.labels,
+                    datasets: [
+                        {
+                            label: '팔로워 수',
+                            data: dataToRender.chart.followers,
+                            backgroundColor: 'rgba(33,145,80,0.7)',
+                            borderRadius: 6
+                        },
+                        {
+                            label: '멤버십 가입자 수',
+                            data: dataToRender.chart.members,
+                            type: 'line',
+                            borderColor: '#7c3aed',
+                            backgroundColor: 'rgba(124,58,237,0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: false,
+                            pointRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+        
+        // DOMContentLoaded 이벤트 내에서 사이드바 관련 스크립트 및 초기 차트 렌더링 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            // 사이드바 메뉴 토글 기능
+            const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+            navItemsWithSubmenu.forEach(item => {
+                const arrow = item.querySelector('.submenu-arrow');
+                item.addEventListener('click', function(event) {
+                    if (this.getAttribute('href') === '#') {
+                        event.preventDefault();
+                    }
+                    const parentLi = this.parentElement;
+                    const submenu = this.nextElementSibling;
+    
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        const parentUl = parentLi.parentElement;
+                        if (parentUl) {
+                            Array.from(parentUl.children).forEach(siblingLi => {
+                                if (siblingLi !== parentLi) {
+                                    const siblingSubmenuControl = siblingLi.querySelector('.emp-nav-item.has-submenu.open');
+                                    if (siblingSubmenuControl) {
+                                        const siblingSubmenuElement = siblingSubmenuControl.nextElementSibling;
+                                        siblingSubmenuControl.classList.remove('open');
+                                        if (siblingSubmenuElement && siblingSubmenuElement.classList.contains('emp-submenu')) {
+                                            siblingSubmenuElement.style.display = 'none';
+                                        }
+                                        const siblingArrow = siblingSubmenuControl.querySelector('.submenu-arrow');
+                                        if (siblingArrow) siblingArrow.style.transform = 'rotate(0deg)';
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    
+                    this.classList.toggle('open');
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                        if (arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+                    }
+                });
+            });
+    
+            // 현재 페이지 URL 기반으로 사이드바 메뉴 활성화 및 펼침
+            const currentFullHref = window.location.href;
+            document.querySelectorAll('.emp-sidebar .emp-nav-item[href]').forEach(link => {
+                const linkHrefAttribute = link.getAttribute('href');
+                if (linkHrefAttribute && linkHrefAttribute !== "#" && currentFullHref.endsWith(linkHrefAttribute)) {
+                    link.classList.add('active');
+                    let currentActiveElement = link;
+                    while (true) {
+                        const parentLi = currentActiveElement.parentElement;
+                        if (!parentLi) break;
+                        const parentSubmenuUl = parentLi.closest('ul.emp-submenu');
+                        if (parentSubmenuUl) {
+                            parentSubmenuUl.style.display = 'block';
+                            const controllingAnchor = parentSubmenuUl.previousElementSibling;
+                            if (controllingAnchor && controllingAnchor.tagName === 'A' && controllingAnchor.classList.contains('has-submenu')) {
+                                controllingAnchor.classList.add('active', 'open');
+                                const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                                if (arrow) arrow.style.transform = 'rotate(90deg)';
+                                currentActiveElement = controllingAnchor;
+                            } else { break; }
+                        } else { break; }
+                    }
+                }
+            });
+    
+            // 초기 렌더
+            renderMembership(document.getElementById('artistSelect').value || 'NCT WISH');
+    
+            // 조회 버튼 이벤트
+            document.getElementById('searchBtn').addEventListener('click', function() {
+                const selectedArtist = document.getElementById('artistSelect').value;
+                renderMembership(selectedArtist || 'NCT WISH'); // 선택된 아티스트가 없으면 기본값
+            });
+        });
+    </script>
+</html> 

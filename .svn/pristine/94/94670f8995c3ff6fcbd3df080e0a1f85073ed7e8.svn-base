@@ -1,0 +1,156 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDTOWN - 직원 포털</title>
+    <%@ include file ="../modules/headerPart.jsp" %>
+<!--     <link rel="stylesheet" href="common/emp_common.css">  -->
+<!--     <link rel="stylesheet" href="emp_portal_style.css">  -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="./modules/header.jsp" %>
+
+        <div class="emp-body-wrapper">
+            <%@ include file="./modules/aside.jsp" %>
+
+            <main class="emp-content">
+                <div class="emp-welcome-message">
+                    <h2>업무 시스템 바로가기</h2>
+                    <p>원하시는 업무 시스템을 선택하여 빠르게 작업을 시작하세요.</p>
+                </div>
+
+                <div class="emp-menu-grid">
+                    <a href="${pageContext.request.contextPath}/emp/edms/approvalBox" class="emp-menu-item">
+                        <div class="emp-menu-icon"><i class="fas fa-file-signature"></i></div>
+                        <div class="emp-menu-title">전자결재</div>
+                        <p class="emp-menu-description">기안서 작성, 결재 요청 확인 및 문서 관리를 진행합니다.</p>
+                    </a>
+
+                    <a href="${pageContext.request.contextPath}/emp/audition/schedule" class="emp-menu-item">
+                        <div class="emp-menu-icon"><i class="fas fa-microphone-alt"></i></div>
+                        <div class="emp-menu-title">오디션 관리</div>
+                        <p class="emp-menu-description">오디션 공고 등록, 지원자 정보 관리 및 심사를 진행합니다.</p>
+                    </a>
+
+                    <a href="${pageContext.request.contextPath}/emp/group/group-management" class="emp-menu-item">
+                        <div class="emp-menu-icon"><i class="fas fa-users"></i></div>
+                        <div class="emp-menu-title">아티스트 커뮤니티 관리</div>
+                        <p class="emp-menu-description">커뮤니티 게시글 모니터링, 사용자 관리 및 운영 업무를 수행합니다.</p>
+                    </a>
+
+                    <a href="${pageContext.request.contextPath}/emp/concert/schedule/list" class="emp-menu-item">
+                        <div class="emp-menu-icon"><i class="fas fa-ticket-alt"></i></div>
+                        <div class="emp-menu-title">콘서트 관리</div>
+                        <p class="emp-menu-description">콘서트 정보 등록, 예매 현황 확인 및 관련 통계를 관리합니다.</p>
+                    </a>
+
+                    <a href="${pageContext.request.contextPath}/emp/emailTool" class="emp-menu-item">
+                        <div class="emp-menu-icon"><i class="fas fa-envelope-open-text"></i></div>
+                        <div class="emp-menu-title">이메일 전송</div>
+                        <p class="emp-menu-description">대내외 공지 및 마케팅 이메일 발송 업무를 진행합니다.</p>
+                    </a>
+                </div>
+            </main>
+        </div>
+
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (직원 전용)</p>
+        </footer>
+    </div>
+
+    <script>
+
+        // 사이드바 메뉴 기능
+        document.addEventListener('DOMContentLoaded', function() {
+            // 메뉴 토글 기능
+            const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+            navItemsWithSubmenu.forEach(item => {
+                const arrow = item.querySelector('.submenu-arrow');
+                item.addEventListener('click', function(event) {
+                    event.preventDefault(); // 링크 기본 동작 방지
+
+                    const parentLi = this.parentElement; // 클릭된 <a>의 부모 <li>
+                    const submenu = this.nextElementSibling; // <a> 바로 다음에 오는 형제 요소 (<ul>이어야 함)
+
+                    // 현재 클릭된 메뉴의 상위 <ul>을 찾아서, 다른 열려있는 형제 메뉴들을 닫음
+                    // 이는 같은 레벨의 다른 메뉴가 열려있을 때 하나를 클릭하면 다른 하나는 닫히도록 하기 위함
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        const parentUl = parentLi.parentElement; // 현재 <li>의 부모 <ul>
+                        if (parentUl) {
+                            Array.from(parentUl.children).forEach(siblingLi => {
+                                if (siblingLi !== parentLi) { // 자기 자신은 제외
+                                    const siblingSubmenuControl = siblingLi.querySelector('.emp-nav-item.has-submenu.open');
+                                    if (siblingSubmenuControl) {
+                                        const siblingSubmenu = siblingSubmenuControl.nextElementSibling;
+                                        siblingSubmenuControl.classList.remove('open');
+                                        if (siblingSubmenu && siblingSubmenu.classList.contains('emp-submenu')) {
+                                            siblingSubmenu.style.display = 'none';
+                                        }
+                                        const siblingArrow = siblingSubmenuControl.querySelector('.submenu-arrow');
+                                        if (siblingArrow) siblingArrow.style.transform = 'rotate(0deg)';
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    
+                    // 현재 클릭한 메뉴의 하위 메뉴 토글
+                    this.classList.toggle('open');
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                        if (arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+                    }
+                });
+            });
+
+            // 현재 페이지 URL 기반으로 사이드바 메뉴 활성화 (REVISED LOGIC)
+            const currentFullHref = window.location.href; // 전체 URL을 사용
+
+            document.querySelectorAll('.emp-sidebar .emp-nav-item[href]').forEach(link => {
+                const linkHrefAttribute = link.getAttribute('href'); // 링크의 href 속성값
+
+                // href 속성이 있고, #이 아니며, 현재 URL이 링크의 href로 끝나는 경우
+                if (linkHrefAttribute && linkHrefAttribute !== "#" && currentFullHref.endsWith(linkHrefAttribute)) {
+                    link.classList.add('active'); // 현재 페이지 링크에 'active' 클래스 추가
+
+                    let currentActiveElement = link; // 활성화된 링크에서 시작
+
+                    // 상위 메뉴로 올라가면서 펼치기
+                    while (true) {
+                        const parentLi = currentActiveElement.parentElement; // 현재 요소의 부모 <li>
+                        if (!parentLi) break; // 부모 <li>가 없으면 중단
+
+                        // 현재 <li>를 포함하는 가장 가까운 '.emp-submenu' <ul> 찾기
+                        const parentSubmenuUl = parentLi.closest('.emp-submenu'); 
+
+                        if (parentSubmenuUl) { // 부모 서브메뉴 <ul>이 있다면
+                            parentSubmenuUl.style.display = 'block'; // 해당 서브메뉴를 보이게 함
+
+                            // 이 서브메뉴를 제어하는 <a> 태그 (보통 이전 형제 요소)
+                            const controllingAnchor = parentSubmenuUl.previousElementSibling;
+
+                            if (controllingAnchor && controllingAnchor.tagName === 'A' && controllingAnchor.classList.contains('has-submenu')) {
+                                controllingAnchor.classList.add('active', 'open'); // 제어하는 앵커도 활성/오픈 상태로
+                                const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                                if (arrow) {
+                                    arrow.style.transform = 'rotate(90deg)'; // 화살표 방향 변경
+                                }
+                                currentActiveElement = controllingAnchor; // 다음 반복을 위해 현재 요소를 제어 앵커로 변경
+                            } else {
+                                break; // 제어 앵커가 없거나 적절하지 않으면 중단
+                            }
+                        } else {
+                            break; // 부모 서브메뉴 <ul>이 없으면 (최상위 레벨이거나 구조가 다름) 중단
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

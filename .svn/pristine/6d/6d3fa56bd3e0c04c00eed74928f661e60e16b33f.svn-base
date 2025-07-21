@@ -1,0 +1,135 @@
+package kr.or.ddit.ddtown.service.admin.notice;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import kr.or.ddit.ddtown.mapper.admin.notice.AdminNoticeMapper;
+import kr.or.ddit.ddtown.mapper.file.IAttachmentFileMapper;
+import kr.or.ddit.vo.corporate.notice.NoticeVO;
+import kr.or.ddit.vo.file.AttachmentFileDetailVO;
+import kr.or.ddit.vo.file.AttachmentFileGroupVO;
+import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class AdminNoticeServiceImpl implements AdminNoticeService {
+	
+	@Autowired
+	private AdminNoticeMapper mapper;					// 공지 매퍼
+	
+	@Autowired
+	private IAttachmentFileMapper groupMapper;			// 파일 그룹 매퍼
+	
+	@Value("${kr.or.ddit.upload.path.mac}")
+	private String uploadBasePath;
+	
+	@Override
+	public List<NoticeVO> getList() {
+		
+		List<NoticeVO> list = null;
+		list = mapper.getList();
+		
+		return list;
+	}
+
+	@Override
+	public NoticeVO getDetail(int id) {
+		return mapper.getDetail(id);
+	}
+
+	@Transactional
+	@Override
+	public void createNotice(NoticeVO noticeVO) {
+		MultipartFile[] boFiles = noticeVO.getBoFile();
+		int generatedFileGroupNo = 0;
+		
+		File basePathDir = new File(this.uploadBasePath);
+		if(!basePathDir.exists()) {
+			boolean created = basePathDir.mkdirs();
+			if(!created) {
+				log.error("파일 디렉토리 생성 실패: {}", this.uploadBasePath);
+				throw new RuntimeException("파일 저장 경로를 생성할 수 없습니다.");
+			}
+		}
+		
+		if(boFiles != null && boFiles.length > 0 && !boFiles[0].isEmpty()) {
+			AttachmentFileGroupVO groupVO = new AttachmentFileGroupVO();
+			groupVO.setFileTypeCode("FITC001");
+			groupVO.setFileTypeNm("기업공지 파일");
+			groupMapper.insertFileGroup(groupVO);	// 파일 그룹 생성 및 ID 반환
+			generatedFileGroupNo = groupVO.getFileGroupNo();
+			
+			// 실제 파일 저장 및 상세 정보 DB 저장
+			saveUploadFiles(boFiles, generatedFileGroupNo);
+		} else {
+			log.info("첨부 파일이 없습니다.");
+		}
+		noticeVO.setFileGroupNo(generatedFileGroupNo);	// 파일 그룹 ID 설정
+		mapper.insertNotice(noticeVO);
+	}
+	
+	@Override
+	public void modifyNotice(NoticeVO noticeVO) {
+		
+	}
+
+	private void saveUploadFiles(MultipartFile[] boFiles, int generatedFileGroupNo) {
+		for(MultipartFile file : boFiles) {
+			if(!file.isEmpty()) {
+				String originalFileName = file.getOriginalFilename();
+				String fileExtension = "";
+				int dotIndex = originalFileName.lastIndexOf(".");
+				if(dotIndex > 0 && dotIndex < originalFileName.length() -1) {
+					fileExtension = originalFileName.substring(dotIndex + 1);
+				}
+				
+				String savedFileName = UUID.randomUUID().toString() + fileExtension;
+				long fileSize = file.getSize();
+				String fileContentType = file.getContentType();
+				
+				File saveFile = new File(uploadBasePath, savedFileName);
+				
+				try {
+					file.transferTo(saveFile);
+					
+					AttachmentFileDetailVO detailVO = new AttachmentFileDetailVO();
+					detailVO.setFileGroupNo(generatedFileGroupNo);
+					detailVO.setFileOriginalNm(originalFileName);
+					detailVO.setFileSaveNm(savedFileName);
+					detailVO.setFileSavepath(uploadBasePath);
+					detailVO.setFileFancysize(fancysize(fileSize));
+					detailVO.setFileMimeType(fileContentType);
+					groupMapper.insertFileDetail(detailVO);
+					log.info("파일 상세 정보 DB 저장 성공: {}", originalFileName);
+					
+				} catch (IOException e) {
+					log.error("파일 저장 중 오류 발생 : {}", e.getMessage(), e);
+					throw new RuntimeException("파일 저장 중 오류 발생 : {}", e);
+				}
+			}
+		}
+	}
+
+	private String fancysize(long fileSize) {
+		
+		DecimalFormat df = new DecimalFormat("0.00");
+		if(fileSize < 1024) {
+			return fileSize + " Bytes";
+		} else if(fileSize < (1024 * 1024)) {
+			return df.format((double) fileSize / 1024) + " KB";
+		} else {
+			return df.format((double) fileSize / (1024 * 1024)) + " MB";
+		}
+	}
+}

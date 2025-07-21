@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.concert.IConcertMapper">
+ 
+ 	<select id="getConcertCount" resultType="int">
+        SELECT COUNT(*)
+        FROM CONCERT c
+        <where>
+            <if test="searchKeyword != null and searchKeyword != ''">
+                AND c.concert_nm LIKE '%' || #{searchKeyword} || '%'
+            </if>
+        </where>
+    </select>
+ 
+ 	<select id="getConcertList" parameterType="map" resultType="kr.or.ddit.vo.concert.ConcertVO">
+        SELECT
+            c.concert_no, c.art_group_no, c.concert_hall_no, c.concert_cat_code,
+            c.concert_reservation_stat_code, c.concert_stat_code, c.concert_img,
+            c.concert_online_yn, c.concert_nm, c.concert_date, c.concert_address,
+            c.concert_start_date, c.concert_end_date, c.concert_running_time,
+            ag.art_group_nm AS artGroupName,
+            ch.concert_hall_nm AS concertHallName
+        FROM CONCERT c
+        LEFT JOIN ARTIST_GROUP ag ON c.art_group_no = ag.art_group_no
+        LEFT JOIN CONCERT_HALL ch ON c.concert_hall_no = ch.concert_hall_no
+        <where>
+            <if test="searchKeyword != null and searchKeyword != ''">
+                AND c.concert_nm LIKE '%' || #{searchKeyword} || '%'
+            </if>
+        </where>
+        ORDER BY c.concert_no asc
+    </select>
+    
+    
+ 	
+ </mapper>

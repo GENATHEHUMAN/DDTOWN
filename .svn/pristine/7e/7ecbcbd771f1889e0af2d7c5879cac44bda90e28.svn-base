@@ -1,0 +1,245 @@
+<%@page import="java.util.Date"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c"%>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/mainservice_home.css" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/mainservice_common.css" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/concert_detail.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.min.css">
+<script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js" defer integrity="sha256-9zljDKpE/mQxmaR4V2cGVaQ7arF3CcXxarvgr7Sj8Uc=" crossorigin="anonymous"></script>
+<title>DDTOWN SQUARE</title>
+
+<style type="text/css">
+
+.concert-detail-poster .poster-img {
+    width: 80%; /* 부모 요소의 전체 너비를 사용 */
+    height: 555px; /* 원하는 고정 높이 설정 (예시: 450px, 디자인에 따라 조절) */
+    overflow: hidden; /* 이미지가 이 영역을 벗어나면 숨김 */
+    display: flex; /* 이미지 중앙 정렬을 위해 flexbox 사용 */
+    justify-content: center; /* 가로 중앙 정렬 */
+    align-items: center; /* 세로 중앙 정렬 */
+}
+
+/* 실제 이미지 태그 (img) */
+.concert-detail-poster .poster-img img {
+    width: 100%; /* 부모 컨테이너(poster-img)의 너비에 맞춤 */
+    height: 555px; /* 부모 컨테이너(poster-img)의 높이에 맞춤 */
+    object-fit: cover; /* 중요: 이미지가 비율을 유지하며 컨테이너를 꽉 채우도록 함 */
+    display: block; /* 이미지 하단에 생길 수 있는 미세한 여백 제거 */
+}
+
+.concert-detail-container {
+    max-width: 1700px;
+    padding: 40px 40px;
+    margin: 0;
+    margin-left: 40px;
+    display: flex; /* 자식 요소들을 가로로 배치 */
+    justify-content: space-between; /* 자식 요소들 사이에 공간을 고르게 분배 */
+    align-items: stretch; /* 자식 요소들을 위쪽으로 정렬 */
+}
+
+/* 콘서트 상세 정보 그리드 스타일 */
+.concert-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 포스터와 정보를 1:1 비율로 배치 */
+    gap: 40px; /* 포스터와 정보 사이 간격 */
+    width: 70%; /* 전체 컨테이너의 70% 차지 */
+    flex-grow: 1; /* 남은 공간이 있으면 확장 */
+    flex-shrink: 1; /* 공간이 부족하면 축소 */
+}
+
+/* 예약 정보 (달력 + 버튼)를 위한 새로운 컨테이너 */
+.concert-reservation-section {
+    width: 20%;
+    flex-grow: 0; /* 남은 공간이 있어도 확장하지 않음 */
+    flex-shrink: 0; /* 공간이 부족해도 축소하지 않음 (이 값을 1로 주면 축소될 수 있음) */
+    padding: 20px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: rgba(176, 141, 244, 0.3);
+    display: flex;
+    flex-direction: column; /* 세로 방향으로 요소 배치 */
+    align-items: center; /* 중앙 정렬 */
+}
+
+.concert-reservation-section h3 {
+    margin-top: 25px;
+    color: #333;
+	padding: 10px;
+}
+
+
+/* Datepicker 컨테이너 스타일 */
+#datepicker {
+    width: 100%; /* 부모 너비에 맞춤 */
+    max-width: 270px; /* 최대 너비 설정 (달력 크기 조절) */
+    margin-bottom: 20px; /* 달력 아래 여백 */
+}
+
+.ui-datepicker .ui-datepicker-header {
+    padding: 0.8em 0; /* **상하 패딩을 늘려 높이 조절** */
+}
+
+.ui-datepicker td span,
+.ui-datepicker td a {
+    padding: 0.6em; /* **각 날짜 셀의 패딩을 늘려 크기 조절** */
+    text-align: center;
+    font-size: 1em; /* 폰트 크기는 #datepicker의 em 기준 */
+    line-height: 1.5; /* 줄 높이 조절 */
+}
+
+/* 달력 요일 (일, 월, 화...) 헤더 */
+.ui-datepicker th {
+    padding: 0.5em; /* **요일 헤더 패딩 조절** */
+    font-size: 0.9em; /* 요일 폰트 크기 */
+}
+
+/* 예매하기 버튼 스타일 */
+.btn-reserve {
+    width: 100%; /* 부모 너비에 맞춤 */
+    max-width: 300px; /* 최대 너비 설정 */
+    padding: 15px 20px;
+    background-color: #8a2be2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* Datepicker 배경색 투명하게 만들기 */
+.ui-datepicker,
+.ui-datepicker .ui-datepicker-header,
+.ui-datepicker .ui-datepicker-content,
+.ui-datepicker .ui-datepicker-calendar thead,
+.ui-datepicker .ui-datepicker-calendar tbody {
+    background: transparent !important; /* 모든 Datepicker 관련 배경을 투명하게 설정 */
+    border: none !important; /* 테두리도 제거 (선택 사항) */
+}
+
+/* 달력 내 각 셀 (날짜)의 배경도 투명하게 */
+.ui-datepicker td {
+    background: transparent !important;
+}
+
+/* 특정 셀 (선택 가능한 날짜, 오늘 날짜 등)의 배경도 투명하게 또는 원하는 스타일로 */
+.ui-state-default, /* 일반 날짜 */
+.ui-state-highlight, /* 오늘 날짜 등 */
+.ui-state-active, /* 선택된 날짜 */
+.ui-state-hover { /* 마우스 오버 시 */
+    background: transparent !important;
+    border: none !important; /* 테두리도 제거 (선택 사항) */
+    color: #333 !important; /* 글자색을 명확하게 유지 (필요 시 조절) */
+}
+
+.ui-state-active {
+    background-color: #8a2be2 !important; /* 연보라색 투명 배경 */
+    color: white !important; /* 글자색 흰색 */
+    border-radius: 300px; /* 모서리 둥글게 */
+}
+
+
+</style>
+</head>
+<body>
+<jsp:include page="/WEB-INF/views/modules/communityHeader.jsp" />
+	
+<div class="concert-detail-container">
+	<c:choose>
+        <c:when test="${not empty concertVO }">
+			    <div class="concert-detail-grid">
+			        <div class="concert-detail-poster">
+			            <div class="poster-img">
+			                <img alt="${concertVO.concertNm }" src="${concertVO.representativeImageUrl }">
+			            </div>
+			        </div>
+			        <div class="concert-detail-info">
+			            <h1 class="concert-title">${concertVO.concertNm }</h1>
+			            <div class="concert-meta">
+			                <div><i class="fa-solid fa-heart"></i><b>아티스트</b>&nbsp;&nbsp;${concertVO.artGroupName }</div>
+			                <div><i class="fa-regular fa-calendar"></i><b>일시</b>&nbsp;&nbsp;<fmt:formatDate value="${concertVO.concertDate }" pattern="yyyy-MM-dd (E) HH:mm"></fmt:formatDate></div>
+			                <div><i class="fa-solid fa-location-dot"></i><b>장소</b>&nbsp;&nbsp;${concertVO.concertHallName }</div>
+			            </div>
+			            <hr>
+			            <div class="concert-desc">
+			                <h3><i class="fa-solid fa-tag"></i> <b>공연 소개</b></h3>
+			                <p>${concertVO.concertGuide }</p>
+			                <div class="concert-desc-meta">
+			                    <span><i class="fa-solid fa-clock"></i><b> 관람 시간</b>&nbsp;&nbsp;${concertVO.concertRunningTime }분</span>
+			                </div>
+			            </div>
+			            <hr>
+			            <div class="concert-price">
+			                <h3><i class="fa-solid fa-ticket-simple"></i> <b>티켓 가격</b></h3>
+			                <div>R석: 121,000원</div>
+			                <div>S석: 99,000원</div>
+			            </div>
+			        </div>
+			    </div>
+    	</c:when>
+    	<c:otherwise>
+    		콘서트 상세 내용을 불러올 수 없습니다.
+    	</c:otherwise>
+    </c:choose>
+    
+    <div class="concert-reservation-section">
+    	<h3>관람일</h3>
+    	<div id="datepicker"></div>
+    	<button class="btn-reserve" id="btnReserve">예매하기</button>
+    </div>
+    
+    
+</div>
+<div id="footer-placeholder"></div>
+</body>
+    <script>
+    $(function() {
+    	
+    	const concertDateString = "<fmt:formatDate value="${concertVO.concertDate}" pattern="yyyy-MM-dd"/>";
+    	const concertDate = new Date(concertDateString);
+    	
+    	// Date 객체의 시간을 0으로 설정하여 날짜만 비교할 수 있게 함.
+    	concertDate.setHours(0, 0, 0, 0);
+    	
+        $( "#datepicker" ).datepicker({
+        	dateFormat: 'yy-mm-dd' //달력 날짜 형태
+           ,showOtherMonths: true //빈 공간에 현재월의 앞뒤월의 날짜를 표시
+           ,showMonthAfterYear:true // 월- 년 순서가아닌 년도 - 월 순서
+           ,showOn: "both" //button:버튼을 표시하고,버튼을 눌러야만 달력 표시 ^ both:버튼을 표시하고,버튼을 누르거나 input을 클릭하면 달력 표시  
+           ,buttonImage: "http://jqueryui.com/resources/demos/datepicker/images/calendar.gif" //버튼 이미지 경로
+           ,buttonImageOnly: true //버튼 이미지만 깔끔하게 보이게함
+           ,monthNames: ['.01','.02','.03','.04','.05','.06','.07','.08','.09','.10','.11','.12'] //달력의 월 부분 Tooltip
+           ,dayNamesMin: ['일','월','화','수','목','금','토'] //달력의 요일 텍스트
+           ,beforeShowDay: function(date) {
+        	   date.setHours(0, 0, 0, 0);
+        	   
+        	   if(date.getTime() === concertDate.getTime()) {
+        		   return [true, '', '']; 	// 콘서트 날짜는 선택 가능하도록 활성화.
+        	   } else {
+        		   return [false, '', ''];	// 그 외 모든 날짜 비활성화.
+        	   }
+           }
+        });
+        
+        // 달력의 초기값을 콘서트 날짜로 설정
+        $('#datepicker').datepicker('setDate', concertDate);
+        
+        // 예매하기 버튼 클릭 이벤트
+        $('#btnReserve').on('click', function() {
+        	const selectedDate = $('#datepicker').datepicker('getDate');
+        	const formattedDate = $.datepicker.formatDate('yy-mm-dd', selectedDate);
+        	
+        	// 예매 처리 로직
+        	console.log(`선택된 날짜: \${formattedDate}`);
+        })
+      });
+    </script>
+</html>

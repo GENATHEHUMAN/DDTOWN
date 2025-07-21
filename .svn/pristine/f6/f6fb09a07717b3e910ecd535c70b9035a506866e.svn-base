@@ -1,0 +1,18 @@
+package kr.or.ddit.ddtown.controller.live;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import kr.or.ddit.ddtown.service.live.LiveService;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/api/live")
+@RequiredArgsConstructor
+public class LiveController {
+
+//	private final LiveService liveService;
+//	
+//	public ResponseEntity<T>
+}

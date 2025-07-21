@@ -1,0 +1,92 @@
+package kr.or.ddit.ddtown.controller.community;
+
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import kr.or.ddit.ddtown.service.community.ICommunityMainPageService;
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+import kr.or.ddit.vo.community.CommunityProfileVO;
+import kr.or.ddit.vo.community.CommunityVO;
+import kr.or.ddit.vo.live.LiveVO;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * 커뮤니티의 라이브 관련 요청을 전담하는 컨트롤러
+ */
+@Slf4j
+@Controller
+@RequestMapping("/community")
+public class CommunityLiveController {
+
+    @Autowired
+    private ICommunityMainPageService communityMainService;
+    
+    @Value("${media.server.url}")
+    private String mediaServerUrl;
+
+    /**
+     * 커뮤니티의 '라이브' 탭을 동기 방식으로 처리하는 메소드.
+     * DB에서 직접 방송 상태를 조회하여 모델에 담아 뷰로 전달합니다.
+     * @param artGroupNo 현재 보고 있는 아티스트 그룹 번호
+     * @param model 뷰에 데이터를 전달하기 위한 모델 객체
+     * @param principal 현재 로그인한 사용자 정보
+     * @return 렌더링할 뷰의 이름
+     */
+    @GetMapping("/live/{artGroupNo}")
+    public String communityLiveTab(
+            @PathVariable int artGroupNo, 
+            Model model,
+            Principal principal 
+        ) {
+
+        log.info("라이브 탭 페이지 요청. artGroupNo: {}", artGroupNo);
+        
+        // 1. 페이지 표시에 필요한 기본 정보 조회 로직 (이전과 동일)
+        ArtistGroupVO artistGroupVO = communityMainService.getCommunityInfo(artGroupNo);
+        model.addAttribute("artistGroupVO", artistGroupVO);
+        
+        String memUsername = (principal != null) ? principal.getName() : "";
+        model.addAttribute("currentUserId", memUsername); 
+        
+        if (!memUsername.isEmpty()) {
+            Map<String, Object> currentUserMap = new HashMap<>();
+            currentUserMap.put("artGroupNo", artGroupNo);
+            currentUserMap.put("memUsername", memUsername);
+            CommunityProfileVO currentUserProfile = communityMainService.currentUserComufollowing(currentUserMap);
+            if(currentUserProfile == null) {
+                model.addAttribute("followFlag", "N");
+            } else {
+                model.addAttribute("followFlag", "Y");
+                model.addAttribute("userProfile", currentUserProfile);
+            }
+        } else {
+            model.addAttribute("followFlag", "N");
+        }
+        
+        model.addAttribute("mediaServerUrl", mediaServerUrl);
+        
+        CommunityVO communityVO = new CommunityVO();
+        communityVO.setArtGroupNo(artGroupNo);
+        model.addAttribute("communityVO", communityVO);
+
+        // 2. Service를 통해 DB에서 현재 아티스트의 '라이브 방송 정보 객체'를 직접 조회합니다.
+        LiveVO liveInfo = communityMainService.getLiveBroadcastInfo(artGroupNo);
+        
+        // 3. 모델에 liveInfo 객체를 담아 JSP로 전달합니다.
+        // (방송 중이 아니라면 이 객체는 null 값이 전달됩니다.)
+        model.addAttribute("liveInfo", liveInfo);
+        log.info("DB 조회 결과 - artGroupNo: {}의 라이브 정보: {}", artGroupNo, liveInfo);
+
+        // 4. 최종적으로 사용자에게 보여줄 JSP 페이지 이름을 반환합니다.
+        return "community/apt/main"; 
+    }
+}

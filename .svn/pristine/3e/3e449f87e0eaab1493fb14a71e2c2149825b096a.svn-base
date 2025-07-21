@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.goods.IGoodsMapper">
+	
+	<!-- 상품 목록 -->
+ 	<select id="goodsList" resultType="kr.or.ddit.vo.goods.goodsVO">
+		select
+			goods_no,
+			art_group_no,
+			goods_stat_code,
+			file_group_no,
+			goods_nm,
+			goods_price,
+			goods_content,
+			goods_reg_date,
+			goods_mod_date,
+			goods_code,
+			goods_multi_opt_yn
+		from goods
+		order by goods_no desc
+ 	</select>
+ 	
+ 	<!-- 상품 한 개씩 가져오기 -->
+	<select id="getGoodsDetail" resultType="kr.or.ddit.vo.goods.goodsVO"> 
+		SELECT
+	        G.goods_no, 
+	        G.art_group_no, 
+	        G.goods_stat_code, 
+	        G.file_group_no,
+	        G.goods_nm, 
+	        G.goods_price, 
+	        G.goods_content, 
+	        G.goods_reg_date,
+	        G.goods_mod_date, 
+	        G.goods_code, 
+	        G.goods_multi_opt_yn,
+	        
+	        AG.art_group_nm      AS artGroupName,  
+	        CDC.comm_code_det_nm AS statusEngKey,  
+	        CDC.description      AS statusKorName   
+	     FROM GOODS G
+	        LEFT OUTER JOIN ARTIST_GROUP AG ON G.art_group_no = AG.art_group_no
+	        LEFT OUTER JOIN COMMON_DETAIL_CODE CDC ON G.goods_stat_code = CDC.comm_code_det_no 
+	                                             AND CDC.comm_code_grp_no = 'GOODS_STAT_CODE'
+	    WHERE
+	        G.goods_no = #{goodsNo} 
+	</select>
+ 	
+ 	<!-- 상품 옵션 가져오기 -->
+ 	<select id="optionList" resultType="kr.or.ddit.vo.goods.goodsOptionVO">
+ 		select
+ 			goods_opt_no, 
+ 			goods_no, 
+ 			goods_opt_nm, 
+ 			goods_opt_fix_yn, 
+ 			goods_opt_etc, 
+ 			goods_opt_sec, 
+ 			goods_opt_price
+ 		from goods_option
+ 		where goods_no = #{goodsNo}
+ 	</select>
+ 	
+ 	<!--  상품 상태 가져오기 -->
+ 	<select id="getgoodsStatus" resultType="kr.or.ddit.vo.goods.goodsVO">
+		select
+			g.goods_no,
+			g.goods_nm,
+			g.goods_stat_code,
+			cdc.comm_code_det_nm as status_eng_key,
+			cdc.description as status_kor_name
+		from
+			goods g
+		inner join
+			common_detail_code cdc on g.goods_stat_code = cdc.comm_code_det_no
+		where cdc.comm_code_grp_no = 'GOODS_STAT_CODE'
+ 	</select>
+ 	
+ 	<!-- 상품별 총 재고 수량 가져오기 -->
+ 	<select id="getgoodsTotalStock" resultType="kr.or.ddit.vo.goods.goodsStockVO">
+ 		select
+ 			goods_no as goodsNo,
+ 			coalesce(sum(stock_remain_qty),0) as totalStockQty
+ 		from
+ 			goods_stock
+ 		group by
+ 			goods_no	
+ 	</select>
+ 	
+ 	<!-- 새 상품 등록 -->
+ 	<insert id="itemsRegister" parameterType="kr.or.ddit.vo.goods.goodsVO">
+		INSERT INTO GOODS (
+			goods_no, 
+			art_group_no, 
+			goods_stat_code, 
+			file_group_no, 
+			goods_nm, 
+			goods_price,
+			goods_content, 
+			goods_reg_date, 
+			goods_mod_date, 
+			goods_code,
+			goods_multi_opt_yn 
+		) VALUES (
+			#{goodsNo}, 
+			#{artGroupNo, jdbcType=NUMERIC}, 
+			#{goodsStatCode, jdbcType=VARCHAR},
+			#{fileGroupNo, jdbcType=NUMERIC}, 
+			#{goodsNm, jdbcType=VARCHAR},
+			#{goodsPrice, jdbcType=NUMERIC}, 
+			#{goodsContent, jdbcType=CLOB},
+			SYSDATE, 
+			SYSDATE, 
+			#{goodsCode, jdbcType=VARCHAR}, 
+			#{goodsMultiOptYn, jdbcType=CHAR} 
+		)
+	</insert>
+ 	
+ 	<!-- 굿즈 옵션 정보 삽입 -->
+ 	<insert id="insertGoodsOption" parameterType="kr.or.ddit.vo.goods.goodsOptionVO">
+ 		<selectKey keyProperty="goodsOptNo" resultType="int" order="BEFORE">
+ 			select GOODS_OPTION_SEQ.NEXTVAL FROM DUAL
+ 		</selectKey>
+ 		insert into GOODS_OPTION (
+			goods_opt_no,
+	        goods_no,
+	        goods_opt_nm,
+	        goods_opt_price,
+	        goods_opt_fix_yn,
+	        goods_opt_etc,
+	        goods_opt_sec
+ 		) values (
+ 			#{goodsOptNo, jdbcType=NUMERIC},
+ 			#{goodsNo, jdbcType=NUMERIC},
+ 			#{goodsOptNm, jdbcType=VARCHAR},
+ 			#{goodsOptPrice, jdbcType=NUMERIC},
+ 			#{goodsOptFixYn, jdbcType=CHAR}, 
+        	#{goodsOptEtc, jdbcType=VARCHAR},
+        	#{goodsOptSec, jdbcType=NUMERIC}
+ 		)	
+ 	</insert>
+ 	
+ 	<!-- 상품 재고 삽입 -->
+ 	<insert id="insertGoodsStock" parameterType="kr.or.ddit.vo.goods.goodsStockVO">
+ 		<selectKey keyProperty="stockNo" resultType="int" order="BEFORE">
+ 			select GOODS_STOCK_SEQ.NEXTVAL FROM DUAL
+ 		</selectKey>
+	 	insert into GOODS_STOCK (
+			stock_no,
+			goods_opt_no,
+			stock_type_code,
+			goods_no,
+			stock_safe_qty,
+			stock_remain_qty,
+			stock_new_qty,
+			stock_unit_cost,
+			stock_mod_date
+	 	) values (
+			#{stockNo},   
+	        #{goodsOptNo, jdbcType=NUMERIC},
+	        #{stockTypeCode, jdbcType=VARCHAR},   
+	        #{goodsNo, jdbcType=NUMERIC},
+	        #{stockSafeQty, jdbcType=NUMERIC},    
+	        #{stockRemainQty, jdbcType=NUMERIC},   
+	        #{stockNewQty, jdbcType=NUMERIC},     
+	        #{stockUnitCost, jdbcType=NUMERIC},   
+	        SYSDATE                            
+	 	)
+ 	</insert>
+ 	
+ 	<!-- 아티스트 그룹 가져오기 -->
+ 	<select id="selectAllArtistGroups" resultType="kr.or.ddit.vo.artist.ArtistGroupVO">
+ 		select 
+ 			art_group_no,
+ 			art_group_nm
+ 		from
+ 			artist_group where 
+ 			art_group_del_yn = 'N' 
+ 		order by 
+ 			art_group_nm ASC 
+ 	</select>
+ 	
+ 	<!-- 다음 상품 번호 가져오기 -->
+ 	<select id="selectNextGoodsNo" resultType="int">
+ 		select goods_seq.nextval from dual
+ 	</select>
+ 	
+ 	<!-- 상품 개별 총 수량 가져오기 -->
+ 	<select id="selectTotalStockForGoods" parameterType="int" resultType="java.lang.Integer">
+ 		select 
+ 			coalesce(sum(stock_remain_qty), 0)
+    	from 
+    		goods_stock
+    	where goods_no = #{value} 
+ 	</select>
+ 	
+ 	<!-- 상품 수정하기 -->
+ 	<update id="updateGoodsItem" parameterType="kr.or.ddit.vo.goods.goodsVO"> 
+ 		UPDATE GOODS
+	    SET
+	        art_group_no       = #{artGroupNo, jdbcType=NUMERIC},
+	        goods_stat_code    = #{goodsStatCode, jdbcType=VARCHAR},
+	        file_group_no      = #{fileGroupNo, jdbcType=NUMERIC}, 
+	        goods_nm           = #{goodsNm, jdbcType=VARCHAR},
+	        goods_price        = #{goodsPrice, jdbcType=NUMERIC},
+	        goods_content      = #{goodsContent, jdbcType=CLOB},
+	        goods_mod_date     = SYSDATE,
+	        goods_multi_opt_yn = #{goodsMultiOptYn, jdbcType=CHAR}
+	    WHERE
+	        goods_no = #{goodsNo, jdbcType=NUMERIC}
+	</update>
+	
+	<!-- 옵션에 해당하는 재고 삭제하기 -->
+	<delete id="deleteStockForOption" parameterType="java.lang.Integer">
+	    DELETE FROM GOODS_STOCK
+	    WHERE goods_opt_no = #{goodsOptNoToDelete}
+	</delete>
+	
+	<!-- 옵션 삭제하기 -->
+	<delete id="deleteGoodsOption" parameterType="java.lang.Integer">
+	    DELETE FROM GOODS_OPTION
+	    WHERE goods_opt_no = #{goodsOptNoToDelete}
+	</delete>
+	
+	<!-- 옵션 수정하기 -->
+	<update id="updateGoodsOption" parameterType="kr.or.ddit.vo.goods.goodsOptionVO"> UPDATE GOODS_OPTION
+	    SET
+	        goods_opt_nm     = #{goodsOptNm, jdbcType=VARCHAR},
+	        goods_opt_price  = #{goodsOptPrice, jdbcType=NUMERIC},
+	        goods_opt_fix_yn = #{goodsOptFixYn, jdbcType=CHAR},
+	        goods_opt_etc    = #{goodsOptEtc, jdbcType=VARCHAR},
+	        goods_opt_sec    = #{goodsOptSec, jdbcType=NUMERIC}
+	    WHERE
+	        goods_opt_no = #{goodsOptNo, jdbcType=NUMERIC}
+	</update>
+	
+	<!--  옵션이 없는 기본 상품의 재고를 삭제할 때! -->
+	<delete id="deleteBaseStockForGoods">
+	    DELETE FROM GOODS_STOCK
+	    WHERE goods_no = #{goodsNo} AND goods_opt_no = #{goodsOptNo}
+	</delete>
+	
+	<!-- 특정 상품 옵션 전체 재고 삭제! -->
+	<delete id="deleteAllOptionsStockForGoods" parameterType="int">
+	    DELETE FROM GOODS_STOCK
+	    WHERE goods_no = #{goodsNo}
+	    AND goods_opt_no != 0  
+    </delete>
+    
+    <!-- 특정 상품 옵션 전체 삭제 -->
+    <delete id="deleteAllOptionsForGoods" parameterType="int">
+	    DELETE FROM GOODS_OPTION
+	    WHERE goods_no = #{goodsNo}
+	</delete>
+	
+	<!-- 상품 아예 삭제!!! -->
+	<delete id="deleteGoodsItem" parameterType="int">
+	    DELETE FROM GOODS
+	    WHERE goods_no = #{goodsNo}
+	</delete>
+	
+	<!-- 상품 옵션 개별로 가져오기 -->
+	<select id="getOptionDetail" resultType="kr.or.ddit.vo.goods.goodsOptionVO">
+		select
+ 			goods_opt_no, 
+ 			goods_no, 
+ 			goods_opt_nm, 
+ 			goods_opt_fix_yn, 
+ 			goods_opt_etc, 
+ 			goods_opt_sec, 
+ 			goods_opt_price
+ 		from goods_option
+ 		where goods_opt_no = #{goodsOptNo}
+	</select>
+	
+	<!-- 상품 상태 업데이트!!! -->
+	<update id="updateGoodsStatus" parameterType="map">
+	    update goods
+	       set goods_stat_code = #{goodsStatCode}
+	     where goods_no = #{goodsNo}
+	</update>
+	
+	<!-- 상태 코드만 딱 가져오기!! -->
+	<select id="getGoodsStatusOnly" parameterType="int" resultType="kr.or.ddit.vo.goods.goodsVO">
+	    SELECT
+	        G.goods_stat_code,
+	        -- AS (별칭)을 VO의 필드명(camelCase)과 일치시켜주면 좋습니다.
+	        CDC.comm_code_det_no AS statusEngKey,
+	        CDC.description      AS statusKorName
+	    FROM
+	        GOODS G
+	    LEFT JOIN
+	        COMMON_DETAIL_CODE CDC ON G.goods_stat_code = CDC.comm_code_det_no
+	                              AND CDC.comm_code_grp_no = 'GOODS_STAT_CODE'
+	    WHERE
+	        G.goods_no = #{goodsNo}
+	</select>
+	
+	<!-- 굿즈 재고 올리기 -->
+	<update id="increaseGoodsStock" parameterType="map"> 
+		UPDATE GOODS_STOCK
+	    SET STOCK_REMAIN_QTY = STOCK_REMAIN_QTY + #{orderQty}
+	    WHERE GOODS_NO = #{goodsNo}
+	      AND (GOODS_OPT_NO = #{goodsOptNo} OR (#{goodsOptNo} = 0 AND GOODS_OPT_NO IS NULL)) 
+     </update>
+     
+     <select id="selectUserGoodsList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="kr.or.ddit.vo.goods.goodsVO">
+        SELECT
+            GOODS_NO,
+            ART_GROUP_NO,
+            ART_GROUP_NM,
+            GOODS_NM,
+            GOODS_PRICE,
+            GOODS_CONTENT,
+            GOODS_REG_DT,
+            GOODS_MOD_DT,
+            GOODS_SALES_COUNT,
+            GOODS_YN,
+            GOODS_STATUS,
+            representativeImageUrl,
+            stockRemainQty
+        FROM (
+            SELECT
+                ROWNUM AS RN,
+                G.GOODS_NO,
+                G.ART_GROUP_NO,
+                AG.ART_GROUP_NM,
+                G.GOODS_NM,
+                G.GOODS_PRICE,
+                G.GOODS_CONTENT,
+                G.GOODS_REG_DATE AS GOODS_REG_DT,
+                G.GOODS_MOD_DATE AS GOODS_MOD_DT,
+                G.GOODS_SALES_COUNT,
+                G.GOODS_YN,
+                CDC.COMM_CODE_DET_NO AS GOODS_STATUS,
+                (SELECT GA.GOODS_ATFL_URL FROM GOODS_ATTACH GA WHERE GA.GOODS_NO = G.GOODS_NO AND GA.GOODS_ATFL_REPR_YN = 'Y') AS representativeImageUrl,
+                (SELECT COALESCE(SUM(GO.GOODS_OPTN_STOCK_QTY), 0) FROM GOODS_OPTION GO WHERE GO.GOODS_NO = G.GOODS_NO) AS stockRemainQty
+            FROM
+                GOODS G
+            INNER JOIN ARTIST_GROUP AG ON G.ART_GROUP_NO = AG.ART_GROUP_NO
+            LEFT OUTER JOIN COMMON_DETAIL_CODE CDC ON G.GOODS_STAT_CODE = CDC.COMM_CODE_DET_NO
+                                                  AND CDC.COMM_CODE_GRP_NO = 'GOODS_STAT_CODE'
+            WHERE 1=1
+            AND G.GOODS_YN = 'Y'
+            AND G.GOODS_STAT_CODE = 'GS001'
+            <if test="artGroupNo != null and artGroupNo != 0">
+                AND G.ART_GROUP_NO = #{artGroupNo}
+            </if>
+            <if test="searchWord != null and searchWord != '' and searchType == 'goodsNm'">
+                AND G.GOODS_NM LIKE '%' || #{searchWord} || '%'
+            </if>
+            ORDER BY
+            <choose>
+                <when test="searchType == 'popularity'">G.GOODS_SALES_COUNT DESC</when>
+                <when test="searchType == 'priceLowHigh'">G.GOODS_PRICE ASC</when>
+                <when test="searchType == 'priceHighLow'">G.GOODS_PRICE DESC</when>
+                <otherwise>G.GOODS_REG_DATE DESC</otherwise>
+            </choose>
+        )
+        WHERE RN BETWEEN #{startRow} AND #{endRow}
+    </select>
+
+    <select id="selectUserGoodsListCount" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+        SELECT
+            COUNT(G.GOODS_NO)
+        FROM
+            GOODS G
+        WHERE 1=1
+        AND G.GOODS_YN = 'Y'
+        AND G.GOODS_STAT_CODE = 'GS001'
+        <if test="artGroupNo != null and artGroupNo != 0">
+            AND G.ART_GROUP_NO = #{artGroupNo}
+        </if>
+        <if test="searchWord != null and searchWord != '' and searchType == 'goodsNm'">
+            AND G.GOODS_NM LIKE '%' || #{searchWord} || '%'
+        </if>
+    </select>
+ </mapper>

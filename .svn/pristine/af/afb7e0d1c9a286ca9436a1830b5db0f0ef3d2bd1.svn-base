@@ -1,0 +1,26 @@
+package kr.or.ddit.ddtown.service.goods.cart;
+
+import java.util.List;
+
+import kr.or.ddit.vo.goods.GoodsCartVO;
+
+public interface ICartService {
+
+	//카트에 넣을 때 사용자 아이디 가져오기
+	public List<GoodsCartVO> getCartItemsUsername(String userId);
+
+	//장바구니에 담아서 업데이트 하기
+	public void addOrUpdateCartItem(GoodsCartVO cart);
+	
+	//장바구니에 담긴 상품 삭제하기
+	public int deleteCartItem(int cartNo);
+	
+	//장바구니에서 선택해서 일괄 삭제하기!!
+	public int deleteSelectedCartItems(List<Integer> cartNoList);
+	
+	//장바구니에서 수량 수정하고 업뎃하기!
+	public int updateCartQuantity(GoodsCartVO cart);
+
+	public void clearCart(String username);
+
+}

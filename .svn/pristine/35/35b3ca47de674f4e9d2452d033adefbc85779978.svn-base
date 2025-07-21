@@ -1,0 +1,226 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신고 관리 - DDTOWN 관리자</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+     <style>
+        .report-detail-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        .report-main-content, .report-processing-panel { background-color: #fff; border: 1px solid #e7eaf3; border-radius: 8px; padding: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .report-main-content h3, .report-processing-panel h3 { font-size: 1.3em; color: #2c3e50; margin-top: 0; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .report-info-section dt { font-weight: 500; color: #555; width: 100px; float: left; clear: left; margin-bottom: 10px; }
+        .report-info-section dd { margin-left: 110px; margin-bottom: 10px; color: #333; }
+        .report-content-preview { border: 1px solid #eee; padding: 15px; border-radius: 4px; background-color: #f9f9f9; margin-top: 10px; min-height: 80px; line-height: 1.6; }
+        .report-content-preview img { max-width: 100%; margin-top: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section id="reportDetailSection" class="ea-section active-section">
+                    <div class="ea-section-header">
+                        <h2 id="reportDetailTitle">신고 내용 상세 (RPT001)</h2>
+                        <a href="/admin/community/report/list" class="ea-btn outline sm"><i class="fas fa-list"></i> 목록으로</a>
+                    </div>
+                    <div class="report-detail-grid">
+                        <div class="report-main-content">
+                            <h3>신고 정보</h3>
+                            <dl class="report-info-section">
+                                <dt>신고 번호:</dt><dd id="detailReportId">RPT001</dd>
+                                <dt>신고 유형:</dt><dd id="detailReportType">게시물</dd>
+                                <dt>신고 대상:</dt><dd id="detailReportedTarget">게시물 제목 (P12345) / 작성자: bad_user</dd>
+                                <dt>신고자:</dt><dd id="detailReporter">reporter_A</dd>
+                                <dt>작성자:</dt><dd id="reported-writer">bad_user</dd>
+                                <dt>신고일:</dt><dd id="detailReportDate">2025-05-12 10:30</dd>
+                                <dt>처리 상태:</dt><dd><span class="report-status-badge new" id="detailReportStatus">신규</span></dd>
+                            </dl>
+                            <h3>신고 사유 및 내용</h3>
+                            <div class="report-content-preview" id="detailReportReason">
+                                <p><strong>사유:</strong> 부적절한 콘텐츠 포함 (욕설)</p>
+                                <p><strong>상세 내용:</strong> 게시물 본문에 심한 욕설과 비방이 포함되어 있어 신고합니다. 확인 후 조치 부탁드립니다.</p>
+                            </div>
+                        </div>
+                        <div class="report-processing-panel">
+                            <h3>신고 처리</h3>
+                            <form id="reportProcessForm" class="ea-form">
+                                <input type="hidden" id="reportIdForProcessing" name="reportId" value="RPT001">
+                                <div class="form-group">
+                                    <label for="processAction">처리 조치 선택</label>
+                                    <select id="processAction" name="action">
+                                        <option value="">조치 선택...</option>
+                                        <option value="warn_user">신고 대상 경고</option>
+                                        <option value="suspend_user_7">회원 활동정지 (7일)</option>
+                                        <option value="suspend_user_30">회원 활동정지 (30일)</option>
+                                        <option value="add_to_blacklist">블랙리스트 추가</option>
+                                        <option value="dismiss_report">신고 반려 (문제 없음)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="processMemo">처리 메모 (관리자용)</label>
+                                    <textarea id="processMemo" name="memo" placeholder="처리 내용 및 사유를 간략히 기록합니다."></textarea>
+                                </div>
+                                <div class="ea-form-actions" style="text-align:left;">
+                                    <button type="submit" class="ea-btn primary">처리 완료</button>
+                                </div>
+                            </form>
+                            <hr style="margin:25px 0;">
+                            <h4>신고 누적 회원 조치</h4>
+                            <p id="reportedUserAccumulatedInfo" style="font-size:0.9em; margin-bottom:10px;">
+                                신고 대상 회원 (<strong id="reportedUserIdDisplay">bad_user</strong>) 누적 신고 횟수: <strong id="reportedUserTotalReports">5</strong>회
+                            </p>
+                            <button class="ea-btn danger sm" id="forceAddToBlacklistBtn" style="display:none;">즉시 블랙리스트 추가</button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (관리자 전용)</p>
+        </footer>
+    </div>
+    <script>
+        // 로그아웃 기능
+        const logoutButton = document.querySelector('.emp-logout-btn');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('로그아웃 하시겠습니까?')) {
+                    alert('로그아웃 되었습니다.');
+                }
+            });
+        }
+        // 사이드바 메뉴 기능 (admin_portal.html과 동일)
+        document.addEventListener('DOMContentLoaded', function() {
+            const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+            navItemsWithSubmenu.forEach(item => {
+                const arrow = item.querySelector('.submenu-arrow');
+                item.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const parentLi = this.parentElement;
+                    const submenu = this.nextElementSibling;
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        const parentUl = parentLi.parentElement;
+                        if (parentUl) {
+                            Array.from(parentUl.children).forEach(siblingLi => {
+                                if (siblingLi !== parentLi) {
+                                    const siblingSubmenuControl = siblingLi.querySelector('.emp-nav-item.has-submenu.open');
+                                    if (siblingSubmenuControl) {
+                                        const siblingSubmenu = siblingSubmenuControl.nextElementSibling;
+                                        siblingSubmenuControl.classList.remove('open');
+                                        if (siblingSubmenu && siblingSubmenu.classList.contains('emp-submenu')) {
+                                            siblingSubmenu.style.display = 'none';
+                                        }
+                                        const siblingArrow = siblingSubmenuControl.querySelector('.submenu-arrow');
+                                        if (siblingArrow) siblingArrow.style.transform = 'rotate(0deg)';
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    this.classList.toggle('open');
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                        if (arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+                    }
+                });
+            });
+            const currentFullHref = window.location.href;
+            document.querySelectorAll('.emp-sidebar .emp-nav-item[href]').forEach(link => {
+                const linkHrefAttribute = link.getAttribute('href');
+                if (linkHrefAttribute && linkHrefAttribute !== "#" && currentFullHref.endsWith(linkHrefAttribute)) {
+                    link.classList.add('active');
+                    let currentActiveElement = link;
+                    while (true) {
+                        const parentLi = currentActiveElement.parentElement;
+                        if (!parentLi) break;
+                        const parentSubmenuUl = parentLi.closest('.emp-submenu');
+                        if (parentSubmenuUl) {
+                            parentSubmenuUl.style.display = 'block';
+                            const controllingAnchor = parentSubmenuUl.previousElementSibling;
+                            if (controllingAnchor && controllingAnchor.tagName === 'A' && controllingAnchor.classList.contains('has-submenu')) {
+                                controllingAnchor.classList.add('active', 'open');
+                                const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                                if (arrow) {
+                                    arrow.style.transform = 'rotate(90deg)';
+                                }
+                                currentActiveElement = controllingAnchor;
+                            } else {
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            });
+        });
+        // 상세 정보 동적 로드 및 처리 폼/블랙리스트 버튼
+        const urlParams = new URLSearchParams(window.location.search);
+        const reportId = urlParams.get('id');
+        const reportDetailTitleEl = document.getElementById('reportDetailTitle');
+        const reportedUserIdDisplayEl = document.getElementById('reportedUserIdDisplay');
+        const reportedUserTotalReportsEl = document.getElementById('reportedUserTotalReports');
+        const forceAddToBlacklistBtnEl = document.getElementById('forceAddToBlacklistBtn');
+        if (reportId && reportDetailTitleEl) {
+            reportDetailTitleEl.textContent = `신고 내용 상세 (\${reportId})`;
+            document.getElementById('reportIdForProcessing').value = reportId;
+            // 실제로는 서버에서 reportId로 상세 데이터 조회 및 각 필드 채우기
+            const sampleReportData = {
+                id: reportId, type: "게시물", target: "게시물 제목 (P12345) / 작성자: bad_user",
+                reporter: "reporter_A", date: "2025-05-12 10:30", status: "new",
+                reason: "<p><strong>사유:</strong> 부적절한 콘텐츠 포함 (욕설)</p><p><strong>상세 내용:</strong> 게시물 본문에 심한 욕설과 비방이 포함되어 있어 신고합니다.</p>",
+                reportedUserId: "bad_user",
+                reportedUserAccumulatedReports: 10
+            };
+            document.getElementById('detailReportId').textContent = sampleReportData.id;
+            document.getElementById('detailReportType').textContent = sampleReportData.type;
+            document.getElementById('detailReportedTarget').innerHTML = sampleReportData.target;
+            document.getElementById('detailReporter').textContent = sampleReportData.reporter;
+            document.getElementById('detailReportDate').textContent = sampleReportData.date;
+            document.getElementById('detailReportStatus').className = `report-status-badge \${sampleReportData.status}`;
+            document.getElementById('detailReportStatus').textContent = sampleReportData.status === 'new' ? '신규' : (sampleReportData.status === 'pending' ? '확인/처리중' : (sampleReportData.status === 'completed' ? '처리완료' : '반려'));
+            document.getElementById('detailReportReason').innerHTML = sampleReportData.reason;
+            if(reportedUserIdDisplayEl) reportedUserIdDisplayEl.textContent = sampleReportData.reportedUserId;
+            if(reportedUserTotalReportsEl) reportedUserTotalReportsEl.textContent = sampleReportData.reportedUserAccumulatedReports;
+            if(forceAddToBlacklistBtnEl && sampleReportData.reportedUserAccumulatedReports >= 10){
+                forceAddToBlacklistBtnEl.style.display = 'inline-block';
+            }
+        } else if(reportDetailTitleEl) {
+            reportDetailTitleEl.textContent = "신고 정보 로드 실패";
+            document.querySelector('.report-detail-grid').innerHTML = "<p>신고 정보를 불러올 수 없습니다. ID가 올바르지 않거나 존재하지 않는 신고입니다.</p>";
+        }
+        // 신고 처리 폼 제출
+        const reportProcessForm = document.getElementById('reportProcessForm');
+        if(reportProcessForm){
+            reportProcessForm.addEventListener('submit', function(event){
+                event.preventDefault();
+                const action = document.getElementById('processAction').value;
+                const memo = document.getElementById('processMemo').value;
+                if(!action){
+                    alert('처리 조치를 선택해주세요.');
+                    return;
+                }
+                alert(`신고 [${reportId}]에 대해 [${action}] 조치를 요청했습니다. 메모: ${memo} (서버 연동 필요)`);
+                document.getElementById('detailReportStatus').className = 'report-status-badge completed';
+                document.getElementById('detailReportStatus').textContent = '처리완료';
+            });
+        }
+        // 즉시 블랙리스트 추가 버튼
+        if(forceAddToBlacklistBtnEl) {
+            forceAddToBlacklistBtnEl.addEventListener('click', function(){
+                const reportedUserId = document.getElementById('reportedUserIdDisplay').textContent;
+                if(confirm(`${reportedUserId} 회원을 즉시 블랙리스트에 추가하고 활동을 제한하시겠습니까?`)){
+                    alert(`${reportedUserId} 회원을 블랙리스트에 추가했습니다. (서버 연동 필요)`);
+                }
+            });
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,130 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/components/translation.css">
+
+<div id="google_translate_element" style="display:none;"></div>
+
+    <!-- <select  id="translateSelectBar">
+    	<option value="ko" class="ko">🇰🇷</option>
+    	<option value="en" class="en">🇺🇸</option>
+    	<option value="ja" class="ja">🇯🇵</option>
+    	<option value="zh-CN" class="zh-CN">🇨🇳</option>
+    </select> -->
+    
+    <div class="custom-language-selector">
+    <div class="selected-language">
+        <span class="flag ko"></span> <span>한국어</span>  <span class="arrow">&#9662;</span> </div>
+    <ul class="language-options">
+        <li><a href="javascript:void(0);" class="translation-link korean" data-lang="ko" title="한국어"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAACXBIWXMAAAsTAAALEwEAmpwYAAABOklEQVR4nNWSv0vDQBTH8yc5CeKkFUEdRNTFSRDBSXRycHFwERcHV0fRqiFNImrRtpKQ0GLE0FahWk3aotRBmh9381fuwKBJFifx4Mt73/f4PN5xJwj/81BKZwghLpPnea2vPE1BEEQ54wRCyDylFEyScgrNMHkeV1HTcVm6jjzjIti6s3F4IqF8Y4GGIcjRPsjmOo/M27U6xJyKav0+CXueB90ssyLozhZIph/+6CDk5W087GV5XTNM9Hw/CX8Xmcxw+GBlFwNjx5iYkxPXIHE4DEMeG6tr+BgfwuKSwuHZhbMffRqHH5vPyEoyut13lHQXI9MSB4enJO5ZXcypcNxWEm53OhBlFfmrAm++vvVgVNo8Mq+cXyBfKPIhqWtXrFu8OE7qUzWemrCrtcTafZTSjd+KcX/3tz8B7wkDnSODMroAAAAASUVORK5CYII=" alt="south-korea"><span class="flag ko"></span>한국어</a></li>
+        <li><a href="javascript:void(0);" class="translation-link english" data-lang="en" title="English"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAACXBIWXMAAAsTAAALEwEAmpwYAAABEElEQVR4nGNgGJpgbt6sTZFhq/7DcEjgCjj7SmjMn09hXr+x4Q8djT0Mbb2n5jf0nPvf1Hf+f3HDyf8ZZUf/59ee+F/dceb/mRN3/r958hQrfvv0aQrDjJw5+9smXvhf0njyf3rpkf9lzaf+t0+6+L998sX/l/zC/3/xdcSKP3Y2zWDo6Dy+sLLtNNimwroT/+PzDv7PqTr2v7z51P8z+y//f3vzFnZ85146w6KSeZsz41b+B+H06BX/06A4I3bl/+sJ6f8/JUdgxR8m9ExkeHfqeP67I4f/k4xPHc9n+DBnWufHioL/pOIPc6Z1MrzdubPs/bpV/0nFb3fuLGN439uW+LE89zypGKRvoNMomQAA3l+FS98+aDEAAAAASUVORK5CYII=" alt="usa"><span class="flag en"></span>English</a></li>
+        <li><a href="javascript:void(0);" class="translation-link japanese" data-lang="ja" title="日本語"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAi0lEQVR4nGNgGDDw4cMHoZfv3xuQij98+CDE8Ob9x4Q37z/+JwMn4NT86sbN/882bALTJGl+3Dfh/zU2tv9XGRjA9OP+icRpfnXjJlwjDIP4r27eIqwZ5FRkjTD8bONm8my+ys5OnM1vQH7un4gwgJ39/+MJk0gM7Zu3wE7FYuN/gpqJimeKUtiAAQDb8R4TZohSgwAAAABJRU5ErkJggg==" alt="japan"><span class="flag ja"></span>日本語</a></li>
+        <li><a href="javascript:void(0);" class="translation-link chinese" data-lang="zh-CN" title="中文(简体)"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAtUlEQVR4nGNgGHngvzED139rBgeqYGMGLob/1gza/20Z/mPF7szYxXFhawZtTANdoIa4Mv//XyVKoYGB7P//d0qhKorm+v8/iJ0MA3MF/v8/Z/j//z3z//+nyP7/78AIUeTD+v+/FwuZLtyr/f//ZeP//wPYEIoiOFH5RBvowPj/fyQnJAxDOBCKQN71I8dAWzTswvT/f7MEFWLZFortGf7/d2SiooG2ZGDrEWqgMZULB4YRBwAcn0PlCmQs1wAAAABJRU5ErkJggg==" alt="china"><span class="flag zh-CN"></span>中文(简体)</a></li>
+        <li><a href="javascript:void(0);" class="translation-link russian" data-lang="ru" title="Русский"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAdklEQVR4nOXUuw2AMAyE4asjCuaIS8rwHAFlVsQiaVFikMs0LGCWsIQQJ33tXx7wv4mIy/maLYiIAzNT4VMtMDN9IJhS8Ucu1UJKxWOJO03rphaWuNMfg3ff+Dq21cLdNx4aQDpATQTQF4IdnAbMJjq4t8/uhT3H8cmtKO8dawAAAABJRU5ErkJggg==" alt="russian-federation"><span class="flag ru"></span>Русский</a></li>
+        <li><a href="javascript:void(0);" class="translation-link spanish" data-lang="es" title="Español"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAYUlEQVR4nGNgGHngqTED121tBgdq4KfGDFwMtzUZtO/qMPynBr6tyaA9BAx8V8Xs/Wcr239q4HdVzN4M72qZ/f8fZP9PDfyultl/RBpYReVIuT3o0+Ftahv4lNqFA8OIAwCLlVobCmvKPgAAAABJRU5ErkJggg==" alt="spain"><span class="flag es"></span>Español</a></li>
+    </ul>
+</div>
+    
+
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script type="text/javascript">
+    // Google Translate Element 초기화 함수
+    function googleTranslateElementInit() {
+        console.log("googleTranslateElementInit CALLED.");
+        new google.translate.TranslateElement(
+            {
+                pageLanguage: 'ko', // 웹 페이지의 기본 언어
+                autoDisplay: false,
+                includedLanguages: 'ko,en,ja,zh-CN,es,ru', // 번역 제공 언어
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            },
+            'google_translate_element'
+        );
+    }
+
+    // 쿠키 설정 함수
+    function setCookie(name, value, days) {
+        let expires = "";
+        if (days) {
+            let date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        // googtrans 쿠키는 path=/ 로 설정되어야 Google Translate가 인식합니다.
+        document.cookie = name + "=" + (value || "") + expires + "; path=/";
+        console.log("Cookie set: " + name + "=" + value);
+    }
+
+    // 쿠키 가져오기
+    function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for(let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+
+    // DOM 로드 완료 후 언어 변경 링크에 이벤트 리스너 추가
+   document.addEventListener('DOMContentLoaded', function() {
+        const customSelector = document.querySelector('.custom-language-selector');
+        const selectedLanguageDiv = customSelector.querySelector('.selected-language');
+        const languageOptionsUl = customSelector.querySelector('.language-options');
+
+        // 현재 선택된 언어 표시 업데이트 함수
+        function updateSelectedLanguageDisplay(langCode, langText, flagClass) {
+            const flagSpan = selectedLanguageDiv.querySelector('.flag');
+            const textSpan = selectedLanguageDiv.querySelector('span:not(.flag):not(.arrow)');
+            if (flagSpan) flagSpan.className = 'flag ' + flagClass; // 국기 아이콘 클래스 변경
+            if (textSpan) textSpan.textContent = langText;
+        }
+
+        // 페이지 로드 시 쿠키에서 현재 번역 언어 가져와서 selected-language 업데이트
+        const currentGoogTrans = getCookie('googtrans');
+        if (currentGoogTrans && currentGoogTrans.includes('/')) {
+            const langParts = currentGoogTrans.split('/');
+            if (langParts.length > 2 && langParts[2]) {
+                const activeLangCode = langParts[2];
+                const activeLink = languageOptionsUl.querySelector('a[data-lang="' + activeLangCode + '"]');
+                if (activeLink) {
+                    const langText = activeLink.textContent.trim() || activeLink.innerText.trim(); // 브라우저 호환성
+                    const flagClass = activeLink.querySelector('.flag') ? activeLink.querySelector('.flag').className.replace('flag ', '') : activeLangCode;
+                    updateSelectedLanguageDisplay(activeLangCode, langText, flagClass);
+                }
+            }
+        }
+
+
+        // 선택된 언어 표시 영역 클릭 시 옵션 목록 토글
+        selectedLanguageDiv.addEventListener('click', function() {
+            languageOptionsUl.style.display = languageOptionsUl.style.display === 'block' ? 'none' : 'block';
+        });
+
+        // 옵션 링크 클릭 시 언어 변경
+        languageOptionsUl.addEventListener('click', function(event) {
+            let clickedLink = event.target.closest('a.translation-link');
+
+            if (clickedLink) {
+                event.preventDefault();
+                const targetLang = clickedLink.getAttribute('data-lang');
+                const sourceLang = 'ko'; // 페이지의 기본 언어
+                const langText = clickedLink.textContent.trim() || clickedLink.innerText.trim(); // 클릭된 링크의 텍스트
+                const flagClass = clickedLink.querySelector('.flag') ? clickedLink.querySelector('.flag').className.replace('flag ', '') : targetLang;
+
+                if (targetLang) {
+                    console.log("Language link clicked. Setting googtrans cookie to: /" + sourceLang + "/" + targetLang);
+                    setCookie('googtrans', '/' + sourceLang + '/' + targetLang, 1);
+                    updateSelectedLanguageDisplay(targetLang, langText, flagClass); // 선택된 언어 UI 즉시 업데이트
+                    languageOptionsUl.style.display = 'none'; // 옵션 목록 숨기기
+                    window.location.reload(); // 페이지 새로고침하여 번역 적용
+                }
+            }
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!customSelector.contains(event.target)) {
+                languageOptionsUl.style.display = 'none';
+            }
+        });
+    });
+</script>

@@ -1,0 +1,15 @@
+package kr.or.ddit.ddtown.controller.corporate.audition;
+
+//@Controller
+/*public class ImageUploadController {
+
+	@Autowired
+    private IFileService fileService; 
+	
+	@ResponseBody
+	@PostMapping("/api/ckeditor/imageUpload")
+	public ResponseEntity<?> uploadImage(@RequestParam("upload") MultipartFile file){
+		Map<String, Object> responseData = new HashMap<>();
+		
+	}
+}*/

@@ -1,0 +1,194 @@
+<%-- /WEB-INF/views/mypage/alert/alertSettingFormContent.jsp --%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+
+<style>
+    .alert-setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 10px; /* 상하 패딩 증가 */
+        border-bottom: 1px solid #eee;
+    }
+    .alert-setting-item:last-child {
+        border-bottom: none;
+    }
+    .alert-setting-label-area label {
+        margin-bottom: 0;
+        font-size: 1rem; /* 폰트 크기 조정 */
+        color: #333;
+    }
+    /* 토글 스위치 기본 스타일 */
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;  /* 너비 */
+        height: 26px; /* 높이 */
+    }
+    /* 실제 체크박스는 숨김 */
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    /* 스위치의 배경(슬라이더) */
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 26px; /* 둥근 모서리 */
+    }
+    /* 스위치의 원형 핸들 */
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 20px; /* 핸들 높이 */
+        width: 20px;  /* 핸들 너비 */
+        left: 3px;    /* 왼쪽 여백 */
+        bottom: 3px;  /* 아래쪽 여백 */
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    /* 체크박스가 선택(checked)되었을 때 슬라이더 배경색 변경 */
+    input:checked + .slider {
+        background-color: #007bff; /* 활성화 색상 */
+    }
+    /* 체크박스가 선택되었을 때 핸들 위치 이동 */
+    input:checked + .slider:before {
+        -webkit-transform: translateX(24px); /* 핸들 이동 거리 */
+        -ms-transform: translateX(24px);
+        transform: translateX(24px);
+    }
+</style>
+
+<section id="alert-settings-content" class="mypage-section active-section">
+    <div class="mypage-section-header">
+        <h3>${pageTitle}</h3>
+    </div>
+
+    <%-- 서버 메시지 표시부 --%>
+    <div id="alertSettingServerMessage" class="server-message"></div>
+    <c:if test="${not empty alertSettingErrorMessage}"><div class="server-message error" style="display:block;">${alertSettingErrorMessage}</div></c:if>
+    <c:if test="${not empty alertSettingSuccessMessage}"><div class="server-message success" style="display:block;">${alertSettingSuccessMessage}</div></c:if>
+
+    <form id="alert-setting-form">
+        <p class="form-hint-mypage" style="margin-bottom: 20px;">수신을 원하는 알림 유형을 선택해주세요.</p>
+        <c:choose>
+            <c:when test="${not empty alertSettings && fn:length(alertSettings) > 0}">
+				<!-- 컨트롤러에서 넘긴 alertSettings 로 각 설정 항목들  생성-->
+                <c:forEach var="setting" items="${alertSettings}" varStatus="status">
+                    <div class="form-group-mypage alert-setting-item">
+						<!--서버로 전송할 데이터, 클라이언트가 안봐도되는값 hidden 처리 -->
+						<input type="hidden" name="alertTypeCode" value="${setting.alertTypeCode}">
+	                        <div class="alert-setting-label-area">
+	                            <label for="toggle_${setting.alertTypeCode}">${setting.alertDescription}</label>
+	                        </div>
+	                        
+	                        <div class="alert-setting-toggle-area">
+	                            <label class="toggle-switch">
+	                                <!-- 
+	                                 * 실제 토글 값
+	                                 * 체크되면 'Y', 체크 해제되면 'N'
+	                                -->
+	                                <input type="checkbox" class="alert-toggle-checkbox" 
+	                                	   id="toggle_checkbox_${setting.alertTypeCode}"
+	                                       data-type-code="${setting.alertTypeCode}"
+	                                       ${setting.alertEnabledYn eq 'Y' ? 'checked' : ''}>
+	                                <span class="slider"></span>
+	                            </label>
+	                            <!-- 서버 전송용 hidden input , 스크립트에서 'Y' 또는 'N'으로 관리 -->
+	                            <input type="hidden" name="alertEnabledYn" value="${setting.alertEnabledYn eq 'Y' ? 'Y' : 'N'}">
+	                        </div>
+                    </div>
+                </c:forEach>
+            </c:when>
+            <c:otherwise>
+                <p class="no-alerts" style="padding: 20px; text-align: center; color: #777;">설정할 알림 유형이 없습니다.</p>
+            </c:otherwise>
+        </c:choose>
+
+        <div class="form-actions-mypage" style="margin-top: 30px;">
+            <button type="submit" id="btn-save-alert-settings" class="btn-mypage-primary">설정 저장</button>
+        </div>
+    </form>
+</section>
+
+<script>
+$(function(){
+    const alertSettingForm = $('#alert-setting-form');
+    const csrfToken = $("meta[name='_csrf']").attr("content");
+    const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+
+    function displayAlertSettingServerMessage(message, isSuccess) {		// 서버 메시지 용
+        $('#alertSettingServerMessage').text(message || '처리 중 오류가 발생했습니다.')
+                           .removeClass('success error')
+                           .addClass(isSuccess ? 'success' : 'error')
+                           .show();
+        setTimeout(() => $('#alertSettingServerMessage').fadeOut(), 5000);		// 5초후 메세지 사라짐
+    }
+	
+	// 토글 스위치 클릭 이벤트 처리
+	    $('.alert-toggle-checkbox').on('change', function() {
+	        // 현재 체크박스의 상태로 'Y' 또는 'N' 값 결정 
+	        const enabledYn = $(this).is(':checked') ? 'Y' : 'N';
+	        // 바로 다음에 위치한 hidden input의 값을 변경하여 폼 제출 시 값 전송
+	        $(this).closest('.alert-setting-toggle-area').find('input[name="alertEnabledYn"]').val(enabledYn);
+	    });
+
+    alertSettingForm.on('submit', function(event) {		// 설정 저장 클릭 시 폼제출
+        event.preventDefault();		// 기본 폼 제출 방지
+
+        const settingsData = [];	// 서버로 보낼 List<AlertSettingVO> 데이터 담을 배열
+        // 폼 데이터 구성
+        $(this).find('.alert-setting-item').each(function() {
+            const typeCode = $(this).find('input[name="alertTypeCode"]').val();
+            const enabledYn = $(this).find('input[name="alertEnabledYn"]').val(); // hidden input의 값을 가져옴
+            
+            settingsData.push({
+                alertTypeCode: typeCode,
+                alertEnabledYn: enabledYn
+            });
+        });
+
+        console.log("저장할 알림 설정 데이터:", settingsData);
+        if (settingsData.length === 0) {
+            displayAlertSettingServerMessage('저장할 설정 항목이 없습니다.', false);
+            return;
+        }
+        
+        let headers = {'Content-Type': 'application/json'}; 
+        headers[csrfHeader] = csrfToken;
+        const saveButton = $('#btn-save-alert-settings');
+		
+
+        $.ajax({
+            url: '<c:url value="/mypage/alerts/setting/save"/>', // 컨트롤러 요청 URL
+            type: 'POST',
+            contentType: 'application/json', // @RequestBody로 받기위해서 json전송
+            data: JSON.stringify(settingsData),		// JS 객체 배열 JSON 문자열로 변환
+            headers: headers,
+            beforeSend: () => saveButton.addClass('loading').prop('disabled', true),		// 요청 시작 전 버튼로딩
+            complete: () => saveButton.removeClass('loading').prop('disabled', false),		// 요청 완료 후 버튼 로딩 제거
+            success: function(response) {
+                displayAlertSettingServerMessage(response.message || '알림 설정이 저장되었습니다.', response.success);
+                if (response.success) {
+                    window.location.reload();
+                }
+            },
+            error: function(xhr) {
+                displayAlertSettingServerMessage('알림 설정 저장 중 오류: ' + (xhr.responseJSON ? xhr.responseJSON.message : '서버 오류'), false);
+            }
+        });
+    });
+});
+</script>

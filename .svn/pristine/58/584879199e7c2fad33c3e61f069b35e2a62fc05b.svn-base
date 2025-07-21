@@ -1,0 +1,20 @@
+package kr.or.ddit.vo.corporate.audition;
+
+import lombok.Data;
+
+@Data
+public class AuditionVO {
+
+	private int audiNo;				//오디션 공고 번호
+	private String empUsername; 	//오디션 담당자
+	private String audiTypeCode; 	//모집 분야 코드
+	private String audiStatCode; 	//진행 상태 코드
+	private Integer fileGroupNo;		//첨부 파일   Integer: 첨부파일 없을 시 detail에 표시 안되게 하려고 씀
+	private String audiTitle;		//오디션 제목
+	private String audiContent;		//오디션 내용
+	private String audiStartDate;	//지원 접수 시작일
+	private String audiEndDate;		//지원 접수 마감일
+	private String audiRegDate;		//공고 등록일시
+	private String audiModDate;		//공고 수정일시
+	
+}

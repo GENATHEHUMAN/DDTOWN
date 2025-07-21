@@ -1,0 +1,97 @@
+// =============================================================
+// 전역 함수 정의 영역
+// =============================================================
+function startLive() {
+    // 디버깅용 alert은 이제 제거하고 최종 코드로 정리합니다.
+    const mediaServerUrl = document.getElementById('mediaServerUrl').value;
+    const artGroupNo = document.getElementById('communityArtistGroupNo').value;
+    const artGroupNm = document.getElementById('communityArtistGroupNm').value;
+    const currentUserId = document.getElementById('stream-info').dataset.userId; 
+
+	console.log("mediaServerUrl");
+	
+    if (!currentUserId) {
+        alert("로그인이 필요합니다.");
+        return;
+    }
+	
+	// 이름에 공백이나 한글이 포함될 수 있으므로, URL에 사용하기 안전하게 인코딩합니다.
+    const encodedArtGroupNm = encodeURIComponent(artGroupNm);
+	
+    if (!mediaServerUrl || !artGroupNo) {
+        alert("방송 정보를 불러올 수 없습니다. 페이지를 새로고침 해주세요.");
+        return;
+    }
+    
+    const broadcastURL = `${mediaServerUrl}/broadcast/new?artGroupNo=${artGroupNo}&userId=${currentUserId}&artGroupNm=${encodedArtGroupNm}`;
+    console.log("새 창으로 여는 URL:", broadcastURL);
+    window.open(broadcastURL, 'broadcastWindow', 'width=1280,height=720');
+}
+
+function watchLive() {
+    const mediaServerUrl = document.getElementById('mediaServerUrl').value;
+    const artGroupNo = document.getElementById('communityArtistGroupNo').value;
+    
+	// 바로 / (루트)로 가는 대신, 새로 만든 검색용 URL을 호출합니다.
+	const watchURL = `${mediaServerUrl}/broadcast/live/${artGroupNo}`;
+	
+    console.log("새 창으로 여는 URL:", watchURL);
+    window.open(watchURL, 'watchWindow', 'width=1280,height=720');
+}
+
+// 라이브 탭 클릭 시 방송 상태를 확인하는 이벤트 핸들러
+$("#live").on("click", function(){
+	// 함수 호출 -> 방송 상태 체크
+	checkLiveStatus();
+})
+
+// 페이지 로드 시 라이브 탭이 기본으로 활성화 되어있을 경우를 대비해 한 번 더 호출
+$(document).ready(function() {
+    if ($('#live').hasClass('active')) {
+        checkLiveStatus();
+    }
+});
+
+/**
+ * 미디어 서버에 현재 아티스트의 라이브 방송 상태를 물어보고 
+ * 그 결과에 따라  'Live 시청하기' 버튼을 보여주거나 숨시는 함수
+ */
+async function checkLiveStatus(){
+	const artGroupNo = document.getElementById('communityArtistGroupNo').value;
+	const mediaServerUrl = document.getElementById('mediaServerUrl').value;
+	const watchBtn = document.getElementById('watch-info'); 
+	
+	// 버튼이나 정보가 없으면 함수를 즉시 종료
+	if(!artGroupNo || !mediaServerUrl || !watchBtn){
+		console.error("필수 정보를 찾을 수 없습니다.");
+		return;
+	}
+	try{
+		// 1단계에서 만든 API를 호출합니다.
+		const response = await fetch(`${mediaServerUrl}/api/broadcast/status/${artGroupNo}`);
+		
+		if(!response.ok){
+			// API 호출 실패
+			watchBtn.style.display = 'none';
+			throw new Error("방송 상태 확인 API 호출 실패");
+		}
+		
+		const data = await response.json();
+		if(data.isLive){
+			console.log(artGroupNo + '번 아티스트는 현재 방송 중입니다.');
+			watchBtn.style.display = "inline-block";
+		}else{
+			console.log(artGroupNo + '번 아티스트는 현재 방송 중이 아닙니다.')
+			watchBtn.style.display = "none";
+		}
+		
+	} catch(error){
+			console.logerror(error);
+			watchBtn.style.display='none';
+	}
+}
+
+
+
+
+

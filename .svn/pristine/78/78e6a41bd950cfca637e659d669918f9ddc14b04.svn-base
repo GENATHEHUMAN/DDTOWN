@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.inquiry.InquiryMapper">
+ 
+ 	<sql id="search">
+ 		<if test="searchType != null and searchType != ''">
+ 			and inq_type_code like '%'||#{searchType}||'%'
+ 		</if>
+ 		<if test="searchWord != null and searchWord != ''">
+ 			and inq_title like '%'||#{searchWord}||'%'
+ 		</if>
+ 	</sql>
+ 
+ 	<select id="getList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="kr.or.ddit.vo.inquiry.InquiryVO">
+ 		select b.*
+			from(
+			select a.*, rownum as rnum
+			from(
+				SELECT
+				    inq_no
+				  , emp_username
+				  , mem_username
+				  , inq_type_code type_detail_code
+				  , c.description inq_type_code_des
+				  , inq_stat_code stat_detail_code
+				  , d.description inq_stat_code_des
+				  , inq_title
+				  , inq_content
+				  , inq_reg_date
+				  , inq_ans_content
+				  , inq_ans_reg_date
+				  
+				FROM
+				    inquiry i, common_detail_code c, common_detail_code d
+				where 
+				    i.inq_type_code = c.comm_code_det_no (+)
+				and i.inq_stat_code = d.comm_code_det_no (+)
+				and i.mem_username = #{memUsername}
+				<include refid="search" />
+				order by inq_reg_date asc)a
+			order by inq_reg_date desc)b
+		where rnum between #{startRow} and #{endRow}
+ 	</select>
+ 	
+ 	<select id="inqTotal" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+ 		select count(inq_no)
+ 		from inquiry
+ 		where
+ 			mem_username = #{memUsername}
+ 		<include refid="search" />
+ 	</select>
+ 	
+ 	<select id="getMember" parameterType="String" resultType="kr.or.ddit.vo.user.MemberVO">
+ 		SELECT
+		    mem_username
+		  , mem_stat_code
+		  , mem_reg_path
+		  , mem_nicknm
+		  , mem_birth
+		  , mem_zip_code
+		  , mem_address1
+		  , mem_address2
+		  , mem_mod_date
+		  , mem_reg_date
+		  , mem_etc_yn
+		  , PASSWORD
+		  , PEO_ENABLED
+		  , USER_TYPE_CODE
+		  , PEO_FIRST_NM
+		  , PEO_LAST_NM
+		  , PEO_EMAIL
+		  , PEO_GENDER
+		  , PEO_PHONE
+		FROM
+		    member m inner join people p on m.mem_username = p.username
+		where mem_username = #{memUsername}
+ 	</select>
+ 	
+ 	<select id="getCodeList" resultType="kr.or.ddit.vo.inquiry.InquiryCodeVO">
+ 		select
+		  comm_code_det_no
+		, comm_code_grp_no
+		, comm_code_det_nm
+		, use_yn
+		, description
+		from common_detail_code
+		where comm_code_grp_no = 'INQ_TYPE_CODE'
+ 	</select>
+ 	
+ 	<select id="getStatCode" resultType="kr.or.ddit.vo.inquiry.InquiryCodeVO">
+ 		select
+		  comm_code_det_no
+		, comm_code_grp_no
+		, comm_code_det_nm
+		, use_yn
+		, description
+		from common_detail_code
+		where comm_code_grp_no = 'INQ_STAT_CODE'
+ 	</select>
+ 	
+ 	<insert id="insertData" parameterType="kr.or.ddit.vo.inquiry.InquiryVO">
+ 		<selectKey keyProperty="inqNo" resultType="int" order="BEFORE">
+ 			select inquiry_seq.nextval from dual
+ 		</selectKey>
+ 		insert into inquiry(inq_no, mem_username, inq_type_code, inq_stat_code, inq_title, inq_content, inq_reg_date)
+ 		values(#{inqNo}, #{memUsername}, #{typeDetailCode}, #{statDetailCode}, #{inqTitle}, #{inqContent}, sysdate)
+ 	</insert>
+ 	
+ 	<select id="getDetail" parameterType="int" resultType="kr.or.ddit.vo.inquiry.InquiryVO">
+ 		select inq_no,
+		        emp_username,
+		        mem_username,
+		        inq_type_code type_detail_code,
+		        c.description inqTypeCodeDes,
+		        inq_stat_code stat_detail_code,
+		        d.description inqStatCodeDes,
+		        inq_title,
+		        inq_content,
+		        inq_reg_date,
+		        inq_ans_content,
+		        inq_ans_reg_date
+		from inquiry i, common_detail_code c, common_detail_code d
+		where i.inq_type_code = c.comm_code_det_no
+		and i.inq_stat_code = d.comm_code_det_no
+		and i.inq_no = #{inqNo}
+ 	</select>
+ 	
+ 	<select id="getTypeCode" parameterType="String" resultType="kr.or.ddit.vo.inquiry.InquiryCodeVO">
+ 		select COMM_CODE_DET_NO, COMM_CODE_GRP_NO, COMM_CODE_DET_NM, USE_YN, DESCRIPTION
+		from common_detail_code
+		where comm_code_det_no = #{typeCode}
+ 	</select>
+ 	
+ 	<update id="updateData" parameterType="kr.or.ddit.vo.inquiry.InquiryVO">
+ 		update inquiry set 
+ 			inq_title = #{inqTitle},
+ 			inq_content = #{inqContent},
+ 			inq_type_code = #{typeDetailCode},
+ 			inq_reg_date = sysdate
+ 		where 
+ 			inq_no = #{inqNo}
+ 	</update>
+ 	
+ 	<delete id="deleteData" parameterType="int">
+ 		delete from inquiry where inq_no = #{inqNo}
+ 	</delete>
+ </mapper>

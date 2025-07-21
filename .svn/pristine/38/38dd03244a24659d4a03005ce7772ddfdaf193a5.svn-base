@@ -1,0 +1,108 @@
+package kr.or.ddit.ddtown.controller.admin.inquiry;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;import org.eclipse.tags.shaded.org.apache.xalan.lib.sql.ObjectArray;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.config.annotation.SecurityBuilder;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.http.SecurityHeaders;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.service.admin.faqInquiry.IAdminFaqService;
+import kr.or.ddit.vo.faq.FaqVO;
+import kr.or.ddit.vo.security.CustomUser;
+import kr.or.ddit.vo.user.EmployeeVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/admin/faq")
+public class AdminFaqController {
+
+	@Autowired
+	private IAdminFaqService faqService;
+	
+	@GetMapping("/list")
+	public ResponseEntity<Map<Object, Object>> faqMainList(){
+		
+		
+		
+		log.info("FAQ 목록 호출 중...");
+		
+		Map<Object, Object> map = faqService.faqAdminMain();
+		
+		return new ResponseEntity<Map<Object, Object>>(map, HttpStatus.OK);
+	}
+	
+	@GetMapping("/detailData/{faqNo}")
+	public ResponseEntity<FaqVO> faqDetail(@PathVariable int faqNo){
+		
+		FaqVO faqVO = faqService.getFaqDetail(faqNo);
+		
+		
+		return new ResponseEntity<FaqVO>(faqVO,HttpStatus.OK);
+	}
+	
+	@PostMapping("/updateData/{faqNo}")
+	public ResponseEntity<ServiceResult> updateData(FaqVO faqVO){
+		
+		ServiceResult result = null;
+		
+		log.info("FAQ 수정 중...");
+		
+		log.info("faqVO : " + faqVO);
+		
+		Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        EmployeeVO memberVO = null;
+        if(principal instanceof CustomUser) {
+        	memberVO = ((CustomUser) principal).getEmployeeVO();
+        }
+		
+        faqVO.setEmpUsername(memberVO.getEmpUsername());
+        
+        result = faqService.updateData(faqVO);
+        
+		return new ResponseEntity<ServiceResult>(result,HttpStatus.OK);
+	}
+	
+	@PostMapping("/insert")
+	public ResponseEntity<ServiceResult> insertData(FaqVO faqVO){
+		
+		ServiceResult result = null;
+		
+		log.info("FAQ 등록 중...");
+		
+		log.info("faqVO : " + faqVO);
+		
+		Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        EmployeeVO memberVO = null;
+        if(principal instanceof CustomUser) {
+        	memberVO = ((CustomUser) principal).getEmployeeVO();
+        }
+		
+        faqVO.setEmpUsername(memberVO.getEmpUsername());
+        
+        result = faqService.faqInsert(faqVO);
+        
+		return new ResponseEntity<ServiceResult>(result, HttpStatus.OK);
+	}
+	
+	@PostMapping("/delete/{faqNo}")
+	public ResponseEntity<ServiceResult> deleteData(@PathVariable int faqNo){
+		log.info("FAQ 삭제 중...");
+		
+		ServiceResult result = faqService.deleteData(faqNo);
+		
+		return new ResponseEntity<ServiceResult>(result, HttpStatus.OK);
+	}
+}

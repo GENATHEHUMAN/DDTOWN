@@ -1,0 +1,27 @@
+package kr.or.ddit.ddtown.mapper.admin.goods.order;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.order.OrdersVO;
+
+@Mapper
+public interface IAdminOrdersMapper {
+
+	public int getTotalOrdersCount(PaginationInfoVO<OrdersVO> pagingVO);
+
+	public List<OrdersVO> getAllOrders(PaginationInfoVO<OrdersVO> pagingVO);
+
+	public OrdersVO getOrderDetail(int orderNo);
+	
+	/**
+     * 주문 정보를 업데이트합니다.
+     * 주로 주문 상태(orderStatCode) 변경이나 관리자 메모(adminOrderMemo) 변경에 사용됩니다.
+     * @param updateOrderVO 업데이트할 정보(orderId는 필수)가 담긴 OrdersVO 객체
+     * @return 업데이트된 행의 수 (보통 1)
+     */
+	public int updateOrder(OrdersVO updateOrderVO);
+
+}

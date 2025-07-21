@@ -1,0 +1,25 @@
+package kr.or.ddit.ddtown.mapper.admin.blacklist;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import kr.or.ddit.vo.blacklist.BlacklistVO;
+
+@Mapper
+public interface IBlacklistMapper {
+
+	//목록페이지
+	public List<BlacklistVO> blackList();
+	//상세페이지
+	public BlacklistVO blackDetail(int banNo);
+	//회원인지 아닌지 체크
+	public int checkMemberId(String memUsername);
+	//등록하기
+	public int blackSignup(BlacklistVO blacklistVO) throws Exception;
+	//수정하기
+	public int blackUpdate(BlacklistVO blacklistVO);
+	//해제(삭제)하기
+	public int blackDelete(int banNo);
+
+}

@@ -1,0 +1,650 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style type="text/css">
+/* communityHeader.jsp 전용 스타일 */
+.main-header {
+    background-color: #fff;
+    border-bottom: 1px solid #eee;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    position: sticky; /* 스크롤 시 상단 고정 */
+    top: 0;
+    z-index: 1000;
+    height: 150px;
+}
+
+.header-nav {
+    display: flex;
+    justify-content: space-between; /* 양쪽 끝으로 정렬 */
+    align-items: center;
+    max-width: 100%; /* 최대 너비 설정 */
+    margin: 0 0; /* 중앙 정렬 */
+}
+
+.home-link {
+    font-size: 1.6em; /* 텍스트 로고 크기 조정 */
+    font-weight: bold;
+    color: #8a2be2; /* 보라색으로 변경 */
+    text-decoration: none;
+    padding-left: 10px; /* 왼쪽 여백 추가 */
+    display: flex; /* 이미지와 텍스트를 가로로 정렬하기 위해 추가 */
+    align-items: center; /* 이미지와 텍스트를 세로로 가운데 정렬하기 위해 추가 */
+}
+
+/* 텍스트 옆에 오는 로고 이미지 스타일 */
+.header-logo {
+    height: 1.5em; /* 부모 폰트 사이즈에 맞춰 이미지 높이 조절 */
+    vertical-align: middle; /* 텍스트와 세로 가운데 정렬 */
+    padding: 8px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center; /* 아이콘과 텍스트 수직 정렬 */
+    gap: 15px; /* 버튼 간격 */
+    list-style: none; /* li 태그의 기본 불릿 제거 */
+    padding: 0;
+    margin: 0;
+    padding-right: 0px;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex; /* 내부 요소 (이모지) 정렬을 위해 flex 사용 */
+    align-items: center;
+    justify-content: center;
+    text-decoration: none; /* 링크 버튼에 밑줄 제거 */
+    color: #8a2be2;
+    font-size: 2.0em; /* 아이콘 크기 유지 */
+}
+
+/* 메인 내비게이션 (굿즈샵, 선호도 조사, 콘서트) 스타일 */
+.main-navigation {
+    background-color: #f8f8f8;
+    padding: 10px 0;
+    border-top: 1px solid #eee; /* 상단 헤더와 분리 */
+    margin-top: 20px; /* 상단 헤더와의 간격 */
+    height: 50px;
+}
+
+.main-navigation .menu-list {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 30px; /* 메뉴 항목 간 간격 */
+}
+
+.main-navigation .menu-item {
+    text-decoration: none;
+    color: #555;
+    font-weight: 400;
+    padding: 8px 20px;
+    transition: color 0.3s ease;
+    position: relative; /* 서브메뉴 기준점 */
+    display: block; /* 링크 영역 확장 */
+    font-size: 20px;
+}
+
+.main-navigation .menu-item:hover {
+    color: #8a2be2; /* 호버 시 보라색으로 변경 */
+}
+
+/* 서브메뉴 스타일 */
+.main-navigation .submenu {
+    display: none; /* 기본 숨김 */
+    position: absolute;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    min-width: 120px;
+    z-index: 1001;
+    list-style: none;
+    padding: 10px 0;
+    margin: 0;
+    border-radius: 4px;
+    top: 100%; /* 부모 메뉴 아래 위치 */
+    left: 50%; /* 가운데 정렬 */
+    transform: translateX(-50%);
+}
+
+.main-navigation li:hover > .submenu {
+    display: block; /* 부모 메뉴 호버 시 서브메뉴 표시 */
+}
+
+.main-navigation .submenu li {
+    padding: 0;
+}
+
+.main-navigation .submenu .menu-item {
+    padding: 8px 15px;
+    color: #333;
+    white-space: nowrap; /* 줄바꿈 방지 */
+}
+
+.main-navigation .submenu .menu-item:hover {
+    background-color: #f0f0f0;
+    color: #8a2be2; /* 호버 시 보라색으로 변경 */
+}
+/* DM 열기 버튼 */
+.dm-open-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #8a2be2;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 50%; /* 원형 버튼 */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    cursor: pointer;
+    font-size: 1.5em; /* 아이콘 크기 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px; /* 원형 크기 */
+    height: 60px; /* 원형 크기 */
+    z-index: 1001; /* 다른 UI 위에 오도록 */
+}
+
+/* DM 모달/팝업 스타일 (채팅방 목록을 표시할 창) */
+.dm-modal-overlay {
+    display: none; /* 초기 숨김 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* 반투명 오버레이 */
+    z-index: 2000; /* DM 열기 버튼보다 위에 */
+    justify-content: center;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.modal-dialog.modal-xl.ms-auto {
+    margin-right: 20px; /* 우측 여백 조정 */
+    max-width: 650px; /* 모달 최대 너비 */
+}
+
+.dm-modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 35px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 100%; /* 적당한 너비 */
+    max-width: 90%; /* 화면 크기 고려 */
+    height: 740px; /* 적당한 높이 */
+    max-height: 90vh; /* 화면 크기 고려 */
+    display: flex;
+    flex-direction: column;
+    position: relative; /* 닫기 버튼 위치 기준 */
+    margin-right: 20px;
+    border: none;
+    overflow: hidden;
+}
+
+.dm-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
+    border-bottom: 1px solid #eee;
+    padding: 15px 25px;
+    background-color: #f8f8f8;
+    border-bottom: 1px solid #e0e0e0;
+    border-radius: 12px 12px 0 0;
+    flex-direction: column-reverse;
+}
+
+.dm-modal-header h2 {
+    margin: 0;
+    font-size: 1.6em;
+    color: #333;
+    font-weight: bold;
+}
+
+.dm-modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 2.2em;
+    color: #a0a0a0;
+    padding: 0;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.dm-modal-close-btn:hover {
+    color: #666;
+}
+
+.dm-modal-iframe {
+    flex-grow: 1; /* 남은 공간을 모두 차지 */
+    border: none; /* iframe 테두리 제거 */
+    width: 100%;
+    height: 100%;
+    background-color: #f0f2f5;
+}
+
+/* DM 모달 하단 목록가기 버튼 */
+.dm-modal-back-btn {
+    background-color: #6a0dad; /* 보라색 계열 */
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 0 0 12px 12px; /* 하단 모서리 둥글게 */
+    font-size: 1.1em;
+    cursor: pointer;
+    width: 100%; /* 너비를 100%로 하여 하단 전체 차지 */
+    text-align: center;
+    transition: background-color 0.2s ease;
+}
+
+.dm-modal-back-btn:hover {
+    background-color: #5a0c9c; /* 호버 시 더 진한 보라색 */
+    color: white;
+}
+
+/* 읽지 않은 메시지 배지 스타일 */
+.dm-unread-badge {
+    position: absolute;
+    top: -5px; /* 버튼 상단에 위치 */
+    right: -5px; /* 버튼 우측에 위치 */
+    background-color: #ff4d4d; /* 빨간색 배경 */
+    color: white;
+    font-size: 0.7em;
+    font-weight: bold;
+    padding: 3px 6px;
+    border-radius: 10px; /* 둥근 모서리 */
+    min-width: 20px; /* 최소 너비 */
+    text-align: center;
+    line-height: 1; /* 텍스트 세로 중앙 정렬 */
+    display: none; /* 초기에는 숨김 */
+}
+
+/* style.css 또는 communityHeader.jsp <style> 태그 내에 추가 */
+.badge-wrapper {
+    position: relative;
+    display: inline-block; /* 뱃지 감싸는 부모 요소 */
+}
+
+.item-count-badge {
+    position: absolute;
+    top: -5px; /* 아이콘 위로 올리기 */
+    right: -5px; /* 아이콘 오른쪽으로 이동 */
+    background-color: #ff4d4d; /* 빨간색 배경 */
+    color: white;
+    font-size: 0.7em;
+    font-weight: bold;
+    padding: 3px 6px;
+    border-radius: 10px; /* 둥근 모양 */
+    min-width: 20px;
+    text-align: center;
+    line-height: 1;
+}
+
+</style>
+
+<header class="main-header">
+	<%@ include file ="headerPart.jsp" %>
+    <nav class="header-nav">
+        <div class="header-left">
+		    <a href="${pageContext.request.contextPath}/community/main" class="home-link">
+		        <img src="${pageContext.request.contextPath}/resources/img/1234.png" alt="DD 로고" class="header-logo">
+		        DDTOWN SQUARE
+		    </a>
+		</div>
+       <div class="header-right">
+       		<li><%@ include file="../modules/translation.jsp" %></li>
+            <sec:authorize access="isAuthenticated()">
+            <li><%@ include file="../modules/alertDisplay.jsp" %></li>
+            <li><a href="<c:url value='/mypage'/>" class="icon-btn active" title="마이페이지"><i class="fas fa-user"></i></a></li>
+            </sec:authorize>
+            <%-- 장바구니 아이콘 및 뱃지 --%>
+            <li>
+                <div class="badge-wrapper" style="position: relative; display: inline-block;"> <%-- 뱃지 위치 조정을 위해 badge-wrapper 스타일 추가 --%>
+                    <a href="${pageContext.request.contextPath}/goods/cart/list" class="icon-btn" aria-label="장바구니">
+                        <i class="fas fa-shopping-cart"></i>
+                    </a>
+                    <%-- 장바구니 개수 뱃지 (초기 로드는 ControllerAdvice가, 이후 업데이트는 JS가 담당) --%>
+                    <span class="item-count-badge" id="headerCartItemCount"
+                          <c:if test="${empty cartItemCount || cartItemCount eq 0}">style="display: none;"</c:if>>
+                          ${empty cartItemCount ? '0' : cartItemCount}
+                    </span>
+                </div>
+            </li>
+            <li><a href="${pageContext.request.contextPath}/inquiry/main" class="icon-btn" title="고객센터"><i class="fas fa-headset"></i>‍</a></li>
+            <sec:authorize access="isAuthenticated()">
+                <form id="logoutForm" action="<c:url value='/logout'/>" method="post" style="display:inline;">
+                    <sec:csrfInput/>
+                    <button type="button" onclick="document.getElementById('logoutForm').submit(); return false;" class="auth-link icon-btn" title="로그아웃">
+                    	<i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </form>
+            </sec:authorize>
+            <sec:authorize access="isAnonymous()">
+                 <a href="${pageContext.request.contextPath}/login" class="auth-link icon-btn"><i class="fa-solid fa-right-to-bracket"></i></a>
+            </sec:authorize>
+        </div>
+    </nav>
+    <nav class="main-navigation">
+        <ul class="menu-list">
+        	<li><a href="${pageContext.request.contextPath}/corporate/main" class="menu-item">COMPANY</a></li>
+            <li><a href="${pageContext.request.contextPath}/goods/main" class="menu-item">SHOP</a></li>
+        	<li><a href="${pageContext.request.contextPath}/community/main" class="menu-item">MAIN</a></li>
+            <li><a href="${pageContext.request.contextPath}/concert/main" class="menu-item">CONCERT</a></li>
+            <li>
+                <a href="${pageContext.request.contextPath}/community/worldcup" class="menu-item">PREFERENCE</a>
+                <ul class="submenu">
+                    <li><a href="${pageContext.request.contextPath}/community/worldcup" class="menu-item">VOTE</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</header>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<sec:authorize access="isAuthenticated()">
+<div class="dm-open-button" id="dmOpenBtn" title="DM 열기" data-bs-toggle="modal" data-bs-target="#dmModalOverlay">
+	<i class="fa-solid fa-paper-plane"></i>
+	<span class="dm-unread-badge" id="dmUnreadCountBadge"></span>
+</div>
+
+<div class="modal fade" id="dmModalOverlay" tabindex="-1" aria-labelledby="dmModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-xl ms-auto">
+		<div class="dm-modal-content modal-content">
+	        <div class="dm-modal-header modal-header">
+	            <h2 class="modal-title" id="dmModalLabel">DM</h2><button type="button" class="btn-close dm-modal-close-btn" data-bs-dismiss="modal" aria-label="Close"></button>
+	        </div>
+	        <iframe id="dmChannelListIframe" class="dm-modal-iframe" src="" frameborder="0"></iframe>
+			<button type="button" class="btn dm-modal-back-btn" id="dmBackBtn" style="font-weight:bold;"><i class="fa-solid fa-list"></i> 목록가기</button>
+	    </div>
+    </div>
+</div>
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+	    const dmModalOverlay = document.getElementById('dmModalOverlay');
+	    const dmChannelListIframe = document.getElementById('dmChannelListIframe');
+	    const dmBackBtn = document.getElementById('dmBackBtn');
+	    const dmUnreadCountBadge = document.getElementById('dmUnreadCountBadge');
+	    const dmOpenBtn = document.getElementById('dmOpenBtn');
+
+	    const dmChannelListUrl = '${pageContext.request.contextPath}/chat/dm/channel';
+	    const totalUnreadCountUrl = '${pageContext.request.contextPath}/chat/dm/total-unread-count';
+	    
+        const headerCartItemCountBadge = document.getElementById('headerCartItemCount');
+        const cartCountApiUrl = '${pageContext.request.contextPath}/api/cart/count';
+        
+
+	    let isUserArtist = false;
+        let isUserMember = false;        // ROLE_MEMBER (일반 멤버)
+        let isUserMembership = false;    // ROLE_MEMBERSHIP (멤버십 회원)
+        let isAuthenticated = false;
+
+        <sec:authorize access="isAuthenticated()">
+	        isAuthenticated = true;
+	        <sec:authorize access="hasRole('ARTIST')">
+	            isUserArtist = true;
+	        </sec:authorize>
+	        <sec:authorize access="hasRole('MEMBER')">
+	            isUserMember = true;
+	        </sec:authorize>
+	        <sec:authorize access="hasRole('MEMBERSHIP')">
+	            isUserMembership = true;
+	        </sec:authorize>
+	    </sec:authorize>
+	    
+	    // --- 총 읽지 않은 메시지 수 업데이트 함수 ---
+        function updateDmUnreadCount() {
+            fetch(totalUnreadCountUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('HTTP 오류! 상태: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(count => {
+                    if (count > 0) {
+                        dmUnreadCountBadge.textContent = count;
+                        dmUnreadCountBadge.style.display = 'block'; // 메시지가 있으면 표시
+                    } else {
+                        dmUnreadCountBadge.style.display = 'none'; // 없으면 숨김
+                    }
+                })
+                .catch(error => {
+                    console.error("총 읽지 않은 메시지 수를 가져오는 데 실패했습니다:", error);
+                    dmUnreadCountBadge.style.display = 'none'; // 오류 발생 시 숨김
+                });
+        }
+        // --- 총 읽지 않은 메시지 수 업데이트 함수 끝 ---
+        
+        // ⭐ 장바구니 개수 업데이트 함수 ⭐
+        function updateCartItemCount() {
+            if (!isAuthenticated) { // 로그인 안 했으면 뱃지 숨기고 종료
+                if (headerCartItemCountBadge) {
+                    headerCartItemCountBadge.style.display = 'none';
+                    headerCartItemCountBadge.textContent = '0';
+                }
+                return;
+            }
+
+            fetch(cartCountApiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('장바구니 개수를 가져오는 데 실패했습니다: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(count => {
+                    if (headerCartItemCountBadge) {
+                        if (count > 0) {
+                            headerCartItemCountBadge.textContent = count;
+                            headerCartItemCountBadge.style.display = 'block'; // 개수가 0보다 크면 표시
+                        } else {
+                            headerCartItemCountBadge.style.display = 'none'; // 0이거나 없으면 숨김
+                            headerCartItemCountBadge.textContent = '0'; // 내용도 0으로 설정
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error("장바구니 개수를 가져오는 중 오류 발생:", error);
+                    if (headerCartItemCountBadge) {
+                        headerCartItemCountBadge.style.display = 'none'; // 오류 시 숨김
+                        headerCartItemCountBadge.textContent = '0';
+                    }
+                });
+        }
+        // ⭐ 장바구니 개수 업데이트 함수 끝 ⭐
+
+        if(dmOpenBtn) {
+        	dmOpenBtn.removeAttribute('data-bs-toggle');
+        	dmOpenBtn.removeAttribute('data-bs-target');
+
+        	dmOpenBtn.addEventListener('click', function() {
+        		if(isAuthenticated) {
+        			if(isUserArtist || isUserMembership) {
+        				window.openDmModal();
+        			} else if(isUserMember) {
+        				Swal.fire({
+        					icon: 'warning',
+        					title: 'DM 접근 불가',
+        					html: 'DM은 <strong style="font-size:1.1em; color: #8a2be2" >멤버십 회원</strong>만 이용 가능합니다.<br>멤버십에 가입하고 아티스트와 소통해보세요!',
+        					confirmButtonTex: '확인',
+        					confirmButtonColor: '#8a2be2'
+        				});
+        			} else {
+        				// 예상치 못한 로그인된 역할 (예: 관리자 등)
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'DM 접근 불가',
+                            text: '이용 권한이 없습니다.',
+                            confirmButtonText: '확인',
+                            confirmButtonColor: '#8a2be2'
+                        });
+        			}
+        		} else {	// 로그인하지 않은 경우
+        			Swal.fire({
+                        icon: 'info', // 정보성 아이콘으로 변경
+                        title: '로그인 필요',
+                        text: 'DM 기능을 이용하려면 로그인해야 합니다.',
+                        showCancelButton: true,
+                        confirmButtonText: '로그인',
+                        cancelButtonText: '취소',
+                        confirmButtonColor: '#8a2be2',
+                        cancelButtonColor: '#cccccc'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '${pageContext.request.contextPath}/login';
+                        }
+                    });
+        		}
+        	});
+        }
+
+	    if (dmModalOverlay) {
+	    	dmModalOverlay.addEventListener('shown.bs.modal', function() {
+	    		
+	    		updateDmUnreadCount();
+	        });
+
+	    	dmModalOverlay.addEventListener('hidden.bs.modal', function() {
+	    		dmChannelListIframe.src = "";
+	    		updateDmUnreadCount();
+	    	});
+	    }
+
+	    // 뒤로가기 버튼 클릭 이벤트
+	    if(dmBackBtn) {
+	    	dmBackBtn.addEventListener('click', function() {
+	    		dmChannelListIframe.src = dmChannelListUrl;
+	    		updateDmUnreadCount();
+	    	});
+	    }
+	 	// 페이지 로드 시 최초 1회 읽지 않은 메시지 수 업데이트
+	    updateDmUnreadCount();
+	});
+</script>
+
+<!-- 전역 openDmModal 함수 추가 -->
+<script>
+// 전역 openDmModal 함수 정의
+window.openDmModal = function(channelId) {
+    console.log("openDmModal 호출됨, channelId:", channelId);
+    
+    // 사용자 권한 확인
+    let isUserArtist = false;
+    let isUserMember = false;
+    let isUserMembership = false;
+    let isAuthenticated = false;
+
+    <sec:authorize access="isAuthenticated()">
+        isAuthenticated = true;
+        <sec:authorize access="hasRole('ARTIST')">
+            isUserArtist = true;
+        </sec:authorize>
+        <sec:authorize access="hasRole('MEMBER')">
+            isUserMember = true;
+        </sec:authorize>
+        <sec:authorize access="hasRole('MEMBERSHIP')">
+            isUserMembership = true;
+        </sec:authorize>
+    </sec:authorize>
+
+    if (!isAuthenticated) {
+        Swal.fire({
+            icon: 'info',
+            title: '로그인 필요',
+            text: 'DM 기능을 이용하려면 로그인해야 합니다.',
+            showCancelButton: true,
+            confirmButtonText: '로그인',
+            cancelButtonText: '취소',
+            confirmButtonColor: '#8a2be2',
+            cancelButtonColor: '#cccccc'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '${pageContext.request.contextPath}/login';
+            }
+        });
+        return;
+    }
+
+    if (!isUserArtist && !isUserMembership) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'DM 접근 불가',
+            html: 'DM은 <strong style="font-size:1.1em; color: #8a2be2">멤버십 회원</strong>만 이용 가능합니다.<br>멤버십에 가입하고 아티스트와 소통해보세요!',
+            confirmButtonText: '확인',
+            confirmButtonColor: '#8a2be2'
+        });
+        return;
+    }
+
+    // DM 모달 열기
+    const dmModalOverlay = document.getElementById('dmModalOverlay');
+    const dmChannelListIframe = document.getElementById('dmChannelListIframe');
+    const contextPath = '${pageContext.request.contextPath}';
+
+    if (dmModalOverlay && dmChannelListIframe) {
+        const dmModal = new bootstrap.Modal(dmModalOverlay);
+        dmModal.show();
+
+        // 채널ID가 있으면 해당 채팅방, 없으면 목록
+        if (channelId && channelId !== 'undefined' && channelId !== '') {
+            dmChannelListIframe.src = contextPath + '/chat/dm/channel/enter/' + channelId;
+        } else {
+            dmChannelListIframe.src = contextPath + '/chat/dm/channel';
+        }
+    } else {
+        // 폴백: 전체 채팅방 목록으로 이동
+        if (channelId && channelId !== 'undefined' && channelId !== '') {
+            window.location.href = contextPath + '/chat/dm/channel/enter/' + channelId;
+        } else {
+            window.location.href = contextPath + '/chat/dm/channel';
+        }
+    }
+};
+
+// AJAX로 채팅방 내용을 로드하는 함수
+function loadChatRoomContent(channelNo) {
+    const dmChannelListIframe = document.getElementById('dmChannelListIframe');
+    
+    // 로딩 표시
+    dmChannelListIframe.style.opacity = '0.5';
+    
+    // AJAX로 채팅방 내용 가져오기
+    $.ajax({
+        url: '${pageContext.request.contextPath}/chat/dm/channel/enter/' + channelNo,
+        type: 'GET',
+        success: function(response) {
+            // iframe 대신 모달 내용을 직접 업데이트
+            const modalBody = dmChannelListIframe.parentElement;
+            modalBody.innerHTML = response;
+            modalBody.style.opacity = '1';
+            
+            // 채팅방 관련 스크립트 실행
+            initializeChatRoom(channelNo);
+        },
+        error: function(xhr, status, error) {
+            console.error("채팅방 로드 실패:", error);
+            // 에러 시 채팅 목록으로 이동
+            dmChannelListIframe.src = '${pageContext.request.contextPath}/chat/dm/channel';
+            dmChannelListIframe.style.opacity = '1';
+        }
+    });
+}
+
+// 채팅방 초기화 함수
+function initializeChatRoom(channelNo) {
+    // WebSocket 연결 및 채팅 기능 초기화
+    console.log("채팅방 초기화:", channelNo);
+    // 여기에 채팅방 관련 스크립트 추가
+}
+</script>
+</sec:authorize>
+

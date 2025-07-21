@@ -1,0 +1,118 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>블랙리스트 관리 - DDTOWN 관리자</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section id="blacklistListSection" class="ea-section active-section">
+                    <div class="ea-section-header">
+                        <h2>블랙리스트 회원 관리</h2>
+                        <div class="ea-header-actions">
+                            <input type="text" class="ea-search-input" id="blacklistSearchInput" placeholder="회원ID, 닉네임, 사유 검색...">
+                        <a class="ea-btn primary" href="/admin/community/blacklist/form" id="accountAddButton"><i class="fas fa-plus"></i> 등록 </a>
+                        </div>
+                        
+                    </div>
+
+                    <table class="ea-table">
+                        <thead>
+                            <tr>
+                                <th class="col-number">번호</th>
+                                <th class="col-userId">회원</th>
+                                <th class="col-reason">블랙리스트 사유</th>
+                                <th class="col-blacklisted-date">지정일</th>
+                                <th class="col-banDate">기간</th>
+                                <th class="col-blacklisted-date">담당자</th>
+                               <!--  <th class="col-blacklisted-date">차단 여부</th> -->
+                            </tr>
+                        </thead>
+                        <tbody id="blacklistTableBody">
+                        	<c:forEach items="${blackList }" var="black">
+	                        	<tr data-blacklist-id="BL001" data-user-id="troublemaker">
+	                                <td>${black.banNo }</td>
+	                                <td class="col-userId">
+	                                	<a href="/admin/community/blacklist/detail?banNo=${black.banNo }" class="member-id-link">${black.memUsername }</a>
+	                                </td>
+	                                <td class="col-reason">
+	                                	<c:choose>
+			                       			<c:when test="${black.banReasonCode eq 'BRC001'}">스팸</c:when>
+			                       			<c:when test="${black.banReasonCode eq 'BRC002'}">욕설</c:when>
+			                       			<c:when test="${black.banReasonCode eq 'BRC003'}">음란물</c:when>
+			                       			<c:when test="${black.banReasonCode eq 'BRC004'}">기타</c:when>
+			                       		</c:choose>
+	                                </td>
+	                                <td>
+	                                	<c:set value="${fn:split(black.banRegDate, ' ')}" var="banRegDate"/>
+	                                	${banRegDate[0]}</td>
+	                                <td>
+	                                	<c:set value="${fn:split(black.banStartDate, ' ')}" var="banStartDate"/>
+		                       				<c:set value="${fn:split(black.banEndDate, ' ')}" var="banEndDate"/>
+		                       				${banStartDate[0]} ~ ${banEndDate[0]}
+	                                </td>
+	                                <td>${black.empUsername }</td>
+<%-- 	                                <td>
+	                                	<c:choose>
+			                       			<c:when test="${black.banActYn eq 'N'}">비활성</c:when>
+			                       			<c:when test="${black.banActYn eq 'Y'}">활성</c:when>
+			                       		</c:choose>
+	                                </td> --%>
+	                            </tr>
+                        	</c:forEach>
+                        	<c:if test="${empty blackList}">
+				                <tr>
+				                    <td colspan="9">신고 내역이 없습니다.</td>
+				                </tr>
+				            </c:if>
+                        </tbody>
+                    </table>
+                    <div class="ea-pagination" id="pagingArea">
+                    	${pagingVO.pagingHTML }
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+<%@ include file="../../modules/footerPart.jsp" %>
+
+<%@ include file="../../modules/sidebar.jsp" %>     
+<script>
+//사이드바 메뉴 기능
+  document.addEventListener('DOMContentLoaded', function() {
+      
+   	// 페이지네이션 로직
+      const pagingArea = $('#pagingArea');
+      if(pagingArea.length > 0) {
+          pagingArea.on('click', 'a', function(event) { 
+              event.preventDefault();
+              const page = $(this).data('page');
+              
+              // 현재 URL에서 검색 파라미터 유지
+              const currentSearchUrl = new URL(window.location.href);
+              const searchType = currentSearchUrl.searchParams.get("searchType");
+              const searchWord = currentSearchUrl.searchParams.get("searchWord");
+
+              let targetPageUrl = '${pageContext.request.contextPath}/emp/artist/artist-management?page=' + page;
+
+              if (searchType && searchWord) {
+                  targetPageUrl += '&searchType=' + encodeURIComponent(searchType);
+                  targetPageUrl += '&searchWord=' + encodeURIComponent(searchWord);
+              }
+              window.location.href = targetPageUrl;
+          });
+      }
+  });
+</script>
+</body>
+</html> 

@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.member.membership.MembershipMapper">
+
+	<!-- 멤버십 구독 여부 확인 --> 
+ 	<select id="hasValidMembershipSubscription" resultType="int">
+ 		SELECT
+ 			COUNT(*)
+ 		from  
+ 			MEMBERSHIP_SUBSCRIPTIONS ms
+ 		join
+ 			MEMBERSHIP_DESCRIPTION md
+ 		on	
+ 			ms.MBSP_NO = md.MBSP_NO
+ 		where
+ 			ms.MEM_USERNAME = #{memUsername}
+ 		and   
+ 			md.ART_GROUP_NO = #{artGroupNo}
+ 		and
+ 			ms.MBSP_SUB_STAT_CODE = 'MSSC001'
+ 		and
+ 			ms.MBSP_SUB_END_DATE >= SYSTIMESTAMP
+ 	</select>
+ 	
+ 	<sql id="searchConditions">
+		<if test="pagingVO.searchWord != null and pagingVO.searchWord != ''">
+			AND ms.MEM_USERNAME LIKE '%' || #{pagingVO.searchWord} || '%'
+		</if>
+		<if test="mbspSubStatCode != null and mbspSubStatCode != ''">
+			AND ms.MBSP_SUB_STAT_CODE = #{mbspSubStatCode}
+		</if>
+ 	</sql>
+ 	
+ 	<sql id="searchDesConditions">
+		<if test="pagingVO.searchWord != null and pagingVO.searchWord != ''">
+			AND md.MBSP_NM LIKE '%' || #{pagingVO.searchWord} || '%'
+		</if>
+ 	</sql>
+ 	
+ 	<!-- 총 레코드 수 조회  ( sub )-->
+ 	<select id="selectTotalRecord" resultType="int">
+ 		SELECT
+ 			COUNT(*)
+ 		FROM
+ 			MEMBERSHIP_SUBSCRIPTIONS ms
+ 		JOIN
+ 			MEMBERSHIP_DESCRIPTION md ON ms.MBSP_NO = md.MBSP_NO
+ 		JOIN
+ 			ARTIST_GROUP ag ON md.ART_GROUP_NO = ag.ART_GROUP_NO
+ 		WHERE
+ 			ag.EMP_USERNAME = #{empUsername}
+ 		<include refid="searchConditions"></include>
+ 	</select>
+ 	
+ 	<!-- 총 레코드 수 조회  ( des )-->
+ 	<select id="selectTotalDesRecord" parameterType="kr.or.ddit.vo.PaginationInfoVO">
+ 		SELECT
+ 			COUNT(*)
+ 		FROM
+ 			MEMBERSHIP_DESCRIPTION md
+ 		WHERE
+ 			1 = 1
+ 		<include refid="searchDesConditions"></include>
+ 	</select>
+ 	
+ 	<!-- 멤버십 구독자 목록 조회 ( sub )-->
+ 	<select id="selectMembershipSubList" resultType="kr.or.ddit.vo.member.membership.MembershipSubscriptionsVO">
+ 		SELECT *
+ 		FROM (
+ 			SELECT
+ 				ms.MBSP_SUB_NO
+ 				, ms.MBSP_NO
+ 				, ms.MEM_USERNAME
+ 				, ms.MBSP_SUB_STAT_CODE
+ 				, ms.MBSP_SUB_START_DATE
+ 				, ms.MBSP_SUB_END_DATE
+ 				, ms.MBSP_SUB_MOD_DATE
+ 				, md.ART_GROUP_NO
+ 				, md.MBSP_NM
+ 				, ag.EMP_USERNAME
+ 				, ag.ART_GROUP_NM
+ 				, ROWNUM AS rnum_alias_for_paging_only
+ 			FROM 
+ 				MEMBERSHIP_SUBSCRIPTIONS ms
+ 			JOIN
+ 				MEMBERSHIP_DESCRIPTION md ON ms.MBSP_NO = md.MBSP_NO
+ 			JOIN
+ 				ARTIST_GROUP ag ON md.ART_GROUP_NO = ag.ART_GROUP_NO
+ 			WHERE
+ 				ag.EMP_USERNAME = #{empUsername}
+	 		<include refid="searchConditions"></include>
+ 			ORDER BY
+ 				ms.MBSP_SUB_NO DESC
+ 		)
+ 		WHERE
+ 			rnum_alias_for_paging_only BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+ 	</select>
+ 	
+ 	<!-- 멤버십 플랜 목록 조회 ( des )-->
+ 	<select id="selectMembershipDesList" parameterType="kr.or.ddit.vo.PaginationInfoVO">
+ 		SELECT b.*
+ 		FROM (SELECT a.*
+ 				, row_number() over(
+ 					order by
+ 						case
+ 							when a.EMP_USERNAME = #{empUsername} THEN 0
+ 							ELSE 1
+ 						end,
+ 						a.MBSP_NO DESC
+ 				) AS rnum_alias_for_paging_only
+		 		FROM (
+		 			SELECT
+		 				md.MBSP_NO
+		 				, md.ART_GROUP_NO
+		 				, md.MBSP_NM
+		 				, md.MBSP_PRICE
+		 				, md.MBSP_DURATION
+		 				, md.MBSP_REG_DATE
+		 				, md.MBSP_MOD_DATE
+		 				, ag.ART_GROUP_NM
+		 				, ag.EMP_USERNAME
+		 			FROM 
+		 				MEMBERSHIP_DESCRIPTION md
+		 			JOIN
+		 				ARTIST_GROUP ag ON md.ART_GROUP_NO = ag.ART_GROUP_NO
+		 			<include refid="searchDesConditions"></include>
+		 			ORDER BY
+		 				md.MBSP_NO DESC
+ 				) a
+ 		 	) b
+ 		WHERE
+ 			rnum_alias_for_paging_only BETWEEN #{pagingVO.startRow} AND #{pagingVO.endRow}
+ 	</select>
+ 	
+ 	<!-- 멤버십 플랜 등록 -->
+ 	<insert id="registerMembershipDes" parameterType="kr.or.ddit.vo.member.membership.MembershipDescriptionVO"
+ 		useGeneratedKeys="true" keyProperty="mbspNo">
+ 		<selectKey keyProperty="mbspNo" resultType="int" order="BEFORE">
+ 			SELECT MEMBERSHIP_DESC_SEQ.NEXTVAL FROM DUAL
+ 		</selectKey>
+ 		INSERT INTO
+ 			MEMBERSHIP_DESCRIPTION
+ 			(
+ 				MBSP_NO
+			    , ART_GROUP_NO
+			    , MBSP_NM
+			    , MBSP_PRICE
+			    , MBSP_DURATION
+			    , MBSP_REG_DATE
+			    , MBSP_MOD_DATE
+ 			)
+ 			VALUES
+ 			(
+ 				#{mbspNo}
+ 				, #{artGroupNo}
+ 				, #{mbspNm}
+ 				, #{mbspPrice}
+ 				, #{mbspDuration}
+ 				, SYSDATE
+ 				, SYSDATE
+ 			)
+ 	</insert>
+ 	
+ 	<!-- 멤버십 플랜 수정 -->
+ 	<update id="modifyMembershipDes" parameterType="kr.or.ddit.vo.member.membership.MembershipDescriptionVO">
+ 		UPDATE MEMBERSHIP_DESCRIPTION
+ 		SET
+ 			MBSP_NM = #{mbspNm}
+ 			, MBSP_PRICE = #{mbspPrice}
+ 			, MBSP_DURATION = #{mbspDuration}
+ 			, MBSP_MOD_DATE = SYSDATE
+ 		WHERE
+ 			MBSP_NO = #{mbspNo}
+ 		AND
+ 			ART_GROUP_NO = #{artGroupNo}
+ 	</update>
+ 	
+ 	<!-- 멤버십 플랜 조회 (1건) -->
+ 	<select id="getMembershipDescription" resultType="kr.or.ddit.vo.member.membership.MembershipDescriptionVO">
+ 		SELECT
+ 			md.MBSP_NO
+			, md.ART_GROUP_NO
+			, md.MBSP_NM
+			, md.MBSP_PRICE
+			, md.MBSP_DURATION
+			, md.MBSP_REG_DATE
+			, md.MBSP_MOD_DATE
+			, ag.ART_GROUP_NM
+			, ag.EMP_USERNAME
+		FROM 
+			MEMBERSHIP_DESCRIPTION md
+		JOIN
+			ARTIST_GROUP ag ON md.ART_GROUP_NO = ag.ART_GROUP_NO
+ 		WHERE
+ 			md.MBSP_NO = #{mbspNo}
+ 	</select>
+ 	
+ 	<!-- 멤버십 플랜 삭제 -->
+ 	<delete id="deleteMembershipDes">
+ 		DELETE FROM
+ 			MEMBERSHIP_DESCRIPTION
+ 		WHERE
+ 			MBSP_NO = #{mbspNo}
+ 	</delete>
+ 	
+ 	<!-- 멤버십 구독자 생성 -->
+	<insert id="insertMembershipSub" parameterType="kr.or.ddit.vo.member.membership.MembershipSubscriptionsVO">
+		INSERT INTO MEMBERSHIP_SUBSCRIPTIONS (
+		    MBSP_SUB_NO
+		    , MBSP_NO
+		    , MEM_USERNAME
+		    , ORDER_DET_NO
+		    , MBSP_SUB_STAT_CODE
+		    , MBSP_SUB_START_DATE
+		    , MBSP_SUB_END_DATE
+		    , MBSP_SUB_MOD_DATE
+		    , MBSP_SID
+		    , MBSP_CID
+		) VALUES ( 
+			MEMBERSHIP_SUB_SEQ.NEXTVAL
+	         , #{mbspNo}
+	         , #{memUsername}
+	         , #{orderDetNo}
+	         , #{mbspSubStatCode}
+	         , #{mbspSubStartDate}
+	         , #{mbspSubEndDate}
+	         , #{mbspSubModDate}
+	         , #{mbspSid}
+	         , #{mbspCid}
+		)
+	</insert>
+	
+	<select id="selectArtGroupNo" parameterType="String" resultType="int">
+		SELECT
+			ART_GROUP_NO
+		FROM
+			ARTIST_GROUP
+		WHERE
+			EMP_USERNAME = #{empUsername}
+	
+	</select>
+	
+	<select id="selectMembershipSubCounts" parameterType="Integer" resultType="map">
+		SELECT
+			ms.MBSP_SUB_STAT_CODE AS mbspSubStatCode,
+			CASE
+				WHEN COUNT(ms.MBSP_SUB_STAT_CODE) = 0 THEN 0
+				ELSE COUNT(ms.MBSP_SUB_STAT_CODE)
+			END AS count
+		FROM
+			MEMBERSHIP_DESCRIPTION md
+		LEFT JOIN
+			MEMBERSHIP_SUBSCRIPTIONS ms ON md.MBSP_NO = ms.MBSP_NO
+		WHERE
+			md.ART_GROUP_NO = #{artGroupNo}
+		GROUP BY
+			ms.MBSP_SUB_STAT_CODE
+	</select>
+	
+	<!-- 사용자의 멤버십 구독 리스트 조회 -->
+	<select id="getMyMembershipList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="kr.or.ddit.vo.member.membership.MembershipSubscriptionsVO">
+		SELECT
+			ms.MBSP_SUB_NO
+			, ms.MBSP_NO
+			, ms.MEM_USERNAME
+			, ms.MBSP_SUB_STAT_CODE as mbspSubStatCode
+			, ms.MBSP_SUB_START_DATE
+			, ms.MBSP_SUB_MOD_DATE
+			, ms.MBSP_SUB_END_DATE
+			, md.MBSP_NM
+			, md.MBSP_PRICE
+			, ag.ART_GROUP_PROFILE_IMG as profileImg
+		FROM
+			MEMBERSHIP_SUBSCRIPTIONS ms
+		JOIN
+			MEMBERSHIP_DESCRIPTION md ON ms.MBSP_NO = md.MBSP_NO
+		JOIN
+			ARTIST_GROUP ag ON md.ART_GROUP_NO = ag.ART_GROUP_NO
+		WHERE
+			ms.MEM_USERNAME = #{memUsername}
+	</select>
+	
+	<!-- 사용자 멤버십 토탈 레코드 수 -->
+	<select id="getMySubTotalRecord" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+		SELECT
+ 			COUNT(*)
+ 		FROM
+ 			MEMBERSHIP_SUBSCRIPTIONS ms
+ 		JOIN
+ 			MEMBERSHIP_DESCRIPTION md ON ms.MBSP_NO = md.MBSP_NO
+ 		JOIN
+ 			ARTIST_GROUP ag ON md.ART_GROUP_NO = ag.ART_GROUP_NO
+ 		WHERE
+ 			ms.MEM_USERNAME = #{memUsername}
+	</select>
+ 
+ 
+ </mapper>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

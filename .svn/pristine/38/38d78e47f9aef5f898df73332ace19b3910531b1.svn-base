@@ -1,0 +1,119 @@
+package kr.or.ddit.ddtown.controller.emp.schedule;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.service.emp.schedule.IScheduleService;
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+import kr.or.ddit.vo.artist.ArtistVO;
+import kr.or.ddit.vo.concert.ConcertNoticeVO;
+import kr.or.ddit.vo.schedule.ScheduleDetailVO;
+import kr.or.ddit.vo.schedule.ScheduleVO;
+import kr.or.ddit.vo.security.CustomUser;
+import kr.or.ddit.vo.user.EmployeeVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/emp/schedule")
+public class EmpScheduleController {
+
+	@Autowired
+	private IScheduleService scheduleService;
+	
+	@GetMapping("/main")
+	public String scheduleMain() {
+		
+		log.info("직원용 일정관리 페이지 요청 중...");
+		
+		return "emp/schedule/main";
+	}
+	
+	@GetMapping("/list")
+	public ResponseEntity<ArtistGroupVO> getSchedule(){
+		
+		Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        EmployeeVO memberVO = null;
+        if(principal instanceof CustomUser) {
+        	memberVO = ((CustomUser) principal).getEmployeeVO();
+        }
+		
+        String empUsername = memberVO.getEmpUsername();
+        
+		ArtistGroupVO groupVO = scheduleService.getList(empUsername);
+		
+		
+		log.info("list : " + groupVO);
+		
+		return new ResponseEntity<ArtistGroupVO>(groupVO, HttpStatus.OK);
+	}
+	
+	@GetMapping("/des/{id}")
+	public ResponseEntity<ScheduleDetailVO> getDes(@PathVariable int id){
+		
+		ScheduleDetailVO vo = scheduleService.getDes(id);
+		
+		log.info("vo : " + vo);
+		
+		return new ResponseEntity<ScheduleDetailVO>(vo, HttpStatus.OK);
+	}
+	
+	@PostMapping("/dateUpdate/{id}")
+	public ResponseEntity<ServiceResult> dateUpdate(@PathVariable int id, ScheduleVO scheduleVO){
+		
+		log.info("scheduleVO : " + scheduleVO);
+		
+		ServiceResult result = scheduleService.dateUpdate(scheduleVO);
+		
+		
+		return new ResponseEntity<ServiceResult>(result, HttpStatus.OK);
+	}
+	
+	@PostMapping("/dateMove/{id}")
+	public ResponseEntity<ServiceResult> dateMove(@PathVariable int id, ScheduleVO scheduleVO){
+		
+		log.info("scheduleVO : " + scheduleVO);
+		
+		ServiceResult result = scheduleService.dateMove(scheduleVO);
+		
+		
+		return new ResponseEntity<ServiceResult>(result, HttpStatus.OK);
+	}
+	
+	@PostMapping("/insert")
+	public ResponseEntity<ServiceResult> insertDate(ScheduleVO scheduleVO){
+		
+		log.info("일정 등록 요청 중...");
+		log.info("scheduleVO : " + scheduleVO);
+		
+		ServiceResult result = scheduleService.dateInsert(scheduleVO);
+		
+		return new ResponseEntity<ServiceResult>(result, HttpStatus.OK);
+	}
+	
+	@PostMapping("/delete/{id}")
+	public ResponseEntity<ServiceResult> deleteDate(@PathVariable int id){
+		
+		ServiceResult result = scheduleService.dateDelete(id);
+		
+		return new ResponseEntity<ServiceResult>(result, HttpStatus.OK);
+	}
+	
+	@GetMapping("/concert/list")
+	public ResponseEntity<List<ConcertNoticeVO>> concertNoticeList(ScheduleVO scheduleVO){
+		
+		List<ConcertNoticeVO> list = scheduleService.concertNoticeList(scheduleVO);
+		
+		return new ResponseEntity<List<ConcertNoticeVO>>(list, HttpStatus.OK);
+	}
+}

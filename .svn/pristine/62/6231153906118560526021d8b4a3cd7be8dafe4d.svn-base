@@ -1,0 +1,169 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>굿즈샵 공지사항 관리 - DDTOWN 관리자 시스템</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <%@ include file="../../../modules/headerPart.jsp" %>
+    <style>
+        a {
+            text-decoration: none;
+        }
+        .goods-notice-section {
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .emp-search-input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 250px;
+        }
+        .emp-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .emp-table th, .emp-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+        }
+        .emp-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        .emp-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        .doc-link {
+            color: #333;
+            text-decoration: none;
+        }
+        .doc-link:hover {
+            color: #007bff;
+            text-decoration: underline;
+        }
+        .emp-pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 20px;
+        }
+        .emp-pagination a {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+        }
+        .emp-pagination a.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .emp-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .emp-btn.primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .emp-btn.primary:hover {
+            background-color: #0056b3;
+        }
+        .emp-btn.sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section class="goods-notice-section">
+                    <div class="emp-section-header" style="display:flex;justify-content:space-between;align-items:center;">
+                        <h2>굿즈샵 공지사항 관리</h2>
+                        <div class="emp-header-actions" style="display:flex;gap:8px;">
+                            <input type="text" id="goodsNoticeSearchInput" class="emp-search-input" placeholder="제목, 내용으로 검색...">
+                            <button id="goodsNoticeSearchBtn" class="emp-btn"><i class="fas fa-search"></i> 검색</button>
+                            <a href="/admin/goods/notice/form" class="emp-btn primary"><i class="fas fa-plus"></i> 새 공지사항 등록</a>
+                        </div>
+                    </div>
+                    <table class="emp-table" style="margin-top:20px;">
+                        <thead>
+                            <tr>
+                                <th style="width:8%;">번호</th>
+                                <th>제목</th>
+                                <th style="width:12%;">작성일</th>
+                                <th style="width:10%;">조회수</th>
+                                <th style="width:12%;">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="goodsNoticeTableBody">
+                            <tr>
+                                <td>2</td>
+                                <td><a href="/admin/goods/notice/detail?id=2" class="doc-link">[이벤트] 가정의 달 기념 특별 굿즈 판매!</a></td>
+                                <td>2025-05-01</td>
+                                <td>175</td>
+                                <td>
+                                    <a href="/admin/goods/notice/detail?id=2" class="emp-btn sm primary"><i class="fas fa-eye"></i> 상세보기</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td><a href="/admin/goods/notice/detail?id=1" class="doc-link">새로운 아티스트 굿즈 입고 안내</a></td>
+                                <td>2025-04-28</td>
+                                <td>210</td>
+                                <td>
+                                    <a href="/admin/goods/notice/detail?id=1" class="emp-btn sm primary"><i class="fas fa-eye"></i> 상세보기</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="ea-pagination" id="pagingArea">
+                    	${pagingVO.pagingHTML }
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+<%@ include file="../../../modules/footerPart.jsp" %>
+
+<%@ include file="../../../modules/sidebar.jsp" %> 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+	//페이지네이션 처리 시작
+	const searchForm = document.getElementById("searchForm");
+    const pageInput = searchForm.querySelector("input[name='currentPage']"); // hidden input의 name 사용
+    const paginationControls = document.getElementById("pagingArea");
+
+    if (paginationControls) { // paginationControls 요소가 존재할 때만 이벤트 리스너 추가
+        paginationControls.addEventListener("click", function(e) {
+            e.preventDefault(); // 기본 링크 이동 방지
+
+            // 클릭된 요소가 'page-link' 클래스를 가지고 있고 'A' 또는 'SPAN' 태그인지 확인
+            if (e.target.classList.contains("page-link") && (e.target.nodeName === "A" || e.target.nodeName === "SPAN")) {
+                pageInput.value = e.target.dataset.page; // data-page 속성 값으로 hidden input 업데이트
+                searchForm.submit(); // 폼 제출
+            }
+        });
+    }
+    // 페이지네이션 처리 끝
+})
+</script>
+</body>
+</html> 

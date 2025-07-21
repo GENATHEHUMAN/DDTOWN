@@ -1,0 +1,116 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>취소/환불 관리</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <%@ include file="../../../modules/headerPart.jsp" %>
+</head>
+<body>
+    <div class="emp-container">
+        <!-- 헤더 -->
+        <%@ include file="../../modules/header.jsp" %>
+          
+        <div class="emp-body-wrapper">
+            <%@ include file="../../modules/aside.jsp" %>
+            <main class="emp-content">
+                <div class="ea-section">
+                    <div class="ea-section-header">
+                        <h2>주문 취소/환불 관리</h2>
+                    </div>
+                    <div style="margin-bottom:20px;">
+                        <input type="text" id="searchInput" class="ea-search-input" placeholder="회원ID, 주문번호, 상품명 검색">
+                        <select id="statusFilter" class="ea-filter-select">
+                            <option value="">전체 상태</option>
+                            <option value="REQ">요청접수</option>
+                            <option value="APPR">승인</option>
+                            <option value="PROC">처리중</option>
+                            <option value="DONE">환불완료</option>
+                            <option value="REJ">요청거부</option>
+                        </select>
+                        <button class="ea-btn outline" onclick="filterTable()"><i class="fas fa-search"></i> 검색</button>
+                    </div>
+                    <table class="ea-table" id="cancelRefundTable">
+                        <thead>
+                            <tr>
+                                <th>취소번호</th>
+                                <th>주문번호</th>
+                                <th>회원ID</th>
+                                <th>상품명</th>
+                                <th>유형</th>
+                                <th>상태</th>
+                                <th>요청일</th>
+                                <th>처리일</th>
+                                <th>상세</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- JS로 렌더링 -->
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+<%@ include file="../../../modules/footerPart.jsp" %>
+
+<%@ include file="../../../modules/sidebar.jsp" %>
+    <script>
+    // 더미 데이터
+    const cancelRefundData = [
+        {cancel_no:101, order_no:2023001, mem_username:'user01', goods_name:'아티스트 포토카드', cancel_type:'주문취소', cancel_stat_code:'REQ', cancel_req_date:'2025-05-10', cancel_res_date:'',},
+        {cancel_no:102, order_no:2023002, mem_username:'user02', goods_name:'굿즈 티셔츠', cancel_type:'환불', cancel_stat_code:'APPR', cancel_req_date:'2025-05-11', cancel_res_date:'2025-05-12',},
+        {cancel_no:103, order_no:2023003, mem_username:'user03', goods_name:'아크릴 키링', cancel_type:'주문취소', cancel_stat_code:'PROC', cancel_req_date:'2025-05-12', cancel_res_date:'',},
+        {cancel_no:104, order_no:2023004, mem_username:'user04', goods_name:'스티커 세트', cancel_type:'환불', cancel_stat_code:'DONE', cancel_req_date:'2025-05-13', cancel_res_date:'2025-05-14',},
+        {cancel_no:105, order_no:2023005, mem_username:'user05', goods_name:'포스터', cancel_type:'주문취소', cancel_stat_code:'REJ', cancel_req_date:'2025-05-14', cancel_res_date:'2025-05-15',},
+    ];
+    const statusMap = {REQ:'요청접수', APPR:'승인', PROC:'처리중', DONE:'환불완료', REJ:'요청거부'};
+    function renderTable(data) {
+        const tbody = document.querySelector('#cancelRefundTable tbody');
+        tbody.innerHTML = '';
+        data.forEach(row => {
+            tbody.innerHTML += `<tr>
+                <td>\${row.cancel_no}</td>
+                <td>\${row.order_no}</td>
+                <td>\${row.mem_username}</td>
+                <td>\${row.goods_name}</td>
+                <td>\${row.cancel_type}</td>
+                <td>\${statusMap[row.cancel_stat_code]||row.cancel_stat_code}</td>
+                <td>\${row.cancel_req_date}</td>
+                <td>\${row.cancel_res_date||'-'}</td>
+                <td><a href="/admin/goods/cancelRefund/detail?cancel_no=\${row.cancel_no}" class="ea-btn sm outline">상세보기</a></td>
+            </tr>`;
+        });
+    }
+    function filterTable() {
+        const search = document.getElementById('searchInput').value.trim().toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+        const filtered = cancelRefundData.filter(row => {
+            const matchSearch = !search ||
+                row.mem_username.toLowerCase().includes(search) ||
+                String(row.order_no).includes(search) ||
+                row.goods_name.toLowerCase().includes(search);
+            const matchStatus = !status || row.cancel_stat_code === status;
+            return matchSearch && matchStatus;
+        });
+        renderTable(filtered);
+    }
+    // 초기 렌더링
+    renderTable(cancelRefundData);
+    // 로그아웃 기능 복사
+    const logoutButton = document.querySelector('.emp-logout-btn');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('로그아웃 하시겠습니까?')) {
+                alert('로그아웃 되었습니다.');
+            }
+        });
+    }
+    // 사이드바 메뉴 활성화 스크립트 복사 (필요시)
+    </script>
+</body>
+</html> 

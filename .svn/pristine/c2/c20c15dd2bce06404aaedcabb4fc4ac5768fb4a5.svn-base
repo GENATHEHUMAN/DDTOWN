@@ -1,0 +1,34 @@
+package kr.or.ddit.vo.member;
+
+import java.sql.Date;
+
+import lombok.Data;
+
+@Data
+public class MemberAdminVO {
+
+	private String memUsername;
+	private String memStatCode;
+	private String memRegPath;
+	private String memNicknm;
+	private String memBirth;
+	private String memZipCode;
+	private String memAddress1;
+	private String memAddress2;
+	private Date memModDate;
+	private Date memRegDate;
+	
+	private int rowNum;
+	
+	private String memStatDetCode;
+	private String memRegDetCode;
+	
+	private PeopleAdminVO peopleVO;
+	
+	private int totalMemCnt;
+	private int generalMemCnt;
+	private int outMemCnt;
+	private int blackMemCnt;
+	
+	private int currentMemCnt;
+}

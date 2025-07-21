@@ -1,0 +1,24 @@
+package kr.or.ddit.vo.inquiry;
+
+import java.util.Date;
+
+import lombok.Data;
+
+@Data
+public class InquiryVO {
+	
+	private int inqNo;				// 문의번호
+	private String empUsername;		// 답변직원
+	private String memUsername;		// 문의한 사용자
+	private String inqTypeCode;		// 문의유형코드
+	private String inqStatCode;		// 처리상태코드
+	private String inqTitle;		// 문의제목
+	private String inqContent;		// 문의내용
+	private Date inqRegDate;		// 문의등록일시
+	private String inqAnsContent;	// 답변내용
+	private Date inqAnsRegDate;		// 답변등록일시
+	
+	private InquiryCodeVO typeDetailCode;
+	private InquiryCodeVO statDetailCode;
+
+}

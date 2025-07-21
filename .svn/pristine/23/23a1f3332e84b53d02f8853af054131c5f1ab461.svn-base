@@ -1,0 +1,68 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/components/translation.css">
+
+<div id="google_translate_element" style="display:none;"></div>
+
+    <select  id="translateSelectBar">
+    	<option value="ko" class="ko">🇰🇷</option>
+    	<option value="en" class="en">🇺🇸</option>
+    	<option value="ja" class="ja">🇯🇵</option>
+    	<option value="zh-CN" class="zh-CN">🇨🇳</option>
+    </select>
+
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script type="text/javascript">
+    // Google Translate Element 초기화 함수
+    function googleTranslateElementInit() {
+        console.log("googleTranslateElementInit CALLED.");
+        new google.translate.TranslateElement(
+            {
+                pageLanguage: 'ko', // 웹 페이지의 기본 언어
+                autoDisplay: false,
+                includedLanguages: 'ko,en,ja,zh-CN', // 번역 제공 언어
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            },
+            'google_translate_element'
+        );
+    }
+
+    // 쿠키 설정 함수
+    function setCookie(name, value, days) {
+        let expires = "";
+        if (days) {
+            let date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        // googtrans 쿠키는 path=/ 로 설정되어야 Google Translate가 인식합니다.
+        document.cookie = name + "=" + (value || "") + expires + "; path=/";
+        console.log("Cookie set: " + name + "=" + value);
+    }
+
+    // 쿠키 가져오기
+    function getCookie(name) {
+        var value = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+        return value? value[2] : null;
+    }
+
+    // DOM 로드 완료 후 언어 변경 링크에 이벤트 리스너 추가
+    document.addEventListener('DOMContentLoaded', function() {
+    	const translateSelectBar = document.getElementById("translateSelectBar");
+    	
+    	translateSelectBar.addEventListener("change",function(e){
+    		const targetLang = this.value;
+            const sourceLang = 'ko';
+    		setCookie('googtrans', '/' + sourceLang + '/' + targetLang, 1); // 쿠키 유효기간 1일
+            window.location.reload();
+    	})
+    	
+    	let value = getCookie("googtrans");
+    	if(value == "/ko/en"){
+    		translateSelectBar.value = "en"
+    	}else if(value == "/ko/ja"){
+    		translateSelectBar.value = "ja"
+    	}else if(value == "/ko/zh-CN"){
+    		translateSelectBar.value = "zh-CN"
+    	}
+    });
+</script>

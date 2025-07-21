@@ -1,0 +1,188 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artist A - 상세 프로필</title>
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/resources/css/pages/mainservice_common.css">
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/resources/css/pages/artist_community.css">
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/resources/css/pages/artistDetail.css">
+</head>
+<body>
+
+    <div class="artist-detail-container">
+        <header class="artist-detail-header">
+            <div class="artist-profile-image-large">
+                <img src="${group.artGroupProfileImg }" alt="${group.artGroupNm }의 프로필 배너" />
+            </div>
+            <div class="artist-info-bar">
+                <div class="artist-name-description">
+                    <h1>${group.artGroupNm }</h1>
+                </div>
+                <div class="artist-actions">
+                    <a href="#" class="action-button go-to-apt" id="goToAptBtn">APT 바로가기</a>
+                </div>
+            </div>
+        </header>
+
+        <nav class="artist-content-tabs">
+            <ul>
+                <li><a href="#" data-tab="profile-content" class="active-tab">프로필 탭</a></li>
+                <li><a href="#" data-tab="album-content">앨범 및 음원 정보 조회 탭</a></li>
+            </ul>
+        </nav>
+
+        <main class="artist-content-area">
+            <section id="profile-content" class="tab-content active">
+                <h2>그룹 소개</h2>
+                <div class="artist-profile-info">
+                    <p>${group.artGroupContent}</p>
+                    <ul class="artist-meta">
+                        <li><strong>데뷔일:</strong> ${group.artGroupDebutdate }</li>
+                        <c:set var="representativeSong" value="정보 없음"/> <%-- 기본값 설정 --%>
+                        <c:if test="${not empty group.albumList}">
+					    <c:forEach items="${group.albumList}" var="album">
+					        <c:set var="representativeSong" value="${album.titleSong}"/>
+					    </c:forEach>
+					</c:if>
+					<li><strong>대표곡:</strong> ${representativeSong}</li>
+                        
+                     
+                    </ul>
+                </div>
+                <h2>최근 활동</h2>
+                <ul class="artist-recent-feed">
+                    <li>
+                        <span class="feed-title">공지사항 1</span>
+                        <span class="feed-date">DATE</span>
+                    </li>
+                    <li>
+                        <span class="feed-title">공지사항 2</span>
+                        <span class="feed-date">DATE</span>
+                    </li>
+                   
+                </ul>
+            </section>
+
+            <section id="album-content" class="tab-content" style="display: none;">
+                <h2>앨범 및 음원 정보</h2>
+
+                <div class="album-list">
+                <c:if test="${not empty group.albumList}">
+			        <div class="album-list">
+			            <c:forEach var="album" items="${group.albumList}">
+			                <article class="album-item">
+			                    <div class="album-cover">
+			                        <%-- 앨범 이미지 표시 (경로는 실제 환경에 맞게 수정) --%>
+			                        <img src="${album.albumImg}" alt="${album.albumNm} 커버" style="width:350px; height:auto;"/>
+			                    </div>
+			                    <div class="album-details">
+			                        <h3 class="album-title">${album.albumNm}</h3>
+			                        <p class="album-release-date">
+			                            <strong>발매일:</strong> 
+			                            <fmt:formatDate value="${album.albumRegDate}" pattern="yyyy년 MM월 dd일" />
+			                        </p>
+			                        <p class="album-description">${album.albumDetail}</p>
+			                        
+			                        <%-- 해당 앨범의 타이틀 곡 표시 --%>
+			                        <p><strong>타이틀 곡:</strong> 
+			                            <c:choose>
+			                                <c:when test="${not empty album.titleSong}">
+			                                    ${album.titleSong}
+			                                </c:when>
+			                                <c:otherwise>
+			                                    (타이틀 곡 정보 없음)
+			                                </c:otherwise>
+			                            </c:choose>
+			                        </p>
+			
+			                        <h4>수록곡 전체:</h4>
+			                        <ul class="track-list-table">
+			                            <c:forEach var="song" items="${album.albumSongs}">
+			                                <li>
+			                                    ${song.songNm}
+			                                    <c:if test="${'Y' eq song.songTitleYn}">
+			                                        <span class="track-title-badge">(타이틀)</span>
+			                                    </c:if>
+			                                </li>
+			                            </c:forEach>
+			                        </ul>
+			                    </div>
+			                </article>
+			                <hr/>
+			            </c:forEach>
+			        </div>
+			    </c:if>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="footer-placeholder"></div>
+
+    <script>
+
+        // 수정된 탭 기능
+        const tabs = document.querySelectorAll('.artist-content-tabs a');
+        const tabContents = document.querySelectorAll('.artist-content-area .tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function(event) {
+                event.preventDefault();
+
+                tabs.forEach(t => t.classList.remove('active-tab'));
+                this.classList.add('active-tab');
+
+                const targetId = this.dataset.tab;
+
+                tabContents.forEach(content => {
+                    if (content.id === targetId) {
+                        content.style.display = 'block';
+                    } else {
+                        content.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // 페이지 로드 시 첫 번째 탭 활성화 및 해당 콘텐츠 표시
+        if (tabs.length > 0 && tabContents.length > 0) {
+            tabs[0].classList.add('active-tab');
+            const firstTabTargetId = tabs[0].dataset.tab;
+
+            tabContents.forEach(content => {
+                if (content.id === firstTabTargetId) {
+                    content.style.display = 'block';
+                } else {
+                    content.style.display = 'none';
+                }
+            });
+        }
+
+        // APT 바로가기 버튼 로직
+        const goToAptBtn = document.getElementById('goToAptBtn');
+        if (goToAptBtn) {
+            goToAptBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                let currentIsLoggedIn = JSON.parse(localStorage.getItem('isUserLoggedIn')) || false; // 최신 로그인 상태 확인
+                if (!currentIsLoggedIn) {
+                    alert('로그인 후 이용하실 수 있습니다.');
+                    // 로그인 페이지로 리디렉션하거나 로그인 모달을 띄울 수 있습니다.
+                    // 예: document.getElementById('loginBtn').click(); 또는 showLoginModal();
+                    return;
+                }
+                let isCommunityJoined = JSON.parse(localStorage.getItem("isCommunityJoined")) || false;
+                if (isCommunityJoined) {
+                    window.location.href = "artist_A_apt.html";
+                } else {
+                    showNicknameModal();
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

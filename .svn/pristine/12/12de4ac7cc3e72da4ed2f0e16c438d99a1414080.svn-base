@@ -1,0 +1,241 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+
+<section id="alerts-content" class="mypage-section active-section">
+    <div class="mypage-section-header">
+        <h3>${pageTitle} <c:if test="${unreadCnt > 0}"><span class="badge badge-danger">${unreadCnt}</span></c:if></h3>
+        <div class="alert-filter-area">
+        	<select id="artist-filter-select" class="form-control form-control-sm" onchange="filterAlertsByArtist()">
+        		<option value="">모든 아티스트 알림</option>
+        		<c:forEach var="group" items="${followedGroups}">
+        			<option value="${group.artGroupNo}" <c:if test="${group.artGroupNo == selectedArtGroupNo}">selected</c:if>>
+        				${group.artGroupNm}
+        			</option>
+        		</c:forEach>
+        	</select>
+        </div>
+        <button type="button" id="btn-mark-all-alerts-read-content" class="btn-mypage-secondary small-btn">모두 읽음 처리</button>
+    </div>
+
+    
+    <div id="alertListServerMessage" class="server-message"></div> 
+    <c:if test="${not empty alertErrorMessage}"><div class="server-message error" style="display:block;">${alertErrorMessage}</div></c:if>
+    <c:if test="${not empty alertSuccessMessage}"><div class="server-message success" style="display:block;">${alertSuccessMessage}</div></c:if>
+
+    <div class="alert-list-container">
+        <c:choose>
+            <c:when test="${not empty alertList && fn:length(alertList) > 0}">
+                <c:forEach var="alert" items="${alertList}">
+					<!-- 각 알림 항목 표시, alertReadYn 값에 따라서 'unread' 값 부여 -->
+                    <div class="alert-item ${alert.alertReadYn eq 'N' ? 'unread' : 'read'}" data-alert-no="${alert.alertNo}">
+                        <div class="alert-icon-area">
+                            <c:choose>
+                                <c:when test="${alert.alertTypeCode eq 'ATC001'}"><i class="fas fa-comment-dots"></i></c:when>
+                                <c:when test="${alert.alertTypeCode eq 'ATC002'}"><i class="fas fa-envelope"></i></c:when>
+                                <c:when test="${alert.alertTypeCode eq 'ATC003'}"><i class="fas fa-calendar-alt"></i></c:when>
+                                <c:when test="${alert.alertTypeCode eq 'ATC004'}"><i class="fas fa-calendar-alt"></i></c:when>
+                                <c:when test="${alert.alertTypeCode eq 'ATC005'}"><i class="fas fa-calendar-alt"></i></c:when>
+                                
+                                <c:otherwise><i class="fas fa-bell"></i></c:otherwise>
+                            </c:choose>
+                        </div>
+                        <div class="alert-content-area">
+							<!-- alertUrl이 있으면 링크 생성, 없으면 텍스트만 표시용 -->
+                            <c:if test="${not empty alert.alertUrl}">
+                                <a href="<c:url value='${alert.alertUrl}'/>" class="alert-link">
+                                    <span class="message">${alert.alertContent}</span>
+                                </a>
+                            </c:if>
+                            <c:if test="${empty alert.alertUrl}">
+                                <span class="message">${alert.alertContent}</span>
+                            </c:if>
+                            <span class="timestamp">
+                            	<fmt:formatDate value="${alert.alertCreateDate}" pattern="yyyy-MM-dd HH:mm:ss"/>
+                            </span>
+                        </div>
+                        <div class="alert-actions-area">
+							<!-- 안읽은 알림('N')일 경우에만 '읽음'버튼 표시용 -->
+                            <c:if test="${alert.alertReadYn eq 'N'}">
+                                <button type="button" class="btn-mark-one-alert-read-content small-btn" data-alert-no="${alert.alertNo}">읽음</button>
+                            </c:if>
+                            <button type="button" class="btn-delete-one-alert-content small-btn" data-alert-no="${alert.alertNo}">삭제</button>
+                        </div>
+                    </div>
+                </c:forEach>
+            </c:when>
+            <c:otherwise>
+                <p class="no-alerts" style="padding: 20px; text-align: center; color: #777;">표시할 알림이 없습니다.</p>
+            </c:otherwise>
+        </c:choose>
+    </div>
+    <%-- 페이징 UI 추가 (필요시) --%>
+    <div class="pagination-container" id="pagingArea">
+             ${pagingVO.pagingHTML}
+        </div>
+</section>
+
+<script>
+
+function filterAlertsByArtist() {
+    const selectedGroupNo = document.getElementById("artist-filter-select").value;
+    const currentUrl = '<c:url value="/mypage/alerts"/>';
+    const params = new URLSearchParams(window.location.search);
+
+    if (selectedGroupNo) {
+        params.set('artGroupNo', selectedGroupNo);
+    } else {
+        params.delete('artGroupNo'); // "모든 아티스트 알림" 선택 시 파라미터 제거 -> 전체보여주기
+    }
+
+    // 필터 변경 시 첫 페이지로 초기화
+    params.set('alertNo', '0'); 
+    params.set('currentPage', '1');
+
+    window.location.href = currentUrl + (params.toString() ? '?' + params.toString() : '');
+}
+
+const logoutButton = document.querySelector('.btn emp-logout-btn');
+if (logoutButton) {
+    logoutButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (confirm('로그아웃 하시겠습니까?')) {
+            alert('로그아웃 되었습니다.');
+        }
+    });
+}
+
+$(function(){
+    const alertListContent = $('#alerts-content'); // 현재 섹션
+    const csrfToken = $("meta[name='_csrf']").attr("content");
+    const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+    
+    function displayAlertListServerMessage(message, isSuccess) {		// 서버 메시지 표시용
+        $('#alertListServerMessage').text(message || '처리 중 오류가 발생했습니다.')
+                           .removeClass('success error')
+                           .addClass(isSuccess ? 'success' : 'error')
+                           .show();
+        setTimeout(() => $('#alertListServerMessage').fadeOut(), 5000);		// 5초뒤 사라짐
+    }
+
+	function updateHeaderBadgeCount(newCount) {		// 헤더 알림배지 개수 업데이트 함수
+	        // alertDisplay.jsp에 있는 updateAlertBadge 함수를 호출하거나, 직접 ID로 접근
+	        const headerBadge = $('#alertBadge'); // 헤더의 배지 ID
+	        if (headerBadge.length) {
+	            if (newCount > 0) {
+	                headerBadge.text(newCount > 99 ? "99+" : newCount).show();
+	            } else {
+	                headerBadge.hide();
+	            }
+	        }
+	}
+
+    // 개별 알림 읽음 처리
+    alertListContent.on('click', '.btn-mark-one-alert-read-content', function() {
+        const alertNo = $(this).data('alertNo');
+        const item = $(this).closest('.alert-item');
+        const button = $(this);
+
+        let headers = {}; headers[csrfHeader] = csrfToken;
+        $.ajax({
+            url: '<c:url value="/mypage/alerts/read"/>',
+            type: 'POST',
+            data: { alertNo: alertNo },
+            headers: headers,
+            success: function(response) {
+                if (response.success) {
+                    item.removeClass('unread').addClass('read');	// 아이템 요소에 클래스 추가
+                    button.remove();	// 읽음 버튼 제거
+                    displayAlertListServerMessage(response.message || '알림을 읽음 처리했습니다.', true);
+                    // 헤더의 안 읽은 알림 개수 실시간 업데이트
+					const currentUnread = parseInt($('.unread-count-display').first().text() || "0");
+                    const newUnread = Math.max(0, currentUnread - 1);		// 개수 1개 차감
+                    $('.unread-count-display').text(newUnread);
+                    if(newUnread == 0) $('.unread-count-display').parent().hide();		// unread 클래스 숨기기
+					updateHeaderBadgeCount(newUnread); 		// 헤더 알림개수 업데이트
+                } else {
+                    displayAlertListServerMessage(response.message || '알림 읽음 처리에 실패했습니다.', false);
+                }
+            },
+            error: function() {
+                displayAlertListServerMessage('알림 읽음 처리 중 서버 오류가 발생했습니다.', false);
+            }
+        });
+    });
+
+    // 개별 알림 삭제 처리	(논리적)
+    alertListContent.on('click', '.btn-delete-one-alert-content', function() {
+        const alertNo = $(this).data('alertNo');
+        const item = $(this).closest('.alert-item');
+		const wasUnread = item.hasClass('unread');
+
+        if (!confirm("이 알림을 삭제하시겠습니까?")) return;
+
+        let headers = {}; headers[csrfHeader] = csrfToken;
+        $.ajax({
+            url: '<c:url value="/mypage/alerts/delete"/>',
+            type: 'POST',
+            data: { alertNo: alertNo },
+            headers: headers,
+            success: function(response) {
+                if (response.success) {
+                    item.fadeOut(function() { 
+                        $(this).remove();
+                        if (alertListContent.find('.alert-item').length === 0) {
+                             alertListContent.find('.alert-list-container').html('<p class="no-alerts" style="padding: 20px; text-align: center; color: #777;">표시할 알림이 없습니다.</p>');
+                        }
+                    });
+                    displayAlertListServerMessage(response.message || '알림을 삭제했습니다.', true);
+                    if(wasUnread){
+						// 안읽은 알림 삭제됐을 경우에 헤더 알림개수 업데이트
+						const currentUnread = parseInt($('.unread-count-display').fisrt().text() || "0");
+						const newUnread = Math.max(0, currentUnread - 1);		// 개수 차감
+						$('.unread-count-display').text(newUnread);		// 새로운 개수로 업데이트
+						if(newUnread == 0) $('.unread-count-display').parent().hide();		// 새로들어온 알림이 없으면 안읽은 개수 하이드
+						updateHeaderBadgeCount(newUnread);		// 헤더 알림개수 업데이트
+					}
+                } else {
+                    displayAlertListServerMessage(response.message || '알림 삭제에 실패했습니다.', false);
+                }
+            },
+            error: function() {
+                displayAlertListServerMessage('알림 삭제 중 서버 오류가 발생했습니다.', false);
+            }
+        });
+    });
+    
+    // 모두 읽음 처리
+    $('#btn-mark-all-alerts-read-content').on('click', function() {
+        if (!alertListContent.find('.alert-item.unread').length) {
+            displayAlertListServerMessage('모두 이미 읽은 알림입니다.', true);
+            return;
+        }
+        if (!confirm("모든 알림을 읽음으로 표시하시겠습니까?")) return;
+
+        let headers = {}; headers[csrfHeader] = csrfToken;
+        $.ajax({
+            url: '<c:url value="/mypage/alerts/readAll"/>',
+            type: 'POST',
+            headers: headers,
+            success: function(response) {
+                if (response.success) {
+                    alertListContent.find('.alert-item.unread').each(function() {
+                        $(this).removeClass('unread').addClass('read');
+                        $(this).find('.btn-mark-one-alert-read-content').remove();
+                    });
+                    displayAlertListServerMessage(response.message || '모든 알림을 읽음 처리했습니다.', true);
+                    // 헤더의 안 읽은 알림 개수 0으로 업데이트
+					$('.unread-count-display').text("0").parent().hide();
+					updateHeaderBadgeCount(0);		// 헤더의 안읽은 알림 개수 0으로 업데이트
+                } else {
+                    displayAlertListServerMessage(response.message || '모든 알림 읽음 처리에 실패했습니다.', false);
+                }
+            },
+            error: function() {
+                displayAlertListServerMessage('모든 알림 읽음 처리 중 서버 오류가 발생했습니다.', false);
+            }
+        });
+    });
+});
+</script>

@@ -1,0 +1,16 @@
+package kr.or.ddit.vo.order;
+
+import lombok.Data;
+
+@Data
+public class PaymentVO {
+	private String cid; //가맹점 번호
+	private String aid; //거래 승인 번호
+	private String paymentStatCode; //결제 상태 코드 (공통 상세 코드: SUCCESS, FAILED, CANCELED)
+	private int totalAmount; //총 요청 / 결제금액
+	private String subSid; //정기 결제 SID
+	private String requestedAt; //결제 요청 시각
+	private String completedAt; //결제 응답 시각
+	private String tid; //결제 번호
+	private int orderNo; //주문 번호
+}

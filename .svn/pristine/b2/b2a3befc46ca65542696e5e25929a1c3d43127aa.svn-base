@@ -1,0 +1,240 @@
+body {
+    background: #f6f7fa;
+    font-family: 'Pretendard', 'Noto Sans KR', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.join-container {
+    max-width: 420px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(80, 60, 120, 0.08);
+    padding: 36px 28px 28px 28px;
+}
+
+.join-title {
+    text-align: center;
+    font-size: 2.1rem;
+    font-weight: 700;
+    margin-bottom: 28px;
+    color: #3d246c;
+}
+
+.join-form .form-group {
+    margin-bottom: 18px;
+}
+
+.join-form label {
+    display: block;
+    font-size: 1.01rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #3d246c;
+}
+
+.input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.join-form input[type="text"],
+.join-form input[type="password"],
+.join-form input[type="email"] {
+    width: 90%;
+    padding: 11px 12px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: #faf9fd;
+    transition: border 0.2s;
+}
+
+.join-form input:focus {
+    border-color: #a259e6;
+    outline: none;
+}
+
+.btn-check {
+    background: #a259e6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0 13px;
+    font-size: 0.80rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    height: 40px;
+}
+
+.btn-check:hover {
+    background: #7c3aed;
+}
+
+.form-group--row {
+    display: flex;
+    gap: 12px;
+}
+
+.birth-selects {
+    display: flex;
+    gap: 8px;
+}
+
+.form-msg {
+    font-size: 0.93rem;
+    margin-top: 4px;
+    min-height: 18px;
+}
+
+.form-msg.error {
+    color: #e53935;
+    font-weight: 600;
+}
+
+.form-msg.success {
+    color: #4caf50;
+    font-weight: 600;
+}
+
+.form-group--terms {
+    background: #f6f7fa;
+    border-radius: 10px;
+    padding: 16px 14px 10px 14px;
+    font-size: 0.98rem;
+    color: #666;
+    margin-bottom: 18px;
+}
+
+.terms-all {
+    margin-bottom: 8px;
+}
+
+.terms-link {
+    color: #a259e6;
+    text-decoration: underline;
+    font-size: 0.97em;
+    margin-left: 4px;
+}
+
+.join-btn {
+    width: 100%;
+    background: #a259e6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 13px 0;
+    font-size: 1.13rem;
+    font-weight: 700;
+    margin-top: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.join-btn:hover {
+    background: #7c3aed;
+}
+
+.login-link {
+    text-align: center;
+    margin-top: 18px;
+    color: #888;
+    font-size: 1rem;
+}
+
+.login-link a {
+    color: #a259e6;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+    .join-container {
+        padding: 18px 6px 18px 6px;
+        max-width: 98vw;
+    }
+    .form-group--row {
+        flex-direction: column;
+        gap: 0;
+    }
+    .birth-selects {
+        flex-direction: column;
+        gap: 0;
+    }
+    .birth-selects select {
+        width: 100%;
+        margin-bottom: 6px;
+    }
+}
+
+/* 모달 스타일 */
+.modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(40,30,60,0.45);
+}
+.modal-content {
+    position: relative;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(80, 60, 120, 0.18);
+    padding: 32px 24px 24px 24px;
+    max-width: 420px;
+    width: 90vw;
+    z-index: 10;
+    animation: modalIn 0.18s;
+}
+@keyframes modalIn {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+}
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #3d246c;
+    margin-bottom: 12px;
+}
+.modal-body {
+    font-size: 1rem;
+    color: #444;
+    max-height: 320px;
+    overflow-y: auto;
+    line-height: 1.6;
+}
+.modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    color: #a259e6;
+    cursor: pointer;
+}
+
+/* 생년월일 select 스타일 */
+.birth-selects select {
+    width: 100px;
+    padding: 11px 12px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: #faf9fd;
+    color: #3d246c;
+    margin-right: 6px;
+    transition: border 0.2s;
+}
+.birth-selects select:focus {
+    border-color: #a259e6;
+    outline: none;
+} 

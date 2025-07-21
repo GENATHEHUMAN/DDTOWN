@@ -1,0 +1,632 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c"%>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/resources/ckeditorInquiry/ckeditor.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/js/adminlte.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<%@ include file="../../modules/headerPart.jsp" %>
+<style type="text/css">
+
+ /* admin_member_detail.html에서 가져온 스타일 */
+.detail-card { background-color: #fff; border: 1px solid #e7eaf3; border-radius: 8px; padding: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); margin-bottom: 10px; }
+.detail-card h3 { font-size: 1.3em; color: #2c3e50; margin-top: 0; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+
+.info-list { list-style: none; padding: 0; margin: 0; overflow: hidden; /* float 해제 */ }
+.info-list dt {
+    font-weight: 600; /* admin_portal.css의 .ea-form label과 유사하게 */
+    color: #333;      /* admin_portal.css의 .ea-form label과 유사하게 */
+    width: 120px; 
+    float: left;
+    clear: left;
+    margin-bottom: 1rem; /* admin_portal.css의 .ea-form .form-group과 유사하게 */
+    line-height: 38px; 
+    padding-right: 10px; /* 우측 여백 추가 */
+    box-sizing: border-box;
+}
+.info-list dd {
+    margin-left: 130px; 
+    margin-bottom: 1rem; /* admin_portal.css의 .ea-form .form-group과 유사하게 */
+    color: #333;
+    min-height: 38px; 
+    display: flex; 
+    align-items: center;
+}
+/* 입력 필드 스타일은 admin_portal.css의 .ea-form input, select 스타일을 최대한 활용하도록 class 부여 고려 */
+.info-list dd input[type="text"],
+.info-list dd input[type="email"],
+.info-list dd select {
+    width: calc(100% - 22px); 
+    padding: .75rem .9rem; /* admin_portal.css .ea-form input과 동일하게 */
+    font-size: .95rem;    /* admin_portal.css .ea-form input과 동일하게 */
+    line-height: 1.5;     /* admin_portal.css .ea-form input과 동일하게 */
+    color: #495057;       /* admin_portal.css .ea-form input과 동일하게 */
+    background-color: #fff;
+    border: 1px solid #ced4da; /* admin_portal.css .ea-form input과 동일하게 */
+    border-radius: .25rem;   /* admin_portal.css .ea-form input과 동일하게 */
+    box-sizing: border-box;
+    height: 38px; /* 일관성 유지 */
+}
+ .info-list dd select {
+    width: auto; /* select는 내용에 맞게 */
+    min-width: 150px;
+}
+
+.info-list dd span.view-mode-text { 
+    padding: 8px 0; 
+    display: inline-block; /* span도 높이를 가지도록 */
+    line-height: 22px; /* 기본 텍스트 줄 높이 */
+}
+.status-badge-in-detail { /* 상세 정보 내 상태 뱃지 */
+     padding: 5px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 500; color: white; display:inline-block;
+}
+.status-badge-in-detail.normal { background-color: #2ecc71; } /* 정상 */
+.status-badge-in-detail.suspended { background-color: #f39c12; } /* 활동정지 */
+.status-badge-in-detail.banned { background-color: #e74c3c; } /* 블랙리스트 */
+.status-badge-in-detail.dormant { background-color: #7f8c8d; } /* 휴면 */
+
+/* 삭제 버튼 스타일 */
+.delete-member-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    margin-left: 10px;
+}
+.delete-member-btn:hover {
+    background-color: #c0392b;
+}
+
+/* 커뮤리스트 */
+.comuListArea{
+	display: flex;
+	gap : 20px;
+}
+.comuImg {
+    height: 80px;
+    width: 80px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    background-color: #e9ecef;
+    overflow: hidden;
+    display: flex
+;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.comuCard-header {
+    padding: var(--bs-card-cap-padding-y) var(--bs-card-cap-padding-x);
+    margin-bottom: 0;
+    color: var(--bs-card-cap-color);
+    background-color: var(--bs-card-cap-bg);
+    border-bottom: var(--bs-card-border-width) solid var(--bs-card-border-color);
+    text-align: center;
+    width: 100%;
+}
+
+.card.border-primary.mb-3 {
+    width: 200px;
+    align-items: center;
+    height: 320px;
+}
+
+.card.border-danger.mb-3 {
+    width: 200px;
+    align-items: center;
+    height: 320px;
+}
+
+.card-body {
+    flex: 1 1 auto;
+    padding: var(--bs-card-spacer-y) var(--bs-card-spacer-x);
+    color: var(--bs-card-color);
+    text-align: left;
+    width: 100%;
+}
+
+.card-title {
+    margin-bottom: var(--bs-card-title-spacer-y);
+    color: var(--bs-card-title-color);
+    border-top: 1px solid #cccccc40;
+    padding: 10px;
+    border-bottom: 1px solid #cccccc40;
+}
+
+span.comuActive {
+    border: 1px solid;
+    border-radius: 8px;
+    /* width: 100px; */
+    font-size: 10px;
+    background-color: #2ecc71;
+    color: white;
+    /* max-width: 100%; */
+    padding: 5px;
+}
+
+span.delete {
+    border: 1px solid;
+    border-radius: 8px;
+    /* width: 100px; */
+    font-size: 10px;
+    background-color: #e74c3c;
+    color: white;
+    /* max-width: 100%; */
+    padding: 5px;
+}
+
+#myChart{
+	height : 200px;
+	width : 100%;
+}
+
+.membershipCard{
+	cursor : pointer;
+	display: inline-grid;
+	color: white;
+	transition: transform 0.3s; /* 추가 */
+	transform: perspective(800px) rotateY(0deg);
+	transform-style: preserve-3d; /* 추가 */
+}
+.membershipCard > * {
+	grid-area: 1 / 1 / 1 / 1;
+  width: 180px;
+  height: 100px;
+  padding: 12px;
+  border-radius: 8px;
+  backface-visibility: hidden; /* 추가 */
+}
+.membershipCard.flipped{
+	transform: perspective(800px) rotateY(180deg);
+}
+
+.card.border-primary.back {
+  transform: rotateY(180deg); /* 추가 */
+}
+
+</style>
+</head>
+<script type="text/javascript">
+
+let myChartInstance = null;
+
+function chart(dataset){
+	let date = new Date();
+	let month = date.getMonth() + 1;
+	console.log(month)
+	let months = [];
+	for(let i=1; i<=month; i++){
+		months.push(i + "월");
+	}
+	console.log(months);
+	if(myChartInstance){
+		myChartInstance.destroy();
+	}
+	
+	let ctx = document.getElementById("myChart");
+	myChartInstance = new Chart(ctx, {
+		type : 'line',
+		data : {
+			labels : months,
+			datasets : dataset
+		},
+		options : {
+			responsive:false,
+			scales : {
+				y: {
+					beginAtZero : true
+				}
+			}
+		}
+	})
+}
+
+function orderChart(memUsername){
+	$.ajax({
+		url : '/'
+	})
+}
+
+$(function(){
+	
+	$("a[id=listBtn]").on("click",function(){
+		let currentPage = sessionStorage.getItem("currentPage");
+		let searchWord = sessionStorage.getItem("searchWord");
+		let searchType = sessionStorage.getItem("searchType");
+		console.log("currentPage",currentPage);
+		console.log("searchWord",searchWord);
+		console.log("searchType",searchType);
+		let preUrl = `/admin/community/member/main?searchType=\${searchType}&searchWord=\${searchWord}&currentPage=\${currentPage}`
+		$("#listBtn").attr("href",preUrl);
+	});
+	
+	let spanMemberName = $("#detailMemberName");
+	let spanNickName = $("#detailMemberNickname");
+	let spanEmail = $("#detailMemberEmail");
+	let spanStatType = $("#detailMemberStatus");
+	
+	let firstName = $("#editfirstName");
+	let lastName = $("#editLastName");
+	let nickName = $("#editMemberNickname");
+	let email = $("#editMemberEmail");
+	let statType = $("#editMemberStatus");
+	
+	let formActionButtons =$("#formActionButtons");
+	let flag = false;
+	
+	$("#editMemberInfoBtn").on("click",function(){
+		
+		if(!flag){
+			
+			nickName.val(spanNickName.html());
+			email.val(spanEmail.html());
+			
+			spanMemberName.attr("style","display:none");
+			spanNickName.attr("style","display:none");
+			spanEmail.attr("style","display:none");
+			spanStatType.attr("style","display:none");
+			
+			firstName.attr("style","display:block");
+			lastName.attr("style","display:block");
+			nickName.attr("style","display:block");
+			email.attr("style","display:block");
+			statType.attr("style","display:block");
+			formActionButtons.attr("style","display:block");
+			$("#editMemberInfoBtn").attr("style","display:none");
+		}
+	});
+	
+	$("#cancelEditBtn").on("click",function(){
+		spanMemberName.attr("style","display:block");
+		spanNickName.attr("style","display:block");
+		spanEmail.attr("style","display:block");
+		spanStatType.attr("style","display:block");
+		
+		firstName.attr("style","display:none");
+		lastName.attr("style","display:none");
+		nickName.attr("style","display:none");
+		email.attr("style","display:none");
+		statType.attr("style","display:none");
+		formActionButtons.attr("style","display:none");
+		$("#editMemberInfoBtn").attr("style","display:block;float: right; margin-top: -5px;");
+	});
+	
+	$("#saveMemberInfoBtn").on("click",function(){
+		console.log($("#lastName").val())
+		let memUsername = $("#detailMemberId").html();
+		
+		let data = new FormData();
+		data.append("memNicknm",nickName.val());
+		data.append("memStatCode",statType.val());
+		data.append("peopleVO.peoLastNm", lastName.val());
+		data.append("peopleVO.peoFirstNm", firstName.val());
+		data.append("peopleVO.peoEmail", email.val());
+		
+		Swal.fire({
+			title : "수정하시겠습니까?",
+			icon : "question",
+			showConfirmButton : true,
+			showCancelButton : true,
+			confirmButtonText : "예",
+			cancelButtonText : "아니오"
+		}).then((result) => {
+			if(result.isConfirmed){
+				$.ajax({
+					url : "/admin/community/member/update/" + memUsername,
+					type : "post",
+					data : data,
+					processData : false,
+					contentType : false,
+					success : function(res){
+						if(res == "OK"){
+							Swal.fire({
+								title : "수정완료!",
+								text : "수정이 완료되었습니다.",
+								icon : "success",
+								showConfirmButton : true,
+							}).then((result) => {
+								location.href = "/admin/community/member/detail/" + memUsername;
+							});
+						}
+					},
+					error : function(error, status, thrown){
+						console.log(error.status)
+					},
+					beforeSend : function(xhr) {
+				        xhr.setRequestHeader('${_csrf.headerName}', '${_csrf.token}');
+				    }
+				});
+			}else{
+				return false;
+			}
+		});
+		
+	});
+	
+	$("#deleteMemberBtn").on("click", function(){
+		let memUsername = $("#detailMemberId").html();
+		
+		Swal.fire({
+			title : "탈퇴요청",
+			text : "정말로 탈퇴처리하시겠습니까?",
+			icon : "warning",
+			showCancelButton : true,
+			confirmButtonText : "예",
+			cancelButtonText : "아니오"
+		}).then((result) => {
+			if(result.isConfirmed){
+				$.ajax({
+					url : "/admin/community/member/delete/" + memUsername,
+					type : "post",
+					success : function(res){
+						if(res == "OK"){
+							Swal.fire({
+								title : "탈퇴처리완료!",
+								text : "정상적으로 탈퇴처리되었습니다.",
+								icon : "success",
+							}).then((result) => {
+								location.href = "/admin/community/member/main";
+							});
+						}
+					},
+					error : function(error, status, thrown){
+						console.log(error.status);
+					},
+					beforeSend : function(xhr) {
+				        xhr.setRequestHeader('${_csrf.headerName}', '${_csrf.token}');
+				    }
+				});
+			}else{
+				return false;
+			}
+		});
+	});
+	
+	$(".card-footer-btn").on("click","label[id=cardLabel]",function(e){
+		let artGroupNo = e.target.dataset.artgroupno;
+		let memUsername = e.target.dataset.memusername;
+		let comuProfileNo = e.target.dataset.comuprofileno;
+		
+		console.log("12312", e.target.dataset.artgroupno);
+		
+		$("#divMyChart").html(`<canvas id="myChart" ></canvas>`);
+		
+		$.ajax({
+			url : '/admin/community/member/cntData/'+artGroupNo,
+			type : 'get',
+			data : {
+				"memUsername" : memUsername,
+				"artGroupNo" : artGroupNo,
+				"comuProfileNo" : comuProfileNo
+			},
+			success : function(res){
+				console.log(res);
+				chart(res);
+			},
+			error : function(error){
+				console.log(error.status);
+			}
+		});
+	});
+	
+	let card = document.querySelectorAll('.membershipCard');
+	card.forEach( div => {
+		div.addEventListener("click",function(){
+			div.classList.toggle('flipped');
+		})
+	})
+	
+	let path = window.location.pathname;
+	let pathList = path.split("/");
+	console.log(pathList)
+// 	orderChart(memUsername);
+});
+
+</script>
+<body>
+<div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+				<main class="emp-content">
+					<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+					  <ol class="breadcrumb">
+					    <li class="breadcrumb-item"><a href="#">아티스트 커뮤니티 관리</a></li>
+					    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/community/member/main" style="color:black;">회원목록</a></li>
+					    <li class="breadcrumb-item active" aria-current="page">회원 상세</li>
+					  </ol>
+					</nav>
+					<section id="memberDetailSection" class="ea-section">
+						<div class="ea-section-header">
+				            <h2 id="memberDetailTitle">회원 상세 정보</h2>
+				            <a href="/admin/community/member/main" class="ea-btn outline sm" id="listBtn"><i class="fas fa-list"></i> 목록으로</a>
+				        </div>
+				        <div class="detail-card basic-info">
+				        	<h3>기본 정보 
+				                <button type="button" class="ea-btn sm delete-member-btn" id="deleteMemberBtn" style="float: right; margin-top: -5px; margin-right: 10px;"><i class="fas fa-trash-alt"></i> 탈퇴 처리</button>
+				                <button type="button" class="ea-btn sm outline" id="editMemberInfoBtn" style="float: right; margin-top: -5px;"><i class="fas fa-edit"></i> 정보 수정</button>
+				            </h3>
+					        <form id="memberInfoForm">
+					        	<dl class="info-list">
+					        		<dt>아이디:</dt>
+					                <dd><span class="view-mode-text" id="detailMemberId">${memberVO.memUsername }</span></dd>
+					                
+						        	<dt>이름:</dt>
+						            <dd>
+						            	<c:set value="${memberVO.peopleVO.peoFirstNm }" var="fristNm" />
+						            	<c:set value="${memberVO.peopleVO.peoLastNm }" var="lastNm" />
+						                <span class="view-mode-text" id="detailMemberName">${lastNm }${fristNm }</span>
+						                <input type="text" id="editLastName" name="memberName" style="display:none;" class="ea-form-control" value="${lastNm }">
+						                <input type="text" id="editfirstName" name="memberName" style="display:none;" class="ea-form-control"  value="${fristNm }">
+						            </dd>
+						            
+						            <dt>닉네임:</dt>
+					                <dd>
+					                    <span class="view-mode-text" id="detailMemberNickname">${memberVO.memNicknm }</span>
+					                    <input type="text" id="editMemberNickname" name="memberNickname" style="display:none;" class="ea-form-control">
+					                </dd>
+					
+					                <dt>이메일:</dt>
+					                <dd>
+					                    <span class="view-mode-text" id="detailMemberEmail">${memberVO.peopleVO.peoEmail }</span>
+					                    <input type="email" id="editMemberEmail" name="memberEmail" style="display:none;" class="ea-form-control">
+					                </dd>
+					
+					                <dt>가입일:</dt>
+					                <dd><span class="view-mode-text" id="detailMemberJoinDate">${memberVO.memRegDate }</span></dd>
+					
+					                <dt>가입경로:</dt>
+					                <dd><span class="view-mode-text">${memberVO.memRegDetCode }</span></dd>
+					                
+					                <dt>회원 상태:</dt>
+					                <dd>
+					                	<c:choose>
+				              				<c:when test="${memberVO.memStatDetCode eq '정상'}">
+				              					<span class="status-badge answered" id="detailMemberStatus" data-code=${memberVO.memStatCode }>${memberVO.memStatDetCode }</span>
+				              				</c:when>
+				              				<c:when test="${memberVO.memStatDetCode eq '정지' }">
+				              					<span class="status-badge pending" id="detailMemberStatus">${memberVO.memStatDetCode }</span>
+				              				</c:when>
+				              				<c:otherwise>
+				              					<span class="status-badge danger" id="detailMemberStatus">${memberVO.memStatDetCode }</span>
+				              				</c:otherwise>
+				              			</c:choose>
+					                    <select id="editMemberStatus" name="memberStatus" style="display:none;" class="ea-filter-select"> 
+					                    	<c:forEach items="${codeList }" var="code">
+					                    		<option value="${code.commCodeDetNo }" <c:if test="${code.commCodeDetNo eq memberVO.memStatCode }">selected</c:if> >${code.description }</option>
+					                    	</c:forEach>
+					                    </select>
+					                </dd>
+					        	</dl>
+					        	<div class="ea-form-actions" id="formActionButtons" style="display:none;">
+					                <button type="button" class="ea-btn outline" id="cancelEditBtn">취소</button>
+					                <button type="button" class="ea-btn primary" id="saveMemberInfoBtn">저장</button>
+					            </div>
+					        </form>
+				        </div>
+				        <div class="detail-card basic-info comuList">
+				        	<div>
+					        	<h3>팔로우 정보 </h3>
+				        	</div>
+				        	<div class="comuListArea">
+								<c:forEach items="${joinComuList }" var="comu">
+									<c:choose>
+										<c:when test="${comu.comuDelYn eq 'Y' }">
+											<c:set value="border-danger" var="borderCss" />
+										</c:when>
+										<c:otherwise>
+											<c:set value="border-primary" var="borderCss" />
+										</c:otherwise>
+									</c:choose>
+									<div class="card ${borderCss } mb-3" style="max-width: 18rem;">
+										<div class="comuCard-header">${comu.comuNm } 커뮤니티</div>
+										<div class="comuImg">
+											<img src="${comu.comuProfileImg }">
+										</div>
+										<div class="card-body">
+											<h5 class="card-title">${comu.comuNicknm }</h5>
+											<div class="card-text">가입일 : ${comu.comuRegDate }</div>
+											<div class="card-text">게시글 수 : ${comu.postCnt }</div>
+											<div class="card-text">댓글 수 : ${comu.replyCnt }</div>
+											<div class="card-text">탈퇴여부 :
+											<c:choose>
+												<c:when test="${comu.comuDelYn eq 'Y' }">
+													<span class="delete">활동 중단</span>
+												</c:when>
+												<c:otherwise>
+													<span class="comuActive">활동중</span>
+												</c:otherwise>
+											</c:choose>
+											</div> 
+										</div>
+										<div class="card-footer-btn">
+											<p>
+												<input type="radio" id="cardDetail${comu.artGroupNo }" name="cardDetail" class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#comuDetailCollapse" role="button" aria-expanded="false" aria-controls="comuDetailCollapse"  style="display:none;"/>
+												<label for="cardDetail${comu.artGroupNo }" class="btn btn-primary" id="cardLabel" 
+														data-artGroupNo="${comu.artGroupNo }" 
+														data-memUsername="${memberVO.memUsername }"
+														data-comuProfileNo="${comu.comuProfileNo }">클릭</label>
+											</p>
+										</div>
+									</div>
+								</c:forEach>
+							</div>
+						</div>
+						<div class="collapse" id="comuDetailCollapse">
+							<div class="detail-card basic-info">
+								<div class="card card-body" id="divMyChart">
+									<canvas id="myChart" ></canvas>
+								</div>
+							</div>
+						</div>
+						<div class="detail-card basic-info">
+							<h3>멤버십 정보</h3>
+							<c:choose>
+								<c:when test="${not empty membershipList }">
+									<c:forEach items="${membershipList }" var="mbsp" varStatus="i">
+										<c:set value="${mbsp[i.index] }" var="item"/>
+										<div class="membershipCard">
+											<div class="card border-primary front mb-3"
+												style="max-width: 18rem;">
+												<div class="card-header">
+													<h3 class="membership-plan-name"><i class="fa-solid fa-gem" style="margin-right: 8px; color: #63DEFD;"></i><c:out value="${item.membershipDesc.mbspNm}" /></h3>
+													<span class="card-plan-number">No. <c:out value="${item.membershipDesc.mbspNo}" /></span>
+												</div>
+												<div class="card-body text-primary">
+													<p class="card-info-item"><strong>아티스트:</strong> <c:out value="${item.membershipDesc.artistGroupVO.artGroupNm}" /></p>
+													<p class="card-info-item"><strong>담당자:</strong> <c:out value="${item.membershipDesc.artistGroupVO.empUsername}" /></p>
+													<p class="card-info-item"><strong>가격:</strong> ₩<fmt:formatNumber value="${item.membershipDesc.mbspPrice}" type="number" groupingUsed="true" /></p>
+													<p class="card-info-item"><strong>기간:</strong> <c:out value="${item.membershipDesc.mbspDuration}" />일</p>
+													<p class="card-info-item"><strong>가입일:</strong> <fmt:formatDate value="${item.subStartDate}" pattern="yyyy-MM-dd" /></p>
+													<p class="card-info-item"><strong>종료일:</strong> <fmt:formatDate value="${item.subEndDate}"  pattern="yyyy-MM-dd" /></p>
+													<p class="card-info-item"><strong>상태:</strong> <c:out value="${item.codeDetailVO.description}" /></p>
+												</div>
+											</div>
+											<div class="card border-primary back mb-3"
+												style="max-width: 18rem;">
+												<div class="card-header">구독 이력</div>
+												<div class="card-body text-primary">
+													<c:choose>
+														<c:when test="${not empty item.subMembership.entrySet() }">
+															<c:forEach items="${item.subMembership.entrySet() }" var="historyMbspList" varStatus="j">
+																<c:set value="${historyMbspList.value }" var="historyMbsp"/>
+																<p class="card-info-item"><strong>내역 ${j.index + 1  }:</strong> <fmt:formatDate value="${historyMbsp.subStartDate}" pattern="YYYY-MM-dd" /> ~ <fmt:formatDate value="${historyMbsp.subEndDate}" pattern="YYYY-MM-dd"/> </p>
+															</c:forEach>
+														</c:when>
+														<c:otherwise>
+															<p class="card-info-item"><strong>가입한 이력이 없습니다.</strong></p>
+														</c:otherwise>
+													</c:choose>
+													
+												</div>
+											</div>
+										</div>
+									</c:forEach>
+								</c:when>
+								<c:otherwise>
+									이용중인 멤버십이 없습니다.
+								</c:otherwise>
+							</c:choose>
+						</div>
+						<div class="detail-card basic-info">
+							<h3>구매목록</h3>
+							<canvas id="orderChart"></canvas>
+						</div>
+					</section>
+				</main>
+			</div>
+		</div>
+<%@ include file="../../modules/footerPart.jsp" %>
+
+<%@ include file="../../modules/sidebar.jsp" %>   		
+</body>
+</html>

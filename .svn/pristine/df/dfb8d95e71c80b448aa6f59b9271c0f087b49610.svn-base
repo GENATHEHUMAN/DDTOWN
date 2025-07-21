@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="kr.or.ddit.ddtown.mapper.admin.notice.AdminNoticeMapper">
+
+
+	<select id="getList" resultType="kr.or.ddit.vo.corporate.notice.NoticeVO">
+		SELECT
+			    ent_noti_no
+			  , emp_username
+			  , file_group_no
+			  , ent_noti_title
+			  , ent_noti_content
+			  , ent_noti_reg_date
+			  , ent_noti_mod_date
+		FROM
+    			enter_notice
+	 ORDER BY 
+	 			ent_noti_no desc
+	</select>
+	
+	<select id="getDetail" parameterType="int" resultType="kr.or.ddit.vo.corporate.notice.NoticeVO">
+		SELECT
+			    ent_noti_no
+			  , emp_username
+			  , file_group_no
+			  , ent_noti_title
+			  , ent_noti_content
+			  , ent_noti_reg_date
+			  , ent_noti_mod_date
+		FROM
+    			enter_notice
+    	WHERE
+				ent_noti_no = #{entNotiNo}
+	</select>
+	
+	<insert id="insertNotice" parameterType="kr.or.ddit.vo.corporate.notice.NoticeVO"
+		useGeneratedKeys="true" keyProperty="entNotiNo">
+		INSERT INTO enter_notice (
+		    emp_username
+		    , file_group_no
+		    , ent_noti_title
+		    , ent_noti_content
+		    , ent_noti_reg_date
+		) VALUES ( 
+		    #{empUsername}
+		    , #{fileGroupNo}
+		    , #{entNotiTitle}
+		    , #{entNotiContent}
+		    , #{entNotiRegDate}
+	</insert>
+
+	<!-- <select id="searchKeyword" parameterType="kr.or.ddit.vo.corporate.notice.NoticeSearchVO"
+		resultType="kr.or.ddit.vo.corporate.notice.NoticeVO">
+		select ENT_NOTI_NO, ENT_NOTI_TITLE, ENT_NOTI_CONTENT, ENT_NOTI_REG_DATE, ENT_NOTI_MOD_DATE
+		  from enter_notice
+		 where ENT_NOTI_TITLE LIKE '%' || #{searchKeyword} || '%'
+		ORDER BY ENT_NOTI_REG_DATE DESC
+	</select> -->
+
+</mapper>

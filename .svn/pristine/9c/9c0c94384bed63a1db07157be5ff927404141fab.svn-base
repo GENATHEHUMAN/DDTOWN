@@ -1,0 +1,13 @@
+package kr.or.ddit.vo.report;
+
+public class reportVO {
+	private int reportNo;
+	
+	/*
+	 * artGroupNo memUsername targetMemUsername reportReasonCode
+	 * reportTarget_typeCode reportStatCode reportResultCode targetComuPostNo
+	 * targetBoardTypeCode targetComuReplyNo targetChatNo
+	 */
+	 
+
+}

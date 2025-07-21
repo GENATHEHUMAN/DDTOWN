@@ -1,0 +1,17 @@
+package kr.or.ddit.vo.community;
+
+import java.util.Date;
+
+import lombok.Data;
+
+@Data
+public class CommunityProfileVO {
+	private int comuProfileNo;
+	private int artGroupNo;
+	private String memUsername;
+	private String comuMemCatCode;
+	private String comuProfileImg;
+	private String comuNicknm;
+	private Date comuRegDate;
+	private String comuDelYn;
+}

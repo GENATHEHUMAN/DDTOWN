@@ -1,0 +1,178 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>자주 묻는 질문</title>
+<%@ include file="../modules/headerPart.jsp" %> <%-- 실제 경로로 수정 필요 --%>
+<%--
+    headerPart.jsp에 다음이 로드되고 있다고 가정합니다:
+    - AdminLTE CSS, FontAwesome CSS, iCheck Bootstrap CSS (또는 AdminLTE 내장)
+    - jQuery, SweetAlert2
+    - 사용자가 제공한 커스텀 CSS 파일들 (reset.css, variables.css, base.css, layout.css, cs_main.css 등)
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !!! 중요: 아코디언 기능 및 AdminLTE 전체 기능이 정상 작동하려면                    !!!
+    !!! 아래 JavaScript 파일들이 headerPart.jsp 또는 이 페이지 하단에 반드시 로드되어야 합니다 !!!
+    !!! (jQuery 다음, adminlte.min.js 이전에 bootstrap.bundle.min.js 로드)           !!!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    --%>
+<style>
+    html, body { height: 100%; }
+    .wrapper { min-height: 100%; display: flex; flex-direction: column; }
+    .content-wrapper.no-layout { margin-left: 0 !important; min-height: 100vh; flex-grow: 1; background-color: #f4f6f9; } /* AdminLTE 기본 배경색 */
+    .page-main-title { font-size: 2.2rem; font-weight: 600; color: #333; text-align: center; }
+    
+    .faq-category-group .custom-control-label { margin-right: 15px; font-weight: 500 !important; cursor:pointer;}
+    .faq-category-group .custom-control-input:checked~.custom-control-label { color: #007bff; /* AdminLTE primary color */ }
+
+    .faq-accordion .card-header { padding: 0; }
+    .faq-accordion .card-header .btn-faq-toggle {
+        color: #333; font-weight: bold; text-decoration: none; font-size: 1.1rem; /* cs_main.css .faq-question 유사 */
+        padding: 0.75rem 1.25rem; display: block; width: 100%; text-align: left;
+        border: none; background: none; position: relative;
+    }
+    .faq-accordion .card-header .btn-faq-toggle:hover { color: #8a2be2; background-color: #f8f9fa;} /* cs_main.css .faq-question:hover 유사 */
+    .faq-accordion .card-header .btn-faq-toggle .faq-icon {
+        position: absolute; right: 1.25rem; top: 50%;
+        transform: translateY(-50%);
+        transition: transform .2s ease-in-out;
+    }
+    .faq-accordion .card-header .btn-faq-toggle[aria-expanded="true"] .faq-icon {
+        transform: translateY(-50%) rotate(-180deg); /* 아이콘 회전: cs_main.css .faq-question.open::after 유사 */
+    }
+    .faq-answer-body {
+        border-left: 3px solid #007bff; /* cs_main.css .faq-answer border-left 와 유사 (색상 변경) */
+        padding: 15px 15px 15px 20px !important; 
+        margin-left: 5px; line-height: 1.7; color: #555; /* cs_main.css .faq-answer 유사 */
+        background-color: #ffffff;
+    }
+</style>
+</head>
+<script type="text/javascript">
+
+$(function(){
+	
+	let radioButtons = $("input[type='radio']");
+	
+	radioButtons.on("click",function(event){
+		let code = event.target.value;
+	});
+	
+	const pagingArea = $('#pagingArea');
+    if(pagingArea.length > 0) {
+        pagingArea.on('click', 'a', function(event) { 
+            event.preventDefault();
+            const page = $(this).data('page');
+            
+            // 현재 URL에서 검색 파라미터 유지
+            const currentSearchUrl = new URL(window.location.href);
+            const searchType = currentSearchUrl.searchParams.get("searchType");
+            const searchWord = currentSearchUrl.searchParams.get("searchWord");
+
+            let targetPageUrl = '${pageContext.request.contextPath}/faq/main?page=' + page;
+
+            if (searchType && searchWord) {
+                targetPageUrl += '&searchType=' + encodeURIComponent(searchType);
+                targetPageUrl += '&searchWord=' + encodeURIComponent(searchWord);
+            }
+            window.location.href = targetPageUrl;
+        });
+    }
+	
+});
+
+</script>
+<body class="hold-transition">
+<div class="wrapper">
+    <div class="content-wrapper no-layout">
+        <section class="content pt-5 pb-4">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <h1 class="page-main-title">자주 묻는 질문</h1>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-10 offset-md-1">
+                        <div class="card card-outline card-primary shadow-sm">
+                            <div class="card-header">
+                                <h3 class="card-title" style="font-size: 1.3rem; font-weight: 600;">카테고리</h3>
+                            </div>
+                            <div class="card-body">
+                            <form action="${pageContext.request.contextPath}/faq/main" method="get">
+                            	<input type="text" id="searchWord" name="searchWord" <c:if test="${not empty pagingVO.searchWord }">value="${pagingVO.searchWord }"</c:if>/>
+                            	<select id="searchType" name="searchType">
+                            		<option value="">전체</option>
+                            		<c:forEach items="${codeList}" var="code">
+                            			<option value="${code.commCodeDetNo }" <c:if test="${code.commCodeDetNo eq pagingVO.searchType }">selected</c:if>>${code.description }</option>
+                            		</c:forEach>
+                            	</select>
+                            	<input type="submit" id="searchBtn" value="검색" class="btn btn-primary"/>
+                            </form>
+                                <hr>
+
+                                <c:choose>
+                                    <c:when test="${empty list}">
+                                        <div class="callout callout-info">
+                                            <h5><i class="icon fas fa-info"></i> 정보</h5>
+                                            <p>등록된 FAQ가 없습니다.</p>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="accordion faq-accordion" id="faqAccordionList">
+                                            <c:forEach items="${list}" var="faq" varStatus="status">
+                                                <%-- 
+                                                    중요: data-category 값은 라디오 버튼의 value 값과 일치해야 합니다.
+                                                    faq 객체에서 카테고리 '코드값' (예: typeDetailCode.commCodeDetNo)을 사용해야 합니다.
+                                                    이전 코드에서 "${faq.description}"으로 되어 있었으나, 이는 카테고리 '이름'이므로 필터링이 제대로 안될 수 있습니다.
+                                                    아래는 typeDetailCode.commCodeDetNo를 사용한다고 가정합니다. 실제 필드명으로 변경해주세요.
+                                                --%>
+                                                <div class="card card-light card-outline mb-2 faq-item-panel" data-category="${faq.description}">
+                                                    <div class="card-header" id="headingFaq_${faq.faqNo}"> <%-- faqNo가 고유 ID라고 가정 --%>
+                                                        <h2 class="mb-0">
+                                                            <%-- 
+                                                                AdminLTE 버전에 따라 data-toggle 또는 data-bs-toggle 사용.
+                                                                AdminLTE 3.2+ & Bootstrap 5: data-bs-toggle="collapse" data-bs-target="..."
+                                                                AdminLTE <3.2 & Bootstrap 4: data-toggle="collapse" data-target="..." (또는 href)
+                                                                제공해주신 AdminLTE FAQ 예시는 data-toggle을 사용했으므로, 우선 그것을 따릅니다.
+                                                            --%>
+                                                            <button class="btn-faq-toggle ${status.first ? '' : 'collapsed'}" type="button" 
+                                                                    data-toggle="collapse" data-target="#collapseFaq_${faq.faqNo}" 
+                                                                    aria-expanded="${status.first ? 'true' : 'false'}" aria-controls="collapseFaq_${faq.faqNo}">
+                                                                Q. (${faq.description}) ${faq.faqTitle}
+                                                                <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                                                            </button>
+                                                        </h2>
+                                                    </div>
+                                                    <div id="collapseFaq_${faq.faqNo}" class="collapse ${status.first ? 'show' : ''}" 
+                                                         aria-labelledby="headingFaq_${faq.faqNo}" data-parent="#faqAccordionList">
+                                                        <div class="card-body faq-answer-body">
+                                                            A. <c:out value="${faq.faqAnswer}" escapeXml="false"/> <%-- HTML 태그가 포함될 수 있다면 escapeXml="false" --%>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </c:forEach>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
+                               <div class="pagination-container" id="pagingArea">
+						             ${pagingVO.pagingHTML}
+						        </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+<%@ include file="../modules/footerPart.jsp" %>
+</body>
+</html>

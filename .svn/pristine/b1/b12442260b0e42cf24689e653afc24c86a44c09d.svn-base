@@ -1,0 +1,260 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>굿즈샵 품목 관리 - DDTOWN 관리자 시스템</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <%@ include file="../../../modules/headerPart.jsp" %>
+    <style>
+        /* items_list.html 에만 적용될 추가/수정 스타일 */
+        .item-thumbnail { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; vertical-align: middle;}
+        .status-badge { padding: 3px 8px; border-radius: 10px; font-size: 0.8em; color: white; }
+        .status-selling { background-color: #2ecc71; } /* 판매중 - 초록색 */
+        .status-soldout { background-color: #e74c3c; } /* 품절 - 빨간색 */
+        .status-hidden { background-color: #95a5a6; } /* 숨김 - 회색 */
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../../modules/header.jsp" %>
+
+        <div class="emp-body-wrapper">
+            <%@ include file="../../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section id="goodsItemsSection" class="ea-section active-section">
+                    <div class="ea-section-header">
+                        <h2>굿즈샵 품목 관리</h2>
+                        <div class="ea-header-actions">
+                            <input type="text" id="goodsItemSearchInput" class="ea-search-input" placeholder="상품명, 상품코드로 검색...">
+                            <select id="goodsItemCategoryFilter" class="ea-filter-select" style="margin-left: 5px;">
+                                <option value="">모든 카테고리</option>
+                                <option value="photocard">포토카드</option>
+                                <option value="clothing">의류</option>
+                                <option value="accessory">악세서리</option>
+                                <option value="stationary">문구</option>
+                            </select>
+                            <button id="goodsItemSearchBtn" class="ea-btn" style="margin-left: 5px;"><i class="fas fa-search"></i> 검색</button>
+                            <a href="/admin/goods/items/form" class="ea-btn primary" style="margin-left: 10px;"><i class="fas fa-plus"></i> 새 상품 등록</a>
+                        </div>
+                    </div>
+
+                    <table class="ea-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 8%;">상품코드</th>
+                                <th style="width: 8%;">이미지</th>
+                                <th>상품명</th>
+                                <th style="width: 10%;">카테고리</th>
+                                <th style="width: 10%;">판매가격</th>
+                                <th style="width: 8%;">재고</th>
+                                <th style="width: 10%;">판매상태</th>
+                                <th style="width: 10%;">등록일</th>
+                                <th style="width: 15%;">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="goodsItemsTableBody">
+                            <tr>
+                                <td>G000123</td>
+                                <td><img src="https://via.placeholder.com/50" alt="상품 이미지" class="item-thumbnail"></td>
+                                <td><a href="/admin/goods/items/detail?id=G000123" class="doc-link">아티스트 A 포토카드 세트 V.2</a></td>
+                                <td>포토카드</td>
+                                <td>15,000 원</td>
+                                <td>150</td>
+                                <td><span class="status-badge status-selling">판매중</span></td>
+                                <td>2025-05-10</td>
+                                <td>
+                                    <a href="/admin/goods/items/detail?id=G000123" class="ea-btn sm"><i class="fas fa-eye"></i> 상세보기</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>G000124</td>
+                                <td><img src="https://via.placeholder.com/50" alt="상품 이미지" class="item-thumbnail"></td>
+                                <td><a href="/admin/goods/items/detail?id=G000124" class="doc-link">DDTOWN 로고 티셔츠 (Black)</a></td>
+                                <td>의류</td>
+                                <td>28,000 원</td>
+                                <td>0</td>
+                                <td><span class="status-badge status-soldout">품절</span></td>
+                                <td>2025-04-20</td>
+                                <td>
+                                    <a href="/admin/goods/items/detail?id=G000124" class="ea-btn sm"><i class="fas fa-eye"></i> 상세보기</a>
+                                </td>
+                            </tr>
+                             <tr>
+                                <td>G000125</td>
+                                <td><img src="https://via.placeholder.com/50" alt="상품 이미지" class="item-thumbnail"></td>
+                                <td><a href="/admin/goods/items/detail?id=G000125" class="doc-link">아티스트 B 응원봉</a></td>
+                                <td>악세서리</td>
+                                <td>35,000 원</td>
+                                <td>75</td>
+                                <td><span class="status-badge status-hidden">숨김</span></td>
+                                <td>2025-03-15</td>
+                                <td>
+                                    <a href="/admin/goods/items/detail?id=G000125" class="ea-btn sm"><i class="fas fa-eye"></i> 상세보기</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                    </table>
+
+                    <div class="ea-pagination" id="goodsItemsPagination">
+                        <a href="#" class="active">1</a>
+                        <a href="#">2</a>
+                        <a href="#">&raquo;</a>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (관리자 전용)</p>
+        </footer>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- 사이드바 메뉴 로직 ---
+        const navItems = document.querySelectorAll('.emp-sidebar .emp-nav-item');
+        navItems.forEach(item => {
+            const arrow = item.querySelector('.submenu-arrow');
+            item.addEventListener('click', function(event) {
+                if (this.classList.contains('has-submenu')) {
+                    event.preventDefault();
+                    const currentlyOpen = this.classList.contains('open');
+                    document.querySelectorAll('.emp-sidebar > .emp-nav > ul > li > .has-submenu.open').forEach(openItem => {
+                        if (openItem !== this) {
+                            openItem.classList.remove('open');
+                            const associatedSubmenuId = "submenu-" + openItem.dataset.menu;
+                            const associatedSubmenu = document.getElementById(associatedSubmenuId);
+                            if (associatedSubmenu) associatedSubmenu.style.display = 'none';
+                            const openArrow = openItem.querySelector('.submenu-arrow');
+                            if(openArrow) openArrow.style.transform = 'rotate(0deg)';
+                        }
+                    });
+                    this.classList.toggle('open');
+                    const submenuId = "submenu-" + this.dataset.menu;
+                    const submenu = document.getElementById(submenuId);
+                    if (submenu) {
+                        submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                        if(arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+                    }
+                }
+            });
+        });
+
+        const currentFilename = window.location.pathname.split('/').pop();
+        let activeParentMenu = null;
+        let relatedPageLinkActivated = false;
+
+        document.querySelectorAll('.emp-sidebar .emp-nav-item').forEach(link => {
+            const linkFilename = link.getAttribute('href').split('/').pop();
+            let isActivePage = (linkFilename === currentFilename);
+
+            if (!isActivePage && linkFilename === 'items_list.html' &&
+                (currentFilename.startsWith('items_form') || currentFilename.startsWith('items_detail'))) {
+                isActivePage = true;
+                relatedPageLinkActivated = true;
+            }
+
+            if (isActivePage) {
+                link.classList.add('active');
+                const parentSubmenu = link.closest('.emp-submenu');
+                if (parentSubmenu) {
+                    parentSubmenu.style.display = 'block';
+                    activeParentMenu = parentSubmenu.previousElementSibling;
+                    if (activeParentMenu && activeParentMenu.classList.contains('has-submenu')) {
+                        activeParentMenu.classList.add('active', 'open');
+                        const arrow = activeParentMenu.querySelector('.submenu-arrow');
+                        if (arrow) arrow.style.transform = 'rotate(90deg)';
+                    }
+                } else if (link.classList.contains('has-submenu')) {
+                     activeParentMenu = link;
+                     link.classList.add('active', 'open');
+                     const arrow = link.querySelector('.submenu-arrow');
+                     if (arrow) arrow.style.transform = 'rotate(90deg)';
+                }
+                if (relatedPageLinkActivated && linkFilename === currentFilename && currentFilename !== 'items_list.html') {
+                    link.classList.remove('active');
+                }
+            }
+        });
+        document.querySelectorAll('.emp-sidebar > .emp-nav > ul > li > .has-submenu').forEach(topLevelMenu => {
+            if ((!activeParentMenu || topLevelMenu !== activeParentMenu) && !topLevelMenu.classList.contains('open') ) {
+                const submenuId = "submenu-" + topLevelMenu.dataset.menu;
+                const submenu = document.getElementById(submenuId);
+                if (submenu) submenu.style.display = 'none';
+                const arrow = topLevelMenu.querySelector('.submenu-arrow');
+                if(arrow) arrow.style.transform = 'rotate(0deg)';
+            }
+        });
+        // --- 사이드바 메뉴 로직 끝 ---
+
+        // 로그아웃 버튼
+        const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+        if (adminLogoutBtn) {
+            adminLogoutBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                if (confirm("로그아웃 하시겠습니까?")) {
+                    alert("로그아웃 되었습니다. (실제 로그아웃 처리는 서버에서)");
+                }
+            });
+        }
+
+        // 상품 검색 기능 (프론트엔드 필터 예시)
+        const searchBtn = document.getElementById('goodsItemSearchBtn');
+        const searchInput = document.getElementById('goodsItemSearchInput');
+        const categoryFilter = document.getElementById('goodsItemCategoryFilter');
+        const tableBody = document.getElementById('goodsItemsTableBody');
+
+        if (searchBtn && searchInput && categoryFilter && tableBody) {
+            function filterItems() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedCategory = categoryFilter.value.toLowerCase();
+                const rows = tableBody.querySelectorAll('tr');
+
+                rows.forEach(row => {
+                    const itemCodeCell = row.querySelector('td:nth-child(1)');
+                    const itemNameCell = row.querySelector('td:nth-child(3) a');
+                    const categoryCell = row.querySelector('td:nth-child(4)');
+                    
+                    let matchesSearch = true;
+                    let matchesCategory = true;
+
+                    if (itemCodeCell && itemNameCell) {
+                        const itemCodeText = itemCodeCell.textContent.toLowerCase();
+                        const itemNameText = itemNameCell.textContent.toLowerCase();
+                        if (searchTerm && !(itemNameText.includes(searchTerm) || itemCodeText.includes(searchTerm))) {
+                            matchesSearch = false;
+                        }
+                    } else {
+                        matchesSearch = false;
+                    }
+
+                    if (categoryCell) {
+                        const categoryText = categoryCell.textContent.toLowerCase();
+                        if (selectedCategory && categoryText !== selectedCategory) {
+                            matchesCategory = false;
+                        }
+                    } else {
+                        matchesCategory = false;
+                    }
+                    
+                    if (matchesSearch && matchesCategory) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+            searchBtn.addEventListener('click', filterItems);
+            searchInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    filterItems();
+                }
+            });
+            categoryFilter.addEventListener('change', filterItems);
+        }
+    });
+    </script>
+</body>
+</html> 

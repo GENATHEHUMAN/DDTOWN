@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.IUserMapper">
+
+ 	<resultMap type="kr.or.ddit.vo.user.MemberVO" id="memberMap">
+ 		<id property="memUsername" column="mem_username"/>
+ 		<result property="memStatCode" column="mem_stat_code" />
+ 		<result property="memRegPath" column="mem_reg_path" />
+ 		<result property="memNicknm" column="mem_nicknm" />
+ 		<result property="memBirth" column="mem_birth" />
+ 		<result property="memZipCode" column="mem_zip_code" />
+ 		<result property="memAddress1" column="mem_address1" />
+ 		<result property="memAddress2" column="mem_address2" />
+ 		<result property="memModDate" column="mem_mod_date" />
+ 		<result property="memRegDate" column="mem_reg_date" />
+ 		<result property="memEtcYn" column="mem_etc_yn" />
+
+ 		<!-- 공통 VO(PeopleVO)  -->
+ 		<result property="username" column="username" />
+ 		<result property="password" column="password" />
+ 		<result property="peoEnabled" column="peo_enabled" />
+ 		<result property="peoFirstNm" column="peo_first_nm" />
+ 		<result property="peoLastNm" column="peo_last_nm" />
+ 		<result property="peoEmail" column="peo_email" />
+ 		<result property="peoGender" column="peo_gender" />
+ 		<result property="peoPhone" column="peo_phone" />
+ 		<result property="peoName" column="peoName"/>
+ 		<result property="userTypeCode" column="user_type_code" />
+ 		<collection property="authList" resultMap="authMap" />
+ 	</resultMap>
+
+ 	<resultMap type="kr.or.ddit.vo.user.EmployeeVO" id="employMap">
+ 		<id property="empUsername" column="EMP_USERNAME"/>
+ 		<result property="empUsername" column="EMP_USERNAME"/>
+		<result property="empDepartCode" column="EMP_DEPART_CODE"/>
+		<result property="empPositionCode" column="EMP_POSITION_CODE"/>
+		<result property="empRegDate" column="EMP_REG_DATE"/>
+		<result property="empEndDate" column="EMP_END_DATE"/>
+		<result property="empDepartNm" column="emp_depart_nm"/>
+		<result property="empPositionNm" column="emp_position_nm"/>
+
+		<!-- 공통 VO(PeopleVO)  -->
+ 		<result property="username" column="username" />
+ 		<result property="password" column="password" />
+ 		<result property="userTypeCode" column="user_type_code" />
+ 		<result property="peoEnabled" column="peo_enabled" />
+ 		<result property="peoFirstNm" column="peo_first_nm" />
+ 		<result property="peoLastNm" column="peo_last_nm" />
+ 		<result property="peoEmail" column="peo_email" />
+ 		<result property="peoGender" column="peo_gender" />
+ 		<result property="peoPhone" column="peo_phone" />
+ 		<result property="peoName" column="peoName"/>
+ 		<collection property="authList" resultMap="authMap" />
+ 	</resultMap>
+
+ 	<resultMap type="kr.or.ddit.vo.user.PeopleAuthVO" id="authMap">
+ 		<result property="username" column="username" />
+ 		<result property="auth" column="auth" />
+ 	</resultMap>
+
+
+ 	<select id="idCheck" parameterType="string" resultType="int">
+ 		select count(username)
+ 		from people
+ 		where username = #{username}
+ 		and	peo_enabled = 'Y'
+ 	</select>
+
+ 	<select id="nickCheck" parameterType="string" resultType="int">
+ 		select count(mem_nicknm)
+ 		from member
+ 		where mem_nicknm = #{memNicknm}
+ 		and	mem_stat_code = 'MSC002'
+ 	</select>
+
+ 	<select id="emailCheck" parameterType="string" resultType="int">
+ 		select count(*)
+ 		from people
+ 		where peo_email = #{peoEmail}
+ 		and peo_enabled = 'Y'
+ 	</select>
+
+
+ 	<insert id="registerPeople" parameterType="kr.or.ddit.vo.user.MemberVO" useGeneratedKeys="true">
+ 		<selectKey keyProperty="userTypeCode" order="BEFORE" resultType="string">
+ 			select 'UTC001' from dual
+ 		</selectKey>
+ 		insert into people(
+ 			  username
+ 			, password
+ 			, user_type_code
+ 			, peo_first_nm
+ 			, peo_last_nm
+ 			, peo_email
+ 			, peo_phone
+ 			, peo_gender
+		) values (
+			  #{username}
+			, #{password}
+			, #{userTypeCode}
+			, #{peoFirstNm}
+			, #{peoLastNm}
+			, #{peoEmail}
+			, #{peoPhone}
+			, #{peoGender}
+		)
+ 	</insert>
+ 	<insert id="registerMember" parameterType="kr.or.ddit.vo.user.MemberVO" useGeneratedKeys="true">
+ 		<selectKey keyProperty="memStatCode" order="BEFORE" resultType="string">
+ 			select 'MSC001' from dual
+ 		</selectKey>
+ 		insert into member(
+ 			  mem_username
+ 			, mem_nicknm
+ 			, mem_stat_code
+ 			, mem_reg_path,mem_reg_date
+ 			, mem_mod_date
+ 			, mem_birth
+ 			, mem_zip_code
+ 			, mem_address1
+ 			, mem_address2
+		) values (
+			  #{username}
+			, #{memNicknm}
+			, #{memStatCode}
+			, #{memRegPath}
+			, sysdate
+			, sysdate
+			, #{memBirth}
+			, #{memZipCode}
+			, #{memAddress1}
+			, #{memAddress2}
+		)
+ 	</insert>
+ 	<insert id="registerAuth" parameterType="string">
+ 		insert into people_auth (
+ 			  username
+ 			, auth
+ 		) values (
+ 			  #{username}
+ 			, 'ROLE_MEMBER'
+ 		)
+ 	</insert>
+
+ 	<select id="findId" parameterType="kr.or.ddit.vo.user.MemberVO" resultType="string">
+ 		select username
+ 		from people
+ 		where peo_email = #{peoEmail}
+ 		and peo_last_nm || peo_first_nm = #{peoName}
+ 	</select>
+
+ 	<select id="findPW" parameterType="kr.or.ddit.vo.user.MemberVO" resultMap="memberMap">
+ 		select
+ 			  username
+ 			, peo_email
+ 			, peo_last_nm || peo_first_nm as peoName
+ 		from people
+ 		where
+ 			username = #{username}
+ 		and peo_email = #{peoEmail}
+ 		and peo_last_nm || peo_first_nm = #{peoName}
+ 	</select>
+
+ 	<update id="updateTempPw" parameterType="kr.or.ddit.vo.user.MemberVO">
+ 		update people
+ 		set
+ 			password = #{password}
+ 		where
+ 			username = #{username}
+ 	</update>
+
+ 	<update id="updateArtistPeople" parameterType="kr.or.ddit.vo.user.MemberVO">
+ 		update people
+ 		set
+ 			  peo_last_nm = #{peoLastNm}
+ 			, peo_first_nm = #{peoFirstNm}
+ 			, peo_gender = #{peoGender}
+ 			, peo_email = #{peoEmail}
+ 			, peo_phone = #{peoPhone}
+ 			<if test="password != null and password != ''">
+	 			, password = #{password}
+ 			</if>
+ 		where
+ 			username = #{username}
+ 	</update>
+
+ 	<update id="updateArtistMember" parameterType="kr.or.ddit.vo.user.MemberVO">
+ 		update member
+ 		set
+ 			  mem_nicknm = #{memNicknm}
+ 			, mem_birth = #{memBirth}
+ 			, mem_zip_code = #{memZipCode}
+ 			, mem_address1 = #{memAddress1}
+ 			, mem_address2 = #{memAddress2}
+ 		where
+ 			mem_username = #{username}
+ 	</update>
+
+ 	<insert id="registArtistPeople" parameterType="kr.or.ddit.vo.user.MemberVO">
+ 		INSERT INTO people (
+		      username
+		    , password
+		    , peo_enabled
+		    , user_type_code
+		    , peo_first_nm
+		    , peo_last_nm
+		    , peo_email
+		    , peo_gender
+		    , peo_phone
+		) VALUES (
+		    #{username}
+		  , #{password}
+		  ,	'Y'
+		  , 'UTC002'
+		  , #{peoFirstNm}
+		  , #{peoLastNm}
+		  , #{peoEmail}
+		  , #{peoGender}
+		  , #{peoPhone}
+		)
+ 	</insert>
+ 	<insert id="registArtistAuth" parameterType="kr.or.ddit.vo.user.PeopleAuthVO">
+ 		INSERT INTO people_auth (
+		      auth
+		    , username
+		) VALUES (
+		    #{auth}
+		  , #{username}
+		)
+ 	</insert>
+
+ 	<insert id="registArtistMember" parameterType="kr.or.ddit.vo.user.MemberVO">
+ 		INSERT INTO member (
+		    mem_username
+		    , mem_stat_code
+		    , mem_reg_path
+		    , mem_nicknm
+		    , mem_birth
+		    , mem_mod_date
+		    , mem_reg_date
+		) VALUES (
+		    #{username}
+		  , 'MSC001'
+		  , 'MRP003'
+		  , #{memNicknm}
+		  , #{memBirth}
+		  , sysdate
+		  , sysdate
+		)
+ 	</insert>
+
+ 	<update id="deleteArtistMember" parameterType="string">
+ 		UPDATE member
+		SET
+		      mem_stat_code = 'MSC002'
+		    , mem_mod_date = sysdate
+		WHERE
+	        mem_username = #{memUsername}
+ 	</update>
+
+ 	<update id="deleteArtistPeople" parameterType="string">
+	 	UPDATE people
+		SET
+		    peo_enabled = 'N'
+		WHERE
+	        username = #{username}
+ 	</update>
+
+ 	<select id="selectMemberInfo" parameterType="string" resultMap="memberMap">
+ 		SELECT
+              p.username
+            , p.password
+            , p.peo_enabled
+            , p.user_type_code
+            , p.peo_first_nm
+            , p.peo_last_nm
+            , p.peo_email
+            , p.peo_gender
+            , p.peo_phone
+            , (p.peo_last_nm || p.peo_first_nm) as peoName
+            , m.mem_username
+            , m.mem_stat_code
+            , m.mem_reg_path
+            , m.mem_nicknm
+            , m.mem_birth
+            , m.mem_zip_code
+            , m.mem_address1
+            , m.mem_address2
+            , m.mem_mod_date
+            , m.mem_reg_date
+            , pa.auth
+        FROM PEOPLE p
+        JOIN MEMBER m ON (p.username = m.mem_username)
+        LEFT JOIN PEOPLE_AUTH pa ON (p.username = pa.username)
+        WHERE p.username = #{username}
+ 	</select>
+
+ 	<delete id="deletePeopleAuth" parameterType="string">
+ 		DELETE FROM PEOPLE_AUTH
+ 		WHERE username = #{username}
+ 	</delete>
+
+ 	<select id="getEmployList" resultMap="employMap">
+ 		select
+ 			p.username
+ 			, password
+ 			, peo_enabled
+ 			, user_type_code
+ 			, peo_first_nm
+ 			, peo_last_nm
+ 			, peo_email
+ 			, peo_gender
+ 			, peo_phone
+ 			, peo_last_nm || peo_first_nm as peoName
+ 			, auth
+ 			, emp_username
+ 			, emp_depart_code
+ 			, emp_position_code
+ 			, emp_reg_date
+ 			, emp_end_date
+ 			,(select description from common_detail_code where comm_code_det_no = emp_depart_code ) as emp_depart_nm
+ 			,(select description from common_detail_code where comm_code_det_no = emp_position_code ) as emp_position_nm
+ 		from
+ 			employee m left outer join people p on(m.emp_username = p.username)
+ 			left outer join people_auth pa on(m.emp_username = pa.username)
+
+ 		where
+ 			p.peo_enabled = 'Y'
+ 		and
+ 			emp_depart_code = 'EDC002'
+ 		and
+            p.username not in (select emp_username from artist_group)
+ 	</select>
+
+ 	<update id="insertAdditionalInfoPeople" parameterType="kr.or.ddit.vo.user.MemberVO">
+ 		UPDATE people
+		SET
+		      peo_first_nm = #{peoFirstNm}
+		    , peo_last_nm = #{peoLastNm}
+		    , peo_gender = #{peoGender}
+		    , peo_email = #{peoEmail}
+		    , peo_phone = #{peoPhone}
+		WHERE
+		    username = #{memUsername}
+ 	</update>
+
+ 	<update id="insertAdditionalInfoMember" parameterType="kr.or.ddit.vo.user.MemberVO">
+ 		UPDATE member
+		SET
+		      mem_nicknm = #{memNicknm}
+		    , mem_birth = #{memBirth}
+		    , mem_zip_code = #{memZipCode}
+		    , mem_address1 = #{memAddress1}
+		    , mem_address2 = #{memAddress2}
+		    , mem_etc_yn = 'N'
+		WHERE
+		    mem_username = #{memUsername}
+ 	</update>
+
+ 	<select id="getPeopleAuth" parameterType="String" resultType="kr.or.ddit.vo.user.PeopleAuthVO">
+ 		SELECT
+ 			AUTH
+ 			, USERNAME
+ 		FROM
+ 			PEOPLE_AUTH
+ 		WHERE
+ 			USERNAME = #{username}
+ 		AND
+ 			AUTH = #{string}
+ 	</select>
+
+ 	<insert id="insertPeopleAuth" parameterType="kr.or.ddit.vo.user.PeopleAuthVO">
+ 		INSERT INTO PEOPLE_AUTH (
+ 			AUTH
+ 			, USERNAME
+ 		) VALUES (
+ 			#{auth}
+ 			, #{username}
+ 		)
+ 	</insert>
+
+ 	<select id="getArtistsNo" parameterType="int" resultType="kr.or.ddit.vo.user.MemberVO">
+ 		SELECT
+ 			a.ART_NO
+ 			, a.MEM_USERNAME as memUsername
+ 			, a.ART_NM
+ 		FROM
+ 			ARTIST a
+ 		RIGHT OUTER JOIN
+ 			ARTIST_GROUP_MAP am ON a.ART_NO = am.ART_NO
+ 		WHERE
+ 			am.ART_GROUP_NO = #{artGroupNo}
+ 	</select>
+ 	<!-- 차단아이디 조회관련 -->
+ 	<select id="getUserByLoginId" parameterType="string" resultType="kr.or.ddit.vo.user.MemberVO">
+ 		SELECT MEM_USERNAME
+ 			 , MEM_STAT_CODE
+ 		  FROM MEMBER
+ 		WHERE MEM_USERNAME = #{username}
+ 	</select>
+ </mapper>

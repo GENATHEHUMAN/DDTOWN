@@ -1,0 +1,153 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APT 관리 - DDTOWN 관리자</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section id="aptListSection" class="ea-section active-section">
+                    <div class="ea-section-header">
+                        <h2>APT 관리 (아티스트 커뮤니티)</h2>
+                        <div class="ea-header-actions">
+                            <input type="text" class="ea-search-input" id="aptSearchInput" placeholder="APT명, 아티스트명 검색...">
+                            <button class="ea-btn primary" onclick="location.href='apt_detail.html'">
+                                <i class="fas fa-plus"></i> 새 APT 생성
+                            </button>
+                        </div>
+                    </div>
+                    <table class="ea-table">
+                        <thead>
+                            <tr>
+                                <th class="col-apt-id">APT ID</th>
+                                <th class="col-apt-name">APT 이름</th>
+                                <th class="col-artist">연결된 아티스트</th>
+                                <th class="col-fan-count">팬 수</th>
+                                <th class="col-apt-floor">APT 층수</th>
+                                <th class="col-created-date">생성일</th>
+                                <th class="col-actions">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aptTableBody">
+                            <tr data-apt-id="APT_ARTIST_A">
+                                <td>APT_ARTIST_A</td>
+                                <td class="apt-name"><a href="apt_detail.html?id=APT_ARTIST_A">Artist A's APT</a></td>
+                                <td class="apt-artist-name"><i class="fas fa-microphone-alt artist-account-icon"></i> Artist A</td>
+                                <td id="fanCount_APT_ARTIST_A">12345</td>
+                                <td id="floor_APT_ARTIST_A">123층</td>
+                                <td>2024-01-10</td>
+                                <td class="notice-actions">
+                                    <button class="ea-btn sm outline" onclick="location.href='/admin/community/apt/detail?id=APT_ARTIST_A'" title="상세보기"><i class="fas fa-search"></i> 상세보기</button>
+                                </td>
+                            </tr>
+                            <tr data-apt-id="APT_GROUP_B">
+                                <td>APT_GROUP_B</td>
+                                <td class="apt-name"><a href="apt_detail.html?id=APT_GROUP_B">Group B's Community</a></td>
+                                <td class="apt-artist-name"><i class="fas fa-users artist-account-icon"></i> Group B</td>
+                                <td id="fanCount_APT_GROUP_B">850</td>
+                                <td id="floor_APT_GROUP_B">8층</td>
+                                <td>2024-03-20</td>
+                                <td class="notice-actions">
+                                    <button class="ea-btn sm outline" onclick="location.href='/admin/community/apt/detail?id=APT_GROUP_B'" title="상세보기"><i class="fas fa-search"></i> 상세보기</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="ea-pagination">
+                        <a href="#">&laquo;</a> <a href="#" class="active">1</a> <a href="#">&raquo;</a>
+                    </div>
+                </section>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (관리자 전용)</p>
+        </footer>
+    </div>
+    <script>
+        // 로그아웃 기능
+        const logoutButton = document.querySelector('.emp-logout-btn');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('로그아웃 하시겠습니까?')) {
+                    alert('로그아웃 되었습니다.');
+                }
+            });
+        }
+
+        // 사이드바 메뉴 기능
+        document.addEventListener('DOMContentLoaded', function() {
+            const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+            navItemsWithSubmenu.forEach(item => {
+                const arrow = item.querySelector('.submenu-arrow');
+                item.addEventListener('click', function(event) {
+                    if (this.classList.contains('has-submenu')) {
+                        event.preventDefault();
+                        const currentlyOpen = this.classList.contains('open');
+                        document.querySelectorAll('.emp-sidebar > .emp-nav > ul > li > .has-submenu.open').forEach(openItem => {
+                            if (openItem !== this) {
+                                openItem.classList.remove('open');
+                                const submenu = openItem.nextElementSibling;
+                                if (submenu && submenu.classList.contains('emp-submenu')) {
+                                    submenu.style.display = 'none';
+                                }
+                                const openArrow = openItem.querySelector('.submenu-arrow');
+                                if(openArrow) openArrow.style.transform = 'rotate(0deg)';
+                            }
+                        });
+                        this.classList.toggle('open');
+                        const submenu = this.nextElementSibling;
+                        if (submenu && submenu.classList.contains('emp-submenu')) {
+                            submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                            if(arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+                        }
+                    }
+                });
+            });
+        });
+
+     // APT 팬 수에 따른 층수 계산 및 업데이트
+        document.querySelectorAll('#aptTableBody tr').forEach(row => {
+            const aptId = row.dataset.aptId;
+            const fanCountCell = document.getElementById(`fanCount_${aptId}`);
+            const floorCell = document.getElementById(`floor_${aptId}`);
+            if (fanCountCell && floorCell) {
+                const fanCount = parseInt(fanCountCell.textContent.replace(/,/g, '')) || 0;
+                const floor = fanCount >= 100 ? Math.floor(fanCount / 100) : 1;
+                fanCountCell.textContent = fanCount.toLocaleString();
+                floorCell.textContent = `${floor}층`;
+            }
+        });
+        // APT 삭제 함수
+        function deleteApt(aptId) {
+            if (confirm(`APT ID [${aptId}]를 정말 삭제하시겠습니까? 관련된 모든 커뮤니티 데이터가 삭제될 수 있습니다.`)) {
+                alert(`APT ${aptId}가 삭제되었습니다. (실제 삭제는 서버 API 호출 필요)`);
+                location.reload();
+            }
+        }
+        // APT 목록 검색
+        const aptSearchInput = document.getElementById('aptSearchInput');
+        const aptTableBody = document.getElementById('aptTableBody');
+        const allAptRows = aptTableBody ? Array.from(aptTableBody.querySelectorAll('tr')) : [];
+        if (aptSearchInput && aptTableBody) {
+            aptSearchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                allAptRows.forEach(row => {
+                    const aptName = row.cells[1].textContent.toLowerCase();
+                    const artistName = row.cells[2].textContent.toLowerCase();
+                    row.style.display = (aptName.includes(searchTerm) || artistName.includes(searchTerm)) ? '' : 'none';
+                });
+            });
+        }
+    </script>
+</body>
+</html> 

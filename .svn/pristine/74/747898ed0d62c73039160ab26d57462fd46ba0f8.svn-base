@@ -1,0 +1,18 @@
+package kr.or.ddit.vo.alert;
+
+import java.sql.Timestamp;
+
+import lombok.Data;
+
+@Data
+public class AlertVO {
+	
+	private long alertNo;				// 알림 번호
+	private String alertTypeCode;		// 알림 유형 코드 ( 새 게시글, 새 댓글, 새로운 팔로워 등)
+	private String relatedItemTypeCode; // 관련 항목 유형코드 ( POST, REPLY, DM, FOLLOWER 등)
+	private String alertContent;		// 알림 내용
+	private String alertUrl;			// 이동 URL
+	private Timestamp alertCreateDate;	// 알림 발생 일시
+	private int relatedItemNo;			// 알림대상의 번호
+	private String relatedItemChar;		// 알림대상의 문자열
+}

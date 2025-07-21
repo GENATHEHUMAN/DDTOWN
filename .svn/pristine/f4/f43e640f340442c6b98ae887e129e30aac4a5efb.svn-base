@@ -1,0 +1,29 @@
+package kr.or.ddit.ddtown.service.stat;
+
+import java.util.List;
+import java.util.Map;
+
+public interface IStatService {
+
+	/**
+	 * 일간 주간 월별 가입자 수 가져오기
+	 * @param searchType
+	 * @return
+	 */
+	public List<Map<String, Object>> getUserSignupData(String searchType);
+
+	/**
+	 * 일간 주간 월별 가장 많이 구매한 사람
+	 * @param searchType
+	 * @return
+	 */
+	public List<Map<String, Object>> getMostBuyUserData(String searchType);
+
+	/**
+	 * 전체 굿즈샵 멤버쉽 콘서트
+	 * @param searchType
+	 * @return
+	 */
+	public List<Map<String, Object>> getRevenueBySector(String searchType);
+
+}

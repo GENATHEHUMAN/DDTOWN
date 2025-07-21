@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.admin.faqInquiry.IAdminFaqMapper">
+ 
+ 	<sql id="faqSearch">
+ 		<if test="searchWord != null and searchWord != ''">
+ 			and (faq_title like '%'||#{searchWord}||'%')
+ 		</if>
+ 		<if test="searchType != null and searchType != ''">
+	        and faq_category like '%'||#{searchType}||'%'
+ 		</if>
+ 	</sql>
+ 
+ 	<select id="faqAdminMain" resultType="kr.or.ddit.vo.faq.FaqVO" parameterType="kr.or.ddit.vo.PaginationInfoVO">
+ 		SELECT *
+			FROM(
+			    select 
+			          faq_no
+			        , emp_username
+			        , faq_category
+			        , faq_title
+			        , faq_answer
+			        , faq_reg_date
+			        , faq_mod_date
+			        , description
+			        , ROWNUM faq_total_row
+			        , total_record
+			    from(
+				        SELECT
+						    faq_no
+						  , emp_username
+						  , faq_category
+						  , faq_title
+						  , faq_answer
+						  , faq_reg_date
+						  , faq_mod_date
+						  , cdc.description
+						  , count(faq_no) over() total_record
+						FROM
+						    faq f, common_detail_code cdc
+						where f.faq_category = cdc.comm_code_det_no (+)
+			        	and 1=1
+			        	<include refid="faqSearch" />
+			        order by faq_reg_date desc))
+			        WHERE faq_total_row between #{startRow} and #{endRow}
+			        order by faq_total_row
+ 	</select>
+ 	
+ 	<select id="getFaqDetail" parameterType="int" resultType="kr.or.ddit.vo.faq.FaqVO">
+ 		SELECT
+		    faq_no
+		  , emp_username
+		  , faq_category
+		  , faq_title
+		  , faq_answer
+		  , faq_reg_date
+		  , faq_mod_date
+		  , cdc.description
+		FROM
+		    faq f, common_detail_code cdc
+		where f.faq_category = cdc.comm_code_det_no (+)
+		and f.faq_no = #{faqNo}
+ 	</select>
+ 	
+ 	<select id="faqCodeList" resultType="kr.or.ddit.vo.faq.FaqCodeVO">
+ 		SELECT C.COMM_CODE_DET_NO, C.COMM_CODE_GRP_NO, C.COMM_CODE_DET_NM, C.USE_YN, C.DESCRIPTION
+		FROM common_detail_code C
+		WHERE c.comm_code_grp_no = 'FAQ_CARTEGORY'
+ 	</select>
+ 	
+ 	<update id="updateData" parameterType="kr.or.ddit.vo.faq.FaqVO">
+ 		update faq set
+ 			faq_title = #{faqTitle},
+ 			emp_username = #{empUsername},
+ 			faq_answer = #{faqAnswer},
+ 			faq_category = #{faqCategory},
+ 			faq_mod_date = sysdate
+ 		where faq_no = #{faqNo}
+ 	</update>
+ 
+ 	<insert id="faqInsert" parameterType="kr.or.ddit.vo.faq.FaqVO">
+ 		<selectKey keyProperty="faqNo" order="BEFORE" resultType="int">
+ 			select faq_seq.nextval from dual
+ 		</selectKey>
+ 		insert into faq (faq_no, emp_username, faq_category, faq_title, faq_answer, faq_reg_date, faq_mod_date)
+ 		values(#{faqNo}, #{empUsername}, #{faqCategory}, #{faqTitle}, #{faqAnswer}, sysdate, sysdate)
+ 	</insert>
+ 	
+ 	<delete id="deleteData" parameterType="int">
+ 		delete from faq where faq_no = #{faqNo}
+ 	</delete>
+ </mapper>

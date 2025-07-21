@@ -1,0 +1,22 @@
+package kr.or.ddit.vo.chat.dm;
+
+import java.util.Date;
+
+import lombok.Data;
+
+@Data
+public class ChatMessageVO {
+
+	public enum MessageType {
+		ENTER, TALK, EXIT, MATCH, MATCH_REQUEST;
+	}
+	
+	private MessageType type;			// 메세지 타입
+	private int chatNo;					// 메세지 번호
+	private int chatChannelNo;			// 채널 번호
+	private String username;			// 송신자
+	private int attachDetailNo;			// 파일
+	private String chatMsgTypeCode;		// dm
+	private String chatContent;			// 메세지 내용
+	private Date chatSendDate;			// 일자
+}

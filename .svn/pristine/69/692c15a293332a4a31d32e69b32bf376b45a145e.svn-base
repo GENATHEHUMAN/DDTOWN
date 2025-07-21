@@ -1,0 +1,8 @@
+package kr.or.ddit.ddtown.service.member.membership;
+
+public interface IMembershipService {
+	
+	// 멤버십 구독 여부 확인
+    boolean hasValidMembershipSubscription(String memUsername, int artGroupNo);
+
+}

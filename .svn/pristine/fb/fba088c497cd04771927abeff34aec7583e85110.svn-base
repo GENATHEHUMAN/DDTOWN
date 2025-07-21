@@ -1,0 +1,20 @@
+package kr.or.ddit.ddtown.service.order;
+
+import java.util.List;
+
+import kr.or.ddit.vo.order.OrderDetailVO;
+import kr.or.ddit.vo.order.OrdersVO;
+import kr.or.ddit.vo.order.PaymentVO;
+
+public interface IOrderService {
+	
+	//결제 바탕으로 주문 생성
+	public int createOrder(OrdersVO order, List<OrderDetailVO> orderDetails);
+
+	//PaymentVO를 DB에 저장
+	public void savePaymentReadyInfo(PaymentVO payment);
+	
+	//주문 상태 업데이트
+	public void updateOrderStatus(int createdOrderNo, String string);
+
+}

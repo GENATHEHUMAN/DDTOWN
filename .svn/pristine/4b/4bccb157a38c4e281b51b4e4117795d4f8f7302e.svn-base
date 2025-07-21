@@ -1,0 +1,194 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신고 관리 - DDTOWN 관리자</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section id="reportListSection" class="ea-section active-section">
+                    <div class="ea-section-header">
+                        <h2>신고 관리</h2>
+                        <div class="ea-header-actions">
+                            <input type="text" class="ea-search-input" id="reportSearchInput" placeholder="신고 대상, 신고자, 내용 검색...">
+                            <select id="reportTypeFilter" class="ea-filter-select" title="신고 유형 필터">
+                                <option value="">전체 유형</option>
+                                <option value="게시물">게시물</option>
+                                <option value="댓글">댓글</option>
+                                <option value="회원 프로필">회원 프로필</option>
+                            </select>
+                            <select id="reportStatusFilter" class="ea-filter-select" title="처리 상태 필터">
+                                <option value="">전체 상태</option>
+                                <option value="신규">신규</option>
+                                <option value="확인/처리중">확인/처리중</option>
+                                <option value="처리완료">처리완료</option>
+                                <option value="반려">반려</option>
+                            </select>
+                        </div>
+                    </div>
+                    <table class="ea-table">
+                        <thead>
+                            <tr>
+                                <th class="col-report-id">신고번호</th>
+                                <th class="col-report-type">신고유형</th>
+                                <th class="col-reported-target">신고대상</th>
+                                <th class="col-reported-writer">작성자</th>
+                                <th class="col-reason">신고 사유 (요약)</th>
+                                <th class="col-reporter">신고자</th>
+                                <th class="col-report-date">신고일</th>
+                                <th class="col-status">처리상태</th>
+                                <th class="col-actions">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody">
+                            <tr data-report-id="RPT001">
+                                <td>RPT001</td>
+                                <td>게시물</td>
+                                <td class="col-reported-target">게시물 제목 또는 ID (P12345)</td>
+                                <td class="col-reported-writer">bad_user</td>
+                                <td class="col-reason">부적절한 콘텐츠 포함 (욕설)</td>
+                                <td>reporter_A</td>
+                                <td>2025-05-12 10:30</td>
+                                <td><span class="report-status-badge new">신규</span></td>
+                                <td>
+                                    <a href="/admin/community/report/detail?id=RPT001" class="ea-btn sm outline" title="상세보기 및 처리">보기</a>
+                                </td>
+                            </tr>
+                            <!-- <tr data-report-id="RPT002">
+                                <td>RPT002</td>
+                                <td>회원 프로필</td>
+                                <td class="col-reported-target">troublemaker</td>
+                                <td class="col-reported-writer">troublemaker</td>
+                                <td class="col-reason">프로필 이미지 부적절, 소개글 혐오 표현</td>
+                                <td>reporter_B</td>
+                                <td>2025-05-11 15:00</td>
+                                <td><span class="report-status-badge pending">확인/처리중</span></td>
+                                <td class="notice-actions">
+                                    <a href="/admin/community/report/detail?id=RPT002" class="ea-btn sm outline" title="상세보기 및 처리"><i class="fas fa-search-plus"></i> 보기</a>
+                                </td>
+                            </tr>
+                            <tr data-report-id="RPT003">
+                                <td>RPT003</td>
+                                <td>댓글</td>
+                                <td class="col-reported-target">댓글 내용 미리보기...</td>
+                                <td class="col-reported-writer">another_user</td>
+                                <td class="col-reason">스팸/광고성 댓글</td>
+                                <td>reporter_C</td>
+                                <td>2025-05-10 09:00</td>
+                                <td><span class="report-status-badge completed">처리완료</span></td>
+                                <td class="notice-actions">
+                                    <a href="/admin/community/report/detail?id=RPT003" class="ea-btn sm outline" title="상세보기"><i class="fas fa-eye"></i> 보기</a>
+                                </td>
+                            </tr> -->
+                        </tbody>
+                    </table>
+                    <div class="ea-pagination">
+                        <a href="#">&laquo;</a> <a href="#" class="active">1</a> <a href="#">2</a> <a href="#">3</a> <a href="#">&raquo;</a>
+                    </div>
+                </section>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (관리자 전용)</p>
+        </footer>
+    </div>
+<script>
+//사이드바 메뉴 기능
+  document.addEventListener('DOMContentLoaded', function() {
+      const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+      navItemsWithSubmenu.forEach(item => {
+          const arrow = item.querySelector('.submenu-arrow');
+          item.addEventListener('click', function(event) {
+              if (this.getAttribute('href') === '#') {
+                  event.preventDefault();
+              }
+              const parentLi = this.parentElement;
+              const submenu = this.nextElementSibling;
+
+              if (submenu && submenu.classList.contains('emp-submenu')) {
+                  const parentUl = parentLi.parentElement;
+                  if (parentUl) {
+                      Array.from(parentUl.children).forEach(siblingLi => {
+                          if (siblingLi !== parentLi) {
+                              const siblingSubmenuControl = siblingLi.querySelector('.emp-nav-item.has-submenu.open');
+                              if (siblingSubmenuControl) {
+                                  const siblingSubmenuElement = siblingSubmenuControl.nextElementSibling;
+                                  siblingSubmenuControl.classList.remove('open');
+                                  if (siblingSubmenuElement && siblingSubmenuElement.classList.contains('emp-submenu')) {
+                                      siblingSubmenuElement.style.display = 'none';
+                                  }
+                                  const siblingArrow = siblingSubmenuControl.querySelector('.submenu-arrow');
+                                  if (siblingArrow) siblingArrow.style.transform = 'rotate(0deg)';
+                              }
+                          }
+                      });
+                  }
+              }
+              
+              this.classList.toggle('open');
+              if (submenu && submenu.classList.contains('emp-submenu')) {
+                  submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                  if (arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+              }
+          });
+      });
+
+      // 현재 페이지 URL 기반으로 사이드바 메뉴 활성화
+      const currentFullHref = window.location.href;
+      document.querySelectorAll('.emp-sidebar .emp-nav-item[href]').forEach(link => {
+          if (link.href === currentFullHref) {
+              link.classList.add('active');
+              let currentActiveElement = link;
+              while (true) {
+                  const parentLi = currentActiveElement.parentElement;
+                  if (!parentLi) break;
+                  const parentSubmenuUl = parentLi.closest('ul.emp-submenu');
+                  if (parentSubmenuUl) {
+                      parentSubmenuUl.style.display = 'block';
+                      const controllingAnchor = parentSubmenuUl.previousElementSibling;
+                      if (controllingAnchor && controllingAnchor.classList.contains('has-submenu')) {
+                          controllingAnchor.classList.add('active', 'open');
+                          const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                          if (arrow) arrow.style.transform = 'rotate(90deg)';
+                          currentActiveElement = controllingAnchor;
+                      } else break;
+                  } else break;
+              }
+          }
+      });
+      
+   	// 페이지네이션 로직
+      const pagingArea = $('#pagingArea');
+      if(pagingArea.length > 0) {
+          pagingArea.on('click', 'a', function(event) { 
+              event.preventDefault();
+              const page = $(this).data('page');
+              
+              // 현재 URL에서 검색 파라미터 유지
+              const currentSearchUrl = new URL(window.location.href);
+              const searchType = currentSearchUrl.searchParams.get("searchType");
+              const searchWord = currentSearchUrl.searchParams.get("searchWord");
+
+              let targetPageUrl = '${pageContext.request.contextPath}/emp/artist/artist-management?page=' + page;
+
+              if (searchType && searchWord) {
+                  targetPageUrl += '&searchType=' + encodeURIComponent(searchType);
+                  targetPageUrl += '&searchWord=' + encodeURIComponent(searchWord);
+              }
+              window.location.href = targetPageUrl;
+          });
+      }
+  });
+       
+</script>
+</body>
+</html> 

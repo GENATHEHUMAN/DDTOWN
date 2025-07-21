@@ -1,0 +1,26 @@
+package kr.or.ddit.vo.order;
+
+import java.util.Date;
+
+import lombok.Data;
+
+/*
+ *이메일, 배송 메모만 NULL 허용
+ */
+@Data
+public class OrdersVO {
+	private int orderNo; //주문 번호
+	private String memUsername; //회원 아이디
+	private String orderTypeCode; //주문 유형 코드 (공통 상세 코드: 굿즈, 온 / 오프라인 콘서트)
+	private String orderStatCode; //주문 상태 코드 (공통 상세 코드: 주문 완료, 결제 요청, 배송 준비)
+	private String orderPayMethodNm; //결제 방법 명
+	private Date orderDate; //주문 일시
+	private int orderTotalPrice; //총 주문 금액 
+	private String orderRecipientNm; //수령인 이름
+	private String orderRecipientPhone; //수령인 전화번호
+	private String orderZipCode; //우편 번호
+	private String orderAddress1; //배송 기본 주소
+	private String orderAddress2; //배송 상세 주소
+	private String orderEmail; //이메일
+	private String orderMemo; //배송 메모
+}

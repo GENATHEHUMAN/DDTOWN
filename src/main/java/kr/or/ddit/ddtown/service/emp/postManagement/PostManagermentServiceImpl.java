@@ -1,0 +1,80 @@
+package kr.or.ddit.ddtown.service.emp.postManagement;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.ddtown.mapper.emp.postManagement.IPostManagementMapper;
+import kr.or.ddit.ddtown.service.file.IFileService;
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.artist.ArtistVO;
+import kr.or.ddit.vo.community.CommunityPostVO;
+import kr.or.ddit.vo.community.CommunityReplyVO;
+import kr.or.ddit.vo.file.AttachmentFileDetailVO;
+
+@Service
+public class PostManagermentServiceImpl implements IPostManagementService{
+
+	@Autowired
+	private IPostManagementMapper postManagementMapper;
+	
+	@Autowired
+	private IFileService fileService;
+
+	@Override
+	public List<CommunityPostVO> getPost(PaginationInfoVO<CommunityPostVO> pagingVO) {
+		
+		List<CommunityPostVO> postList = postManagementMapper.getPost(pagingVO);
+		
+		return postList;
+	}
+
+	@Override
+	public int totalRecord(String empUsername) {
+		
+		int totalRecord = postManagementMapper.totalRecord(empUsername);
+		
+		return totalRecord;
+	}
+
+	@Override
+	public List<ArtistVO> empArtistList(String empUsername) {
+		
+		List<ArtistVO> artistList = postManagementMapper.empArtistList(empUsername);
+		
+		return artistList;
+	}
+
+	@Override
+	public CommunityPostVO selectPost(int comuPostNo) {
+		
+		CommunityPostVO postVO = postManagementMapper.selectPost(comuPostNo);
+		
+		if(postVO.getFileGroupNo() != null) {
+			try {
+				List<AttachmentFileDetailVO> fileList = fileService.getFileDetailsByGroupNo(postVO.getFileGroupNo());
+				postVO.setPostFiles(fileList);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return postVO;
+	}
+
+	@Override
+	public List<CommunityReplyVO> postReplyList(PaginationInfoVO<CommunityReplyVO> pagingVO) {
+		
+		List<CommunityReplyVO> postReplyList = postManagementMapper.postReplyList(pagingVO);
+		
+		return postReplyList;
+	}
+
+	@Override
+	public int replyTotalRecord(PaginationInfoVO<CommunityReplyVO> pagingVO) {
+		int replyTotalRecord = postManagementMapper.replyTotalRecord(pagingVO);
+		return replyTotalRecord;
+	}
+	
+}

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.goods.IWishlistMapper">
+	<select id="checkWishlist" resultType="int">
+		select count(*)
+		from goods_wishlist
+		where mem_username = #{username} and goods_no = #{goodsNo}
+	</select>
+	
+	<delete id="deleteWishlist">
+		delete from goods_wishlist
+		where mem_username = #{username} and goods_no = #{goodsNo}
+	</delete>
+	
+	<insert id="insertWishlist" parameterType="kr.or.ddit.vo.goods.GoodsWishListVO">
+		insert into goods_wishlist (mem_username, goods_no, wish_reg_date)
+		values (#{memUsername}, #{goodsNo}, SYSDATE)
+	</insert>
+	
+	<select id="getWishlistByUsername" parameterType="kr.or.ddit.vo.goods.GoodsWishListVO">
+		select 
+	            mem_username,
+	            goods_no, 
+	            wish_reg_date 
+	        from 
+	            goods_wishlist
+	        where 
+	            mem_username = #{username}
+	        order by 
+	            wish_reg_date desc
+	</select>
+	
+	<delete id="deleteWishlistByGoodsNo" parameterType="int">
+    	DELETE FROM GOODS_WISHLIST WHERE GOODS_NO = #{goodsNo}
+	</delete>
+</mapper>

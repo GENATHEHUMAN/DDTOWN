@@ -1,0 +1,364 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDTOWN - 오디션 지원자 정보</title>
+    <%@ include file="../../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section id="applicant-info-section" class="am-section active-section">
+                    <div class="am-section-header">
+                        <h2>지원자 정보 조회</h2>
+                        <div class="am-header-actions">
+                            <select id="select-audition-for-applicants" class="am-filter-select" style="min-width: 250px;">
+                                <option value="">오디션 선택</option>
+                                <option value="AUD001">2025 글로벌 K-POP 스타 오디션</option>
+                                <option value="AUD002">2025 상반기 신인 배우 오디션</option>
+                                <option value="AUD003">DD TOWN 전속 작곡가 공개 모집</option>
+                            </select>
+                            <input type="text" id="search-applicant-input" placeholder="지원자명, 지원번호 검색" class="am-search-input">
+                            <button type="button" id="btn-search-applicant" class="am-btn"><i class="fas fa-search"></i> 검색</button>
+                        </div>
+                    </div>
+                    <div class="am-section-content">
+                        <p id="applicant-list-placeholder" style="text-align:center; padding: 20px; color: #777;">오디션을 선택해주세요.</p>
+                        <table class="am-table" id="applicant-table" style="display:none;">
+                            <thead>
+                                <tr>
+                                    <th style="width:10%;">지원번호</th>
+                                    <th style="width:10%;">이름</th>
+                                    <th style="width:15%;">지원분야</th>
+                                    <th style="width:12%;">제출일</th>
+                                    <th style="width:13%;">심사 결과</th>
+                                    <th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="applicant-table-body">
+                            </tbody>
+                        </table>
+                        <div class="am-pagination" id="applicant-pagination" style="display:none;"></div>
+                    </div>
+                </section>
+                <!-- 지원자 상세/심사 모달 등은 기존 audition_management.html 구조와 동일하게 이식 -->
+                <div id="applicant-detail-view-modal" class="am-modal">
+                    <div class="am-modal-content" style="max-width: 750px;">
+                        <span class="am-modal-close" data-modal-id="applicant-detail-view-modal">&times;</span>
+                        <h3 id="applicant-detail-modal-title">지원자 상세 정보</h3>
+                        <div class="am-form applicant-detail-view-grid">
+                            <div class="form-group">
+                                <label>지원 오디션</label>
+                                <p id="view-applicant-audition-name">-</p>
+                            </div>
+                            <div class="form-group">
+                                <label>지원번호</label>
+                                <p id="view-applicant-id">-</p>
+                            </div>
+                            <div class="form-group">
+                                <label>이름</label>
+                                <p id="view-applicant-name">-</p>
+                            </div>
+                            <div class="form-group">
+                                <label>생년월일</label>
+                                <p id="view-applicant-birthdate">-</p>
+                            </div>
+                            <div class="form-group">
+                                <label>연락처</label>
+                                <p id="view-applicant-contact">-</p>
+                            </div>
+                            <div class="form-group">
+                                <label>이메일</label>
+                                <p id="view-applicant-email">-</p>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>주소</label>
+                                <p id="view-applicant-address">-</p>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>지원 분야</label>
+                                <p id="view-applicant-field">-</p>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>학력</label>
+                                <p id="view-applicant-education" style="white-space: pre-wrap;">-</p>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>경력</label>
+                                <p id="view-applicant-experience" style="white-space: pre-wrap;">-</p>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>자기소개</label>
+                                <p id="view-applicant-self-introduction" style="white-space: pre-wrap;">-</p>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>제출 서류 목록</label>
+                                <div id="view-applicant-submitted-files" class="submitted-files-list">
+                                    <p>제출된 서류가 없습니다.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="am-form-actions">
+                            <button type="button" id="btn-approve-applicant" class="am-btn success">합격</button>
+                            <button type="button" id="btn-reject-applicant" class="am-btn danger">불합격</button>
+                            <button type="button" id="btn-download-applicant-pdf" class="am-btn primary"><i class="fas fa-file-pdf"></i> PDF로 다운로드</button>
+                            <button type="button" class="am-btn secondary btn-close-modal" data-modal-id="applicant-detail-view-modal">닫기</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (직원 전용)</p>
+        </footer>
+    </div>
+</body>
+<script>
+// 오디션 지원자 정보 JS (emp_portal 스타일 기반)
+// --- 공통 로그아웃/사용자명/사이드바 토글 스크립트 (emp_portal.html과 동일) ---
+document.addEventListener('DOMContentLoaded', function() {
+    const logoutButton = document.querySelector('.emp-logout-btn');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('로그아웃 하시겠습니까?')) {
+                alert('로그아웃 되었습니다.');
+                //window.location.href = '/admin/login';
+            }
+        });
+    }
+    const employeeNameSpan = document.getElementById('employee-name');
+    if (employeeNameSpan) {
+        employeeNameSpan.textContent = "홍길동";
+    }
+    // 사이드바 토글 및 활성화 스크립트 (emp_portal.html과 동일하게)
+    const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+    navItemsWithSubmenu.forEach(item => {
+        const arrow = item.querySelector('.submenu-arrow');
+        item.addEventListener('click', function(event) {
+            event.preventDefault();
+            const parentLi = this.parentElement;
+            const submenu = this.nextElementSibling;
+            if (submenu && submenu.classList.contains('emp-submenu')) {
+                const parentUl = parentLi.parentElement;
+                if (parentUl) {
+                    Array.from(parentUl.children).forEach(siblingLi => {
+                        if (siblingLi !== parentLi) {
+                            const siblingSubmenuControl = siblingLi.querySelector('.emp-nav-item.has-submenu.open');
+                            if (siblingSubmenuControl) {
+                                const siblingSubmenu = siblingSubmenuControl.nextElementSibling;
+                                siblingSubmenuControl.classList.remove('open');
+                                if (siblingSubmenu && siblingSubmenu.classList.contains('emp-submenu')) {
+                                    siblingSubmenu.style.display = 'none';
+                                }
+                                const siblingArrow = siblingSubmenuControl.querySelector('.submenu-arrow');
+                                if (siblingArrow) siblingArrow.style.transform = 'rotate(0deg)';
+                            }
+                        }
+                    });
+                }
+            }
+            this.classList.toggle('open');
+            if (submenu && submenu.classList.contains('emp-submenu')) {
+                submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                if (arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+            }
+        });
+    });
+
+    // 현재 페이지 URL 기반으로 사이드바 메뉴 활성화
+    const currentFullHref = window.location.href;
+
+    document.querySelectorAll('.emp-sidebar .emp-nav-item[href]').forEach(link => {
+        const linkHrefAttribute = link.getAttribute('href');
+
+        if (linkHrefAttribute && linkHrefAttribute !== "#" && currentFullHref.endsWith(linkHrefAttribute)) {
+            link.classList.add('active');
+
+            let currentActiveElement = link;
+
+            while (true) {
+                const parentLi = currentActiveElement.parentElement;
+                if (!parentLi) break;
+
+                const parentSubmenuUl = parentLi.closest('.emp-submenu');
+
+                if (parentSubmenuUl) {
+                    parentSubmenuUl.style.display = 'block';
+
+                    const controllingAnchor = parentSubmenuUl.previousElementSibling;
+
+                    if (controllingAnchor && controllingAnchor.tagName === 'A' && controllingAnchor.classList.contains('has-submenu')) {
+                        controllingAnchor.classList.add('active', 'open');
+                        const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                        if (arrow) {
+                            arrow.style.transform = 'rotate(90deg)';
+                        }
+                        currentActiveElement = controllingAnchor;
+                    } else {
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+    });
+});
+// --- 지원자 정보 데이터 및 기능 (audition_management.html에서 추출) ---
+const allExampleApplicants = {
+    "AUD001": [
+        { id: 'APL001', name: '김민준', field: '보컬, 댄스', submittedDate: '2025-06-01', currentStage: 'document', examResult: 'pending_review', auditionName: '2025 글로벌 K-POP 스타 오디션', birthDate: '2002-03-15', contact: '010-1234-5678', email: 'minjun.kim@example.com', address: '서울특별시 강남구 테헤란로 123, DD빌딩 401호', education: 'DD대학교 실용음악과 보컬전공 졸업 (2024)', experience: '2023 DD엔터테인먼트 주최 보컬 트레이닝 수료\n2024 K-POP 월드 페스티벌 서울 예선 참가', selfIntroduction: '안녕하세요! K-POP의 미래를 꿈꾸는 김민준입니다. 저의 열정과 끊임없는 노력으로 무대 위에서 최고의 모습을 보여드리겠습니다. 저의 강점은 파워풀한 가창력과 섬세한 감정 표현입니다. 잘 부탁드립니다!', submittedFiles: [ { name: '이력서_김민준.pdf', url: '#' }, { name: '포트폴리오(음원파일)_김민준.zip', url: '#' }, { name: '자기소개영상_김민준.mp4', url: '#' } ], evaluationHistory: [ { stage: 'document', result: 'pass', date: '2025-06-05', evaluator: '김심사', comment: '서류 내용 성실. 잠재력 있음.' }, { stage: 'practical', result: 'pending_review', date: '2025-06-10', evaluator: '박코치', comment: '실기 평가 예정.' } ] },
+        { id: 'APL002', name: '이서아', field: '랩', submittedDate: '2025-06-02', currentStage: 'document', examResult: 'pass', auditionName: '2025 글로벌 K-POP 스타 오디션', birthDate: '2000-11-20', contact: '010-8765-4321', email: 'seoa.lee@example.com', address: '경기도 성남시 분당구 정자로 456, YY오피스텔 101호', education: '판교고등학교 졸업 (2019)', experience: '독립 레이블 믹스테잎 발매 (2023)\n언더그라운드 랩 배틀 다수 참가 및 입상', selfIntroduction: '독보적인 플로우와 메시지 있는 랩을 추구하는 이서아입니다. 세상을 저의 목소리로 채우고 싶습니다.', submittedFiles: [ { name: '랩음원_이서아.mp3', url: '#' }, { name: '가사집_이서아.pdf', url: '#' } ], evaluationHistory: [ { stage: 'document', result: 'pass', date: '2025-06-06', evaluator: '김심사', comment: '랩 스타일 독창적, 가사 전달력 우수.' } ] }
+    ],
+    "AUD002": [
+        { id: 'APL005', name: '정다해', field: '연기', submittedDate: '2025-04-16', currentStage: 'practical', examResult: 'pass', auditionName: '2025 상반기 신인 배우 오디션', birthDate: '1998-07-01', contact: '010-5555-1111', email: 'dahae.jung@example.com', address: '부산광역시 해운대구 마린시티로 789, ZZ아파트 203동', education: '중앙대학교 연극영화과 졸업 (2022)', experience: '단편영화 "여름밤" 주연 (2023)\n연극 "갈매기" 니나 역 (2022)', selfIntroduction: '카메라 앞에서 가장 자유로운 배우 정다해입니다. 다양한 캐릭터를 소화하며 깊은 감동을 전달하고 싶습니다.', submittedFiles: [ { name: '프로필_정다해.pdf', url: '#' }, { name: '연기영상_정다해.mov', url: '#' } ], evaluationHistory: [ { stage: 'document', result: 'pass', date: '2025-04-20', evaluator: '이감독', comment: '경력사항 인상적.' }, { stage: 'practical', result: 'pass', date: '2025-04-28', evaluator: '최작가', comment: '캐릭터 해석 능력 뛰어남.' } ] }
+    ]
+};
+function getStageText(stageKey) {
+    const stages = { document: '서류', practical: '실기', interview: '면접', final: '최종' };
+    return stages[stageKey] || '알수없음';
+}
+function getResultText(statusKey){
+    const results = { pass: '합격', hold: '보류', fail: '탈락', pending_review: '심사중' };
+    return results[statusKey] || '미지정';
+}
+function renderApplicantTable(applicants) {
+    const tbody = document.getElementById('applicant-table-body');
+    tbody.innerHTML = '';
+    if(!applicants || applicants.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">검색 결과가 없습니다.</td></tr>`;
+        document.getElementById('applicant-table').style.display = 'table';
+        return;
+    }
+    applicants.forEach(app => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>\${app.id}</td>
+            <td><a href="#" class="doc-link btn-view-applicant-detail" data-id="\${app.id}" data-audition-id="AUD001">\${app.name}</a></td>
+            <td>\${app.field}</td>
+            <td>\${app.submittedDate}</td>
+            <td><span class="status result-${app.examResult}">\${getResultText(app.examResult)}</span></td>
+            <td>
+                <button class="am-btn sm outline btn-view-applicant-detail" data-id="\${app.id}" data-audition-id="AUD001" title="상세보기"><i class="fas fa-search-plus"></i></button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    document.getElementById('applicant-table').style.display = 'table';
+}
+document.getElementById('btn-search-applicant').addEventListener('click', () => {
+    const selectedAuditionId = document.getElementById('select-audition-for-applicants').value;
+    if (selectedAuditionId) renderApplicantTable(allExampleApplicants[selectedAuditionId] || []);
+    else alert('먼저 오디션을 선택해주세요.');
+});
+document.getElementById('select-audition-for-applicants').addEventListener('change', function() {
+    renderApplicantTable(allExampleApplicants[this.value] || []);
+});
+// 지원자 상세/심사/다운로드 모달 등은 audition_management.html의 구조와 동일하게 구현 (필요시 추가) 
+
+// 이름/상세보기 버튼 클릭 시 상세 모달 오픈 및 심사 기능
+const applicantTableBody = document.getElementById('applicant-table-body');
+let currentDetailApplicant = null;
+if(applicantTableBody){
+    applicantTableBody.addEventListener('click', function(e){
+        let target = e.target;
+        let link = target.closest('.btn-view-applicant-detail');
+        if(link){
+            e.preventDefault();
+            const applicantId = link.dataset.id;
+            const auditionId = link.dataset.auditionId || document.getElementById('select-audition-for-applicants').value;
+            const applicants = allExampleApplicants[auditionId] || [];
+            const app = applicants.find(a => a.id === applicantId);
+            if(app){
+                currentDetailApplicant = app;
+                // 상세 정보 바인딩
+                document.getElementById('applicant-detail-modal-title').textContent = `\${app.name} (\${app.id}) - 상세 정보`;
+                document.getElementById('view-applicant-audition-name').textContent = app.auditionName || auditionId;
+                document.getElementById('view-applicant-id').textContent = app.id;
+                document.getElementById('view-applicant-name').textContent = app.name;
+                document.getElementById('view-applicant-birthdate').textContent = app.birthDate || '-';
+                document.getElementById('view-applicant-contact').textContent = app.contact || '-';
+                document.getElementById('view-applicant-email').textContent = app.email || '-';
+                document.getElementById('view-applicant-address').textContent = app.address || '-';
+                document.getElementById('view-applicant-field').textContent = app.field || '-';
+                document.getElementById('view-applicant-education').textContent = app.education || '-';
+                document.getElementById('view-applicant-experience').textContent = app.experience || '-';
+                document.getElementById('view-applicant-self-introduction').textContent = app.selfIntroduction || '-';
+                // 제출 서류
+                const filesElem = document.getElementById('view-applicant-submitted-files');
+                filesElem.innerHTML = '';
+                if(app.submittedFiles && app.submittedFiles.length > 0){
+                    app.submittedFiles.forEach(file => {
+                        const fileLink = document.createElement('a');
+                        fileLink.href = file.url || '#';
+                        fileLink.textContent = file.name;
+                        fileLink.target = '_blank';
+                        fileLink.classList.add('submitted-file-item');
+                        filesElem.appendChild(fileLink);
+                        filesElem.appendChild(document.createElement('br'));
+                    });
+                }else{
+                    filesElem.innerHTML = '<p>제출된 서류가 없습니다.</p>';
+                }
+                document.getElementById('applicant-detail-view-modal').style.display = 'block';
+            }
+        }
+    });
+}
+// 합격/불합격 버튼 처리
+const btnApprove = document.getElementById('btn-approve-applicant');
+const btnReject = document.getElementById('btn-reject-applicant');
+if(btnApprove){
+    btnApprove.addEventListener('click', function(){
+        if(currentDetailApplicant){
+            currentDetailApplicant.examResult = 'pass';
+            alert('합격 처리되었습니다.');
+            document.getElementById('applicant-detail-view-modal').style.display = 'none';
+            // 테이블 갱신
+            const auditionId = document.getElementById('select-audition-for-applicants').value;
+            renderApplicantTable(allExampleApplicants[auditionId] || []);
+        }
+    });
+}
+if(btnReject){
+    btnReject.addEventListener('click', function(){
+        if(currentDetailApplicant){
+            currentDetailApplicant.examResult = 'fail';
+            alert('불합격 처리되었습니다.');
+            document.getElementById('applicant-detail-view-modal').style.display = 'none';
+            // 테이블 갱신
+            const auditionId = document.getElementById('select-audition-for-applicants').value;
+            renderApplicantTable(allExampleApplicants[auditionId] || []);
+        }
+    });
+}
+// 모달 닫기 기능 보완
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if(modal) modal.style.display = 'none';
+}
+// X 버튼, 닫기 버튼
+Array.from(document.querySelectorAll('.am-modal-close, .btn-close-modal')).forEach(btn => {
+    btn.onclick = function(){
+        const modalId = btn.dataset.modalId;
+        if(modalId) closeModal(modalId);
+        else if(btn.closest('.am-modal')) closeModal(btn.closest('.am-modal').id);
+    };
+});
+// 모달 바깥 클릭 시 닫기
+window.addEventListener('click', function(e){
+    const modal = document.getElementById('applicant-detail-view-modal');
+    if(e.target === modal){
+        closeModal('applicant-detail-view-modal');
+    }
+});
+</script>
+</html> 

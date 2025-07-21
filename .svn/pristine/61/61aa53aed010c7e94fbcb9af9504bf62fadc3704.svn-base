@@ -1,0 +1,105 @@
+spring.application.name=DDTOWN
+
+server.port=6688
+
+# DM 채팅 웹소켓 IP 접속 허용
+server.address=0.0.0.0
+
+# view resolver 접두어, 접미사 설정
+#spring.mvc.view.prefix=/WEB-INF/views/
+#spring.mvc.view.suffix=.jsp
+
+# log level 설정
+logging.level.kr.or.ddit=debug
+logging.level.org.springframework.security=debug
+
+# 파일 업로드 설정
+# 업로드 가능한 최대 파일 크기(각 파일)
+spring.servlet.multipart.max-file-size=10MB
+# 요청에 담긴 모든 파일+데이터의 크기 제한
+spring.servlet.multipart.max-request-size=20MB
+spring.servlet.multipart.file-size-threshold=20MB
+kr.or.ddit.upload.path=C:/upload
+kr.or.ddit.upload.path.mac=/Users/beryz/Desktop/upload
+
+# 데이터베이스 접속 정보 설정(dataSource)
+spring.datasource.url=jdbc:oracle:thin:@112.220.114.131:1521/xe
+spring.datasource.username=team1_202412F
+spring.datasource.password=java
+spring.datasource.driver-class-name=oracle.jdbc.driver.OracleDriver
+
+# mybatis 설정
+mybatis.configuration.map-underscore-to-camel-case=true
+mybatis.configuration.jdbc-type-for-null=varchar
+mybatis.type-aliases-package=kr.or.ddit.vo
+mybatis.mapper-locations=classpath:mybatis/mapper/**/*_Mapper.xml
+
+#스프링 시큐리티 oauth2 구글 소셜로그인 정보
+spring.security.oauth2.client.registration.google.client-id=1023837029203-fqttj37uipaql2pm4blivp0l9bte87v4.apps.googleusercontent.com
+spring.security.oauth2.client.registration.google.client-secret=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
+spring.security.oauth2.client.registration.google.scope=profile,email
+spring.security.oauth2.client.registration.google.redirect-uri=http://localhost:6688/login/oauth2/code/google
+
+spring.security.oauth2.client.registration.kakao.client-id=b5a9dadf23367bd699dfeeb478ac17c7
+spring.security.oauth2.client.registration.kakao.redirect-uri=http://localhost:6688/login/oauth2/code/kakao
+spring.security.oauth2.client.registration.kakao.client-name=Kakao
+spring.security.oauth2.client.registration.kakao.scope=profile_nickname,profile_image
+spring.security.oauth2.client.registration.kakao.authorization-grant-type=authorization_code
+
+spring.security.oauth2.client.provider.kakao.authorization-uri=https://kauth.kakao.com/oauth/authorize
+spring.security.oauth2.client.provider.kakao.token-uri=https://kauth.kakao.com/oauth/token
+spring.security.oauth2.client.provider.kakao.user-info-uri=https://kapi.kakao.com/v2/user/me
+spring.security.oauth2.client.provider.kakao.user-name-attribute=id
+
+# spring mail 설정
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=ddtownmaster@gmail.com
+spring.mail.password=dsrzvcccwtdxbxbj
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.timeout=3000
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+#reCHAPTCHA 서비스 key
+rechaptcha.site-key=6LeEEkQrAAAAAOVnYZFx9QvBNFT1GmwSKVV2M8Km
+rechaptcha.verify-url=https://recaptchaenterprise.googleapis.com/v1/projects/ddtowns/assessments?key=AIzaSyAh4oOUY-joJzZZsU3_e77DPnqQMwd6OIU
+
+# ==================================
+# 카카오페이 API 설정
+# ==================================
+
+# Kakaopay Developers 에서 앱 생성 후 발급받은 admin key (이 키가 40자리 'Secret key' 임)
+kakaopay.api.secret.key=DEVF7F26E39505DDDA95966A30DF16E6A8A3A494
+
+# Kakaopay 로부터 전달받은 가맹점 ID
+cid=TC0ONETIME
+
+# 결제 준비 (Ready) API URL
+kakaopay.ready_url=https://open-api.kakaopay.com/online/v1/payment/ready
+
+# 결제 승인 (Approve) API URL
+kakaopay.approve_url=https://open-api.kakaopay.com/online/v1/payment/approve
+
+
+# 콜백 호스트 정보 (HOST_URL 대체용)
+kakaopay.sample.host=http://localhost:6688
+
+# WebRTC 미디어 서버(8080 서버)의 주소
+#media.server.url=http://192.168.35.118:8080
+#media.server.url=http://192.168.35.99:8080
+#media.server.url=http://192.168.35.108:8080
+media.server.url=http://192.168.35.93:8080
+#media.server.url=http://192.168.45.104:8080
+#media.server.url=http://192.168.40.20:8080
+#media.server.url=http://192.168.35.122:8080
+#media.server.url=http://192.168.35.116:8080
+#media.server.url=http://192.168.35.98:8080
+#media.server.url=http://192.168.35.124:8080
+#media.server.url=http://192.168.35.22:8080
+
+
+# 결제 취소 (Cancel) API URL
+kakaopay.cancel_url=https://open-api.kakaopay.com/online/v1/payment/cancel
+
+# 결제 목록 확인 API URL
+kakaopay.inquiry-api-url=https://open-api.kakaopay.com/online/v1/payment/order

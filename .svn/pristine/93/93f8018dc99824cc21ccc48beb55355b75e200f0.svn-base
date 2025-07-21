@@ -1,0 +1,212 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공지사항 수정 - DDTOWN 직원 포털</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+    <style>
+        .notice-edit-container { max-width: 700px; margin: 0 auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); padding: 36px 36px 28px 36px; margin-top: 40px; }
+        .notice-edit-container h2 { font-size: 1.7em; color: #234aad; margin-bottom: 28px; }
+        .notice-form-row { display: flex; align-items: center; margin-bottom: 18px; }
+        .notice-form-row label { width: 150px; font-weight: 600; color: #333; }
+        .notice-form-row input[type="text"],
+        .notice-form-row input[type="file"],
+        .notice-form-row input[type="datetime-local"],
+        .notice-form-row input[type="number"],
+        .notice-form-row select { flex: 1; padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        .notice-form-row input[readonly], .notice-form-row input[disabled] { background: #f5f5f5; color: #888; }
+        .notice-form-row .file-label { font-weight: 400; }
+        .notice-form-row .file-input { border: none; background: none; }
+        .notice-form-row .ck-editor__editable { min-height: 180px; }
+        .notice-form-row .ck-editor__main { width: 100%; }
+        .notice-form-row .ck-editor__editable_inline { min-height: 180px; }
+        .notice-form-row .ck-editor__main { width: 100%; }
+        .notice-form-btns { text-align: center; margin-top: 30px; }
+        .notice-form-btns button { padding: 10px 32px; font-size: 1.1em; border: none; border-radius: 5px; margin: 0 8px; cursor: pointer; }
+        .notice-form-btns .submit-btn { background: #1976d2; color: #fff; }
+        .notice-form-btns .cancel-btn { background: #bdbdbd; color: #fff; }
+        .file-current { font-size: 0.97em; color: #1976d2; margin-left: 10px; }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content" style="position:relative; min-height:600px;">
+                <div class="notice-edit-container">
+                    <h2>공지사항 수정</h2>
+                    <form id="noticeEditForm">
+                        <div class="notice-form-row">
+                            <label>공지사항 번호</label>
+                            <input type="text" value="N001" readonly>
+                        </div>
+                        <div class="notice-form-row">
+                            <label>공지 작성자</label>
+                            <input type="text" value="홍길동" readonly>
+                        </div>
+                        <div class="notice-form-row">
+                            <label>첨부파일</label>
+                            <input type="file" class="file-input">
+                            <span class="file-current">(기존 파일: notice1.pdf)</span>
+                        </div>
+                        <div class="notice-form-row">
+                            <label>아티스트 그룹번호</label>
+                            <input type="text" value="NCT WISH" readonly>
+                        </div>
+                        <div class="notice-form-row">
+                            <label>공지 제목</label>
+                            <input type="text" id="noticeTitle" value="NCT WISH 공식 팬클럽 'NCTzen WISH' 1기 모집 마감 임박!" required>
+                        </div>
+                        <div class="notice-form-row">
+                            <label>공지 내용</label>
+                            <textarea id="noticeContent">NCT WISH 공식 팬클럽 모집 관련 안내 내용입니다.</textarea>
+                        </div>
+                        <div class="notice-form-row">
+                            <label>공지 작성일시</label>
+                            <input type="text" value="2025-05-10 10:00" readonly>
+                        </div>
+                        <div class="notice-form-row">
+                            <label>공지 수정일시</label>
+                            <input type="text" value="2025-05-14 09:30" readonly>
+                        </div>
+                        <div class="notice-form-btns">
+                            <button type="submit" class="submit-btn">저장</button>
+                            <button type="button" class="cancel-btn" id="cancelBtn">취소</button>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (직원 전용)</p>
+        </footer>
+    </div>
+</body>
+<script>
+        // 로그아웃 기능
+        const logoutButton = document.querySelector('.emp-logout-btn');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('로그아웃 하시겠습니까?')) {
+                    alert('로그아웃 되었습니다.');
+                    // window.location.href = '로그인 페이지 경로';
+                }
+            });
+        }
+    
+        // 직원 이름 등 동적 데이터 로드 (예시)
+        const employeeNameSpan = document.getElementById('employee-name');
+        if (employeeNameSpan) {
+            employeeNameSpan.textContent = "홍길동";
+        }
+    
+        // 취소 버튼 클릭 시 공지사항 관리로 이동
+        document.getElementById('cancelBtn').onclick = function() {
+            window.location.href = '/emp/notice/detail';
+        };
+    
+        // 폼 제출 시(저장)
+        document.getElementById('noticeEditForm').onsubmit = function(e) {
+            e.preventDefault();
+            // var noticeContent = CKEDITOR.instances.noticeContent.getData();
+            alert('공지사항이 수정되었습니다. (실제 저장은 미구현)');
+            window.location.href = '/emp/notice/detail';
+        };
+    
+        // DOMContentLoaded 이벤트 내에서 사이드바 관련 스크립트 및 CKEditor 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            // CKEDITOR 적용
+            CKEDITOR.replace('noticeContent');
+    
+            // 사이드바 메뉴 토글 기능
+            const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+            navItemsWithSubmenu.forEach(item => {
+                const arrow = item.querySelector('.submenu-arrow');
+                item.addEventListener('click', function(event) {
+                    if (this.getAttribute('href') === '#') {
+                        event.preventDefault();
+                    }
+                    const parentLi = this.parentElement;
+                    const submenu = this.nextElementSibling;
+    
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        const parentUl = parentLi.parentElement;
+                        if (parentUl) {
+                            Array.from(parentUl.children).forEach(siblingLi => {
+                                if (siblingLi !== parentLi) {
+                                    const siblingSubmenuControl = siblingLi.querySelector('.emp-nav-item.has-submenu.open');
+                                    if (siblingSubmenuControl) {
+                                        const siblingSubmenuElement = siblingSubmenuControl.nextElementSibling;
+                                        siblingSubmenuControl.classList.remove('open');
+                                        if (siblingSubmenuElement && siblingSubmenuElement.classList.contains('emp-submenu')) {
+                                            siblingSubmenuElement.style.display = 'none';
+                                        }
+                                        const siblingArrow = siblingSubmenuControl.querySelector('.submenu-arrow');
+                                        if (siblingArrow) siblingArrow.style.transform = 'rotate(0deg)';
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    
+                    this.classList.toggle('open');
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                        if (arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+                    }
+                });
+            });
+    
+            // 현재 페이지 URL 기반으로 사이드바 메뉴 활성화 및 펼침
+            // notice_edit.html 페이지에서는 'notice_management.html' 메뉴를 활성화하는 것이 자연스러움
+            const currentFullHref = window.location.href;
+            document.querySelectorAll('.emp-sidebar .emp-nav-item[href]').forEach(link => {
+                const linkHrefAttribute = link.getAttribute('href');
+                if (linkHrefAttribute && linkHrefAttribute !== "#" && (currentFullHref.includes("notice_edit.html") && linkHrefAttribute.endsWith("notice_management.html"))) {
+                     link.classList.add('active');
+                     let currentActiveElement = link;
+                     while (true) {
+                        const parentLi = currentActiveElement.parentElement;
+                        if (!parentLi) break;
+                        const parentSubmenuUl = parentLi.closest('ul.emp-submenu');
+                        if (parentSubmenuUl) {
+                            parentSubmenuUl.style.display = 'block';
+                            const controllingAnchor = parentSubmenuUl.previousElementSibling;
+                            if (controllingAnchor && controllingAnchor.tagName === 'A' && controllingAnchor.classList.contains('has-submenu')) {
+                                controllingAnchor.classList.add('active', 'open');
+                                const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                                if (arrow) arrow.style.transform = 'rotate(90deg)';
+                                currentActiveElement = controllingAnchor;
+                            } else { break; }
+                        } else { break; }
+                     }
+                } else if (linkHrefAttribute && linkHrefAttribute !== "#" && currentFullHref.endsWith(linkHrefAttribute)) {
+                    link.classList.add('active');
+                    let currentActiveElement = link;
+                     while (true) {
+                        const parentLi = currentActiveElement.parentElement;
+                        if (!parentLi) break;
+                        const parentSubmenuUl = parentLi.closest('ul.emp-submenu');
+                        if (parentSubmenuUl) {
+                            parentSubmenuUl.style.display = 'block';
+                            const controllingAnchor = parentSubmenuUl.previousElementSibling;
+                            if (controllingAnchor && controllingAnchor.tagName === 'A' && controllingAnchor.classList.contains('has-submenu')) {
+                                controllingAnchor.classList.add('active', 'open');
+                                const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                                if (arrow) arrow.style.transform = 'rotate(90deg)';
+                                currentActiveElement = controllingAnchor;
+                            } else { break; }
+                        } else { break; }
+                     }
+                }
+            });
+        });
+    </script>
+</html> 

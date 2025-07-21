@@ -1,0 +1,25 @@
+package kr.or.ddit.vo.user;
+
+import java.util.Date;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class MemberVO extends PeopleVO{
+	private String memUsername;
+	private String memStatCode;
+	private String memRegPath;
+	private String memNicknm;
+	private String memBirth;
+	private String memZipCode;
+	private String memAddress1;
+	private String memAddress2;
+	private Date memModDate;
+	private Date memRegDate;
+	private String memEtcYn;
+
+}

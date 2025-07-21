@@ -1,0 +1,23 @@
+package kr.or.ddit.ddtown.service.emp.artist;
+
+import java.util.List;
+
+import kr.or.ddit.vo.artist.AlbumVO;
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+import kr.or.ddit.vo.artist.ArtistVO;
+
+public interface IArtistGroupService {
+
+	// 목록 불러오기
+	public List<ArtistGroupVO> retrieveArtistGroupList();
+	
+	// 그룹의 상세 정보 불러오기
+	public ArtistGroupVO retrieveArtistGroup(int artGroupNo);
+	
+	// 그룹 및 아티스트 정보 수정
+	public int updateArtistGroupAndMembersAndAlbums(ArtistGroupVO groupToUpdate) throws Exception;
+	
+	// 추가된 getAllAlbums 메소드 선언
+    public List<AlbumVO> getAllAlbums();
+
+}

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.alert.IAlertMapper">
+ 
+ <resultMap type="kr.or.ddit.vo.AlertSettingVO" id="alertSettingMap">
+ 	<id property="alertTypeCode" column="ALERT_TYPE_CODE"/>
+ 	<result property="alertTypeCode" column="ALERT_TYPE_CODE"/>
+	<result property="memUsername" column="MEM_USERNAME"/>
+	<result property="alertEnabledYn" column="ALERT_ENABLED_YN"/>
+	<result property="alertModDate" column="ALERT_MOD_DATE"/>
+	<result property="alertDescription" column="DESCRIPTION"/>
+ </resultMap>
+ 
+ <!--
+ATC001
+ATC002
+ATC003
+ATC004
+-->
+<!-- alert_type_code 가져오기 -->
+<select id="getATCs" resultType="string">
+	SELECT
+	    comm_code_det_no
+	FROM
+	    common_detail_code
+	WHERE
+	    comm_code_grp_no = 'ALERT_TYPE_CODE'
+</select>
+
+ <insert id="insertSetting" parameterType="kr.or.ddit.vo.AlertSettingVO" >
+ 	INSERT INTO alert_setting (
+	    alert_type_code
+	    , mem_username
+	) VALUES (
+	    #{alertTypeCode}
+	  , #{memUsername}
+	)
+ </insert>
+ 
+ </mapper>

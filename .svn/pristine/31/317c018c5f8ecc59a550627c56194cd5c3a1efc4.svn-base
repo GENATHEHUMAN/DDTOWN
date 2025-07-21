@@ -1,0 +1,525 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec"%>  
+
+<%--
+  컨트롤러에서 다음 속성들을 설정하고 이 페이지로 포워드해야 합니다:
+  request.setAttribute("isEditMode", true/false); // 수정 모드 여부
+  if (isEditMode) {
+      request.setAttribute("item", itemObject); // 상품 정보 객체 (Map 또는 DTO)
+                                               // itemObject는 name, sku, category, price, stock, status, description, images (List<ImageDTO>) 등을 포함
+  }
+  request.setAttribute("adminUser", adminUserObject); // 헤더용 관리자 정보
+--%>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상품 등록 - DDTOWN 관리자 시스템</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/admin_portal.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/admin_items.css">
+</head>
+<body>
+    <div class="emp-container">
+        <header class="emp-header">
+            <div class="emp-logo">
+                <a href="${pageContext.request.contextPath}/admin/main">DDTOWN 관리자</a>
+            </div>
+            <div class="emp-user-info">
+                <span id="adminUserName"><i class="fas fa-user-circle"></i> ${not empty adminUser.username ? adminUser.username : '관리자 (admin_user)'}</span>
+                <a href="#" class="emp-logout-btn" id="adminLogoutBtn"><i class="fas fa-sign-out-alt"></i> 로그아웃</a>
+            </div>
+        </header>
+
+        <div class="emp-body-wrapper">
+            <aside class="emp-sidebar">
+                <nav class="emp-nav">
+                    <ul>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="corp">
+                                <i class="fas fa-building"></i> 기업관리 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-corp">
+                                <li><a href="${pageContext.request.contextPath}/admin/notice/corpList" class="emp-nav-item">공지사항 관리</a></li>
+                                <li><a href="${pageContext.request.contextPath}/admin/info/dashboard" class="emp-nav-item">기업정보 관리</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="cs">
+                                <i class="fas fa-headset"></i> 고객센터 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-cs">
+                                <li><a href="${pageContext.request.contextPath}/admin/cs/faqList" class="emp-nav-item">FAQ 관리</a></li>
+                                <li><a href="${pageContext.request.contextPath}/admin/cs/inquiryList" class="emp-nav-item">1:1문의 관리</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="community">
+                                <i class="fas fa-users"></i> 아티스트 커뮤니티 관리 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-community">
+                                <li><a href="${pageContext.request.contextPath}/admin/artist/memberList" class="emp-nav-item">회원관리</a></li>
+                                <li><a href="${pageContext.request.contextPath}/admin/artist/artistList" class="emp-nav-item">아티스트 관리</a></li>
+                                <li><a href="${pageContext.request.contextPath}/admin/report/reportList" class="emp-nav-item">신고 관리</a></li>
+                                <li><a href="${pageContext.request.contextPath}/admin/blacklist/list" class="emp-nav-item">블랙리스트 관리</a></li>
+                                <li><a href="${pageContext.request.contextPath}/admin/apt/list" class="emp-nav-item">APT 관리</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="goods">
+                                <i class="fas fa-store"></i> 굿즈샵 관리 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-goods">
+                                <li><a href="${pageContext.request.contextPath}/admin/goods/noticeList" class="emp-nav-item">공지사항 관리</a></li>
+                                <li><a href="${pageContext.request.contextPath}/admin/goods/itemList" class="emp-nav-item">품목 관리</a></li>
+                                <li><a href="${pageContext.request.contextPath}/admin/goods/categoryList" class="emp-nav-item">품목 카테고리 관리</a></li>
+                                <li><a href="${pageContext.request.contextPath}/admin/goods/orderList" class="emp-nav-item">주문내역 관리</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/admin/stats/main" class="emp-nav-item" data-menu="stats">
+                                <i class="fas fa-chart-line"></i> 통계관리
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+            <main class="emp-content">
+                <section id="goodsItemFormSection" class="ea-section active-section">
+                    <div class="item-form-container">
+                        <div class="item-form-header">
+                            <h2>상품 등록</h2>
+                        </div>
+
+                        <c:if test="${not empty successMessage}">
+                            <div class="alert alert-success">${successMessage}</div>
+                        </c:if>
+                        <c:if test="${not empty errorMessage}">
+                            <div class="alert alert-danger">${errorMessage}</div>
+                        </c:if>
+
+ 						<form method="POST" action="${pageContext.request.contextPath}/admin/goods/items/form" enctype="multipart/form-data">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="goodsNm">상품명 <span class="required">*</span></label>
+                                    <input type="text" id="goodsNm" name="goodsNm" required value="<c:out value='${item.goodsNm}'/>">
+                                </div>
+                                <div class="form-group">
+                                    <label for="goodsCode">상품코드<span class="required"></span></label>
+                                    <%-- 상품코드는 자동 생성되므로, 입력 필드를 없애거나 읽기 전용으로 표시할 수 있습니다. --%>
+                                    <%-- 여기서는 일단 기존대로 두되, 서버에서 덮어쓴다고 가정합니다. 또는 readonly 처리. --%>
+                                    <input type="text" id="goodsCode" name="goodsCode" readonly placeholder="자동 생성" value="<c:out value='${item.goodsCode}'/>">
+                                </div>
+                            </div>
+							<!-- 
+							1. 상품 등록 시 옵션도 새로 등록할 수 있고, 기존의 옵션은
+							1. 옵션 별 재고를 입력할 수 있음. 
+							 - 옵션 자체를 함께 등록 가능
+							2. 재고 수량이 필요가 없음? 옵션 별 재고수량의 총 합을 구해야 함
+							 - 옵션 별 재고를 입력
+							 - 옵션 별 재고를 합치면 상품의 총 재고수량이 됨
+							 - ex) 응원봉 -> 옵션(굿즈넘버(f.k), 아티스트그룹넘버(f.k)) : 빨간색(opt01) 2개
+							 -     응원봉 -> 옵션 : 노란색(opt02) 3개
+							 - 	   머리띠 -> 옵션 : 빨간색(opt03) 5개
+							3. 굿즈VO에는 총 재고수량 프로퍼티가 있어야 함
+							결론) 굿즈 넘버(goodsNo), 아티스트 그룹 넘버(artGroupNo)가 form 태그 안에 
+								<input type="text" name="goodsNo".. 
+								<input type="text" name="artGroupNo".. 
+								있어야 함
+								- 굿즈 넘버 : 숫자(굿즈 판단)
+								- 상품 코드 : 아티스트명+숫자
+							 -->
+							 
+							<!-- 아티스트 그룹 -->
+							<div class="form-row">
+							    <div class="form-group">
+							        <label for="artGroupNo">아티스트 그룹 <span class="required">*</span></label>
+							        <select id="artGroupNo" name="artGroupNo" required>
+							            <option value="">아티스트를 선택하세요</option>
+							            <c:forEach var="artist" items="${artistList}">
+							                <option value="${artist.artGroupNo}">
+							                    <c:out value="${artist.artGroupNm}"/>
+							                </option>
+							            </c:forEach>
+							        </select>
+							    </div>
+							</div>
+							
+							<!-- 옵션 선택 -->
+							<div class="form-group">
+                                <label for="useOptionsCheckbox">옵션 사용</label>
+                                <input type="checkbox" id="useOptionsCheckbox" name="useOptions" value="true" checked> 
+                                </div>
+
+                            <div class="form-row" id="mainStockSection">
+                                <div class="form-group">
+                                    <label for="stockRemainQty">재고수량<span class="required">*</span></label>
+                                    <input type="number" id="stockRemainQty" name="stockRemainQty" min="0" value="<c:out value='${item.stockRemainQty}'/>">
+                                </div>
+                            </div>
+                            
+                            <div id="optionsInputSection"> <%-- ID 추가 --%>
+                                <div id="goodsOptionsContainer">
+                                    <div class="option-set"> <input type="text" name="options[0].goodsOptNm" placeholder="옵션명 (예: 레드/S)">
+                                        <input type="number" name="options[0].initialStockQty" placeholder="초기 재고 수량">
+                                        <input type="number" name="options[0].goodsOptPrice" placeholder="옵션 추가 가격">
+                                        <input type="text" name="options[0].goodsOptEtc" placeholder="옵션 설명 (비고)">
+                                        <button type="button" class="remove-option-btn">삭제</button>
+                                    </div>
+                                </div>
+                                <button type="button" id="addOptionBtn">옵션 추가</button>
+                            </div>
+							
+							<!-- 판매 가격 -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="goodsPrice">판매가격 <span class="required">*</span></label>
+                                    <input type="number" id="goodsPrice" name="goodsPrice" min="0" step="1" required value="<c:out value='${item.goodsPrice}'/>">
+                                </div>
+                            </div>
+                            
+                            <!-- 재고 수량 (일단 제거) -->
+                            <div class="form-row">
+                            
+                            
+                                <%-- <div class="form-group">
+                                    <label for="stockRemainQty">재고수량 <span class="required">*</span></label>
+                                    <input type="number" id="stockRemainQty" name="stockRemainQty" min="0" required value="<c:out value='${item.stockRemainQty}'/>">
+                                </div> --%>
+                                
+                                
+                                <!-- 판매 상태 -->
+                                <div class="form-group">
+								    <label for="itemStatus">판매상태 <span class="required">*</span></label>
+								    <select id="itemStatus" name="statusEngKey" required> <%-- name도 statusEngKey로 변경하는 것을 고려 --%>
+								        <option value="IN_STOCK" <c:if test="${item.statusEngKey == 'IN_STOCK' or empty item.statusEngKey}">selected</c:if>>판매중</option>
+								        <option value="SOLD_OUT" <c:if test="${item.statusEngKey == 'SOLD_OUT'}">selected</c:if>>품절</option>
+								    </select>
+								</div>
+                            </div>
+                            
+                            <!-- 상품 설명 -->
+                            <div class="form-group">
+                                <label for="goodsContent">상품설명 <span class="required">*</span></label>
+                                <textarea id="goodsContent" name="goodsContent" required><c:out value='${item.goodsContent}'/></textarea>
+                            </div>
+                            
+                            <!-- 상품 이미지 -->
+                            <div class="form-group">
+                                <label for="goodsFiles">상품 이미지 <span class="required">*</span></label>
+                                <div class="image-upload-area" id="imageUploadArea">
+                                    <p>이미지를 드래그하거나 클릭하여 업로드하세요</p>
+                                    <input type="file" id="goodsFiles" name="goodsFiles" multiple accept="image/*" style="display: none;">
+                                    <button type="button" class="ea-btn" onclick="document.getElementById('goodsFiles').click()">
+                                        <i class="fas fa-upload"></i> 이미지 선택
+                                    </button>
+                                </div>
+                                
+                                <!-- 이미지 미리보기 -->
+                                <div class="image-preview-container" id="imagePreviewContainer">
+                                    <%-- 새로 추가하는 이미지 미리보기만 여기에 표시됩니다 --%>
+                                </div>
+                            </div>
+							
+							<!-- 취소 / 등록 버튼 -->
+                            <div class="form-actions">
+                                <a href="${pageContext.request.contextPath}/admin/goods/itemList" class="ea-btn">취소</a>
+                                <button type="submit" id="goodsRegisterSubmitBtn" class="ea-btn primary"><i class="fas fa-save"></i> 등록</button>
+                            </div>
+                            <sec:csrfInput/>
+                        </form>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <footer class="emp-footer">
+            <p>&copy; <jsp:useBean id="now" class="java.util.Date" /><fmt:formatDate value="${now}" pattern="yyyy" /> DDTOWN Entertainment. All rights reserved. (관리자 전용)</p>
+        </footer>
+    </div>
+
+    <script>
+ 	// 로그아웃 기능 (실제 로그아웃 처리는 서버에서)
+    const logoutButton = document.getElementById('adminLogoutBtn');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('로그아웃 하시겠습니까?')) {
+                // 실제 로그아웃 URL로 이동
+                window.location.href = '${pageContext.request.contextPath}/admin/logout';
+            }
+        });
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+        navItemsWithSubmenu.forEach(item => {
+            const arrow = item.querySelector('.submenu-arrow');
+            item.addEventListener('click', function(event) {
+                // 링크 이동을 막지 않으려면 아래 주석 처리 (href="#" 인 경우에만 막는 것이 좋음)
+                if (this.getAttribute('href') === '#') {
+                    event.preventDefault();
+                }
+
+                const parentLi = this.parentElement;
+                const submenu = this.nextElementSibling;
+
+                // 다른 열린 서브메뉴 닫기
+                if (submenu && submenu.classList.contains('emp-submenu')) {
+                    const parentUl = parentLi.parentElement;
+                    if (parentUl) {
+                        Array.from(parentUl.children).forEach(siblingLi => {
+                            if (siblingLi !== parentLi) {
+                                const siblingSubmenuControl = siblingLi.querySelector('.emp-nav-item.has-submenu.open');
+                                if (siblingSubmenuControl) {
+                                    const siblingSubmenu = siblingSubmenuControl.nextElementSibling;
+                                    siblingSubmenuControl.classList.remove('open');
+                                    if (siblingSubmenu && siblingSubmenu.classList.contains('emp-submenu')) {
+                                        siblingSubmenu.style.display = 'none';
+                                    }
+                                    const siblingArrow = siblingSubmenuControl.querySelector('.submenu-arrow');
+                                    if (siblingArrow) siblingArrow.style.transform = 'rotate(0deg)';
+                                }
+                            }
+                        });
+                    }
+                }
+                
+                // 현재 클릭한 메뉴 토글
+                this.classList.toggle('open');
+                if (submenu && submenu.classList.contains('emp-submenu')) {
+                    submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                    if (arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+                }
+            });
+        });
+
+        // 현재 URL을 기반으로 활성 메뉴 표시
+        const currentFullHref = window.location.href;
+        const contextPath = "${pageContext.request.contextPath}";
+
+        document.querySelectorAll('.emp-sidebar .emp-nav-item[href]').forEach(link => {
+            const linkHrefAttribute = link.getAttribute('href');
+            // 링크가 #이 아니고, 현재 URL이 해당 링크로 끝나는 경우 (컨텍스트 경로 고려)
+            if (linkHrefAttribute && linkHrefAttribute !== "#") {
+                const fullLinkPath = (linkHrefAttribute.startsWith(contextPath) ? linkHrefAttribute : contextPath + linkHrefAttribute);
+                // URL이 정확히 일치하거나, 현재 URL이 링크로 시작하고 추가 파라미터가 있는 경우도 고려할 수 있음
+                // 여기서는 단순 endsWith 대신, URL 객체를 사용하여 경로만 비교하는 것이 더 정확할 수 있습니다.
+                // 간단하게는 아래와 같이 처리:
+                if (currentFullHref.includes(fullLinkPath)) { // includes로 변경하여 파라미터가 있어도 매칭되도록
+                    link.classList.add('active');
+                    let currentActiveElement = link;
+                    // 부모 서브메뉴 펼치기
+                    while (true) {
+                        const parentLi = currentActiveElement.parentElement;
+                        if (!parentLi) break;
+                        const parentSubmenuUl = parentLi.closest('.emp-submenu');
+                        if (parentSubmenuUl) {
+                            parentSubmenuUl.style.display = 'block';
+                            const controllingAnchor = parentSubmenuUl.previousElementSibling;
+                            if (controllingAnchor && controllingAnchor.tagName === 'A' && controllingAnchor.classList.contains('has-submenu')) {
+                                controllingAnchor.classList.add('active', 'open');
+                                const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                                if (arrow) {
+                                    arrow.style.transform = 'rotate(90deg)';
+                                }
+                                currentActiveElement = controllingAnchor;
+                            } else {
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+    	//------------------------중복 제출 방어--------------------------------------
+    	// JavaScript 최상단 또는 DOMContentLoaded 내부의 적절한 위치
+		const submitButton = document.getElementById('goodsRegisterSubmitBtn');
+		const itemFormForSubmit = document.querySelector('form[action$="/items/register"]'); // 폼을 정확히 선택
+		
+		if (itemFormForSubmit && submitButton) {
+		    itemFormForSubmit.addEventListener('submit', function(event) {
+		        console.log('Submit event triggered for itemFormForSubmit');
+		        if (submitButton.dataset.submitted === 'true') {
+		            console.warn('폼 중복 제출 시도 감지됨 (JS).');
+		            event.preventDefault(); // 이미 제출 중이면 다시 제출 막기
+		            return false;
+		        }
+		        submitButton.dataset.submitted = 'true'; // 제출 상태 표시
+		        submitButton.disabled = true;
+		        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 처리 중...';
+		
+		        // (주의) 만약 클라이언트측 유효성 검사 실패로 submit을 막고 버튼을 다시 활성화해야 한다면
+		        // 이 로직은 유효성 검사 통과 *후에* 실행되거나, 실패 시 버튼을 다시 활성화해야 합니다.
+		    });
+		}
+
+        //------------------------옵션 추가 / 삭제 로직---------------------------------
+        const addButton = document.getElementById('addOptionBtn');
+        const container = document.getElementById('goodsOptionsContainer');
+        let optionIndex = container.getElementsByClassName('option-set').length;
+        
+        addButton.addEventListener('click', function() {
+            const newOptionSetDiv = document.createElement('div');
+            newOptionSetDiv.classList.add('option-set');
+			console.log("optionIndex : ", optionIndex);
+
+            newOptionSetDiv.innerHTML = `
+                <input type="text" name="options[\${optionIndex}].goodsOptNm" placeholder="옵션명 (예: 레드/S)">
+                <input type="number" name="options[\${optionIndex}].initialStockQty" placeholder="초기 재고 수량" min="0">
+                <input type="number" name="options[\${optionIndex}].goodsOptPrice" placeholder="옵션 추가 가격" min="0">
+                <input type="text" name="options[\${optionIndex}].goodsOptEtc" placeholder="옵션 설명 (비고)">
+                <button type="button" class="remove-option-btn">삭제</button>
+            `;
+
+            container.appendChild(newOptionSetDiv);
+            optionIndex++;
+        });
+
+        container.addEventListener('click', function(event) {
+            if (event.target.classList.contains('remove-option-btn')) {
+                event.target.parentElement.remove();
+            }
+        });
+        //------------------------옵션 추가 / 삭제 로직 끝---------------------------------
+		
+        //------------------------옵션 사용 여부에 따른 변경 로직--------------------------------
+        const useOptionsCheckbox = document.getElementById('useOptionsCheckbox');
+        const mainStockSection = document.getElementById('mainStockSection');
+        const stockRemainQtyInput = document.getElementById('stockRemainQty');
+        const optionsInputSection = document.getElementById('optionsInputSection');
+
+        function toggleSectionsBasedOnOptions() {
+            if (useOptionsCheckbox.checked) { // 옵션 사용 시
+                mainStockSection.style.display = 'none'; // 상품 레벨 재고 숨김
+                stockRemainQtyInput.disabled = true;     // 비활성화하여 값 전송 안되게
+                stockRemainQtyInput.required = false;    // 필수입력 해제
+
+                optionsInputSection.style.display = 'block'; // 옵션 입력 영역 보임
+                // 옵션 입력 필드들 활성화
+                optionsInputSection.querySelectorAll('input, button').forEach(el => el.disabled = false);
+                // 첫 번째 옵션명은 필수로 설정 (예시)
+                const firstOptNm = optionsInputSection.querySelector('input[name="options[0].goodsOptNm"]');
+                if(firstOptNm) firstOptNm.required = true;
+
+            } else { // 옵션 미사용 시
+                mainStockSection.style.display = '';    // 상품 레벨 재고 보임 (기본 display 스타일로)
+                stockRemainQtyInput.disabled = false;
+                stockRemainQtyInput.required = true;     // 필수입력 설정
+
+                optionsInputSection.style.display = 'none'; // 옵션 입력 영역 숨김
+                // 옵션 입력 필드들 비활성화
+                optionsInputSection.querySelectorAll('input, button').forEach(el => el.disabled = true);
+                const firstOptNm = optionsInputSection.querySelector('input[name="options[0].goodsOptNm"]');
+                if(firstOptNm) firstOptNm.required = false; // 필수입력 해제
+            }
+        }
+
+        useOptionsCheckbox.addEventListener('change', toggleSectionsBasedOnOptions);
+        toggleSectionsBasedOnOptions(); // 페이지 로드 시 초기 상태 설정
+        //------------------------옵션 사용 여부에 따른 변경 로직 끝--------------------------------
+
+        
+        
+        //------------------------이미지 미리보기 / 파일 관리 로직---------------------------------
+        const goodsFilesInput = document.getElementById('goodsFiles'); //파일 입력 필드
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+
+        let currentFilesDataTransfer = new DataTransfer();
+
+        goodsFilesInput.addEventListener('change', function(event) {
+            const newFiles = event.target.files; //사용자가 이번에 새로 선택한 파일들
+
+            Array.from(newFiles).forEach(file => {
+                console.log("선택된 파일: (change 이벤트)", file.name, file.size, file.type, file.lastModified); //상세 정보 로깅
+                
+                if (file.type.startsWith('image/')) { // Was: file.type.startsWith('/image')
+                    let exists = false;
+                    for (let i = 0; i < currentFilesDataTransfer.files.length; i++) {
+                        
+                        if (currentFilesDataTransfer.files[i].name === file.name && currentFilesDataTransfer.files[i].size === file.size) { // Was: currentFilesDataTransfer.files[i].name == file.name
+                            exists = true;
+                            console.log("중복 파일 감지:", file.name);
+                            break;
+                        }
+                    }
+
+                    if (!exists) {
+                        currentFilesDataTransfer.items.add(file); //관리 목록에 파일 추가
+                        displayImagePreview(file); // 미리보기 함수 호출
+                        console.log("currentFilesDataTransfer에 추가됨:", file.name, "총 개수:", currentFilesDataTransfer.files.length);
+                    }
+                } else {
+                    alert('이미지 파일만 업로드할 수 있습니다!');
+                }
+            });
+            
+            goodsFilesInput.files = currentFilesDataTransfer.files; // Was: goodsFilesInput.files = cuurentFilesDataTransfer.files;
+
+            logFileListState(goodsFilesInput.files, "파일 선택(change) 후 goodsFilesInput.files");
+            
+            event.target.value = ''; //동일 파일 재선택 가능하도록 초기화
+        });
+	
+        //--------------------추가한 이미지 미리보기 로직---------------------------
+        function displayImagePreview(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+            	
+                console.log("FileReader 결과 (Data URL 첫 100자):", e.target.result ? e.target.result.substring(0, 100) + "..." : "결과 없음 또는 null");
+                console.log("FileReader 결과 전체 길이:", e.target.result ? e.target.result.length : "N/A");
+            	
+                const previewDiv = document.createElement('div');
+                previewDiv.classList.add('image-preview');
+                previewDiv.dataset.fileName = file.name;
+
+                previewDiv.innerHTML = `
+                    <img src="\${e.target.result}" alt="\${file.name}" style="max-width: 100px; max-height: 100px; margin: 5px; border: 1px solid #ddd;">
+                    <button type="button" class="remove-image-preview-btn" title="이 이미지 제거" style="cursor:pointer; color:red; border:none; background:transparent;">&times;</button>
+                `;
+                imagePreviewContainer.appendChild(previewDiv);
+                console.log("미리보기 DIV 추가됨: ", file.name);
+            };
+            
+            //FileReader 에러 핸들러 추가
+            reader.onerror = function(e) {
+            	console.log("FileReader 결과 (Data URL 첫 100자):", e.target.result ? e.target.result.substring(0, 100) + "..." : "결과 없음 또는 null");
+                console.log("FileReader 결과 전체 길이:", e.target.result ? e.target.result.length : "N/A");
+            	alert("파일을 읽는 중 오류가 발생했습니다: " + file.name);
+            };
+            
+            reader.readAsDataURL(file); //파일 읽기 시작
+        }
+        
+		//----------------------------추가한 이미지 제거 로직---------------------------
+        imagePreviewContainer.addEventListener('click', function(event) {
+            if (event.target.classList.contains('remove-image-preview-btn')) {
+                const previewElement = event.target.parentElement;
+                const fileNameToRemove = previewElement.dataset.fileName;
+
+                const newTempDataTransfer = new DataTransfer();
+                for (let i = 0; i < currentFilesDataTransfer.files.length; i++) {
+                    
+                    if (currentFilesDataTransfer.files[i].name !== fileNameToRemove) { // Was: currentFilesDataTransfer.files[i].names
+                        newTempDataTransfer.items.add(currentFilesDataTransfer.files[i]);
+                    }
+                }
+                currentFilesDataTransfer = newTempDataTransfer;
+
+                goodsFilesInput.files = currentFilesDataTransfer.files;
+                previewElement.remove();
+                console.log("미리보기 및 파일 목록에서 제거됨: ", fileNameToRemove);
+            } 
+        });
+		
+		
+    });
+    </script>
+</body>
+</html>

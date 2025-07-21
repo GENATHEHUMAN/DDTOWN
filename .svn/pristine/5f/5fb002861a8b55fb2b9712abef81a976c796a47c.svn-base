@@ -1,0 +1,89 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>라이브 관리 - DDTOWN 직원 포털</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .live-section-title { font-size: 1.3em; font-weight: 600; margin-bottom: 10px; }
+        .live-box { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 20px; margin-bottom: 28px; }
+        .live-info-row { display: flex; align-items: center; gap: 18px; margin-bottom: 8px; }
+        .live-info-row .live-title { font-weight: 600; color: #234aad; }
+        .live-info-row .live-link { color: #1976d2; text-decoration: underline; font-weight: 500; }
+        .live-info-row .live-link:hover { text-decoration: underline; color: #1451a3; }
+        .live-info-row .live-viewers { color: #666; font-size: 0.98em; }
+        .live-table { width: 100%; border-collapse: collapse; background: #fff; margin-bottom: 18px; }
+        .live-table th, .live-table td { border: 1px solid #e0e0e0; padding: 10px; text-align: center; }
+        .live-table th { background: #f5f5f5; font-weight: 600; }
+        .live-table td .btn { padding: 5px 16px; border-radius: 5px; font-size: 0.98em; cursor: pointer; border: none; }
+        .live-table td .btn-hide { background: #bdbdbd; color: #fff; }
+        .live-table td .btn-show { background: #4caf50; color: #fff; }
+        .live-table td .btn-delete { background: #e74c3c; color: #fff; margin-left: 6px; }
+        .live-table td .btn-public { background: #4caf50; color: #fff; }
+        .live-table td .btn-private { background: #bdbdbd; color: #fff; }
+        .vod-status-public { background: #e0f7e9; color: #219150; border-radius: 12px; padding: 3px 14px; font-weight: 600; }
+        .vod-status-hide { background: #ececec; color: #888; border-radius: 12px; padding: 3px 14px; font-weight: 600; }
+        .search-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+        .search-bar select, .search-bar input { padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        .search-bar button { background: #1976d2; color: #fff; border: none; border-radius: 4px; padding: 7px 18px; font-size: 1em; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+        
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content" style="position:relative; min-height:600px;">
+            
+            	<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+					<ol class="breadcrumb">
+					  <li class="breadcrumb-item"><a href="#" style="color:black;">아티스트 커뮤니티 관리</a></li>
+					  <li class="breadcrumb-item active" aria-current="page">라이브 관리</li>
+					</ol>
+				</nav>
+				
+                <h2 style="margin-bottom:18px;">라이브 방송 관리</h2>
+                <!-- 현재 진행중인 라이브 -->
+                <div class="live-section-title">현재 진행중인 라이브</div>
+                <div class="live-box">
+                    <div class="live-info-row">
+                        <span class="live-title">라이브 제목</span>
+                        <span class="live-viewers">현재 시청자: <strong>##,###명</strong></span>
+                        <a href="#" class="live-link" target="_blank">모니터링 링크 &rarr;</a>
+                        <span style="color:#888; font-size:0.98em;">(시작: yyyy-MM-dd HH:mm)</span>
+                    </div>
+                </div>
+                
+                <table class="live-table">
+                    <thead>
+                        <tr>
+                            <th>라이브 제목</th>
+                            <th>라이브 설명</th>
+                            <th>그룹</th>
+                            <th>누적 시청자 수</th>
+                            <th>방송 품질</th>
+                            <th>방송 시작 일시</th>
+                            <th>방송 종료 일시</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        DB 에서 목록을 가져올 예정
+                        
+                    </tbody>
+                </table>
+            </main>
+        </div>
+    </div>
+</body>
+<%@ include file="../../modules/footerPart.jsp" %>
+
+<%@ include file="../../modules/sidebar.jsp" %>  
+<script>
+
+</script>
+</html> 

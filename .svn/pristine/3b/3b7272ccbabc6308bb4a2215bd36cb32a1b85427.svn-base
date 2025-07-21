@@ -1,0 +1,228 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DD TOWN 오디션 상세보기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/audition.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<%@ include file="../modules/headerPart.jsp" %>
+<style>
+/* "예정" 상태 (ADSC001) */
+.audition-status.recruiting.status-scheduled {
+    background-color: #007bff; /* 연한 파란색 배경 */
+         /* 대비를 위한 어두운 글씨색 */
+}
+
+/* "진행중" 상태 (ADSC002) */
+.audition-status.recruiting.status-in-progress {
+    background-color: #2ecc40; /* 초록색 배경 (이전의 고정색이 진행중일 때 적용되도록 여기에 다시 정의) */
+
+}
+
+/* "마감" 상태 (ADSC003) */
+.audition-status.recruiting.status-closed {
+    background-color: #dc3545; /* 연한 빨간색 배경 */
+
+}
+</style>
+</head>
+<body>
+<%@ include file="./../corporate/modules/header.jsp" %>
+	<main>
+		<section class="audition-detail-hero">
+            <div class="container">
+                <h2>오디션 상세정보</h2>
+            </div>
+        </section>
+		
+		<section class="audition-detail-section">
+            <div class="container">
+                <div class="audition-detail-header">
+                    <div class="audition-status recruiting
+									    <c:choose>
+									        <c:when test="${audition.audiStatCode eq 'ADSC001'}">status-scheduled</c:when>
+									        <c:when test="${audition.audiStatCode eq 'ADSC002'}">status-in-progress</c:when>
+									        <c:when test="${audition.audiStatCode eq 'ADSC003'}">status-closed</c:when>
+									    </c:choose>
+									">
+									    <c:choose>
+									        <c:when test="${audition.audiStatCode eq 'ADSC001'}">예정</c:when>
+									        <c:when test="${audition.audiStatCode eq 'ADSC002'}">진행중</c:when>
+									        <c:when test="${audition.audiStatCode eq 'ADSC003'}">마감</c:when>
+									    </c:choose>
+									</div>
+                    <h3 class="audition-detail-title">${audition.audiTitle }</h3>
+                </div>
+                <ul class="audition-detail-meta">
+                    <li><strong>모집 분야:</strong>
+	                    <c:choose>
+                     		<c:when test="${audition.audiTypeCode eq 'ADTC001'}">보컬</c:when>
+                     		<c:when test="${audition.audiTypeCode eq 'ADTC002'}">댄스</c:when>
+                     		<c:when test="${audition.audiTypeCode eq 'ADTC003'}">연기</c:when>
+                     	</c:choose>
+                    </li>
+                    <li><strong>접수 시작일:</strong>
+                    	<c:set value="${fn:split(audition.audiStartDate, ' ')}" var="auditionStartDate"/> ${auditionStartDate[0]}
+                    </li>
+                    <li><strong>접수 마감일:</strong>
+                    	<c:set value="${fn:split(audition.audiEndDate, ' ')}" var="auditionEndDate"/> ${auditionEndDate[0]}
+                    </li>
+<%--                <li><strong>공고 등록일시:</strong> ${audition.audiRegDate }</li> --%>
+                </ul>
+                <div class="audition-detail-content">
+                    <h4>오디션 내용</h4>
+                   <p>
+       				 ${fn:replace(audition.audiContent, '-', '<br><br>-')}
+    				</p>
+                </div>
+                
+                <div class="audition-detail-attachments">
+                <c:if test="${audition.fileGroupNo ne null}">
+				    <h4>첨부파일</h4>
+				    <ul class="list-unstyled">
+				    	<c:if test="${not empty audition.fileList}">
+						    <c:forEach var="file" items="${audition.fileList}">
+						    <li>
+                        <c:choose>
+                            <%-- 파일의 MIME 타입이 'image/'로 시작하는지 확인 (예: image/jpeg, image/png 등) --%>
+                            <c:when test="${fn:startsWith(file.fileMimeType, 'image/')}">
+                                <div class="attached-image-container">
+                                    <%-- 이미지는 <img> 태그로 직접 표시합니다. file.webPath는 이미지를 웹에서 접근할 수 있는 URL이어야 합니다. --%>
+                                    <img src="${file.webPath}" alt="${file.fileOriginalNm}"
+                                         class="img-fluid attached-image"
+                                         style="max-width: 100%; height: auto; display: block; margin-bottom: 10px;">
+                                    <%-- 이미지 파일명 표시 --%>
+                                    <span>${file.fileOriginalNm}</span>
+                                    <%-- 이미지도 원본 파일 다운로드 링크를 제공하고 싶다면 추가 (선택 사항) --%>
+                                    <a href="<c:url value='/corporate/Audition/download.do'>
+                                             <c:param name='attachDetailNo' value='${file.attachDetailNo}'/>
+                                             </c:url>" class="attachment-link-download" style="margin-left: 10px;">
+                                        <i class="fas fa-download"></i> 다운로드
+                                    </a>
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <%-- 이미지가 아닌 파일(PDF, 문서 등)은 기존처럼 다운로드 링크로 표시 --%>
+                                <a href="<c:url value='/corporate/Audition/download.do'>
+                                         <c:param name='attachDetailNo' value='${file.attachDetailNo}'/>
+                                         </c:url>" class="attachment-link">
+                                    <%-- 파일 타입에 따른 아이콘 (예: PDF는 fas fa-file-pdf, 일반 파일은 fas fa-file-alt) --%>
+                                    <i class="fas fa-file-alt"></i> ${file.fileOriginalNm}
+                                </a>
+                            </c:otherwise>
+                        </c:choose>
+                    </li>
+				        		<%-- <li>
+				            		<a href="<c:url value='/corporate/Audition/download.do'>
+								            	 <c:param name='attachDetailNo' value='${file.attachDetailNo}'/>
+								            	 </c:url>" class="attachment-link">
+				                		<i class="fas fa-file-pdf"></i>
+				                		${file.fileOriginalNm}
+				            		</a>
+				        		</li> --%>
+				        	</c:forEach>						
+						</c:if>
+				    </ul>
+				</c:if>
+                </div>
+                <div class="audition-detail-actions">
+                    <a href="${pageContext.request.contextPath}/corporate/audition/schedule" class="btn btn-secondary">
+                        <i class="fas fa-list"></i> 목록
+                    </a>
+                    <c:if test="${audition.audiStatCode eq 'ADSC002'}">
+	                    <a href="/corporate/audition/supportForm.do?audiNo=${audition.audiNo }" class="btn btn-primary">
+	                        <i class="fas fa-pen"></i> 지원하기
+	                    </a>
+                    </c:if>
+                </div>
+            </div>
+        </section>
+	</main>
+<!-- footer 부분 -->
+	<footer class="site-footer">
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-info">
+                    <div class="footer-logo">DD TOWN</div>
+                    <p class="footer-description">
+                        DD TOWN은 창의성과 열정을 바탕으로 아티스트와 팬 모두에게 최고의 경험을 선사합니다. 
+                        우리는 혁신적인 콘텐츠와 글로벌 네트워크를 통해 K-Culture의 미래를 만들어갑니다.
+                    </p>
+                    <div class="footer-contact">
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>대전광역시 중구 계룡로 846</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <span>042-123-4567</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>contact@ddtown.com</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h3>바로가기</h3>
+                    <ul>
+                        <li class="has-submenu">
+                            <a href="#">기업 정보</a>
+                            <ul class="submenu">
+                                <li><a href="${pageContext.request.contextPath}/corporate/finance">재무정보</a></li>
+                                <li><a href="${pageContext.request.contextPath}/corporate/about">기업소개</a></li>
+                                <li><a href="${pageContext.request.contextPath}/corporate/notice/list">기업 공지</a></li>
+                                <li><a href="${pageContext.request.contextPath}/corporate/location">기업 위치</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="${pageContext.request.contextPath}/corporate/audition/schedule">오디션</a></li>
+                        <li><a href="${pageContext.request.contextPath}/corporate/artist/profile">아티스트 프로필</a></li>
+                        <li><a href="${pageContext.request.contextPath}/community/artist/main">아티스트 커뮤니티</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 DD TOWN Entertainment. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <%-- JS 파일 경로를 ${pageContext.request.contextPath}/resources 로 시작하도록 수정 --%>
+    <script src="${pageContext.request.contextPath}/resources/js/common/main.js"></script>
+</body>
+<script type="text/javascript">
+$(function(){
+	let listBtn = $("#listBtn");  //목록 버튼 Element
+	let supportBtn = $("#supportBtn");  //지원하기 버튼 Element
+	
+	listBtn.on("click", function(){
+		location.href = "/corporate/audition/schedule";	//상세 페이지 이동
+		
+	
+	});
+	
+	supportBtn.on("click", function(){
+		location.href = "/corporate/audition/supportForm.do";	//상세 페이지 이동
+	
+	});
+	
+	// 메시지가 있으면 alert 띄우기
+	var message = "<%= request.getAttribute("message") == null ? "" : request.getAttribute("message") %>";
+
+    if (message !== "") {
+        alert(message); 
+    }
+})
+</script>
+</html>

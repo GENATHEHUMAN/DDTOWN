@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.emp.schedule.IScheduleMapper">
+ 	<resultMap type="kr.or.ddit.vo.schedule.ScheduleVO" id="scheduleList">
+		<result property="id" column="id"/>
+		<result property="title" column="TITLE"/>
+		<result property="start" column="start"/>
+		<result property="end" column="end"/>
+		<result property="textColor" column="TEXT_COLOR"/>
+		<result property="backgroundColor" column="BACKGROUND_COLOR"/>
+		<result property="url" column="URL"/>
+		<result property="allDayStatus" column="all_day_status"/>
+		<result property="place" column="PLACE"/>
+ 		<result property="artGroupNo" column="ART_GROUP_NO"/>
+ 		<result property="content" column="CONTENT"/>
+ 	</resultMap>
+ 	
+ 
+ 	<select id="getList" parameterType="String" resultMap="scheduleList" >
+ 		select 
+ 		  ART_SCHEDULE_NO as "id"
+ 		, ART_GROUP_NO
+ 		, TITLE
+ 		, START_DATE as "start"
+ 		, END_DATE as "end"
+ 		, PLACE
+ 		, CONTENT
+ 		, TEXT_COLOR
+ 		, URL
+ 		, BACKGROUND_COLOR
+ 		, ALL_DAY as all_day_status
+		from ARTIST_SCHEDULE
+		where ART_GROUP_NO = (select ART_GROUP_NO
+		                      from artist_group
+		                      where emp_username = #{empUsername})
+ 	</select>
+ 	
+ 	<select id="getDes" parameterType="int" resultType="kr.or.ddit.vo.schedule.ScheduleDetailVO">
+ 		select 
+	 		place,
+			content
+		from artist_schedule
+		where art_schedule_no = #{id}
+ 	</select>
+ 	
+ 	<update id="dateUpdate" parameterType="kr.or.ddit.vo.schedule.ScheduleVO">
+ 		update artist_schedule set
+ 			  title	= #{title}
+ 			, start_date = #{start}
+ 			, end_date = #{end}
+ 			, place = #{place}
+ 			, content = #{content}
+ 			, text_color = #{textColor}
+ 			, url = #{url}
+ 			, background_color = #{backgroundColor}
+ 			, all_day = #{allDayStatus}
+ 		where art_schedule_no = #{id}
+ 	</update>
+ 	
+ 	<update id="dateMove" parameterType="kr.or.ddit.vo.schedule.ScheduleVO">
+ 		update artist_schedule set
+ 			  start_date = #{start}
+ 			, end_date = #{end}
+ 		where art_schedule_no = #{id}
+ 	</update>
+ 
+ 	<insert id="dateInsert" parameterType="kr.or.ddit.vo.schedule.ScheduleVO">
+ 	<selectKey resultType="int" keyProperty="id" order="BEFORE" >
+ 		select artist_schedule_seq.nextval from dual
+ 	</selectKey>
+ 		insert into artist_schedule (art_schedule_no, art_group_no, title, start_date, end_date, place, content, text_color, url, background_color, all_day)
+ 		values (#{id}, #{artGroupNo}, #{title}, #{start}, #{end}, #{place}, #{content}, #{textColor}, #{url}, #{backgroundColor}, #{allDayStatus})
+ 	</insert>
+ 	
+ 	<delete id="dateDelete" parameterType="int">
+ 		delete from artist_schedule where art_schedule_no = #{id}
+ 	</delete>
+ </mapper>

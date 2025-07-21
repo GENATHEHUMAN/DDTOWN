@@ -1,0 +1,26 @@
+package kr.or.ddit.ddtown.controller.emp.audition;
+
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import kr.or.ddit.vo.corporate.audition.AuditionUserVO;
+
+@RestController
+@RequestMapping("/api/emp/audition")
+public class EmpAuditionAPIController {
+
+	/*
+	 * @GetMapping("/applicant") public ResponseEntity<List<AuditionUserVO>>
+	 * getApplicants(@RequestParam int audiNo){ List<AuditionUserVO>
+	 * auditionUserList = empAuditionService.auditionUserList(audiNo);
+	 * 
+	 * return new ResponseEntity<>(auditionUserList,HttpStatus.OK); }
+	 */
+	
+}

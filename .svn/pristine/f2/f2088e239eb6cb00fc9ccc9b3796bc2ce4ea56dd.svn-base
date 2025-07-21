@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.admin.member.IMemberAdminMapper">
+ 	<resultMap type="kr.or.ddit.vo.member.MemberAdminVO" id="memberList">
+ 		<result property="rowNum" column="ROW_NUM"/>
+ 		<result property="memUsername" column="MEM_USERNAME"/>
+		<result property="memStatCode" column="MEM_STAT_CODE"/>
+		<result property="memRegPath" column="MEM_REG_PATH"/>
+		<result property="memNicknm" column="MEM_NICKNM"/>
+		<result property="memBirth" column="MEM_BIRTH"/>
+		<result property="memZipCode" column="MEM_ZIP_CODE"/>
+		<result property="memAddress1" column="MEM_ADDRESS1"/>
+		<result property="memAddress2" column="MEM_ADDRESS2"/>
+		<result property="memModDate" column="MEM_MOD_DATE"/>
+		<result property="memRegDate" column="MEM_REG_DATE"/>
+		<result property="memStatDetCode" column="MEM_STAT_DET_CODE"/>
+		<result property="memRegDetCode" column="MEM_REG_DET_CODE"/>
+
+		<result property="totalMemCnt" column="total"/>
+		<result property="generalMemCnt" column="general_mem"/>
+		<result property="outMemCnt" column="out_mem"/>
+		<result property="blackMemCnt" column="black_mem"/>
+
+		<result property="currentMemCnt" column="current_total"/>
+
+		<collection property="peopleVO" resultMap="peopelInfo" />
+ 	</resultMap>
+
+ 	<resultMap type="kr.or.ddit.vo.member.PeopleAdminVO" id="peopelInfo">
+ 		<result property="username" column="USERNAME"/>
+		<result property="password" column="PASSWORD"/>
+		<result property="peoEnabled" column="PEO_ENABLED"/>
+		<result property="userTypeCode" column="USER_TYPE_CODE"/>
+		<result property="peoFirstNm" column="PEO_FIRST_NM"/>
+		<result property="peoLastNm" column="PEO_LAST_NM"/>
+		<result property="peoEmail" column="PEO_EMAIL"/>
+		<result property="peoGender" column="PEO_GENDER"/>
+		<result property="peoPhone" column="PEO_PHONE"/>
+ 	</resultMap>
+
+ 	<sql id="searchMember">
+ 		<if test='searchType != null and searchType !=" " and searchType.trim() != ""'>
+ 			and m.mem_stat_code = #{searchType}
+ 		</if>
+ 		<if test='searchWord != null and searchWord != " " and searchWord.trim() != ""'>
+ 			and (p.username like '%'||#{searchWord}||'%')
+ 		</if>
+ 	</sql>
+
+ 	<select id="getMemberList" resultMap="memberList">
+ 		select ROWNUM row_num, mp.*
+		from (
+			select m.MEM_USERNAME
+			, m.MEM_STAT_CODE
+			, m.MEM_REG_PATH
+			, m.MEM_NICKNM
+			, m.MEM_BIRTH
+			, m.MEM_ZIP_CODE
+			, m.MEM_ADDRESS1
+			, m.MEM_ADDRESS2
+			, m.MEM_MOD_DATE
+			, m.MEM_REG_DATE
+
+			, p.username
+			, p.password
+			, p.peo_enabled
+			, p.user_type_code
+			, p.peo_first_nm
+			, p.peo_last_nm
+			, p.peo_email
+			, p.peo_gender
+			, p.peo_phone
+			, cdc.DESCRIPTION mem_stat_det_code
+			from member m, people p, common_detail_code cdc
+			where m.mem_username = p.username (+)
+			and m.MEM_STAT_CODE = cdc.comm_code_det_no (+)
+			order by m.MEM_REG_DATE DESC ) mp
+ 	</select>
+
+ 	<select id="getMember" parameterType="String" resultMap="memberList">
+ 		select m.mem_username
+			, m.mem_stat_code
+			, m.mem_reg_path
+			, m.mem_nicknm
+			, m.mem_birth
+			, m.mem_zip_code
+			, m.mem_address1
+			, m.mem_address2
+			, m.mem_mod_date
+			, m.mem_reg_date
+			, p.username
+			, p.password
+			, p.peo_enabled
+			, p.user_type_code
+			, p.peo_first_nm
+			, p.peo_last_nm
+			, p.peo_email
+			, p.peo_gender
+			, p.peo_phone
+			, cdc.description mem_stat_det_code
+            , cd.description mem_reg_det_code
+			from member m, people p, common_detail_code cdc, common_detail_code cd
+			where m.mem_username = p.username (+)
+			and m.mem_stat_code = cdc.comm_code_det_no (+)
+            and m.mem_reg_path = cd.comm_code_det_no (+)
+			and m.mem_username = #{memusername}
+ 	</select>
+
+ 	<select id="getCodeList" resultType="kr.or.ddit.vo.member.MemCodeListVO">
+		select comm_code_det_no, comm_code_grp_no, comm_code_det_nm, use_yn, description
+		from common_detail_code
+		where comm_code_grp_no = 'MEM_STATE_CODE'
+ 	</select>
+
+ 	<update id="updateMember" parameterType="kr.or.ddit.vo.member.MemberAdminVO" >
+ 		update member set
+ 			mem_stat_code = #{memStatCode},
+ 			mem_nicknm = #{memNicknm}
+ 		where mem_username = #{memUsername}
+ 	</update>
+
+ 	<update id="updatePeople" parameterType="kr.or.ddit.vo.member.PeopleAdminVO">
+ 		update people set
+ 			peo_first_nm = #{peoFirstNm},
+ 			peo_last_nm = #{peoLastNm},
+ 			peo_email = #{peoEmail}
+ 		where username = #{username}
+ 	</update>
+
+ 	<update id="deleteMember" parameterType="String">
+ 		update member set
+ 			mem_stat_code = 'MSC002'
+ 		where mem_username = #{memUsername}
+ 	</update>
+
+ 	<update id="deletePeople" parameterType="String">
+ 		update people set
+ 			peo_enabled = 'N'
+ 		where username = #{memUsername}
+ 	</update>
+
+ 	<select id="getTotalRecord" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+ 		select count(*)
+ 		from people p
+ 		left join member m on (p.username = m.mem_username)
+ 		where 1=1
+ 		and (p.user_type_code in ('UTC001','UTC002','UTC005'))
+ 		<include refid="searchMember"/>
+ 	</select>
+
+ 	<select id="getDataList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultMap="memberList">
+ 		select b.*
+		from (select a.*, ROWNUM as row_num
+		  from
+		        (SELECT
+				    m.MEM_USERNAME
+				    , m.MEM_STAT_CODE
+				    , m.MEM_REG_PATH
+				    , m.MEM_NICKNM
+				    , m.MEM_BIRTH
+				    , m.MEM_ZIP_CODE
+				    , m.MEM_ADDRESS1
+				    , m.MEM_ADDRESS2
+				    , m.MEM_MOD_DATE
+				    , m.MEM_REG_DATE
+
+				    , p.username
+				    , p.password
+				    , p.peo_enabled
+				    , p.user_type_code
+				    , p.peo_first_nm
+				    , p.peo_last_nm
+				    , p.peo_email
+				    , p.peo_gender
+				    , p.peo_phone
+
+				    , cdc.description mem_stat_det_code
+				    , cd.description mem_reg_det_code
+
+				    <include refid="subQuery" />
+				FROM
+				    people p
+				left join member m on (p.username = m.mem_username)
+				left join common_detail_code cdc on m.mem_stat_code = cdc.comm_code_det_no
+				left join common_detail_code cd on m.mem_reg_path = cd.comm_code_det_no
+				WHERE 1=1
+				and (p.user_type_code in ('UTC001','UTC002','UTC005'))
+				<include refid="searchMember" />
+				order by m.mem_reg_date desc) a
+			)b
+		<![CDATA[
+			where b.row_num >= #{startRow} and b.row_num <= #{endRow}
+		]]>
+ 	</select>
+
+ 	<sql id="subQuery">
+ 		<choose>
+ 			<when test='searchType == null or searchType.trim() == "" or searchType ==" "'>
+ 				, (SELECT COUNT(*) totalMember
+			        FROM people p_sub
+			        LEFT JOIN member m_sub ON (p_sub.username = m_sub.mem_username)
+			        WHERE p_sub.user_type_code IN ('UTC001','UTC002','UTC005')) as total
+			    , (select count(*)
+			        from people p_sub
+			        LEFT JOIN member m_sub ON (p_sub.username = m_sub.mem_username)
+			        WHERE p_sub.user_type_code IN ('UTC001','UTC002','UTC005')
+			        and m_sub.mem_stat_code = 'MSC001') as general_mem
+			    , (select count(*)
+			        from people p_sub
+			        LEFT JOIN member m_sub ON (p_sub.username = m_sub.mem_username)
+			        WHERE p_sub.user_type_code IN ('UTC001','UTC002','UTC005')
+			        and m_sub.mem_stat_code = 'MSC002') as out_mem
+			    , (select count(*)
+			        from people p_sub
+			        LEFT JOIN member m_sub ON (p_sub.username = m_sub.mem_username)
+			        WHERE p_sub.user_type_code IN ('UTC001','UTC002','UTC005')
+			        and m_sub.mem_stat_code = 'MSC003') as black_mem
+ 			</when>
+ 			<otherwise>
+			    , (select count(*)
+			        from people p_sub
+			        LEFT JOIN member m_sub ON (p_sub.username = m_sub.mem_username)
+			        WHERE p_sub.user_type_code IN ('UTC001','UTC002','UTC005')
+			        <include refid="searchQuery" />
+			        ) as current_total
+ 			</otherwise>
+ 		</choose>
+ 	</sql>
+
+ 	<sql id="searchQuery">
+ 		<if test='searchType != null and searchType !=" " and searchType.trim() != ""'>
+ 			and mem_stat_code = #{searchType}
+ 		</if>
+ 		<if test='searchWord != null and searchWord != " " and searchWord.trim() != ""'>
+ 			and (username like '%'||#{searchWord}||'%')
+ 		</if>
+ 	</sql>
+
+ 	<select id="getTodayRegisterUser" resultType="int">
+ 		select
+ 			count(*)
+ 		from
+ 			member
+ 		where
+ 			MEM_STAT_CODE = 'MSC001'
+ 		and
+ 			MEM_REG_DATE between trunc(sysdate) and trunc(sysdate) + 1
+ 	</select>
+ </mapper>

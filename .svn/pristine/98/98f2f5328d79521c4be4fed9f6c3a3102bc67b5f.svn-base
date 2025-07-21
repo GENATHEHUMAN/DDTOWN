@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>모달 테스트</title>
+    <style>
+        .modal-overlay {
+            display: none; /* 초기에는 숨김 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex; /* JavaScript에서 이 값으로 변경 */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 400px;
+            max-width: 90%;
+            text-align: center;
+        }
+        .modal-buttons button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>모달 테스트 페이지</h1>
+    <button type="button" id="openModalBtn">모달 열기</button>
+
+    <div id="testModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>테스트 모달입니다!</h3>
+            <p>이 모달이 잘 보이시나요?</p>
+            <div class="modal-buttons">
+                <button type="button" id="closeTestModalBtn">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const openModalBtn = document.getElementById('openModalBtn');
+            const testModal = document.getElementById('testModal');
+            const closeTestModalBtn = document.getElementById('closeTestModalBtn');
+
+            openModalBtn.addEventListener('click', function() {
+                testModal.style.display = 'flex';
+            });
+
+            closeTestModalBtn.addEventListener('click', function() {
+                testModal.style.display = 'none';
+            });
+
+            testModal.addEventListener('click', function(event) {
+                if (event.target === testModal) {
+                    testModal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,274 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>굿즈샵 품목 관리 - DDTOWN 관리자 시스템</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <%@ include file="../../../modules/headerPart.jsp" %>
+    <style>
+        /* items_detail.html 에만 적용될 추가/수정 스타일 */
+        .item-detail-container { background-color: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .item-detail-header h2 { font-size: 1.8em; color: #2c3e50; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;}
+        
+        .item-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .item-info-section { margin-bottom: 20px; }
+        .item-info-section dt { font-weight: 600; color: #555; margin-bottom: 5px; font-size: 0.95em; }
+        .item-info-section dd { margin-left: 0; margin-bottom: 15px; color: #333; font-size: 1em; white-space: pre-wrap; }
+        
+        .item-images { margin-bottom: 20px; }
+        .item-images h3 { font-size: 1.2em; color: #333; margin-bottom: 10px; }
+        .main-image-display { max-width: 100%; height: auto; border-radius: 6px; margin-bottom:15px; border: 1px solid #ddd; padding:5px; }
+        .additional-images-display img { width: 100px; height: 100px; object-fit: cover; border-radius: 4px; margin-right: 10px; border: 1px solid #eee; padding:3px;}
+        
+        .item-actions { margin-top: 30px; text-align: right; }
+        .item-actions .ea-btn { margin-left: 10px; }
+
+        .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.9em; color: white; display:inline-block; }
+        .status-selling { background-color: #2ecc71; }
+        .status-soldout { background-color: #e74c3c; }
+        .status-hidden { background-color: #95a5a6; }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../../modules/header.jsp" %>
+
+        <div class="emp-body-wrapper">
+            <%@ include file="../../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section id="goodsItemDetailSection" class="ea-section active-section">
+                    <div class="item-detail-container">
+                        <div class="item-detail-header">
+                            <h2 id="itemName">상품명 불러오는 중...</h2>
+                        </div>
+
+                        <div class="item-images">
+                            <h3><i class="fas fa-image"></i> 상품 이미지</h3>
+                            <img src="https://via.placeholder.com/400x300.png?text=Main+Image" alt="대표 이미지" id="mainImageDisplay" class="main-image-display">
+                            <div class="additional-images-display" id="additionalImagesDisplay">
+                                <img src="https://via.placeholder.com/100.png?text=Sub1" alt="추가 이미지 1">
+                                <img src="https://via.placeholder.com/100.png?text=Sub2" alt="추가 이미지 2">
+                            </div>
+                        </div>
+                        <hr>
+                        <dl class="item-info-grid">
+                            <div class="item-info-section">
+                                <dt>상품코드 (SKU)</dt>
+                                <dd id="itemSku">데이터 없음</dd>
+                                
+                                <dt>카테고리</dt>
+                                <dd id="itemCategory">데이터 없음</dd>
+                            </div>
+                            <div class="item-info-section">
+                                <dt>판매가격</dt>
+                                <dd id="itemPrice">데이터 없음</dd>
+
+                                <dt>재고수량</dt>
+                                <dd id="itemStock">데이터 없음</dd>
+                            </div>
+                            <div class="item-info-section">
+                                <dt>판매상태</dt>
+                                <dd><span id="itemStatus" class="status-badge">데이터 없음</span></dd>
+
+                                <dt>등록일</dt>
+                                <dd id="itemRegDate">데이터 없음</dd>
+                            </div>
+                             <div class="item-info-section">
+                                <dt>최근 수정일</dt>
+                                <dd id="itemModDate">데이터 없음</dd>
+                            </div>
+                        </dl>
+                        <hr>
+                         <div class="item-info-section">
+                            <dt>상품설명</dt>
+                            <dd id="itemDescription">데이터 없음</dd>
+                        </div>
+
+                        <div class="item-actions">
+                            <a href="/admin/goods/items/list" class="ea-btn">목록</a>
+                            <a href="items_form.html?id=G000123" class="ea-btn primary"><i class="fas fa-edit"></i> 수정</a>
+                            <button type="button" id="deleteItemBtn" class="ea-btn danger"><i class="fas fa-trash"></i> 삭제</button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (관리자 전용)</p>
+        </footer>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const itemId = urlParams.get('id');
+
+        if (itemId) {
+            console.log("Loading item details for ID:", itemId);
+            // --- 실제 애플리케이션에서는 서버에서 itemId로 상품 상세 정보를 가져옵니다 ---
+            // 예시 데이터 (프론트엔드 데모용)
+            const sampleItem = {
+                id: itemId,
+                name: "아티스트 A 포토카드 세트 V.2 (ID:"+itemId+")",
+                sku: "ARTISTA-PC-V2",
+                category: "포토카드",
+                price: "15,000 원",
+                stock: "150 개",
+                status: "selling", // selling, soldout, hidden
+                regDate: "2025-05-10",
+                modDate: "2025-05-11",
+                description: "아티스트 A의 미공개 포토카드 5종 세트입니다.\n한정 수량으로 제작되었으며, 각 카드 뒷면에는 특별 메시지가 담겨 있습니다.",
+                mainImageUrl: "https://via.placeholder.com/400x300.png?text=ArtistA+Photocard",
+                additionalImages: [
+                    { url: "https://via.placeholder.com/100.png?text=Card1", alt: "포토카드 1" },
+                    { url: "https://via.placeholder.com/100.png?text=Card2", alt: "포토카드 2" },
+                    { url: "https://via.placeholder.com/100.png?text=Card3", alt: "포토카드 3" }
+                ]
+            };
+
+            document.title = sampleItem.name + " - DDTOWN 관리자 시스템";
+            document.getElementById('itemName').textContent = sampleItem.name;
+            document.getElementById('itemSku').textContent = sampleItem.sku;
+            document.getElementById('itemCategory').textContent = sampleItem.category;
+            document.getElementById('itemPrice').textContent = sampleItem.price;
+            document.getElementById('itemStock').textContent = sampleItem.stock;
+            
+            const statusBadge = document.getElementById('itemStatus');
+            statusBadge.textContent = sampleItem.status === 'selling' ? '판매중' : (sampleItem.status === 'soldout' ? '품절' : '숨김');
+            statusBadge.className = 'status-badge'; // Reset classes
+            if (sampleItem.status === 'selling') statusBadge.classList.add('status-selling');
+            else if (sampleItem.status === 'soldout') statusBadge.classList.add('status-soldout');
+            else if (sampleItem.status === 'hidden') statusBadge.classList.add('status-hidden');
+
+            document.getElementById('itemRegDate').textContent = sampleItem.regDate;
+            document.getElementById('itemModDate').textContent = sampleItem.modDate;
+            document.getElementById('itemDescription').textContent = sampleItem.description;
+
+            document.getElementById('mainImageDisplay').src = sampleItem.mainImageUrl;
+            document.getElementById('mainImageDisplay').alt = sampleItem.name + " 대표 이미지";
+            
+            const additionalImagesContainer = document.getElementById('additionalImagesDisplay');
+            additionalImagesContainer.innerHTML = ''; // Clear defaults
+            if (sampleItem.additionalImages && sampleItem.additionalImages.length > 0) {
+                sampleItem.additionalImages.forEach(imgInfo => {
+                    const img = document.createElement('img');
+                    img.src = imgInfo.url;
+                    img.alt = imgInfo.alt;
+                    additionalImagesContainer.appendChild(img);
+                });
+            } else {
+                additionalImagesContainer.textContent = "추가 이미지가 없습니다.";
+            }
+
+            const editBtn = document.querySelector('.item-actions .ea-btn.primary');
+            if (editBtn) editBtn.href = `items_form.html?id=${itemId}`;
+
+            const deleteBtn = document.getElementById('deleteItemBtn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function() {
+                    if (confirm(`상품 '${sampleItem.name}' 을(를) 정말 삭제하시겠습니까?`)) {
+                        console.log("Deleting item with ID:", itemId);
+                        alert("상품이 삭제되었습니다. (서버 연동 필요)");
+                        window.location.href = 'items_list.html';
+                    }
+                });
+            }
+        } else {
+            document.getElementById('goodsItemDetailSection').innerHTML = 
+                '<div class="item-detail-container"><p>잘못된 접근입니다. 상품 ID가 제공되지 않았습니다. <a href="/admin/goods/items/list">목록으로 돌아가기</a></p></div>';
+        }
+        // --- 데이터 로드 끝 ---
+
+        // --- 사이드바 메뉴 로직 ---
+        const navItems = document.querySelectorAll('.emp-sidebar .emp-nav-item');
+        navItems.forEach(item => {
+            const arrow = item.querySelector('.submenu-arrow');
+            item.addEventListener('click', function(event) {
+                if (this.classList.contains('has-submenu')) {
+                    event.preventDefault();
+                    const currentlyOpen = this.classList.contains('open');
+                    document.querySelectorAll('.emp-sidebar > .emp-nav > ul > li > .has-submenu.open').forEach(openItem => {
+                        if (openItem !== this) {
+                            openItem.classList.remove('open');
+                            const associatedSubmenuId = "submenu-" + openItem.dataset.menu;
+                            const associatedSubmenu = document.getElementById(associatedSubmenuId);
+                            if (associatedSubmenu) associatedSubmenu.style.display = 'none';
+                            const openArrow = openItem.querySelector('.submenu-arrow');
+                            if(openArrow) openArrow.style.transform = 'rotate(0deg)';
+                        }
+                    });
+                    this.classList.toggle('open');
+                    const submenuId = "submenu-" + this.dataset.menu;
+                    const submenu = document.getElementById(submenuId);
+                    if (submenu) {
+                        submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                        if(arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+                    }
+                }
+            });
+        });
+
+        const currentFilename = window.location.pathname.split('/').pop();
+        let activeParentMenu = null;
+        let relatedPageLinkActivated = false;
+
+        document.querySelectorAll('.emp-sidebar .emp-nav-item').forEach(link => {
+            const linkFilename = link.getAttribute('href').split('/').pop();
+            let isActivePage = (linkFilename === currentFilename);
+
+            if (!isActivePage && linkFilename === 'items_list.html' &&
+                (currentFilename.startsWith('items_form') || currentFilename.startsWith('items_detail'))) {
+                isActivePage = true;
+                relatedPageLinkActivated = true;
+            }
+
+            if (isActivePage) {
+                link.classList.add('active');
+                const parentSubmenu = link.closest('.emp-submenu');
+                if (parentSubmenu) {
+                    parentSubmenu.style.display = 'block';
+                    activeParentMenu = parentSubmenu.previousElementSibling;
+                    if (activeParentMenu && activeParentMenu.classList.contains('has-submenu')) {
+                        activeParentMenu.classList.add('active', 'open');
+                        const arrow = activeParentMenu.querySelector('.submenu-arrow');
+                        if (arrow) arrow.style.transform = 'rotate(90deg)';
+                    }
+                } else if (link.classList.contains('has-submenu')) {
+                     activeParentMenu = link;
+                     link.classList.add('active', 'open');
+                     const arrow = link.querySelector('.submenu-arrow');
+                     if (arrow) arrow.style.transform = 'rotate(90deg)';
+                }
+                if (relatedPageLinkActivated && linkFilename === currentFilename && currentFilename !== 'items_list.html') {
+                    link.classList.remove('active');
+                }
+            }
+        });
+        document.querySelectorAll('.emp-sidebar > .emp-nav > ul > li > .has-submenu').forEach(topLevelMenu => {
+            if ((!activeParentMenu || topLevelMenu !== activeParentMenu) && !topLevelMenu.classList.contains('open') ) {
+                const submenuId = "submenu-" + topLevelMenu.dataset.menu;
+                const submenu = document.getElementById(submenuId);
+                if (submenu) submenu.style.display = 'none';
+                const arrow = topLevelMenu.querySelector('.submenu-arrow');
+                if(arrow) arrow.style.transform = 'rotate(0deg)';
+            }
+        });
+        // --- 사이드바 메뉴 로직 끝 ---
+
+        // 로그아웃 버튼
+        const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+        if (adminLogoutBtn) {
+            adminLogoutBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                if (confirm("로그아웃 하시겠습니까?")) {
+                    alert("로그아웃 되었습니다. (실제 로그아웃 처리는 서버에서)");
+                }
+            });
+        }
+    });
+    </script>
+</body>
+</html> 

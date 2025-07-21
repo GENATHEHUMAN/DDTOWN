@@ -1,0 +1,392 @@
+/* notice_custom.css - 공지사항 페이지 콘텐츠 영역 공통 스타일 */
+
+/* 메인 콘텐츠 박스 */
+.notice-main-box {
+    background-color: #fff;
+    padding: 25px 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+}
+
+/* 페이지 제목 (예: "공지사항 관리", "공지사항 상세") */
+.notice-page-title {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* 목록 상단 바 (제목 + 버튼) */
+.notice-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.notice-header-bar .section-title {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: #333;
+}
+
+.notice-add-btn,
+.notice-action-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 9px 20px;
+    font-size: 0.95em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.notice-add-btn:hover,
+.notice-action-btn:hover {
+    background-color: #0056b3;
+}
+.notice-add-btn i,
+.notice-action-btn i {
+    font-size: 0.9em;
+}
+
+/* 검색 바 */
+.notice-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.notice-search-bar select,
+.notice-search-bar .notice-search-input {
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.95em;
+    height: 40px;
+    box-sizing: border-box;
+}
+.notice-search-bar select { min-width: 160px; flex-grow: 0; }
+.notice-search-bar .notice-search-input { flex-grow: 1; }
+
+.notice-search-bar .notice-search-btn {
+    background: #6c757d;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0 20px;
+    height: 40px;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.notice-search-bar .notice-search-btn:hover {
+    background: #545b62;
+}
+
+/* 테이블 */
+.notice-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+    background: #fff;
+    font-size: 0.95em;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.notice-table th,
+.notice-table td {
+    border-bottom: 1px solid #dee2e6;
+    padding: 12px 15px;
+    text-align: left;
+    vertical-align: middle;
+}
+.notice-table th:first-child, .notice-table td:first-child { padding-left: 20px; }
+.notice-table th:last-child, .notice-table td:last-child { padding-right: 20px; }
+
+.notice-table thead th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+    text-align: center;
+    border-bottom-width: 2px;
+}
+.notice-table tbody tr:hover {
+    background-color: #f1f7ff;
+}
+
+.notice-table td.notice-title a,
+.notice-table td.title a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+.notice-table td.notice-title a:hover,
+.notice-table td.title a:hover {
+    text-decoration: underline;
+}
+
+.notice-table tr.notice-important-row td,
+.notice-table td.emp-table-fixed {
+    font-weight: bold;
+    color: #1565c0;
+    background-color: #eef7ff;
+}
+.notice-table tr.notice-important-row td .fa-thumbtack {
+    margin-right: 6px;
+    color: #1565c0;
+}
+.notice-table td.notice-title a.emp-important-link {
+    color: #1565c0;
+    font-weight: bold;
+}
+
+/* 테이블/액션 버튼 */
+.btn {
+    padding: 7px 15px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 0.9em;
+    cursor: pointer;
+    margin-right: 6px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 500;
+}
+.btn:last-child { margin-right: 0; }
+
+.btn-detail {
+    border-color: #6c757d;
+    background: #fff;
+    color: #6c757d;
+}
+.btn-detail:hover { background: #f1f3f5; color: #5a6268; }
+
+.btn-edit {
+    background: #28a745;
+    color: #fff;
+}
+.btn-edit:hover { background: #1e7e34; }
+
+.btn-delete {
+    background: #dc3545;
+    color: #fff;
+}
+.btn-delete:hover { background: #c82333; }
+
+/* 페이지네이션 */
+.emp-pagination {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+    text-align: center;
+}
+.emp-pagination a, .emp-pagination button {
+    background: #fff;
+    border: 1px solid #007bff;
+    color: #007bff;
+    border-radius: 4px;
+    padding: 7px 13px;
+    margin: 0 3px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.9em;
+    transition: background-color 0.2s, color 0.2s;
+}
+.emp-pagination a.active, .emp-pagination button.active,
+.emp-pagination a:hover, .emp-pagination button:hover {
+    background: #007bff;
+    color: #fff;
+}
+
+/* 공지사항 상세 (notice_detail.html) */
+.notice-detail-header {
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 25px;
+}
+.notice-detail-header h2 { /* .notice-page-title 클래스 사용 권장 */
+    font-size: 1.8em;
+    color: #2c3e50;
+    margin: 0 0 12px 0;
+    font-weight: 700;
+}
+.notice-detail-meta {
+    font-size: 0.9em;
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+.notice-detail-meta span { margin-right: 20px; display: inline-block; }
+#noticeDetailFixed, .notice-detail-fixed-pin {
+    font-weight: 500;
+    color: #17a2b8;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background-color: #e2f6f8;
+    border: 1px solid #bee0e5;
+    font-size: 0.9em;
+}
+#noticeDetailFixed i, .notice-detail-fixed-pin i { margin-right: 5px; }
+
+.notice-content-view {
+    padding: 20px 0;
+    line-height: 1.75;
+    font-size: 1em;
+    color: #343a40;
+    min-height: 150px;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 25px;
+}
+.notice-content-view p { margin-bottom: 1em; }
+.notice-content-view strong { font-weight: 600; color: #212529; }
+.notice-content-view img { max-width: 100%; height: auto; margin: 15px 0; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+.notice-attachments-view { margin-bottom: 25px; }
+.notice-attachments-view h4 {
+    font-size: 1.15em;
+    margin-bottom: 12px;
+    color: #343a40;
+    font-weight: 600;
+}
+.notice-attachments-view h4 i { margin-right: 8px; color: #6c757d;}
+.notice-attachments-view ul { list-style: none; padding: 0; margin:0; }
+.notice-attachments-view li { margin-bottom: 6px; }
+.notice-attachments-view li a {
+    text-decoration: none;
+    color: #007bff;
+    font-size: 0.95em;
+    transition: color 0.2s;
+}
+.notice-attachments-view li a:hover { color: #0056b3; text-decoration: underline;}
+.notice-attachments-view li a i { margin-right: 7px; }
+
+.notice-actions-bottom {
+    margin-top: 30px;
+    text-align: right;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+}
+.notice-actions-bottom .btn { margin-left: 10px; }
+.notice-actions-bottom .btn:first-child { margin-left: 0; }
+
+/* 공지사항 폼 (notice_form.html) */
+.notice-form-title { /* .notice-page-title 클래스 사용 권장 */
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+.notice-form .notice-form-group { margin-bottom: 1.8rem; }
+.notice-form label {
+    display: block;
+    margin-bottom: 0.7rem;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.95em;
+}
+.notice-form input[type="text"],
+.notice-form select,
+.notice-form textarea {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 1em;
+    box-sizing: border-box;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+.notice-form input[type="text"]:focus,
+.notice-form select:focus,
+.notice-form textarea:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 .25rem rgba(13,110,253,.25);
+}
+.notice-form textarea#noticeContentInput { min-height: 250px; resize: vertical; }
+
+.notice-form .file-input-wrapper { margin-top: 5px; }
+.notice-form .file-input-wrapper input[type="file"] {
+    padding: 0.6rem;
+    border: 1px dashed #ced4da;
+}
+.notice-form .file-input-wrapper input[type="file"]:hover { border-color: #007bff; }
+
+.current-attachments-list { list-style: none; padding: 0; margin-top: 10px; font-size: 0.9em; }
+.current-attachments-list li {
+    margin-bottom: 6px;
+    color: #495057;
+    background-color: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #e9ecef;
+}
+.current-attachments-list li button {
+    margin-left: 10px;
+    font-size: 0.9em;
+    color: #dc3545;
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding: 3px 6px;
+}
+.current-attachments-list li button:hover { color: #c82333; }
+
+.notice-form-group input[type="checkbox"] {
+    width: 17px; height: 17px;
+    margin-right: 8px;
+    vertical-align: middle;
+    cursor: pointer;
+}
+.notice-form-group label span { vertical-align: middle; font-weight: normal; }
+.notice-form-group label span.fixed-label-text {
+    color:#1565c0;
+    font-weight:bold;
+}
+
+.notice-form-actions {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* 반응형 조정 */
+@media (max-width: 768px) {
+    .notice-main-box { padding: 20px; }
+    .notice-page-title, .notice-form-title { font-size: 1.6em; margin-bottom: 20px; }
+    .notice-header-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .notice-header-bar .section-title { font-size: 1.3em; }
+    .notice-search-bar { flex-direction: column; align-items: stretch; padding: 10px; }
+    .notice-table { font-size: 0.9em; }
+    .notice-table th, .notice-table td { padding: 10px 12px; }
+    .notice-table th:first-child, .notice-table td:first-child { padding-left: 15px; }
+    .notice-table th:last-child, .notice-table td:last-child { padding-right: 15px; }
+    .notice-form-actions, .notice-actions-bottom { flex-direction: column; gap: 10px; }
+    .notice-form-actions .btn, .notice-actions-bottom .btn { width: 100%; margin-left: 0; }
+    .notice-detail-meta span { margin-right: 10px; margin-bottom: 5px; }
+}

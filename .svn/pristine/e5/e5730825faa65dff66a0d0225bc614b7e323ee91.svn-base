@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.orders.ICancelMapper">
+
+    <resultMap id="cancelListMap" type="kr.or.ddit.vo.order.OrderCancelVO">
+        <id property="cancelNo" column="CANCEL_NO" />
+        <result property="orderNo" column="ORDER_NO" />
+        <result property="goodsNo" column="GOODS_NO" />
+        <result property="cancelType" column="CANCEL_TYPE" />
+        <result property="cancelReasonCode" column="CANCEL_REASON_CODE" />
+        <result property="cancelStatCode" column="CANCEL_STAT_CODE" />
+        <result property="empUsername" column="EMP_USERNAME" />
+        <result property="memUsername" column="MEM_USERNAME" />
+        <result property="cancelReasonDetail" column="CANCEL_REASON_DETAIL" />
+        <result property="cancelItemQty" column="CANCEL_ITEM_QTY" />
+        <result property="cancelReqPrice" column="CANCEL_REQ_PRICE" />
+        <result property="cancelResPrice" column="CANCEL_RES_PRICE" />
+        <result property="cancelReqDate" column="CANCEL_REQ_DATE" />
+        <result property="cancelResDate" column="CANCEL_RES_DATE" />
+        <result property="cancelAccountNo" column="CANCEL_ACCOUNT_NO" />
+        <result property="cancelAccountHol" column="CANCEL_ACCOUNT_HOL" />
+
+        <result property="goodsNm" column="GOODS_NM" />
+        <result property="cancelTypeName" column="CANCEL_TYPE_NAME" />
+        <result property="cancelStatName" column="CANCEL_STAT_NAME" />
+    </resultMap>
+	
+	<insert id="insertCancel" parameterType="kr.or.ddit.vo.order.OrderCancelVO">
+	    INSERT INTO ORDER_CANCEL (
+	        CANCEL_NO,
+	        ORDER_NO,
+	        GOODS_NO,
+	        CANCEL_TYPE,
+	        CANCEL_REASON_CODE,
+	        CANCEL_STAT_CODE,
+	        EMP_USERNAME,
+	        MEM_USERNAME,
+	        CANCEL_REASON_DETAIL,
+	        CANCEL_ITEM_QTY,
+	        CANCEL_REQ_PRICE,
+	        CANCEL_REQ_DATE,
+	        <trim suffixOverrides=","> <if test="cancelResPrice != 0">CANCEL_RES_PRICE,</if>
+	            <if test="cancelResDate != null">CANCEL_RES_DATE,</if>
+	            <if test="cancelAccountNo != null and cancelAccountNo != ''">CANCEL_ACCOUNT_NO,</if>
+	            <if test="cancelAccountHol != null and cancelAccountHol != ''">CANCEL_ACCOUNT_HOL,</if> </trim>
+	    ) VALUES (
+	        ORDER_CANCEL_SEQ.NEXTVAL,
+	        #{orderNo},
+	        #{goodsNo},
+	        #{cancelType},
+	        #{cancelReasonCode},
+	        #{cancelStatCode},
+	        #{empUsername},
+	        #{memUsername},
+	        #{cancelReasonDetail},
+	        #{cancelItemQty},
+	        #{cancelReqPrice},
+	        SYSDATE,
+	        <trim suffixOverrides=","> <if test="cancelResPrice != 0">#{cancelResPrice},</if>
+	            <if test="cancelResDate != null">SYSDATE,</if>
+	            <if test="cancelAccountNo != null and cancelAccountNo != ''">#{cancelAccountNo},</if>
+	            <if test="cancelAccountHol != null and cancelAccountHol != ''">#{cancelAccountHol},</if> </trim>
+	    )
+	</insert>
+    
+    <update id="updateCancelStatus" parameterType="kr.or.ddit.vo.order.OrderCancelVO">
+        UPDATE ORDER_CANCEL
+        SET
+            CANCEL_STAT_CODE = #{cancelStatCode}
+            <if test="empUsername != null and empUsername != ''">, EMP_USERNAME = #{empUsername}</if>
+            <if test="cancelReasonDetail != null and cancelReasonDetail != ''">, CANCEL_REASON_DETAIL = #{cancelReasonDetail}</if>
+            <if test="cancelResPrice != 0">, CANCEL_RES_PRICE = #{cancelResPrice}</if>
+            <if test="cancelResDate != null">, CANCEL_RES_DATE = SYSDATE</if>
+            <if test="cancelAccountNo != null and cancelAccountNo != ''">, CANCEL_ACCOUNT_NO = #{cancelAccountNo}</if>
+            <if test="cancelAccountHol != null and cancelAccountHol != ''">, CANCEL_ACCOUNT_HOL = #{cancelAccountHol}</if>
+        WHERE
+            CANCEL_NO = #{cancelNo}
+    </update>
+    
+   <select id="selectFilteredCancelRefunds" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="kr.or.ddit.vo.order.OrderCancelVO">
+	    SELECT
+	        A.*
+	    FROM (
+	        SELECT
+	            ROWNUM AS RNUM,
+	            OC.CANCEL_NO,
+	            OC.ORDER_NO,
+	            OC.MEM_USERNAME,
+	            G.GOODS_NM,
+	            OC.CANCEL_TYPE,
+	            CDC_TYPE.DESCRIPTION AS CANCEL_TYPE_NAME,
+	            OC.CANCEL_STAT_CODE,
+	            CDC_STAT.DESCRIPTION AS CANCEL_STAT_NAME,
+	            OC.CANCEL_REQ_DATE,
+	            OC.CANCEL_RES_DATE
+	        FROM ORDER_CANCEL OC
+	        LEFT JOIN GOODS G ON OC.GOODS_NO = G.GOODS_NO
+	        LEFT JOIN COMMON_DETAIL_CODE CDC_TYPE ON OC.CANCEL_TYPE = CDC_TYPE.COMM_CODE_DET_NO AND CDC_TYPE.COMM_CODE_GRP_NO = 'CANCEL_TYPE' LEFT JOIN COMMON_DETAIL_CODE CDC_STAT ON OC.CANCEL_STAT_CODE = CDC_STAT.COMM_CODE_DET_NO AND CDC_STAT.COMM_CODE_GRP_NO = 'CANCEL_STAT_CODE'
+	        WHERE 1=1
+	        <if test="searchMap != null">
+	            <if test="searchMap.searchKeyword != null and searchMap.searchKeyword != ''">
+	                AND (
+	                       OC.MEM_USERNAME LIKE '%' || #{searchMap.searchKeyword} || '%'
+	                    OR TO_CHAR(OC.ORDER_NO) LIKE '%' || #{searchMap.searchKeyword} || '%'
+	                    OR G.GOODS_NM LIKE '%' || #{searchMap.searchKeyword} || '%'
+	                )
+	            </if>
+	            <if test="searchMap.statusCode != null and searchMap.statusCode != ''">
+	                AND OC.CANCEL_STAT_CODE = #{searchMap.statusCode}
+	            </if>
+	        </if>
+	        ORDER BY OC.CANCEL_REQ_DATE DESC
+	    ) A
+	    <![CDATA[
+	    WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	    ]]>
+	</select>
+	    
+	<select id="selectTotalCancelRefundCount" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+	    SELECT COUNT(*)
+	    FROM ORDER_CANCEL OC
+	    LEFT JOIN GOODS G ON OC.GOODS_NO = G.GOODS_NO
+	    LEFT JOIN COMMON_DETAIL_CODE CDC_TYPE ON OC.CANCEL_TYPE = CDC_TYPE.COMM_CODE_DET_NO AND CDC_TYPE.COMM_CODE_GRP_NO = 'CANCEL_TYPE' LEFT JOIN COMMON_DETAIL_CODE CDC_STAT ON OC.CANCEL_STAT_CODE = CDC_STAT.COMM_CODE_DET_NO AND CDC_STAT.COMM_CODE_GRP_NO = 'CANCEL_STAT_CODE'
+	    WHERE 1=1
+	    <if test="searchMap != null">
+	        <if test="searchMap.searchKeyword != null and searchMap.searchKeyword != ''">
+	            AND (
+	                   OC.MEM_USERNAME LIKE '%' || #{searchMap.searchKeyword} || '%'
+	                OR TO_CHAR(OC.ORDER_NO) LIKE '%' || #{searchMap.searchKeyword} || '%'
+	                OR G.GOODS_NM LIKE '%' || #{searchMap.searchKeyword} || '%'
+	            )
+	        </if>
+	        <if test="searchMap.statusCode != null and searchMap.statusCode != ''">
+	            AND OC.CANCEL_STAT_CODE = #{searchMap.statusCode}
+	        </if>
+	    </if>
+	</select>
+    
+	<select id="selectCancelDetail" resultMap="cancelListMap" parameterType="int">
+	    SELECT
+	        OC.CANCEL_NO,
+	        OC.ORDER_NO,
+	        OC.MEM_USERNAME,
+	        G.GOODS_NM,
+	        OC.CANCEL_TYPE,
+	        CDC_TYPE.DESCRIPTION AS CANCEL_TYPE_NAME,
+	        OC.CANCEL_STAT_CODE,
+	        CDC_STAT.DESCRIPTION AS CANCEL_STAT_NAME,
+	        OC.CANCEL_REQ_DATE,
+	        OC.CANCEL_RES_DATE,
+	        OC.CANCEL_ACCOUNT_NO,
+	        OC.CANCEL_ACCOUNT_HOL,
+	        OC.CANCEL_REASON_DETAIL,
+	        OC.CANCEL_ITEM_QTY,
+	        OC.CANCEL_REQ_PRICE,
+	        OC.CANCEL_RES_PRICE,
+	        OC.GOODS_NO,
+	        OC.CANCEL_REASON_CODE,
+	        OC.EMP_USERNAME
+	    FROM ORDER_CANCEL OC
+	    LEFT JOIN GOODS G ON OC.GOODS_NO = G.GOODS_NO
+	    LEFT JOIN COMMON_DETAIL_CODE CDC_TYPE
+	        ON OC.CANCEL_TYPE = CDC_TYPE.COMM_CODE_DET_NO
+	        AND CDC_TYPE.COMM_CODE_GRP_NO = 'CANCEL_TYPE' LEFT JOIN COMMON_DETAIL_CODE CDC_STAT
+	        ON OC.CANCEL_STAT_CODE = CDC_STAT.COMM_CODE_DET_NO
+	        AND CDC_STAT.COMM_CODE_GRP_NO = 'CANCEL_STAT_CODE'
+	    WHERE OC.CANCEL_NO = #{cancelNo}
+	</select>
+    
+    <update id="updateCancelRefund" parameterType="kr.or.ddit.vo.order.OrderCancelVO">
+        UPDATE ORDER_CANCEL
+        <set>
+            <if test="cancelStatCode != null and !cancelStatCode.isEmpty()">
+                CANCEL_STAT_CODE = #{cancelStatCode},
+            </if>
+            <if test="cancelReasonDetail != null">
+                CANCEL_REASON_DETAIL = #{cancelReasonDetail},
+            </if>
+            <if test="cancelResDate != null">
+                CANCEL_RES_DATE = #{cancelResDate},
+            </if>
+            EMP_USERNAME = #{empUsername} </set>
+        WHERE CANCEL_NO = #{cancelNo}
+    </update>
+    
+	<insert id="insertOrderCancel" parameterType="kr.or.ddit.vo.order.OrderCancelVO">
+        <selectKey keyProperty="cancelNo" resultType="int" order="BEFORE">
+            SELECT ORDER_CANCEL_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        
+        INSERT INTO ORDER_CANCEL (
+            CANCEL_NO,           
+            ORDER_NO,            
+            GOODS_NO,            
+            CANCEL_TYPE,         
+            CANCEL_REASON_CODE,  
+            CANCEL_STAT_CODE,    
+            MEM_USERNAME,        
+            CANCEL_REASON_DETAIL,
+            CANCEL_ITEM_QTY,     
+            CANCEL_REQ_PRICE,    
+            CANCEL_REQ_DATE,     
+            CANCEL_ACCOUNT_NO,   
+            CANCEL_ACCOUNT_HOL   
+        ) VALUES (
+            #{cancelNo},          
+            #{orderNo},           
+            #{goodsNo},           
+            #{cancelType},
+            #{cancelReasonCode},
+            #{cancelStatCode},
+            #{memUsername},
+            #{cancelReasonDetail},
+            #{cancelItemQty},
+            #{cancelReqPrice},
+            SYSDATE,              
+            #{cancelAccountNo},   
+            #{cancelAccountHol}   
+        )
+    </insert>
+
+
+    
+</mapper>

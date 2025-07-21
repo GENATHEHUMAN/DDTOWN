@@ -1,0 +1,100 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>블랙리스트 관리 - DDTOWN 관리자</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section id="blacklistListSection" class="ea-section active-section">
+                    <div class="ea-section-header">
+                        <h2>블랙리스트 회원 관리</h2>
+                        <div class="ea-header-actions">
+                            <input type="text" class="ea-search-input" id="blacklistSearchInput" placeholder="회원ID, 닉네임, 사유 검색...">
+                        </div>
+                    </div>
+
+                    <table class="ea-table">
+                        <thead>
+                            <tr>
+                                <th class="col-number">번호</th>
+                                <th class="col-userId">회원ID</th>
+                                <th class="col-nickname">닉네임</th>
+                                <th class="col-reason">블랙리스트 사유</th>
+                                <th class="col-blacklisted-date">지정일</th>
+                                <th class="col-actions">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="blacklistTableBody">
+                            <tr data-blacklist-id="BL001" data-user-id="troublemaker">
+                                <td>1</td>
+                                <td class="col-userId"><a href="/admin/community/blacklist/detail?id=BL001&userId=troublemaker" class="member-id-link">troublemaker</a></td>
+                                <td>감마선</td>
+                                <td class="col-reason">반복적인 욕설 및 비방 (신고 누적 15회)</td>
+                                <td>2025-03-10</td>
+                                <td>
+                                    <a href="/admin/community/blacklist/detail?id=BL001&userId=troublemaker" class="ea-btn sm outline" title="사유 수정"><i class="fas fa-edit"></i> 사유 수정</a>
+                                    <button class="ea-btn sm success" onclick="releaseBlacklist('BL001', 'troublemaker')" title="블랙리스트 해제"><i class="fas fa-undo"></i> 해제</button>
+                                </td>
+                            </tr>
+                            <!-- <tr data-blacklist-id="BL002" data-user-id="spammer007">
+                                <td>2</td>
+                                <td class="col-userId"><a href="/admin/community/blacklist/detail?id=BL002&userId=spammer007" class="member-id-link">spammer007</a></td>
+                                <td>스팸봇아님</td>
+                                <td class="col-reason">지속적인 광고성 게시물 도배 (신고 누적 12회)</td>
+                                <td>2025-04-22</td>
+                                <td class="notice-actions">
+                                    <a href="/admin/community/blacklist/detail?id=BL002&userId=spammer007" class="ea-btn sm outline" title="사유 수정"><i class="fas fa-edit"></i> 사유 수정</a>
+                                    <button class="ea-btn sm success" onclick="releaseBlacklist('BL002', 'spammer007')" title="블랙리스트 해제"><i class="fas fa-undo"></i> 해제</button>
+                                </td>
+                            </tr> -->
+                        </tbody>
+                    </table>
+                    <div class="ea-pagination" id="pagingArea">
+                    	${pagingVO.pagingHTML }
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+<%@ include file="../../modules/footerPart.jsp" %>
+
+<%@ include file="../../modules/sidebar.jsp" %>     
+<script>
+//사이드바 메뉴 기능
+  document.addEventListener('DOMContentLoaded', function() {
+      
+   	// 페이지네이션 로직
+      const pagingArea = $('#pagingArea');
+      if(pagingArea.length > 0) {
+          pagingArea.on('click', 'a', function(event) { 
+              event.preventDefault();
+              const page = $(this).data('page');
+              
+              // 현재 URL에서 검색 파라미터 유지
+              const currentSearchUrl = new URL(window.location.href);
+              const searchType = currentSearchUrl.searchParams.get("searchType");
+              const searchWord = currentSearchUrl.searchParams.get("searchWord");
+
+              let targetPageUrl = '${pageContext.request.contextPath}/emp/artist/artist-management?page=' + page;
+
+              if (searchType && searchWord) {
+                  targetPageUrl += '&searchType=' + encodeURIComponent(searchType);
+                  targetPageUrl += '&searchWord=' + encodeURIComponent(searchWord);
+              }
+              window.location.href = targetPageUrl;
+          });
+      }
+  });
+</script>
+</body>
+</html> 

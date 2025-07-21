@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="kr.or.ddit.ddtown.mapper.corporate.NoticeMapper">
+	
+
+	<resultMap type="kr.or.ddit.vo.corporate.notice.NoticeVO" id="noticeMap">
+		<result property="entNotiNo" column="ENT_NOTI_NO"/>
+		<result property="empUsername" column="EMP_USERNAME"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="entNotiTitle" column="ENT_NOTI_TITLE"/>
+		<result property="entNotiContent" column="ENT_NOTI_CONTENT"/>
+		<result property="entNotiRegDate" column="ENT_NOTI_REG_DATE"/>
+		<result property="entNotiModDate" column="ENT_NOTI_MOD_DATE"/>
+		<collection property="attachmentList" resultMap="FileDetailMap"></collection>
+	</resultMap>
+	
+	<resultMap type="kr.or.ddit.vo.file.AttachmentFileDetailVO" id="FileDetailMap">
+		<result property="attachDetailNo" column="ATTACH_DETAIL_NO"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalNm" column="FILE_ORIGINAL_NM"/>
+		<result property="fileSaveNm" column="FILE_SAVE_NM"/>
+		<result property="fileSavepath" column="FILE_SAVEPATH"/>
+		<result property="fileUseYn" column="FILE_USE_YN"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMimeType" column="FILE_MIME_TYPE"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+	</resultMap>
+
+<sql id="searchConditions">
+		<where>
+			<if test="searchWord != null and searchWord != ''">
+				AND ENT_NOTI_TITLE LIKE '%' || #{searchWord} || '%'
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectTotalRecord" parameterType="kr.or.ddit.vo.PaginationInfoVO">
+		select 
+				count(*)
+		from
+				enter_notice
+		<include refid="searchConditions"></include>
+	</select>
+	
+	<select id="selectNoticeList" parameterType="kr.or.ddit.vo.PaginationInfoVO">
+		SELECT *
+        FROM (
+            SELECT
+                ent_noti_no,
+                emp_username,
+                file_group_no,
+                ent_noti_title,
+                ent_noti_content,
+                ent_noti_reg_date,
+                ent_noti_mod_date,
+                ROWNUM AS rnum_alias_for_paging_only  
+            FROM (
+                SELECT
+                    ent_noti_no, emp_username, file_group_no,
+                    ent_noti_title, ent_noti_content,
+                    ent_noti_reg_date, ent_noti_mod_date
+                FROM ENTER_NOTICE
+                <include refid="searchConditions"/>
+        		ORDER BY ent_noti_no DESC 
+        	) inner_query
+        ) outer_query
+        <![CDATA[
+        WHERE rnum_alias_for_paging_only BETWEEN #{startRow} AND #{endRow}
+        ]]>
+	</select>
+
+	<select id="getDetail" parameterType="int" resultMap="noticeMap">
+		SELECT
+	        EN.ent_noti_no          
+	      , EN.emp_username        
+	      , EN.file_group_no       
+	      , EN.ent_noti_title    
+	      , EN.ent_noti_content   
+	      , EN.ent_noti_reg_date  
+	      , EN.ent_noti_mod_date  
+	      , AFD.attach_detail_no  
+	      , AFD.file_original_nm   
+	      , AFD.file_save_nm     
+	      , AFD.file_savepath      
+	      , AFD.file_ext          
+	      , AFD.file_mime_type     
+	      , AFD.file_fancysize      
+	      , AFD.file_save_date    
+	    FROM
+	        enter_notice EN
+	    LEFT JOIN
+	        attachment_file_detail AFD ON EN.file_group_no = AFD.file_group_no
+	    WHERE
+	        EN.ent_noti_no = #{entNotiNo}
+	    ORDER BY
+	        AFD.attach_detail_no ASC 
+	</select>
+
+
+</mapper>

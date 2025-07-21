@@ -1,0 +1,235 @@
+/* admin_refund_detail.css - 기존 form-group 구조에 맞춰 admin_items_detail.css 스타일을 적용 */
+
+/* --- 전체 컨테이너 및 섹션 스타일 --- */
+.ea-section {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+/* 상세 페이지 전체를 감싸는 컨테이너 */
+.ea-section-header + .ea-form { /* 섹션 헤더 다음의 폼에 스타일 적용 */
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.ea-section-header {
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+    display: flex; /* 제목과 버튼을 한 줄에 배치 */
+    justify-content: space-between; /* 양 끝 정렬 */
+    align-items: center; /* 세로 중앙 정렬 */
+}
+
+.ea-section-header h2 {
+    font-size: 2.2em;
+    color: #333;
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+
+/* --- form-group 스타일 (핵심 변경) --- */
+.ea-form {
+    display: grid;
+    /* 기본적으로 2단 그리드, 작은 화면에서는 1단으로 전환 */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+    gap: 20px 30px; /* 행 간격, 열 간격 */
+}
+
+/* form-group 전체 너비 사용 (예: 상세 사유) */
+.ea-form .form-group:has(textarea) { /* textarea를 포함하는 form-group */
+    grid-column: 1 / -1; /* 그리드 전체 너비를 차지 */
+    border-top: 1px dashed #e9e9e9; /* 구분선 */
+    padding-top: 20px;
+    margin-top: 10px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0; /* 그리드 갭으로 마진 대체 */
+    padding: 0; /* 기존 form-group 패딩 제거 */
+}
+
+.form-group label {
+    font-weight: 700;
+    color: #555;
+    margin-bottom: 8px;
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #eee; /* `dt` 스타일 모방 */
+}
+
+.form-group label::before { /* `dt` 스타일 모방 */
+    content: "•";
+    color: #007bff;
+    margin-right: 8px;
+    font-size: 1.2em;
+    line-height: 1;
+}
+
+.form-group input[type="text"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+    color: #333;
+    background-color: #fcfcfc;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+/* 읽기 전용 필드 */
+.form-group input[readonly],
+.form-group select[disabled],
+.form-group textarea[readonly] {
+    background-color: #e9ecef;
+    color: #6c757d;
+    cursor: not-allowed;
+    border-color: #ced4da;
+}
+
+/* 텍스트 에어리어 높이 조정 */
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+    max-height: 200px;
+}
+
+/* --- 뱃지 스타일 (기존 유지) --- */
+/* HTML에서 직접 뱃지 클래스를 적용해야 합니다. (예: <span class="refund-type-badge type-CANCEL">취소</span>) */
+.refund-type-badge,
+.refund-status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    color: white;
+    display: inline-block;
+    min-width: 70px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease-in-out;
+}
+
+.refund-type-badge:hover,
+.refund-status-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* 유형 뱃지 색상 */
+.type-CANCEL { background-color: #ffc107; color: #343a40; } /* 취소 (노랑) */
+.type-REFUND { background-color: #17a2b8; } /* 환불 (하늘) */
+
+/* 상태 뱃지 색상 */
+.status-CSC001 { background-color: #ffc107; color: #343a40; } /* 취소 요청 접수 (노랑) */
+.status-CSC002 { background-color: #007bff; } /* 취소 처리중 (파랑) */
+.status-CSC003 { background-color: #28a745; } /* 취소 완료 (초록) */
+.status-RSC003 { background-color: #28a745; } /* 환불 완료 (초록) */
+
+
+/* --- 액션 버튼 스타일 --- */
+.ea-form-actions {
+    grid-column: 1 / -1; /* 버튼 영역도 전체 너비 사용 */
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* --- 일반 버튼 스타일 (.ea-btn은 이 파일을 사용하는 모든 버튼에 공통 적용) --- */
+.ea-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ea-btn .fas {
+    margin-right: 8px;
+}
+
+.ea-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* 버튼 색상 정의 */
+.ea-btn.primary {
+    background-color: #007bff;
+    color: white;
+}
+.ea-btn.primary:hover { background-color: #0056b3; }
+
+.ea-btn.danger {
+    background-color: #dc3545;
+    color: white;
+}
+.ea-btn.danger:hover { background-color: #bd2130; }
+
+.ea-btn.outline {
+    background-color: transparent;
+    color: #007bff;
+    border: 1px solid #007bff;
+}
+.ea-btn.outline:hover {
+    background-color: #e6f2ff;
+    color: #0056b3;
+}
+
+/* 기본 버튼 스타일 (색상 클래스 없는 경우) */
+.ea-btn:not(.primary):not(.danger):not(.outline) {
+    background-color: #f0f0f0;
+    color: #555;
+    border: 1px solid #ddd;
+}
+.ea-btn:not(.primary):not(.danger):not(.outline):hover {
+    background-color: #e2e6ea;
+    border-color: #c4c8cb;
+    color: #333;
+}
+
+/* 미디어 쿼리: 작은 화면에서는 그리드를 1열로 */
+@media (max-width: 768px) {
+    .ea-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+.breadcrumb-item a {
+    color: black !important; /* Bootstrap 기본 스타일을 강제로 덮어씌움 */
+}
+
+.breadcrumb-item.active {
+    color: #6c757d; /* 현재 페이지 색상 (회색조) */
+}

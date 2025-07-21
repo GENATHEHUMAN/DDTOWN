@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.admin.blacklist.IBlacklistMapper">
+
+<!-- 목록페이지 -->
+	<select id="blackList" resultType="kr.or.ddit.vo.blacklist.BlacklistVO">
+		select BAN_NO
+			 , MEM_USERNAME
+			 , EMP_USERNAME
+			 , BAN_REASON_CODE
+			 , BAN_REASON_DETAIL
+			 , BAN_START_DATE
+			 , BAN_END_DATE
+			 , BAN_REG_DATE
+			 , BAN_ACT_YN
+		from BLACKLIST
+		order by BAN_NO desc
+	</select>
+<!-- 상세페이지 -->
+	<select id="blackDetail" parameterType="int" resultType="kr.or.ddit.vo.blacklist.BlacklistVO">
+		select BAN_NO
+			 , MEM_USERNAME
+			 , EMP_USERNAME
+			 , BAN_REASON_CODE
+			 , BAN_REASON_DETAIL
+			 , BAN_START_DATE
+			 , BAN_END_DATE
+			 , BAN_REG_DATE
+			 , BAN_ACT_YN
+		from BLACKLIST
+		where BAN_NO = #{banNo}
+	</select>
+	<!-- 블랙 리스트 등록시 회원아이디가 가입이 되어있는 아이디인지 확인 -->
+	<select id="checkMemberId" parameterType="string" resultType="int">
+		select count(*) 
+		  from MEMBER
+		  where MEM_USERNAME = #{memUsername}
+	</select>
+	<!--블랙 리스트 등록하기 -->
+	<insert id="blackSignup" parameterType="kr.or.ddit.vo.blacklist.BlacklistVO" useGeneratedKeys="true">
+		<selectKey keyProperty="banNo" resultType="int" order="BEFORE">
+			SELECT BLACKLIST_SEQ.NEXTVAL FROM DUAL
+	    </selectKey>
+		insert into BLACKLIST(
+			BAN_NO, MEM_USERNAME, EMP_USERNAME, BAN_REASON_CODE, BAN_REASON_DETAIL, BAN_START_DATE, BAN_END_DATE, BAN_REG_DATE, BAN_ACT_YN
+		)values(
+			#{banNo}, #{memUsername}, #{empUsername}, #{banReasonCode}, #{banReasonDetail}, sysdate, #{banEndDate}, sysdate, 'Y'
+		)
+	</insert>
+	<!-- 수정하기 -->
+	<update id="blackUpdate" parameterType="kr.or.ddit.vo.blacklist.BlacklistVO">
+	 	update BLACKLIST
+	 	   set EMP_USERNAME  = #{empUsername}
+			 , BAN_REASON_CODE = #{banReasonCode}
+			 , BAN_REASON_DETAIL = #{banReasonDetail}
+			 , BAN_END_DATE = #{banEndDate}
+		 where BAN_NO = #{banNo}
+	</update>
+	<!-- 삭제하기 -->
+	<delete id="blackDelete" parameterType="int">
+		delete from BLACKLIST
+		 where BAN_NO = #{banNo}
+	</delete>
+
+</mapper>

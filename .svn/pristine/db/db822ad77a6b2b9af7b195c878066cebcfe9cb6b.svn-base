@@ -1,0 +1,313 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>콘서트 일정 관리 - DDTOWN 직원 포털</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <style>
+        .concert-header-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+        .concert-header-bar .concert-title { font-size: 1.5em; font-weight: 700; color: #234aad; }
+        .concert-header-bar .concert-add-btn { background: #1976d2; color: #fff; border: none; border-radius: 5px; padding: 8px 22px; font-size: 1em; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+        .concert-header-bar .concert-add-btn:hover { background: #1451a3; }
+        .concert-search-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+        .concert-search-bar input { padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        .concert-search-bar button { background: #1976d2; color: #fff; border: none; border-radius: 4px; padding: 7px 18px; font-size: 1em; cursor: pointer; }
+        .concert-table { width: 100%; border-collapse: collapse; background: #fff; margin-bottom: 18px; }
+        .concert-table th, .concert-table td { border: 1px solid #e0e0e0; padding: 10px; text-align: center; }
+        .concert-table th { background: #f5f5f5; font-weight: 600; }
+        .concert-table td .btn { padding: 5px 14px; border-radius: 5px; font-size: 0.98em; cursor: pointer; border: none; margin: 0 2px; }
+        .concert-table td .btn-edit { background: #1976d2; color: #fff; }
+        .concert-table td .btn-delete { background: #e74c3c; color: #fff; }
+        .concert-table td .btn-detail { background: #4caf50; color: #fff; }
+        .concert-table td .btn-live { background: #7c3aed; color: #fff; }
+        .concert-table td .btn-edit:hover, .concert-table td .btn-detail:hover, .concert-table td .btn-live:hover { opacity: 0.85; }
+        .concert-table td .btn-delete:hover { background: #c0392b; }
+        .modal { position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; overflow: auto; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: #fff; padding: 30px 30px 20px 30px; border-radius: 10px; min-width: 340px; max-width: 95vw; box-shadow: 0 4px 24px rgba(0,0,0,0.18); position: relative; }
+        .modal-content h2 { margin-top: 0; }
+        .close { position: absolute; right: 18px; top: 12px; font-size: 2em; color: #888; cursor: pointer; }
+        .modal-content label { font-weight: 500; }
+        .modal-content input, .modal-content textarea { width: 100%; margin-top: 4px; margin-bottom: 8px; padding: 7px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        .modal-content textarea { resize: vertical; }
+        .modal-content .modal-btn-row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+        .modal-content .modal-btn-row button { padding: 8px 22px; border: none; border-radius: 4px; font-size: 1em; cursor: pointer; }
+        .modal-content .modal-btn-row .cancel-btn { background: #888; color: #fff; }
+        .modal-content .modal-btn-row .save-btn { background: #1976d2; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content" style="position:relative; min-height:600px;">
+                <div class="concert-header-bar">
+                    <div class="concert-title">콘서트 일정 관리</div>
+                    <button class="concert-add-btn" id="addConcertBtn"><i class="fas fa-calendar-plus"></i> 새 일정 등록</button>
+                </div>
+                <div class="concert-search-bar">
+                    <input type="text" id="concertSearchInput" placeholder="콘서트명 검색">
+                    <button id="concertSearchBtn"><i class="fas fa-search"></i> 검색</button>
+                </div>
+                <table class="concert-table" id="concertTable">
+                    <thead>
+                        <tr>
+                            <th>콘서트명</th>
+                            <th>일정</th>
+                            <th>장소</th>
+                            <th>진행방식</th>
+                            <th>관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="concertTableBody">
+                        <!-- JS로 동적 생성 -->
+                    </tbody>
+                </table>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (직원 전용)</p>
+        </footer>
+    </div>
+    <!-- 새 일정 등록/수정/상세 모달 -->
+    <div id="concertModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" id="closeConcertModal">&times;</span>
+            <h2 id="concertModalTitle">새 콘서트 일정 등록</h2>
+            <form id="concertForm">
+                <label>콘서트명 <span style="color:red;">*</span><br>
+                    <input type="text" id="concertName" required>
+                </label>
+                <label>일정 <span style="color:red;">*</span><br>
+                    <input type="datetime-local" id="concertDate" required>
+                </label>
+                <label>장소<br>
+                    <input type="text" id="concertPlace">
+                </label>
+                <label>진행방식<br>
+                    <select id="concertType">
+                        <option value="오프라인">오프라인</option>
+                        <option value="온라인">온라인</option>
+                        <option value="온/오프라인">온/오프라인</option>
+                    </select>
+                </label>
+                <label>설명<br>
+                    <textarea id="concertDesc" rows="3"></textarea>
+                </label>
+                <div class="modal-btn-row">
+                    <button type="button" class="cancel-btn" id="concertCancelBtn">취소</button>
+                    <button type="submit" class="save-btn" id="concertSaveBtn">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- 상세정보 모달 -->
+    <div id="concertDetailModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" id="closeConcertDetailModal">&times;</span>
+            <h2>콘서트 상세정보</h2>
+            <div id="concertDetailContent"></div>
+            <div class="modal-btn-row">
+                <button type="button" class="cancel-btn" id="concertDetailCloseBtn">닫기</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // 로그아웃, 사이드바, 직원명 등 emp_portal.html과 동일
+        const logoutButton = document.querySelector('.emp-logout-btn');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('로그아웃 하시겠습니까?')) {
+                    alert('로그아웃 되었습니다.');
+                }
+            });
+        }
+        const employeeNameSpan = document.getElementById('employee-name');
+        if (employeeNameSpan) {
+            employeeNameSpan.textContent = "홍길동";
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            // 메뉴 토글 기능
+            const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+            navItemsWithSubmenu.forEach(item => {
+                const arrow = item.querySelector('.submenu-arrow');
+                item.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const parentLi = this.parentElement;
+                    const submenu = this.nextElementSibling;
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        const parentUl = parentLi.parentElement;
+                        if (parentUl) {
+                            Array.from(parentUl.children).forEach(siblingLi => {
+                                if (siblingLi !== parentLi) {
+                                    const siblingSubmenuControl = siblingLi.querySelector('.emp-nav-item.has-submenu.open');
+                                    if (siblingSubmenuControl) {
+                                        const siblingSubmenu = siblingSubmenuControl.nextElementSibling;
+                                        siblingSubmenuControl.classList.remove('open');
+                                        if (siblingSubmenu && siblingSubmenu.classList.contains('emp-submenu')) {
+                                            siblingSubmenu.style.display = 'none';
+                                        }
+                                        const siblingArrow = siblingSubmenuControl.querySelector('.submenu-arrow');
+                                        if (siblingArrow) siblingArrow.style.transform = 'rotate(0deg)';
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    this.classList.toggle('open');
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                        if (arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+                    }
+                });
+            });
+            // 현재 페이지 URL 기반으로 사이드바 메뉴 활성화
+            const currentFullHref = window.location.href;
+            document.querySelectorAll('.emp-sidebar .emp-nav-item[href]').forEach(link => {
+                const linkHrefAttribute = link.getAttribute('href');
+                if (linkHrefAttribute && linkHrefAttribute !== "#" && currentFullHref.endsWith(linkHrefAttribute)) {
+                    link.classList.add('active');
+                    let currentActiveElement = link;
+                    while (true) {
+                        const parentLi = currentActiveElement.parentElement;
+                        if (!parentLi) break;
+                        const parentSubmenuUl = parentLi.closest('.emp-submenu');
+                        if (parentSubmenuUl) {
+                            parentSubmenuUl.style.display = 'block';
+                            const controllingAnchor = parentSubmenuUl.previousElementSibling;
+                            if (controllingAnchor && controllingAnchor.tagName === 'A' && controllingAnchor.classList.contains('has-submenu')) {
+                                controllingAnchor.classList.add('active', 'open');
+                                const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                                if (arrow) {
+                                    arrow.style.transform = 'rotate(90deg)';
+                                }
+                                currentActiveElement = controllingAnchor;
+                            } else {
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            });
+        });
+        // 콘서트 일정 샘플 데이터
+        let concertList = [
+            { id: 1, name: 'NCT WISH 1st Concert', date: '2025-06-10T19:00', place: 'KSPO DOME', type: '오프라인', desc: 'NCT WISH의 첫 단독 콘서트입니다.' },
+            { id: 2, name: 'RIIZE Online Live', date: '2025-07-01T20:00', place: '온라인', type: '온라인', desc: 'RIIZE의 온라인 콘서트 라이브.' },
+            { id: 3, name: 'LE SSERAFIM World Tour', date: '2025-08-15T18:00', place: 'Jamsil Stadium', type: '온/오프라인', desc: 'LE SSERAFIM 월드투어 서울 공연.' }
+        ];
+        let editId = null;
+        function renderConcertTable(filter = '') {
+            const tbody = document.getElementById('concertTableBody');
+            tbody.innerHTML = '';
+            concertList.filter(c => c.name.includes(filter)).forEach(concert => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>\${concert.name}</td>
+                    <td>\${concert.date.replace('T', ' ')}</td>
+                    <td>\${concert.place}</td>
+                    <td>\${concert.type}</td>
+                    <td>
+                        <button class="btn btn-detail" onclick="showConcertDetail(\${concert.id})">조회</button>
+                        <button class="btn btn-edit" onclick="editConcert(\${concert.id})">수정</button>
+                        <button class="btn btn-delete" onclick="deleteConcert(\${concert.id})">삭제</button>
+                        \${concert.type.includes('온라인') ? `<button class='btn btn-live' onclick='startOnlineConcert(\${concert.id})'>온라인 콘서트 시작</button>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        // 검색
+        document.getElementById('concertSearchBtn').onclick = function() {
+            const val = document.getElementById('concertSearchInput').value.trim();
+            renderConcertTable(val);
+        };
+        // 새 일정 등록
+        document.getElementById('addConcertBtn').onclick = function() {
+            editId = null;
+            document.getElementById('concertModalTitle').textContent = '새 콘서트 일정 등록';
+            document.getElementById('concertForm').reset();
+            document.getElementById('concertModal').style.display = 'flex';
+        };
+        document.getElementById('concertCancelBtn').onclick = function() {
+            document.getElementById('concertModal').style.display = 'none';
+        };
+        document.getElementById('closeConcertModal').onclick = function() {
+            document.getElementById('concertModal').style.display = 'none';
+        };
+        document.getElementById('concertForm').onsubmit = function(e) {
+            e.preventDefault();
+            const name = document.getElementById('concertName').value;
+            const date = document.getElementById('concertDate').value;
+            const place = document.getElementById('concertPlace').value;
+            const type = document.getElementById('concertType').value;
+            const desc = document.getElementById('concertDesc').value;
+            if (!name || !date) { alert('필수 항목을 입력하세요.'); return; }
+            if (editId) {
+                // 수정
+                const idx = concertList.findIndex(c => c.id === editId);
+                if (idx > -1) {
+                    concertList[idx] = { id: editId, name, date, place, type, desc };
+                }
+            } else {
+                // 등록
+                const newId = concertList.length ? Math.max(...concertList.map(c=>c.id))+1 : 1;
+                concertList.push({ id: newId, name, date, place, type, desc });
+            }
+            renderConcertTable();
+            document.getElementById('concertModal').style.display = 'none';
+        };
+        // 수정
+        window.editConcert = function(id) {
+            editId = id;
+            const c = concertList.find(c => c.id === id);
+            if (!c) return;
+            document.getElementById('concertModalTitle').textContent = '콘서트 일정 수정';
+            document.getElementById('concertName').value = c.name;
+            document.getElementById('concertDate').value = c.date;
+            document.getElementById('concertPlace').value = c.place;
+            document.getElementById('concertType').value = c.type;
+            document.getElementById('concertDesc').value = c.desc;
+            document.getElementById('concertModal').style.display = 'flex';
+        };
+        // 삭제
+        window.deleteConcert = function(id) {
+            if (confirm('정말로 삭제하시겠습니까?')) {
+                concertList = concertList.filter(c => c.id !== id);
+                renderConcertTable();
+            }
+        };
+        // 상세
+        window.showConcertDetail = function(id) {
+            const c = concertList.find(c => c.id === id);
+            if (!c) return;
+            document.getElementById('concertDetailContent').innerHTML = `
+                <div><b>콘서트명:</b> \${c.name}</div>
+                <div><b>일정:</b> \${c.date.replace('T',' ')}</div>
+                <div><b>장소:</b> \${c.place}</div>
+                <div><b>진행방식:</b> \${c.type}</div>
+                <div><b>설명:</b> \${c.desc}</div>
+            `;
+            document.getElementById('concertDetailModal').style.display = 'flex';
+        };
+        document.getElementById('closeConcertDetailModal').onclick = function() {
+            document.getElementById('concertDetailModal').style.display = 'none';
+        };
+        document.getElementById('concertDetailCloseBtn').onclick = function() {
+            document.getElementById('concertDetailModal').style.display = 'none';
+        };
+        // 온라인 콘서트 시작
+        window.startOnlineConcert = function(id) {
+            alert('온라인 콘서트 라이브 방송 페이지로 이동합니다. (실제 구현 필요)');
+            // window.location.href = 'online_live.html?id=' + id;
+        };
+        // 초기 렌더
+        renderConcertTable();
+    </script>
+</body>
+</html> 

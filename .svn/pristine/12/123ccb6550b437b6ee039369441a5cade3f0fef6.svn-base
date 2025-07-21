@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.emp.edms.IEdmsMapper">
+ 
+ 	<resultMap type="kr.or.ddit.vo.edms.EdmsVO" id="edmsMap">
+		<id property="edmsNo" column="EDMS_NO"/>
+		<result property="edmsNo" column="EDMS_NO"/>
+		<result property="formNo" column="FORM_NO"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="edmsStatCode" column="EDMS_STAT_CODE"/>
+		<result property="edmsTitle" column="EDMS_TITLE"/>
+ 		<result property="edmsContent" column="EDMS_CONTENT"/>
+		<result property="edmsManageNo" column="EDMS_MANAGE_NO"/>
+		<result property="empUsername" column="EMP_USERNAME"/>
+		<result property="edmsReqDate" column="EDMS_REQ_DATE"/>
+		<result property="edmsUrgenYn" column="EDMS_URGEN_YN"/>
+		<result property="empName" column="emp_name"/>
+		<result property="formNm" column="form_nm"/>
+		
+		<collection property="approverList" resultMap="approverMap"/>
+		<collection property="referenceList" resultMap="referenceMap"/>
+ 	</resultMap>
+ 
+ 	<resultMap type="kr.or.ddit.vo.edms.ApproverVO" id="approverMap">
+ 		<id property="apvNo" column="APV_NO"/>
+ 		<result property="apvNo" column="APV_NO"/>
+		<result property="empUsername" column="approver_EMP_USERNAME"/>
+		<result property="edmsNo" column="EDMS_NO"/>
+		<result property="apvStatCode" column="APV_STAT_CODE"/>
+		<result property="apvRejectReason" column="APV_REJECT_REASON"/>
+		<result property="apvResDate" column="APV_RES_DATE"/>
+		<result property="apvSec" column="APV_SEC"/>
+		<result property="empName" column="approver_emp_name"/>
+		<result property="empPositionCode" column="approver_emp_position_code"/>
+		<result property="empPositionNm" column="approver_emp_position_nm"/>
+		<result property="empDepartNm" column="approver_emp_depart_nm"/>
+ 	</resultMap>
+ 
+ 	<resultMap type="kr.or.ddit.vo.edms.ReferenceVO" id="referenceMap">
+		<result property="edmsNo" column="EDMS_NO"/>
+ 		<result property="empUsername" column="reference_EMP_USERNAME"/>
+ 		<result property="empName" column="reference_emp_name"/>
+ 		<result property="empPositionCode" column="reference_emp_position_code"/>
+		<result property="empPositionNm" column="reference_emp_position_nm"/>
+		<result property="empDepartNm" column="reference_emp_depart_nm"/>
+ 	</resultMap>
+ 
+ 	<sql id="searchTitle">
+ 		<if test="searchWord != null and searchWord != ''">
+ 			and edms_title like '%' || #{searchWord} || '%'
+ 		</if>
+ 		<if test="searchType != null and searchType != 'all'">
+ 			and edms_stat_code = #{searchType}
+ 		</if>
+ 	</sql>
+ 
+ 	<select id="getFormList" resultType="kr.or.ddit.vo.edms.EdmsFormVO">
+ 		select FORM_NO
+ 		, FORM_NM
+ 		, FORM_TYPE_CODE
+ 		, FORM_CONTENT
+ 		from form
+ 		order by form_no
+ 	</select>
+ 	
+ 	<select id="getForm" parameterType="int" resultType="kr.or.ddit.vo.edms.EdmsFormVO">
+ 		select FORM_NO
+ 		, FORM_NM
+ 		, FORM_TYPE_CODE
+ 		, FORM_CONTENT
+ 		from form
+ 		where form_no = #{formNo}
+ 	</select>
+ 	
+ 	<update id="updateForm" parameterType="kr.or.ddit.vo.edms.EdmsFormVO">
+ 		update form
+ 		set
+ 			form_content = #{formContent}
+ 		where
+ 			form_no = #{formNo}
+ 	</update>
+ 	
+ 	<select id="getDepartList" resultType="kr.or.ddit.vo.edms.EdmsCommVO">
+ 		SELECT
+		    comm_code_det_no
+		  , comm_code_grp_no
+		  , comm_code_det_nm
+		  , use_yn
+		  , description
+		FROM
+		    common_detail_code
+		WHERE
+			comm_code_grp_no = 'EMP_DEPART_CODE'
+		order by comm_code_det_no desc
+ 	</select>
+ 	
+ 	<select id="getEmpList" parameterType="string" resultType="kr.or.ddit.vo.user.EmployeeVO">
+ 		SELECT
+		    emp_username
+		  , emp_depart_code
+		  , emp_position_code
+		  , emp_reg_date
+		  , emp_end_date
+		  , (select description from common_detail_code where emp_depart_code = comm_code_det_no) as emp_depart_nm
+		  , (select description from common_detail_code where emp_position_code = comm_code_det_no) as emp_position_nm
+		  , peo_last_nm || peo_first_nm as peoName
+		FROM
+		    employee emp,
+		    people p
+		where
+			emp.emp_username = p.username
+		and
+			emp_depart_code = #{empDepartCode}
+		order by emp_position_code desc
+ 	</select>
+ 	
+ 	<select id="selectApprovalBoxList" parameterType="map" resultType="kr.or.ddit.vo.edms.EdmsVO">
+ 		select b.*
+		from (select a.*, row_number() over(order by a.edms_no desc) as rnum
+		  from
+		        (SELECT
+				    edms_no
+				  , form_no
+				  , emp_username
+				  , file_group_no
+				  , edms_stat_code
+				  , edms_title
+				  , edms_req_date
+				  , edms_urgen_yn
+				  , edms_content
+				  , edms_manage_no
+				  , peo_last_nm || peo_first_nm as emp_name
+				FROM
+				    edms e,
+		    		people p
+				where 
+					e.emp_username = p.username
+				and	
+					emp_username = #{empUsername}
+				<include refid="searchTitle" />
+				ORDER BY edms_no desc
+				) a
+			)b
+		<![CDATA[
+			where b.rnum >= #{startRow} and b.rnum <= #{endRow}
+		]]>
+ 	</select>
+ 	
+ 	<select id="selectTotalRecord" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+ 		select
+ 			count(*)
+ 		from
+ 			edms
+ 		where 1=1
+ 		<include refid="searchTitle"/>
+ 	</select>
+ 	
+ 	<select id="selectApproval" parameterType="int" resultMap="edmsMap">
+ 		SELECT
+		    e.edms_no
+		  , e.form_no
+		  , e.emp_username
+		  , e.file_group_no
+		  , e.edms_stat_code
+		  , e.edms_title
+		  , e.edms_req_date
+		  , e.edms_urgen_yn
+		  , e.edms_content
+		  , e.edms_manage_no
+		  , ( select peo_last_nm || peo_first_nm from people p where e.emp_username = p.username ) as emp_name
+		  , a.apv_no
+		  , a.emp_username as approver_emp_username
+		  , a.edms_no
+		  , a.apv_stat_code
+		  , a.apv_reject_reason
+		  , a.apv_res_date
+		  , a.apv_sec
+		  , ( select peo_last_nm || peo_first_nm from people p where a.emp_username = p.username ) as approver_emp_name
+		  ,	app_emp.emp_position_code as approver_emp_position_code
+		  ,	app_cdc.description as approver_emp_position_nm
+		  , ( select description from common_detail_code cdc where app_emp.emp_depart_code = cdc.comm_code_det_no) as approver_emp_depart_nm
+		  , r.emp_username as reference_emp_username
+  		  , r.edms_no
+  		  , ( select peo_last_nm || peo_first_nm from people p where r.emp_username = p.username ) as reference_emp_name
+		  ,	ref_emp.emp_position_code as reference_emp_position_code
+		  ,	ref_cdc.description as reference_emp_position_nm
+		  , ( select description from common_detail_code cdc where ref_emp.emp_depart_code = cdc.comm_code_det_no) as reference_emp_depart_nm
+		  , f.form_nm
+		FROM
+		    edms e
+		left join approver a on(e.edms_no = a.edms_no)
+		left join reference r on(e.edms_no = r.edms_no)
+		left join employee app_emp on (a.emp_username = app_emp.emp_username)
+		left join common_detail_code app_cdc on(app_emp.emp_position_code = app_cdc.comm_code_det_no)
+		left join employee ref_emp on (r.emp_username = ref_emp.emp_username)
+		left join common_detail_code ref_cdc on(ref_emp.emp_position_code = ref_cdc.comm_code_det_no)
+		left join form f on(e.form_no = f.form_no)
+		where
+			e.edms_no = #{edmsNo}
+ 	</select>
+ </mapper>

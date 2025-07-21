@@ -1,0 +1,276 @@
+@charset "UTF-8";
+/* admin_portal.css에 정의된 스타일을 최대한 활용합니다. */
+/* 아티스트명 링크 스타일 */
+.artist-name-link {
+    font-weight: 500;
+    color: #007bff; /* 기본 링크 색상 */
+    text-decoration: none;
+}
+.artist-name-link:hover {
+    text-decoration: underline;
+}
+/* 그룹 프로필 헤더 */
+.group-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 2rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 1.5rem;
+}
+.group-profile-header .profile-image {
+    width: 150px;
+    height: 150px;
+    border-radius : 10px;
+/* 		    object-fit: cover; */
+    border: 1px solid #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.group-profile-header .profile-info h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+.group-profile-header .profile-info p {
+    margin: 0.25rem 0;
+    color: #495057;
+    font-size: 1rem;
+}
+
+/* --- 콘텐츠 섹션 스타일 --- */
+.content-section {
+    margin-top: 2.5rem; /* 각 섹션 간의 수직 간격 */
+}
+.section-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e9ecef; /* 제목 아래 구분선 */
+}
+.empty-message {
+    text-align: center;
+    color: #888;
+    padding: 3rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+/* 멤버 그리드 스타일 */
+.member-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1.5rem;
+}
+.member-card {
+    text-align: center;
+    background-color: #fff;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.member-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.member-card img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 0.75rem;
+}
+.member-card .member-name {
+    font-weight: 600;
+}
+
+/* 앨범 카드 스타일 */
+.album-card {
+    display: flex;
+    gap: 1.5rem;
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    margin-bottom: 1.5rem;
+}
+.album-cover img {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+.album-details {
+    flex: 1;
+}
+.album-title { margin-top: 0; }
+.album-release-date { font-size: 0.9rem; color: #888; }
+.track-list {
+    list-style: none;
+    padding: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    border-top: 1px solid #eee;
+    margin-top: 1rem;
+    padding-top: 1rem;
+}
+.track-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+.title-badge {
+    background-color: #0d6efd;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+
+/* --- 통계 섹션 스타일 --- */
+.stats-grid {
+    display: grid;
+    /* 2개의 카드를 나란히 배치하고, 화면이 작아지면 자동으로 수직 정렬됩니다. */
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
+    gap: 1.5rem;
+}
+
+.stats-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.stats-card h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* 멤버십 현황 카드 */
+.membership-stats-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.doughnut-chart-placeholder {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    /* CSS Conic Gradient로 도넛 차트 흉내내기 */
+    background: conic-gradient(#0d6efd 0% 70%, #a7caff 70% 100%);
+    flex-shrink: 0;
+}
+.doughnut-chart-placeholder::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 70%;
+    height: 70%;
+    background-color: #fff;
+    border-radius: 50%;
+}
+.doughnut-chart-placeholder::after {
+    content: '총\A' attr(data-total) '명'; /* 총 인원 표시 */
+    white-space: pre;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.membership-details dl {
+    margin: 0;
+}
+.membership-details dt {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #555;
+    font-weight: 500;
+}
+.membership-details dd {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0.1rem 0 0.8rem 1.2rem; /* 간격 미세 조정 */
+}
+.legend-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+/* 현재 gold 클래스만 사용되므로 gold 스타일만 남김 */
+.legend-dot.gold { background-color: #0d6efd; }
+
+
+/* 가장 많이 팔린 굿즈 카드 (순위 리스트) */
+.leaderboard-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: leaderboard-counter; /* 순위 숫자 카운터 */
+}
+.leaderboard-list li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f3f5;
+    counter-increment: leaderboard-counter;
+}
+.leaderboard-list li:last-child {
+    border-bottom: none;
+}
+.leaderboard-list li::before {
+    content: counter(leaderboard-counter);
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #888;
+    min-width: 20px;
+    text-align: center;
+}
+.leaderboard-list img {
+    width: 50px;
+    height: 50px;
+    border-radius: 5px;
+    object-fit: cover;
+    background-color: #eee; /* 이미지가 없을 경우를 대비한 배경색 */
+}
+.leaderboard-list .item-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+.leaderboard-list .item-name {
+    font-weight: 600;
+}
+.leaderboard-list .item-sales {
+    font-size: 0.9rem;
+    color: #888;
+}
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+    .group-profile-header, .album-card {
+        flex-direction: column;
+        text-align: center;
+    }
+}

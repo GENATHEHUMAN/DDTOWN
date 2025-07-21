@@ -1,0 +1,43 @@
+<div class="modal fade " id="editPostModal" tabindex="-1" aria-labelledby="editPostModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="editPostModalLabel">
+					<c:out value="포스트 수정" />
+				</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal"
+					aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<form id="editPostForm" enctype="multipart/form-data" method="post">
+				<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+					<input type="hidden" name="artGroupNo" value="${artistGroupVO.artGroupNo }" />
+					<input type="hidden" name="comuPostNo" id="postNum" />
+					<input type="hidden" id="fileGroupNo" name="fileGroupNo" />
+					<input type="hidden" id="deleteFiles" name="deleteFiles" />
+
+					<div id="editImgArea"></div>
+
+					<div>내용</div>
+					<textarea rows="5" cols="10" id="editComuPostContent"
+						 name="comuPostContent" onchange="contentLengthCheck(this)"></textarea>
+					<div class="text-right pt-2">
+						<span class="pt-1"><span class="cmt-sub-size">0</span>/1000</span>
+					</div>
+
+					<label for="editPostMemberShipYn" id="checkBoxMbs"> 
+						<input type="checkbox" id="editPostMemberShipYn" name="postMemberShipYn" value="멤버십전용 게시물" />
+						<input type="hidden" id="editMemberShipYn" name="memberShipYn"
+						value="" /> 멤버십전용
+					</label> 
+					<input type="file" name="files" id="editInsertPostFile" multiple accept="image/*">
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary" id="postUpdateBtn">수정</button>
+				<button type="button" class="btn btn-secondary"
+					data-bs-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>

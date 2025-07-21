@@ -1,0 +1,13 @@
+package kr.or.ddit.ddtown.service.admin.faqInquiry;
+
+import java.util.List;
+
+import kr.or.ddit.vo.faq.FaqVO;
+
+public interface IAdminFaqService {
+
+	public List<FaqVO> faqAdminMain();
+
+	public FaqVO getFaqDetail(int faqNo);
+
+}

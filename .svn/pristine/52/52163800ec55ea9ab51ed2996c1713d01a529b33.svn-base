@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.alert.IAlertMapper">
+	
+	 <resultMap type="kr.or.ddit.vo.alert.AlertVO" id="alertResultMap">
+	 	<id property="alertNo" column="ALERT_NO" />
+	 	<result property="alertTypeCode" column="ALERT_TYPE_CODE" />
+	 	<result property="relatedItemTypeCode" column="RELATED_ITEM_TYPE_CODE" />
+	 	<result property="alertContent" column="ALERT_CONTENT" />
+	 	<result property="alertUrl" column="ALERT_URL" />
+	 	<result property="alertCreateDate" column="ALERT_CREATE_DATE" />
+	 	<result property="relatedItemNo" column="RELATED_ITEM_NO" />
+	 	<result property="relatedItemChar" column="RELATED_ITEM_CHAR" />
+	 	<result property="alertReadYn" column="ALERT_READ_YN" />
+	 </resultMap>
+	 
+	 <resultMap type="kr.or.ddit.vo.alert.AlertSettingVO" id="alertSettingMap">
+	 	<id property="alertTypeCode" column="ALERT_TYPE_CODE"/>
+	 	<result property="alertTypeCode" column="ALERT_TYPE_CODE"/>
+		<result property="memUsername" column="MEM_USERNAME"/>
+		<result property="alertEnabledYn" column="ALERT_ENABLED_YN"/>
+		<result property="alertModDate" column="ALERT_MOD_DATE"/>
+		<result property="alertDescription" column="DESCRIPTION"/>
+	 </resultMap>
+	 
+	<!--
+	ATC001
+	ATC002
+	ATC003
+	ATC004
+	-->
+	<!-- alert_type_code 가져오기 -->
+	<select id="getATCs" resultType="string">
+		SELECT
+		    comm_code_det_no
+		FROM
+		    common_detail_code
+		WHERE
+		    comm_code_grp_no = 'ALERT_TYPE_CODE'
+	</select>
+	
+	 <insert id="insertSetting" parameterType="kr.or.ddit.vo.alert.AlertSettingVO" >
+	 	INSERT INTO alert_setting (
+		    alert_type_code
+		    , mem_username
+		) VALUES (
+		    #{alertTypeCode}
+		  , #{memUsername}
+		)
+	 </insert>
+	
+	<insert id="insertAlert" parameterType="kr.or.ddit.vo.alert.AlertVO" useGeneratedKeys="true">
+		<selectKey keyProperty="alertNo" resultType="long" order="BEFORE" >
+			SELECT ALERT_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO ALERT (
+			alert_no, alert_type_code, related_item_type_code, alert_content, alert_url,
+			alert_create_date, related_item_no, related_item_char
+		) VALUES (
+			#{alertNo}, #{alertTypeCode}, #{relatedItemTypeCode}, #{alertContent}, #{alertUrl},
+			#{alertCreateDate}, #{relatedItemNo}, #{relatedItemChar}
+		)
+	</insert>
+	
+	<insert id="insertAlertReceiver" parameterType="kr.or.ddit.vo.alert.AlertReceiverVO">
+		INSERT INTO ALERT_RECEIVER(
+			alert_no, mem_username, alert_get_date, alert_read_yn, alert_del_yn
+		) VALUES (
+			#{alertNo}, #{memUsername}, #{alertGetDate}, #{alertReadYn}, #{alertDelYn}
+		)
+	</insert>
+	
+	<select id="selectAlertByUsername" parameterType="string" resultMap="alertResultMap">
+		SELECT
+			a.alert_no,
+			a.alert_type_code,
+			a.related_item_type_code,
+			a.alert_content,
+			a.alert_url,
+			a.alert_create_date,
+			a.related_item_no,
+			a.related_item_char,
+			ar.alert_read_yn
+		FROM
+			alert a join alert_receiver ar on a.alert_no = ar.alert_no
+		WHERE ar.mem_username = #{memUsername}
+		AND	ar.alert_del_yn = 'N'
+		ORDER BY a.alert_create_date DESC
+	</select>
+	
+	<select id="selectLatestAlertsByUsername" resultMap="alertResultMap">
+    SELECT * FROM (
+        SELECT 
+            A.ALERT_NO, 
+            A.ALERT_TYPE_CODE, 
+            A.RELATED_ITEM_TYPE_CODE,
+            A.ALERT_CONTENT, 
+            A.ALERT_URL, 
+            A.ALERT_CREATE_DATE,
+            A.RELATED_ITEM_NO, 
+            A.RELATED_ITEM_CHAR,
+            AR.ALERT_READ_YN
+        FROM ALERT A
+        JOIN ALERT_RECEIVER AR ON A.ALERT_NO = AR.ALERT_NO
+        WHERE AR.MEM_USERNAME = #{memUsername}
+          AND AR.ALERT_DEL_YN = 'N'
+        ORDER BY A.ALERT_CREATE_DATE DESC
+    )
+    WHERE ROWNUM &lt;= #{cnt}
+</select>
+	
+	<select id="cntUnreadAlerts" parameterType="string" resultType="int">
+		SELECT count(*)
+		FROM alert_receiver
+		WHERE mem_username = #{memUsername}
+		  AND alert_read_yn = 'N'
+		  AND alert_del_yn = 'N'
+	</select>
+	
+	<update id="markAsRead">
+		UPDATE alert_receiver
+		   SET alert_read_yn = 'Y',
+		   	   alert_get_date = SYSTIMESTAMP
+		 WHERE alert_no = #{alertNo}
+		   AND mem_username = #{memUsername}
+	</update>
+	
+	<update id="markAllAsRead" parameterType="string">
+		UPDATE alert_receiver
+		SET	alert_read_yn = 'Y',
+			alert_get_date = systimestamp
+		WHERE mem_username = #{memUsername}
+		  AND alert_read_yn = 'N'
+		  AND alert_del_yn = 'N'	
+	</update>
+	
+	<update id="markAsDeleted">
+		UPDATE alert_receiver
+		   SET alert_del_yn = 'Y'
+		WHERE alert_no = #{alertNo}
+		  AND mem_username = #{memUsername}
+	</update>
+	
+	<select id="selectAlertSettings" parameterType="string" resultType="kr.or.ddit.vo.alert.AlertSettingVO">
+		SELECT
+			alert_type_code as alertTypeCode,
+			mem_username as memUsername,
+			alert_enabled_yn as alertEnabledYn,
+			alert_mod_date as alertModDate
+		FROM alert_setting
+		WHERE mem_username = #{memUsername}
+	</select>
+	
+	<insert id="insertAlertSetting" parameterType="kr.or.ddit.vo.alert.AlertSettingVO">
+		MERGE INTO alert_setting t
+		USING (
+			SELECT
+				#{alertTypeCode} as alert_type_code_src,
+				#{memUsername} as mem_username_src,
+				#{alertEnabledYn} as alert_enabled_yn_src,
+				systimestamp as alert_mod_date_src
+			FROM DUAL
+		) s
+		on (t.mem_username = s.mem_username_src and t.alert_type_code = s.alert_type_code_src)
+		WHEN MATCHED THEN
+			UPDATE SET
+				t.alert_enabled_yn = s.alert_enabled_yn_src,
+				t.alert_mod_date = s.alert_mod_date_src
+		WHEN NOT MATCHED THEN
+			INSERT (alert_type_code, mem_username, alert_enabled_yn, alert_mod_date)
+			VALUES (s.alert_type_code_src, s.mem_username_src, s.alert_enabled_yn_src, s.alert_mod_date_src)
+	</insert>
+	
+	 <select id="selectAllAlertTypeCodes" parameterType="string" resultType="string">
+        SELECT comm_code_det_no
+        FROM common_detail_code
+        WHERE comm_code_grp_no = #{commCodeGrpNo} AND use_yn = 'Y'
+    </select>
+</mapper>

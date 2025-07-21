@@ -1,0 +1,201 @@
+/* About Page Styles */
+
+/* Hero Section */
+.about-hero {
+    background-color: var(--background-color-dark);
+    color: var(--text-color-light);
+    padding: var(--spacing-xl) 0;
+    text-align: center;
+}
+
+.about-hero h2 {
+    font-size: var(--font-size-xxlarge);
+    margin-bottom: var(--spacing-md);
+}
+
+.about-hero p {
+    font-size: var(--font-size-large);
+    color: var(--text-color-secondary);
+}
+
+/* Vision Section */
+.about-vision {
+    padding: var(--spacing-xl) 0;
+    background-color: var(--background-color-light);
+}
+
+.vision-content {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.vision-content h3 {
+    font-size: var(--font-size-xlarge);
+    margin-bottom: var(--spacing-lg);
+    color: var(--text-color-primary);
+}
+
+.vision-text {
+    font-size: var(--font-size-large);
+    font-weight: var(--font-weight-bold);
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-lg);
+}
+
+.vision-description {
+    font-size: var(--font-size-medium);
+    line-height: 1.6;
+    color: var(--text-color-secondary);
+}
+
+/* History Section */
+.about-history {
+    padding: var(--spacing-xl) 0;
+}
+
+.about-history h3 {
+    text-align: center;
+    font-size: var(--font-size-xlarge);
+    margin-bottom: var(--spacing-xl);
+    color: var(--text-color-primary);
+}
+
+.timeline {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 100%;
+    background-color: var(--primary-color);
+}
+
+.timeline-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+    position: relative;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-item .year {
+    background-color: var(--primary-color);
+    color: var(--text-color-light);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    font-weight: var(--font-weight-bold);
+    margin: 0 var(--spacing-lg);
+}
+
+.timeline-item .content {
+    background-color: var(--background-color-light);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    flex: 0 1 400px;
+}
+
+.timeline-item .content h4 {
+    color: var(--text-color-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.timeline-item .content p {
+    color: var(--text-color-secondary);
+}
+
+/* Values Section */
+.about-values {
+    padding: var(--spacing-xl) 0;
+    background-color: var(--background-color-light);
+}
+
+.about-values h3 {
+    text-align: center;
+    font-size: var(--font-size-xlarge);
+    margin-bottom: var(--spacing-xl);
+    color: var(--text-color-primary);
+}
+
+.values-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-lg);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.value-item {
+    text-align: center;
+    padding: var(--spacing-lg);
+    background-color: var(--background-color);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-normal);
+}
+
+.value-item:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.value-item i {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-md);
+}
+
+.value-item h4 {
+    color: var(--text-color-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.value-item p {
+    color: var(--text-color-secondary);
+    font-size: var(--font-size-small);
+    line-height: 1.6;
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+    .values-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .timeline::before {
+        left: 0;
+    }
+
+    .timeline-item {
+        flex-direction: column;
+        align-items: flex-start;
+        padding-left: var(--spacing-lg);
+    }
+
+    .timeline-item .year {
+        margin: 0 0 var(--spacing-md) 0;
+    }
+
+    .timeline-item .content {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .values-grid {
+        grid-template-columns: 1fr;
+    }
+} 

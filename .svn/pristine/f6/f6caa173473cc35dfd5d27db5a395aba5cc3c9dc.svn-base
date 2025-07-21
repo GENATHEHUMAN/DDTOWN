@@ -1,0 +1,56 @@
+package kr.or.ddit.ddtown.service.community;
+
+import java.util.List;
+import java.util.Map;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.vo.artist.AlbumVO;
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+import kr.or.ddit.vo.community.CommunityPostVO;
+import kr.or.ddit.vo.community.CommunityProfileVO;
+import kr.or.ddit.vo.community.CommunityReplyVO;
+import kr.or.ddit.vo.community.CommunityVO;
+
+public interface ICommunityMainPageService {
+
+	public List<ArtistGroupVO> getGroupLists();
+
+	public ArtistGroupVO getGroupInfo(int artGroupNo);
+
+	public List<AlbumVO> getGroupAlbum(int artGroupNo);
+
+	public ArtistGroupVO getCommunityInfo(int artGroupNo);
+
+	public List<CommunityPostVO> getArtistPostList(CommunityVO communityVO);
+
+	public List<CommunityPostVO> getFanPostList(CommunityVO communityVO);
+
+	public int getPostTotal(CommunityVO communityVO);
+
+	public CommunityProfileVO currentUserComufollowing(Map<String, Object> currentUser);
+
+	public ServiceResult postInsert(CommunityPostVO postVO);
+
+	public ServiceResult postUpdate(CommunityPostVO postVO);
+
+	public CommunityPostVO getPost(int comuPostNo);
+	
+	/**
+	 * comuProfileNo, artGroupNo로 프로필VO 찾은 후 해당 프로필이 작성한 글 목록 및 댓글 목록 가져오기
+	 * @param profileVO
+	 * @return
+	 */
+	public CommunityProfileVO selectProfile(CommunityProfileVO profileVO);
+
+	public ServiceResult postDelete(int postNum);
+
+	public ServiceResult replyInsert(CommunityReplyVO replyVO);
+
+	/**
+	 * 포스트 번호로 해당 포스트 정보 및 댓글 가져오기
+	 * @param comuPostNo
+	 * @return
+	 */
+	public CommunityPostVO selectPost(int comuPostNo);
+
+}

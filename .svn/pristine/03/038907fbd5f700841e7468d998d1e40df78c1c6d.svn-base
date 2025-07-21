@@ -1,0 +1,229 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>라이브 관리 - DDTOWN 직원 포털</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .live-section-title { font-size: 1.3em; font-weight: 600; margin-bottom: 10px; }
+        .live-box { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 20px; margin-bottom: 28px; }
+        .live-info-row { display: flex; align-items: center; gap: 18px; margin-bottom: 8px; }
+        .live-info-row .live-title { font-weight: 600; color: #234aad; }
+        .live-info-row .live-link { color: #1976d2; text-decoration: underline; font-weight: 500; }
+        .live-info-row .live-link:hover { text-decoration: underline; color: #1451a3; }
+        .live-info-row .live-viewers { color: #666; font-size: 0.98em; }
+        .live-table { width: 100%; border-collapse: collapse; background: #fff; margin-bottom: 18px; }
+        .live-table th, .live-table td { border: 1px solid #e0e0e0; padding: 10px; text-align: center; }
+        .live-table th { background: #f5f5f5; font-weight: 600; }
+        .live-table td .btn { padding: 5px 16px; border-radius: 5px; font-size: 0.98em; cursor: pointer; border: none; }
+        .live-table td .btn-hide { background: #bdbdbd; color: #fff; }
+        .live-table td .btn-show { background: #4caf50; color: #fff; }
+        .live-table td .btn-delete { background: #e74c3c; color: #fff; margin-left: 6px; }
+        .live-table td .btn-public { background: #4caf50; color: #fff; }
+        .live-table td .btn-private { background: #bdbdbd; color: #fff; }
+        .vod-status-public { background: #e0f7e9; color: #219150; border-radius: 12px; padding: 3px 14px; font-weight: 600; }
+        .vod-status-hide { background: #ececec; color: #888; border-radius: 12px; padding: 3px 14px; font-weight: 600; }
+        .search-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+        .search-bar select, .search-bar input { padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        .search-bar button { background: #1976d2; color: #fff; border: none; border-radius: 4px; padding: 7px 18px; font-size: 1em; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content" style="position:relative; min-height:600px;">
+                <h2 style="margin-bottom:18px;">라이브 방송 관리</h2>
+                <!-- 현재 진행중인 라이브 -->
+                <div class="live-section-title">현재 진행중인 라이브</div>
+                <div class="live-box">
+                    <div class="live-info-row">
+                        <span class="live-title">aespa 'MY들과 위한 깜짝 소통 라이브'</span>
+                        <span class="live-viewers">현재 시청자: <strong>10,523명</strong></span>
+                        <a href="#" class="live-link" target="_blank">모니터링 링크 &rarr;</a>
+                        <span style="color:#888; font-size:0.98em;">(시작: 2025-05-13 11:00)</span>
+                    </div>
+                </div>
+                <!-- 지난 LIVE 다시보기 관리 -->
+                <div class="live-section-title" style="margin-top:32px;">지난 LIVE 다시보기 관리</div>
+                <div class="search-bar">
+                    <select id="artistSelect">
+                        <option value="">전체 아티스트</option>
+                        <option value="NCT WISH">NCT WISH</option>
+                        <option value="RIIZE">RIIZE</option>
+                        <option value="LE SSERAFIM">LE SSERAFIM</option>
+                    </select>
+                    <input type="text" id="liveTitleInput" placeholder="라이브 제목 검색">
+                    <button id="liveSearchBtn"><i class="fas fa-search"></i> 검색</button>
+                </div>
+                <table class="live-table">
+                    <thead>
+                        <tr>
+                            <th>라이브 제목</th>
+                            <th>아티스트</th>
+                            <th>방송일</th>
+                            <th>VOD 상태</th>
+                            <th>관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>NCT WISH 데뷔 첫 라이브 풀버전</td>
+                            <td>NCT WISH</td>
+                            <td>2025-02-28</td>
+                            <td><span class="vod-status-public">공개중</span></td>
+                            <td>
+                                <button class="btn btn-hide" onclick="changeVodStatus(this, '숨김')">숨기기</button>
+                                <button class="btn btn-delete" onclick="deleteVodRow(this)">VOD 삭제</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>RIIZE 'RIIZING DAY' 비하인드 토크</td>
+                            <td>RIIZE</td>
+                            <td>2025-04-10</td>
+                            <td><span class="vod-status-hide">숨김</span></td>
+                            <td>
+                                <button class="btn btn-show" onclick="changeVodStatus(this, '공개중')">공개</button>
+                                <button class="btn btn-delete" onclick="deleteVodRow(this)">VOD 삭제</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>LE SSERAFIM 'EASY' 컴백 라이브</td>
+                            <td>LE SSERAFIM</td>
+                            <td>2025-02-19</td>
+                            <td><span class="vod-status-public">공개중</span></td>
+                            <td>
+                                <button class="btn btn-hide" onclick="changeVodStatus(this, '숨김')">숨기기</button>
+                                <button class="btn btn-delete" onclick="deleteVodRow(this)">VOD 삭제</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (직원 전용)</p>
+        </footer>
+    </div>
+</body>
+<script>
+        // 로그아웃 기능
+        const logoutButton = document.querySelector('.emp-logout-btn');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('로그아웃 하시겠습니까?')) {
+                    alert('로그아웃 되었습니다.');
+                }
+            });
+        }
+    
+        // 직원 이름 등 동적 데이터 로드 (예시)
+        const employeeNameSpan = document.getElementById('employee-name');
+        if (employeeNameSpan) {
+            employeeNameSpan.textContent = "홍길동";
+        }
+    
+        // VOD 상태 변경
+        function changeVodStatus(btn, status) {
+            const row = btn.closest('tr');
+            const statusCell = row.querySelector('td:nth-child(4) span');
+            if (status === '숨김') {
+                statusCell.textContent = '숨김';
+                statusCell.className = 'vod-status-hide';
+                btn.outerHTML = '<button class="btn btn-show" onclick="changeVodStatus(this, \'공개중\')">공개</button>';
+            } else {
+                statusCell.textContent = '공개중';
+                statusCell.className = 'vod-status-public';
+                btn.outerHTML = '<button class="btn btn-hide" onclick="changeVodStatus(this, \'숨김\')">숨기기</button>';
+            }
+        }
+    
+        // VOD 삭제
+        function deleteVodRow(btn) {
+            if (confirm('정말로 해당 VOD를 삭제하시겠습니까?')) {
+                const row = btn.closest('tr');
+                row.remove();
+            }
+        }
+    
+        // 검색 기능 (샘플)
+        document.getElementById('liveSearchBtn').addEventListener('click', function() {
+            const artist = document.getElementById('artistSelect').value;
+            const title = document.getElementById('liveTitleInput').value;
+            alert(`검색 요청:\n- 아티스트: ${artist}\n- 라이브 제목: ${title}\n\n(실제 검색 기능 미구현)`);
+        });
+    
+        // DOMContentLoaded 이벤트 내에서 사이드바 관련 스크립트 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            // 사이드바 메뉴 토글 기능
+            const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+            navItemsWithSubmenu.forEach(item => {
+                const arrow = item.querySelector('.submenu-arrow');
+                item.addEventListener('click', function(event) {
+                    if (this.getAttribute('href') === '#') {
+                        event.preventDefault();
+                    }
+                    const parentLi = this.parentElement;
+                    const submenu = this.nextElementSibling;
+    
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        const parentUl = parentLi.parentElement;
+                        if (parentUl) {
+                            Array.from(parentUl.children).forEach(siblingLi => {
+                                if (siblingLi !== parentLi) {
+                                    const siblingSubmenuControl = siblingLi.querySelector('.emp-nav-item.has-submenu.open');
+                                    if (siblingSubmenuControl) {
+                                        const siblingSubmenuElement = siblingSubmenuControl.nextElementSibling;
+                                        siblingSubmenuControl.classList.remove('open');
+                                        if (siblingSubmenuElement && siblingSubmenuElement.classList.contains('emp-submenu')) {
+                                            siblingSubmenuElement.style.display = 'none';
+                                        }
+                                        const siblingArrow = siblingSubmenuControl.querySelector('.submenu-arrow');
+                                        if (siblingArrow) siblingArrow.style.transform = 'rotate(0deg)';
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    
+                    this.classList.toggle('open');
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                        if (arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+                    }
+                });
+            });
+    
+            // 현재 페이지 URL 기반으로 사이드바 메뉴 활성화 및 펼침
+            const currentFullHref = window.location.href;
+            document.querySelectorAll('.emp-sidebar .emp-nav-item[href]').forEach(link => {
+                const linkHrefAttribute = link.getAttribute('href');
+                if (linkHrefAttribute && linkHrefAttribute !== "#" && currentFullHref.endsWith(linkHrefAttribute)) {
+                    link.classList.add('active');
+                    let currentActiveElement = link;
+                    while (true) {
+                        const parentLi = currentActiveElement.parentElement;
+                        if (!parentLi) break;
+                        const parentSubmenuUl = parentLi.closest('ul.emp-submenu');
+                        if (parentSubmenuUl) {
+                            parentSubmenuUl.style.display = 'block';
+                            const controllingAnchor = parentSubmenuUl.previousElementSibling;
+                            if (controllingAnchor && controllingAnchor.tagName === 'A' && controllingAnchor.classList.contains('has-submenu')) {
+                                controllingAnchor.classList.add('active', 'open');
+                                const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                                if (arrow) arrow.style.transform = 'rotate(90deg)';
+                                currentActiveElement = controllingAnchor;
+                            } else { break; }
+                        } else { break; }
+                    }
+                }
+            });
+        });
+    </script>
+</html> 

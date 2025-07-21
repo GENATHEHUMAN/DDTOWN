@@ -1,0 +1,14 @@
+package kr.or.ddit.ddtown.mapper.community;
+
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface CommunityProfileMapper {
+
+	String getMemUsernameByComuProfile(int comuProfileNo);
+
+	Integer selectArtistGroupNoByComuProfileNo(Integer artistComuProfileNo);
+
+	Integer selectComuprofileNoByMember(String currentUser, Integer artGroupNo);
+
+}

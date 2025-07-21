@@ -1,0 +1,175 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>굿즈샵 공지사항 등록 - DDTOWN 관리자 시스템</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <%@ include file="../../../modules/headerPart.jsp" %>
+    <style>
+        .goods-notice-form-section {
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .emp-section-header {
+            margin-bottom: 20px;
+        }
+        .emp-section-header h2 {
+            margin: 0;
+            color: #333;
+        }
+        .emp-form {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 95%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-group textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+        .form-check-input {
+            margin-right: 8px;
+        }
+        .form-check-label {
+            color: #333;
+            user-select: none;
+        }
+        .file-upload-info {
+            margin-top: 8px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .emp-form-actions {
+            margin-top: 30px;
+            text-align: right;
+        }
+        .emp-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            margin-left: 8px;
+        }
+        .emp-btn i {
+            margin-right: 5px;
+        }
+        .emp-btn.primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .emp-btn.primary:hover {
+            background-color: #0056b3;
+        }
+        .emp-btn.default {
+            background-color: #6c757d;
+            color: white;
+        }
+        .emp-btn.default:hover {
+            background-color: #5a6268;
+        }
+        .emp-btn.danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .emp-btn.danger:hover {
+            background-color: #c82333;
+        }
+        .emp-btn.sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section class="goods-notice-form-section">
+                    <div class="emp-section-header">
+                        <h2 id="formPageTitle">굿즈샵 공지사항 등록</h2>
+                    </div>
+                    <form id="goodsNoticeForm" class="emp-form">
+                        <input type="hidden" id="noticeId" name="noticeId" value="">
+                        <div class="form-group">
+                            <label for="noticeTitle">제목</label>
+                            <input type="text" id="noticeTitle" name="noticeTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="noticeContent">내용</label>
+                            <textarea id="noticeContent" name="noticeContent" rows="10" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <input type="checkbox" id="isPinned" name="isPinned" class="form-check-input">
+                            <label for="isPinned" class="form-check-label">상단 고정</label>
+                        </div>
+                        <div class="form-group">
+                            <label for="noticeAttachment">첨부파일</label>
+                            <input type="file" id="noticeAttachment" name="noticeAttachment">
+                            <div id="currentAttachment" class="file-upload-info"></div>
+                        </div>
+                        <div class="emp-form-actions">
+                            <a href="/admin/goods/notice/list" class="emp-btn default"><i class="fas fa-list"></i> 목록</a>
+                            <button type="submit" id="submitButton" class="emp-btn primary"><i class="fas fa-check"></i> 등록</button>
+                            <button type="button" class="emp-btn danger" id="deleteBtn"><i class="fas fa-times"></i> 삭제</button>
+                        </div>
+                    </form>
+                </section>
+            </main>
+        </div>
+		<div class="ea-pagination" id="pagingArea">
+        	${pagingVO.pagingHTML }
+        </div>
+    </div>
+<%@ include file="../../modules/footerPart.jsp" %>
+
+<%@ include file="../../modules/sidebar.jsp" %> 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+	//페이지네이션 처리 시작
+	const searchForm = document.getElementById("searchForm");
+    const pageInput = searchForm.querySelector("input[name='currentPage']"); // hidden input의 name 사용
+    const paginationControls = document.getElementById("pagingArea");
+
+    if (paginationControls) { // paginationControls 요소가 존재할 때만 이벤트 리스너 추가
+        paginationControls.addEventListener("click", function(e) {
+            e.preventDefault(); // 기본 링크 이동 방지
+
+            // 클릭된 요소가 'page-link' 클래스를 가지고 있고 'A' 또는 'SPAN' 태그인지 확인
+            if (e.target.classList.contains("page-link") && (e.target.nodeName === "A" || e.target.nodeName === "SPAN")) {
+                pageInput.value = e.target.dataset.page; // data-page 속성 값으로 hidden input 업데이트
+                searchForm.submit(); // 폼 제출
+            }
+        });
+    }
+    // 페이지네이션 처리 끝
+})
+</script>
+</body>
+</html> 

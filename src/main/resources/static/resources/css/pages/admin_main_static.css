@@ -1,0 +1,110 @@
+.dashboard-card .card-icon {
+    font-size: 2.5em; /* 아이콘 크기 조정 */
+    margin-bottom: 0.5rem; /* 부트스트랩 간격 사용 */
+    color: var(--bs-primary); /* 부트스트랩 기본 색상 변수 사용 */
+}
+.dashboard-card .summary-card .count {
+    font-size: 2em; /* 숫자 크기 조정 */
+    font-weight: bold;
+}
+.dashboard-card .description {
+    font-size: 0.9em;
+    color: #6c757d;
+}
+.dashboard-card .card-link {
+    font-size: 0.9em;
+    text-decoration: none;
+    color: var(--bs-link-color);
+}
+.status-text.normal { color: #28a745; font-weight: bold; } /* Green for normal */
+.status-text.warning { color: #ffc107; font-weight: bold; } /* Yellow for warning */
+.status-text.danger { color: #dc3545; font-weight: bold; } /* Red for danger */
+
+/* Emp-Container / Emp-Body-Wrapper / Emp-Content 레이아웃 조정 (필요시) */
+.emp-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* 최소 뷰포트 높이 */
+}
+.emp-body-wrapper {
+    display: flex;
+    flex-grow: 1; /* 남은 공간을 차지하도록 */
+}
+.emp-content {
+    flex-grow: 1; /* 남은 공간을 차지하도록 */
+    padding: 1.5rem; /* 기본 패딩 */
+}
+
+/* 공지사항 목록 스타일 */
+.notice-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.notice-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.notice-list li:last-child {
+    border-bottom: none;
+}
+.notice-list li a {
+    text-decoration: none;
+    color: #343a40;
+    font-weight: 500;
+    flex-grow: 1;
+    margin-right: 10px;
+}
+.notice-list li a:hover {
+    color: #0d6efd; /* 부트스트랩 링크 호버 색상 */
+}
+.notice-list li .date {
+    font-size: 0.85em;
+    color: #6c757d;
+}
+/* 기존 CSS는 무시 요청에 따라 여기서는 최소한만 유지 또는 부트스트랩 대체 */
+.chart-container {
+    width: 100%;
+    height: 300px; /* 차트의 최소 높이 지정 */
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* 부트스트랩 카드에 맞추어 padding 조정 */
+.card-body.chart-body {
+    padding: 0; /* 차트가 카드 바디 전체를 차지하도록 */
+}
+.stats-filter-group .form-select {
+    width: auto; /* select 박스 너비 자동 조절 */
+}
+.stats-cards-grid .dashboard-card {
+    text-align: center;
+    padding: 1rem;
+    border-radius: .5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+    background-color: #fff;
+}
+.stats-cards-grid .dashboard-card .card-icon {
+    font-size: 2.5rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+.stats-cards-grid .dashboard-card h3 {
+    font-size: 1rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+}
+.stats-cards-grid .dashboard-card .count {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #343a40;
+}
+.stats-cards-grid .dashboard-card .unit {
+    font-size: 0.9rem;
+    font-weight: normal;
+    color: #6c757d;
+}

@@ -1,0 +1,341 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" content="${_csrf.token}"/>
+	<meta name="_csrf_header" content="${_csrf.headerName}"/>
+    <title>DDTOWN 굿즈샵</title>
+ 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/goods.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/goods_main.css">
+ 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="logo">
+            <a href="${pageContext.request.contextPath}/goods/main">DDTOWN SQUARE</a>
+        </div>
+        <nav class="utility-nav">
+            <c:choose>
+                <c:when test="${sessionScope.isUserLoggedIn_server == true}">
+                    <ul id="loggedInNav">
+                        <li><a href="#" class="icon-btn" title="알림">🔔</a></li>
+                        <li><a href="${pageContext.request.contextPath}/mypage.html" class="icon-btn" title="마이페이지">👤</a></li>
+                        <li><a href="#" class="icon-btn" title="고객센터">👩‍💻</a></li>
+                        <li><a href="${pageContext.request.contextPath}/logout" id="logoutBtn" class="auth-link">로그아웃</a></li>
+                    </ul>
+                </c:when>
+                <c:otherwise>
+                    <ul id="loggedOutNav">
+                        <li><a href="${pageContext.request.contextPath}/login.html" class="auth-link">로그인</a></li>
+                        <li><a href="${pageContext.request.contextPath}/signup.html" class="signup-link">회원가입</a></li>
+                    </ul>
+                </c:otherwise>
+            </c:choose>
+        </nav>
+    </header>
+
+    <nav class="main-navigation">
+        <ul>
+            <li><a href="${pageContext.request.contextPath}/goods/main">굿즈샵</a></li>
+            <li>
+                <a href="#">선호도 조사</a>
+                <ul class="submenu">
+                    <li><a href="${pageContext.request.contextPath}">인기 투표</a></li>
+                </ul>
+            </li>
+            <li><a href="#">콘서트</a></li>
+        </ul>
+    </nav>
+
+    <%-- 메인 공지사항 객체(notice)가 null이 아니고 비어있지 않은 경우에만 표시 --%>
+    <c:if test="${not empty notice}">
+        <div class="shop-notice-bar">
+            ✨ ${notice.goodsNotiTitle}<hr> <a href="${pageContext.request.contextPath}/notice/detail/${notice.goodsNotiNo}">자세히 보기</a> ✨
+            <%-- 공지사항 상세 URL 수정: goodsNotiNo 앞에 /notice/detail/ 추가 --%>
+        </div>
+    </c:if>
+
+    <nav class="artist-filter-bar">
+        <%-- '전체' 버튼의 활성 상태 확인 --%>
+        <button class="filter-btn ${pagingVO.searchWord == null || pagingVO.searchWord == '' || !pagingVO.searchType.startsWith('artist') ? 'active' : ''}" data-artist-id="all">전체</button>
+        <c:forEach var="artist" items="${artistList}">
+            <%-- 아티스트 버튼 활성 상태 확인: searchType이 'artist'로 시작하고 searchWord가 현재 아티스트의 artGroupNo와 일치하는지 --%>
+            <button class="filter-btn ${pagingVO.searchType.startsWith('artist') && pagingVO.searchWord == artist.artGroupNo ? 'active' : ''}"
+                    data-artist-id="${artist.artGroupNo}">${artist.artGroupNm}</button>
+        </c:forEach>
+    </nav>
+
+    <section class="product-list-section">
+        <div class="product-grid-header">
+            <h2>전체 상품</h2>
+            <div class="sort-options">
+                <select id="sortProducts">
+                    <%-- 현재 정렬 타입에 따라 selected 속성 추가 --%>
+                    <option value="newest" ${pagingVO.searchType == 'newest' || pagingVO.searchType == 'artist' ? 'selected' : ''}>신상품순</option>
+                    <option value="popularity" ${pagingVO.searchType.contains('popularity') ? 'selected' : ''}>인기순</option>
+                    <option value="priceLowHigh" ${pagingVO.searchType.contains('priceLowHigh') ? 'selected' : ''}>낮은가격순</option>
+                    <option value="priceHighLow" ${pagingVO.searchType.contains('priceHighLow') ? 'selected' : ''}>높은가격순</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="product-grid" id="productGrid">
+            <%-- 상품 목록이 비어있지 않고, 총 레코드 수가 0보다 클 때만 상품을 표시 --%>
+            <c:choose>
+                <c:when test="${not empty pagingVO.dataList and pagingVO.totalRecord > 0}">
+                    <c:forEach items="${pagingVO.dataList}" var="goods">
+                        <div class="product-item">
+                            <%-- goods 객체의 isWished 필드를 직접 사용 --%>
+                            <button class="wish-button ${goods.isWished() ? 'wished' : ''}"
+                                    data-wished="${goods.isWished()}"
+                                    data-goods-no="${goods.goodsNo}">
+                                <i class="fa-heart ${goods.isWished() ? 'fas' : 'far'}"></i>
+                            </button>
+                            <%-- 상품 상세 페이지 링크 --%>
+                            <a href="${pageContext.request.contextPath}/goods/detail?goodsNo=${goods.goodsNo}" class="product-link">
+                                <c:choose>
+                                    <c:when test="${not empty goods.representativeImageUrl}"> <%-- 여기를 goodsImgPath -> representativeImageUrl로 변경 --%>
+                                        <img src="${pageContext.request.contextPath}${goods.representativeImageUrl}" alt="${goods.goodsNm}" class="product-image"> <%-- 여기도 변경. /resources/uploads/goods/ 제거 --%>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <img src="https://via.placeholder.com/200?text=No+Image" alt="이미지 없음" class="product-image">
+                                    </c:otherwise>
+                                </c:choose>
+                                <div class="product-info">
+                                    <div>
+                                        <%-- 아티스트 그룹 번호를 표시하거나 아티스트 그룹 이름으로 변경 가능 --%>
+                                        <span class="product-artist-tag">${goods.artGroupNo}</span>
+                                        <h3 class="product-name">${goods.goodsNm}</h3>
+                                    </div>
+                                    <div class="product-price">
+                                        <fmt:formatNumber value="${goods.goodsPrice}" type="number" />
+                                        <span class="currency">원</span>
+                                    </div>
+                                    <%-- 재고 수량 표시 (필요하다면) --%>
+                                    <div class="product-status-stock">
+                                        <c:if test="${goods.stockRemainQty <= 0}">
+                                            <span style="color: red; font-weight: bold;">[품절]</span>
+                                        </c:if>
+                                        <%-- <c:if test="${goods.stockRemainQty > 0}"> --%>
+                                        <%--     <span style="color: green;">재고: ${goods.stockRemainQty}개</span> --%>
+                                        <%-- </c:if> --%>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </c:forEach>
+                </c:when>
+                <c:otherwise>
+                    <p style="text-align: center; width: 100%; padding: 50px;">등록된 상품이 없습니다.</p>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </section>
+
+    <%-- 페이지네이션 HTML 출력 --%>
+    <div class="pagination">
+        ${pagingVO.pagingHTML}
+    </div>
+
+    <%-- 장바구니/찜목록 플로팅 버튼 (수정 없음) --%>
+    <c:set var="cartCount" value="${not empty cartItemCount ? cartItemCount : 0}" />
+    <c:set var="wishCount" value="${not empty wishlistItemCount ? wishlistItemCount : 0}" />
+
+    <nav class="floating-nav">
+        <a href="${pageContext.request.contextPath}/cart.html" class="floating-btn" id="floatingCartBtn" title="장바구니">
+            🛒
+            <span class="item-count-badge" id="cartItemCount" style="display: ${cartCount > 0 ? 'flex' : 'none'};">${cartCount}</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/wishlist.html" class="floating-btn" id="floatingWishlistBtn" title="찜목록">
+            ❤️
+            <span class="item-count-badge" id="wishlistItemCount" style="display: ${wishCount > 0 ? 'flex' : 'none'};">${wishCount}</span>
+        </a>
+    </nav>
+
+    <script>
+    let csrfToken;
+    let csrfHeader;
+    
+    const contextPath = "${pageContext.request.contextPath}";
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const csrfMeta = document.querySelector('meta[name="_csrf"]');
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+        if (csrfMeta && csrfHeaderMeta) {
+            csrfToken = csrfMeta.content;
+            csrfHeader = csrfHeaderMeta.content;
+        } else {
+            console.error("CSRF meta tags not found. CSRF protection might be disabled or misconfigured.");
+        }
+
+        const isUserLoggedIn = ${isLoggedIn};
+
+        // 로그인/로그아웃 네비게이션 표시 (이 부분은 JSP에서 직접 처리하는 것이 더 일반적입니다. JS는 필요시 동적 변경에 사용)
+        // const loggedOutNav = document.getElementById('loggedOutNav');
+        // const loggedInNav = document.getElementById('loggedInNav');
+        // if (isUserLoggedIn) {
+        //     if(loggedOutNav) loggedOutNav.style.display = 'none';
+        //     if(loggedInNav) loggedInNav.style.display = 'flex';
+        // } else {
+        //     if(loggedOutNav) loggedOutNav.style.display = 'flex';
+        //     if(loggedInNav) loggedInNav.style.display = 'none';
+        // }
+
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function(event) {
+                alert("로그아웃되었습니다.");
+            });
+        }
+
+        // --- 찜(Wishlist) 기능 스크립트 ---
+        const wishButtons = document.querySelectorAll('.wish-button');
+
+        wishButtons.forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+
+                const goodsNo = this.dataset.goodsNo;
+                const isWished = this.dataset.wished === 'true';
+                const icon = this.querySelector('i');
+
+                if (!isUserLoggedIn) {
+                    alert('로그인이 필요한 기능입니다.');
+                    window.location.href = '${pageContext.request.contextPath}/login';
+                    return;
+                }
+
+                const requestBody = { goodsNo: parseInt(goodsNo) };
+
+                fetch('${pageContext.request.contextPath}/goods/wishlist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [csrfHeader]: csrfToken
+                    },
+                    body: JSON.stringify(requestBody)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                         if (response.status === 401) {
+                             alert('로그인 세션이 만료되었거나 로그인이 필요합니다.');
+                             window.location.href = '${pageContext.request.contextPath}/login';
+                         }
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.message || `서버 오류 발생 (HTTP ${response.status})`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert(data.message);
+
+                    if (data.status === 'success') {
+                        if (data.action === 'added') {
+                            icon.classList.remove('far');
+                            icon.classList.add('fas');
+                            button.classList.add('wished');
+                            this.dataset.wished = 'true';
+                        } else if (data.action === 'removed') {
+                            icon.classList.remove('fas');
+                            icon.classList.add('far');
+                            button.classList.remove('wished');
+                            this.dataset.wished = 'false';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('찜 처리 중 오류:', error);
+                    alert('찜 처리 중 오류가 발생했습니다: ' + error.message);
+                });
+            });
+        });
+
+     // --- 상품 정렬 변경 스크립트 ---
+        const sortProductsSelect = document.getElementById('sortProducts');
+        if (sortProductsSelect) {
+            sortProductsSelect.addEventListener('change', function() {
+                const selectedSortType = this.value;
+                const currentPage = 1; // 정렬 변경 시 1페이지로 이동
+
+                const urlParams = new URLSearchParams(window.location.search);
+                let currentSearchWord = urlParams.get('searchWord') || '';
+                let currentSearchType = urlParams.get('searchType') || 'newest';
+
+                let finalSearchType = selectedSortType;
+                let finalSearchWord = currentSearchWord;
+
+                if (currentSearchType.startsWith('artist') && currentSearchWord) {
+                    finalSearchWord = currentSearchWord;
+                    finalSearchType = 'artist_' + selectedSortType;
+                }
+
+                // URL 재구성 및 이동: pageContext.request.contextPath 대신 contextPath 변수 사용
+             	// **여기 수정: 올바른 템플릿 리터럴 문법과 변수명 사용**
+                window.location.href = `${contextPath}/goods/main?currentPage=${currentPage}&searchWord=${finalSearchWord}&searchType=${finalSearchType}`;
+            });
+        }
+
+     // --- 아티스트 필터 버튼 클릭 스크립트 ---
+        const filterButtons = document.querySelectorAll('.artist-filter-bar .filter-btn');
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const artistId = this.dataset.artistId;
+                const currentPage = 1;
+
+                const urlParams = new URLSearchParams(window.location.search);
+                let currentSortType = urlParams.get('searchType') || 'newest';
+
+                let searchWord = '';
+                let searchType = 'newest';
+
+                if (artistId !== 'all') {
+                    searchWord = artistId;
+
+                    // 기존 정렬 타입에서 'artist_' 접두사 제거
+                    let baseSortType = currentSortType.replace('artist_', '');
+                    
+                    // 만약 기본 정렬 타입이 'newest'라면, 'artist'만 사용 (ex: /goods/main?searchType=artist&searchWord=1)
+                    // 그 외의 정렬 타입이라면 'artist_정렬타입' 사용 (ex: /goods/main?searchType=artist_popularity&searchWord=1)
+                    if (baseSortType === 'newest') {
+                        searchType = 'artist';
+                    } else {
+                        searchType = 'artist_' + baseSortType;
+                    }
+                } else {
+                    // "전체" 버튼 클릭 시
+                    searchWord = '';
+                    // 기존 정렬 타입에서 'artist_' 접두사 제거 (ex: artist_popularity -> popularity)
+                    searchType = currentSortType.replace('artist_', '');
+                    // 만약 'artist'만 남아있으면 'newest'로 설정 (예: artist -> newest)
+                    if (searchType === 'artist') {
+                        searchType = 'newest';
+                    }
+                }
+
+                window.location.href = `${contextPath}/goods/main?currentPage=${currentPage}&searchWord=${searchWord}&searchType=${searchType}`;
+            });
+        });
+
+     // --- 페이지네이션 클릭 이벤트 ---
+        const paginationArea = document.querySelector('.pagination');
+        if (paginationArea) {
+            paginationArea.addEventListener('click', function(e) {
+                if (e.target.classList.contains('page-link') && e.target.tagName === 'A') {
+                    e.preventDefault(); // 기본 링크 이동 방지
+                    const page = e.target.dataset.page; // data-page 속성 값 가져오기
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('currentPage', page); // currentPage 업데이트
+                    window.location.href = `\${window.location.pathname}?\${urlParams.toString()}`;
+                }
+            });
+        }
+    });
+    </script>
+</body>
+</html>

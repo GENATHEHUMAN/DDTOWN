@@ -1,0 +1,97 @@
+package kr.or.ddit.ddtown.controller.admin.member;
+
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.service.admin.member.IMemberAdminService;
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.member.MemCodeListVO;
+import kr.or.ddit.vo.member.MemberAdminVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/admin/community/member")
+public class AdminMemberController {
+
+	@Autowired
+	private IMemberAdminService memberAdminService;
+	
+	@GetMapping("/main")
+	public String memberList(
+			@RequestParam(defaultValue = "1", required = true) int currentPage,
+			@RequestParam(required = false, defaultValue = "all") String searchType,
+			@RequestParam(required = false) String searchWord,
+			Model model){
+		
+		log.info("목록 요청 중...");
+		PaginationInfoVO<MemberAdminVO> pagingVO = new PaginationInfoVO<>();
+		pagingVO.setCurrentPage(currentPage);
+		pagingVO.setSearchType(searchType);
+		if(StringUtils.isNotBlank(searchWord)) {
+			pagingVO.setSearchWord(searchWord);
+		}
+		log.info("pagingVO : {}",pagingVO);
+		int totalRecord = memberAdminService.getTotalRecord(pagingVO);
+		pagingVO.setTotalRecord(totalRecord);
+		List<MemberAdminVO> dataList = memberAdminService.getDataList(pagingVO);
+		pagingVO.setDataList(dataList);
+		
+		model.addAttribute("pagingVO", pagingVO);
+		
+		return "admin/member/main";
+	}
+	
+	@GetMapping("/detail/{memUsername}")
+	public String detailMember(@PathVariable String memUsername, Model model) {
+		
+		log.info("회원 상세페이지 요청 중...");
+		
+		MemberAdminVO memberVO = memberAdminService.getMember(memUsername);
+		
+		List<MemCodeListVO> codeList = memberAdminService.getCodeList();
+		
+		model.addAttribute("memberVO", memberVO);
+		model.addAttribute("codeList", codeList);
+		
+		log.info("memberVO : " + memberVO);
+		
+		return "admin/member/detail";
+	}
+	
+	@PostMapping("/update/{memUsername}")
+	public ResponseEntity<ServiceResult> updateMember(@PathVariable String memUsername, MemberAdminVO memberVO) {
+		
+		ServiceResult result = null;
+		
+		log.info("회원 업데이트 요청중...");
+		
+		log.info("memberVO : " + memberVO);
+		
+		result = memberAdminService.updateMember(memberVO);
+		
+		return new ResponseEntity<ServiceResult>(result, HttpStatus.OK);
+	}
+	
+	@PostMapping("/delete/{memUsername}")
+	public ResponseEntity<ServiceResult> deleteMemeber(@PathVariable String memUsername){
+		
+		ServiceResult result = null;
+		
+		result = memberAdminService.deleteMember(memUsername);
+		
+		return new ResponseEntity<ServiceResult>(result, HttpStatus.OK);
+	}
+}

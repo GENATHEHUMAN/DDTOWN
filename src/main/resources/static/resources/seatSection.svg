@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<svg width="1206" height="744" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" version="1.1" xml:space="preserve">
+ <title>Layer 1</title>
+ <g class="layer">
+  <title>Layer 1</title>
+  <g class="section_A" id="svg_9">
+   <title>A</title>
+   <g id="svg_7">
+    <rect fill="#cccccc" height="456" id="svg_2" width="212.68" x="99.32" y="0"/>
+    <rect fill="#cccccc" height="429" id="svg_3" width="31.1" x="76.24" y="27"/>
+    <rect fill="#cccccc" height="377" id="svg_4" width="31.1" x="49.15" y="79"/>
+    <rect fill="#cccccc" height="299" id="svg_5" width="31.1" x="27.08" y="157"/>
+    <rect fill="#cccccc" height="244" id="svg_6" width="31.1" x="1" y="212"/>
+   </g>
+   <text fill="#000000" font-family="Noto Sans JP" font-size="195" font-weight="normal" id="svg_8" stroke="#000" stroke-width="0" text-anchor="start" transform="matrix(1.52206 0 0 1.00604 -94.0295 25.7588)" x="116.66" xml:space="preserve" y="284">A</text>
+  </g>
+  <g class="section_B" fill="#b2b2b2" id="svg_12" transform="matrix(1 0 0 1 0 0)">
+   <title>B</title>
+   <rect fill="#cccccc" height="454" id="svg_10" stroke-width="0" width="473" x="369" y="0"/>
+   <text fill="#000000" font-family="Noto Sans JP" font-size="195" id="svg_11" stroke-width="0" text-anchor="start" transform="matrix(1.56977 0 0 1 -272.919 0)" x="494.93" xml:space="preserve" y="295">B</text>
+  </g>
+  <g class="section_C" id="svg_795" transform="matrix(1 0 0 1 0 0)">
+   <title>C</title>
+   <g id="svg_740">
+    <rect fill="#cccccc" height="457" id="svg_13" stroke="#000000" stroke-opacity="0" stroke-width="0" width="213" x="898" y="0"/>
+    <rect fill="#cccccc" height="429" id="svg_409" stroke="#000000" stroke-opacity="0" stroke-width="0" width="26" x="1110" y="28"/>
+    <rect fill="#cccccc" height="379" id="svg_484" stroke="#000000" stroke-opacity="0" stroke-width="0" width="26" x="1131" y="78"/>
+    <rect fill="#cccccc" height="349" id="svg_525" stroke="#000000" stroke-opacity="0" stroke-width="0" width="26" x="1155" y="108"/>
+    <rect fill="#cccccc" height="241" id="svg_603" stroke="#000000" stroke-opacity="0" stroke-width="0" width="26" x="1179" y="216"/>
+   </g>
+   <text fill="#000000" font-family="Noto Sans JP" font-size="195" id="svg_794" stroke="#000000" stroke-opacity="0" stroke-width="0" text-anchor="start" transform="matrix(1.19998 0 0 1 -201.326 0)" x="987" xml:space="preserve" y="303">C</text>
+  </g>
+  <g class="section_D" id="svg_825" transform="matrix(1 0 0 1 0 0)">
+   <title>D</title>
+   <g id="svg_823">
+    <rect fill="#cccccc" height="213.4" id="svg_818" width="46" x="353" y="531.6"/>
+    <rect fill="#cccccc" height="248" id="svg_819" width="262" x="94" y="497"/>
+    <rect fill="#cccccc" height="215.7" id="svg_820" width="30" x="70" y="497"/>
+    <rect fill="#cccccc" height="190.33" id="svg_821" width="51" x="23" y="497"/>
+    <rect fill="#cccccc" height="151.11" id="svg_822" width="25" x="2" y="529.3"/>
+   </g>
+   <text fill="#000000" font-family="Noto Sans JP" font-size="195" id="svg_824" stroke-width="0" text-anchor="start" transform="matrix(1.22116 0 0 0.751952 -33.6166 181.515)" x="152.54" xml:space="preserve" y="668.73">D</text>
+  </g>
+  <g class="section_E" id="svg_833" transform="matrix(1 0 0 1 0 0) matrix(1 0 0 1.0653 -808 -725.52)">
+   <title>E</title>
+   <g id="svg_831">
+    <rect fill="#cccccc" height="218.61" id="svg_826" stroke="#000000" stroke-opacity="0" stroke-width="0" width="49" x="1616" y="1159.97"/>
+    <rect fill="#cccccc" height="249" id="svg_827" stroke="#000000" stroke-opacity="0" stroke-width="0" width="260" x="1663" y="1129.58"/>
+    <rect fill="#cccccc" height="212.76" id="svg_828" stroke="#000000" stroke-opacity="0" stroke-width="0" width="25" x="1923" y="1129.58"/>
+    <rect fill="#cccccc" height="184.7" id="svg_829" stroke="#000000" stroke-opacity="0" stroke-width="0" width="47" x="1947" y="1129.58"/>
+    <rect fill="#cccccc" height="151.97" id="svg_830" stroke="#000000" stroke-opacity="0" stroke-width="0" width="23" x="1990" y="1162.31"/>
+   </g>
+   <text fill="#000000" font-family="Noto Sans JP" font-size="195" id="svg_832" stroke="#000000" stroke-opacity="0" stroke-width="0" text-anchor="start" transform="matrix(1.20684 0 0 0.814901 -182.778 226.171)" x="1573.03" xml:space="preserve" y="1345.73">E</text>
+  </g>
+ </g>
+</svg>

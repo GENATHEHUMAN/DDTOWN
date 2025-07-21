@@ -1,0 +1,85 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDTOWN - 직원 시스템</title>
+    <%@ include file ="../modules/headerPart.jsp" %>
+<!--     <link rel="stylesheet" href="common/emp_common.css">  -->
+<!--     <link rel="stylesheet" href="emp_portal_style.css">  -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style type="text/css">
+	    .dashboard-grid .card-icon {
+            font-size: 2.5em; /* 아이콘 크기 조정 */
+            margin-bottom: 10px;
+        }
+        .dashboard-grid .summary-card .count {
+            font-size: 2em; /* 숫자 크기 조정 */
+        }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="./modules/header.jsp" %>
+
+        <div class="emp-body-wrapper">
+            <%@ include file="./modules/aside.jsp" %>
+
+            <main class="emp-content">
+            	
+            	<div class="portal-welcome-message">
+                    <h2>DDTOWN 직원 시스템</h2>
+                    <p>환영합니다, <c:out value="${loginAdmin.adminName}" default="직원"/>님! 왼쪽 메뉴를 통해 각 항목을 관리할 수 있습니다.</p>
+                </div>
+            	
+                <div class="dashboard-grid">
+                	<div class="dashboard-card summary-card">
+                		<a href="${pageContext.request.contextPath}/emp/edms/approvalBox" class="emp-menu-item">
+	                		<div style="" class="card-icon"><i class="fas fa-file-signature"></i></div>
+	                        <div class="card-content">
+	                            <h3>전자 결재</h3>
+	                            <p class="emp-menu-description">기안서 작성, 결재 요청 확인 및 문서 관리를 진행합니다.</p>
+	                        </div>
+                        </a>
+                	</div>
+                	<div class="dashboard-card summary-card">
+                		<a href="${pageContext.request.contextPath}/emp/audition/schedule" class="emp-menu-item">
+	                		<div class="card-icon"><i class="fas fa-microphone-alt"></i></div>
+	                        <div class="card-content">
+	                            <h3>오디션 관리</h3>
+	                            <p class="emp-menu-description">오디션 공고 등록, 지원자 정보 관리 및 심사를 진행합니다.</p>
+	                        </div>
+                        </a>
+                	</div>
+                	<div class="dashboard-card summary-card">
+                		<a href="${pageContext.request.contextPath}/emp/group/group-management" class="emp-menu-item">
+	                		<div class="card-icon"><i class="fas fa-users"></i></div>
+	                        <div class="card-content">
+	                            <h3>아티스트 그룹 관리</h3>
+	                            <p class="emp-menu-description">커뮤니티 게시글 모니터링, 사용자 관리 및 운영 업무를 수행합니다.</p>
+	                        </div>
+                        </a>
+                	</div>
+                	<div class="dashboard-card summary-card">
+                		<a href="${pageContext.request.contextPath}/emp/concert/schedule/list" class="emp-menu-item">
+	                		<div class="card-icon"><i class="fas fa-ticket-alt"></i></div>
+	                        <div class="card-content">
+	                            <h3>콘서트 관리</h3>
+	                            <p class="emp-menu-description">콘서트 정보 등록, 예매 현황 확인 및 관련 통계를 관리합니다.</p>
+	                        </div>
+                        </a>
+                	</div>
+                </div>
+            </main>
+        </div>
+    </div>
+<%@ include file="../modules/footerPart.jsp" %>
+
+<%@ include file="../modules/sidebar.jsp" %>   
+<script>
+
+</script>
+</body>
+</html>

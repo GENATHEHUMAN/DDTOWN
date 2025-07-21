@@ -1,0 +1,235 @@
+body { /* 기본 폰트는 emp_common.css 등에서 관리될 수 있으므로, 필요시 조정 */
+	font-family: sans-serif;
+}
+
+main.emp-content { /* emp_common.css 와 충돌 가능성. 필요시 조정 */
+	width: 90%;
+	margin: 20px auto;
+}
+/* artist-search-form 스타일 (기존 artist-search-box 와 유사) */
+.artist-search-form {
+	margin-bottom: 20px;
+	display: flex;
+	gap: 10px;
+	align-items: center;
+}
+
+.artist-search-form .ea-filter-select, .artist-search-form .ea-search-input
+	{
+	padding: 8px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+}
+
+.artist-search-form .ea-search-input {
+	flex-grow: 1;
+}
+
+.artist-search-form .ea-btn.primary {
+	padding: 8px 15px;
+	background-color: #007bff;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.artist-search-form .ea-btn.primary:hover {
+	background-color: #0056b3;
+}
+
+/* ea-table 스타일 (기존 artist-table 과 유사) */
+table.ea-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 20px 0;
+	table-layout: fixed;
+}
+
+table.ea-table th, table.ea-table td {
+	border: 1px solid #ddd;
+	padding: 10px;
+	text-align: left;
+	vertical-align: middle;
+	word-wrap: break-word;
+}
+
+table.ea-table th {
+	background-color: #f2f2f2;
+	font-weight: bold;
+}
+
+th.col-profile-path, td.col-profile-path {
+	width: 30%;
+}
+
+th.col-actions, td.col-actions {
+	width: 10%;
+	text-align: center;
+} /* 관리 버튼 중앙 정렬 */
+.ea-btn { /* 공통 버튼 스타일 */
+	padding: 6px 12px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 0.9em;
+	text-decoration: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.ea-btn.sm {
+	font-size: 0.8em;
+	padding: 4px 8px;
+}
+
+.ea-btn.primary {
+	background-color: #007bff;
+	color: white;
+}
+
+.ea-btn.primary:hover {
+	background-color: #0056b3;
+}
+
+.ea-btn.outline {
+	background-color: transparent;
+	color: #007bff;
+	border: 1px solid #007bff;
+}
+
+.ea-btn.outline:hover {
+	background-color: #007bff;
+	color: white;
+}
+
+.action-button { /* 이전 스타일과의 호환성 또는 다른 버튼에 사용될 수 있음 */
+	padding: 6px 12px;
+	background-color: #28a745;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 0.9em;
+}
+
+.action-button:hover {
+	background-color: #218838;
+}
+
+.modal-actions, .ea-form-actions {
+	text-align: right;
+	margin-top: 20px;
+}
+
+.modal {
+	display: none;
+	position: fixed;
+	z-index: 1000;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+	background-color: #fefefe;
+	margin: 10% auto;
+	padding: 25px;
+	border: 1px solid #888;
+	width: 60%;
+	max-width: 600px;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0
+		rgba(0, 0, 0, 0.19);
+	border-radius: 5px;
+}
+
+.close-button {
+	color: #aaa;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+}
+
+.close-button:hover, .close-button:focus {
+	color: black;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.modal-content hr {
+	margin-top: 5px;
+	margin-bottom: 15px;
+}
+
+.modal-content div.form-group {
+	margin-bottom: 15px;
+}
+
+.modal-content input[type="text"], .modal-content input[type="date"],
+	/* 데뷔일 타입이 있다면 */ .modal-content input[type="file"], .modal-content textarea
+	{
+	width: 100%;
+	padding: 8px;
+	border: 1px solid #ccc;
+	border-radius: 3px;
+	margin-top: 4px;
+	box-sizing: border-box;
+}
+
+.modal-content input[readonly] {
+	background-color: #e9ecef;
+}
+
+.modal-content textarea {
+	resize: vertical;
+}
+
+.form-group label {
+	display: block;
+	margin-bottom: 3px;
+	font-weight: bold;
+}
+
+small {
+	font-size: 0.85em;
+	color: #6c757d;
+}
+
+/* 페이징 스타일 (기본) */
+.ea-pagination {
+	text-align: center;
+	margin-top: 20px;
+}
+
+.ea-pagination a, .ea-pagination strong {
+	display: inline-block;
+	padding: 6px 12px;
+	margin: 0 2px;
+	border: 1px solid #ddd;
+	color: #007bff;
+	text-decoration: none;
+	border-radius: 4px;
+}
+
+.ea-pagination strong {
+	background-color: #007bff;
+	color: white;
+	border-color: #007bff;
+}
+
+.ea-pagination a:hover {
+	background-color: #f0f0f0;
+	border-color: #ccc;
+}
+
+.portal-welcome-message { /* 검색 결과 없을 때 메시지 스타일 */
+	padding: 20px;
+	background-color: #f8f9fa;
+	border: 1px solid #e9ecef;
+	border-radius: 5px;
+	color: #6c757d;
+}

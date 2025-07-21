@@ -1,0 +1,421 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>품목 관리 - DDTOWN 관리자 시스템</title>
+    
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/admin_items.css">
+    <%@ include file="../../../modules/headerPart.jsp" %>
+<style>
+/* admin_goods.css (또는 admin_item.css) */
+
+/* ⭐⭐ 공통 레이아웃 및 폼 요소 스타일 (상품 관리 페이지에 맞게 유지) ⭐⭐ */
+.ea-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+#searchForm {
+    display: flex;
+    flex-wrap: nowrap; /* 상품 관리 페이지의 검색 폼은 한 줄 유지하는 경향이 있으므로 nowrap */
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+#searchForm > * {
+    margin-bottom: 0;
+}
+
+.ea-header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* ⭐⭐ 상품 관리 필터 뱃지 스타일 ⭐⭐ */
+
+/* 뱃지 버튼들을 담는 컨테이너 (header-with-buttons 내부의 filter-buttons) */
+.filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 0 !important; /* mb-3 Bootstrap 클래스의 마진을 덮어씌워 0으로 만듦 */
+}
+
+/* 모든 필터 뱃지 버튼에 공통적으로 적용될 기본 스타일 */
+.status-filter-badge {
+    display: inline-flex; /* 텍스트 내용에 따라 너비 자동 조절 + flexbox 속성 적용 */
+    align-items: center; /* 텍스트 수직 중앙 정렬 */
+    justify-content: center; /* 텍스트 수평 중앙 정렬 */
+    padding: .25em .8em; /* 뱃지 내부의 상하좌우 여백 조정 (좀 더 넓게) */
+    font-size: .85em; /* 폰트 크기 조정 */
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-radius: 1rem; /* 더 둥글게 (12px보다 더 부드럽게) */
+    color: #fff; /* 글자색 흰색 (기본) */
+    margin-right: 10px; /* 각 버튼 사이의 오른쪽 여백 */
+    margin-bottom: 8px; /* 줄 바꿈 시 하단 간격 */
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    min-height: 32px; /* 최소 높이 설정 (버튼들이 일관된 높이를 가지도록) */
+    transition: all 0.2s ease-in-out; /* 부드러운 전환 효과 */
+}
+
+/* 1. "전체" 필터 뱃지 - 파란색 */
+.status-filter-badge.status-filter-all {
+    background-color: #0d6efd; /* Bootstrap primary blue */
+}
+
+/* 2. 각 상태 코드에 따른 배경색 정의 (상품 상태 코드) */
+.status-filter-badge.status-filter-gsc001 { /* 판매중 */
+    background-color: #28a745; /* Bootstrap success green */
+}
+.status-filter-badge.status-filter-gsc002 { /* 품절 */
+    background-color: #dc3545; /* Bootstrap danger red */
+}
+/* 추가 상품 상태가 있다면 여기에 계속 추가하세요 */
+
+
+/* 선택된 필터 버튼의 스타일 (강조 효과) */
+.status-filter-badge.active {
+    filter: brightness(1.15); /* 약간 더 밝게 */
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* 살짝 푸른색 그림자 추가 */
+    border: 2px solid rgba(255, 255, 255, 0.5); /* 흰색 테두리 */
+}
+
+/* 마우스 호버 시 효과 */
+.status-filter-badge:hover {
+    filter: brightness(0.9); /* 약간 어둡게 */
+    transform: translateY(-1px); /* 살짝 위로 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 호버 시 그림자 강화 */
+}
+
+/* header-with-buttons는 상품 관리 페이지의 HTML 구조에 따라 다를 수 있습니다. */
+/* 만약 h2와 버튼 그룹이 한 줄에 같이 배치되어 있다면 아래 스타일이 필요합니다. */
+.header-with-buttons {
+    display: flex; /* 자식 요소들을 한 줄에 배치 */
+    align-items: center; /* 자식 요소들을 수직 중앙 정렬 */
+    /* justify-content: space-between; */ /* h2와 버튼 그룹을 양쪽 끝으로 벌리고 싶다면 */
+    margin-bottom: 20px; /* 전체 컨테이너 하단 여백 */
+}
+
+.header-with-buttons h2 {
+    margin-right: 20px; /* h2와 버튼 그룹 사이의 오른쪽 간격 조절 */
+    margin-bottom: 0; /* h2의 기본 하단 마진 제거 (수직 정렬 시 필요) */
+    white-space: nowrap; /* h2 텍스트가 길어질 경우 줄바꿈 방지 */
+}
+
+/* 테이블의 상품 상태 뱃지 스타일 (목록 내 각 행의 상태 표시) */
+.item-status-badge { /* 상품 목록에서 사용될 뱃지 */
+    display: inline-block;
+    padding: .25em .6em;
+    font-size: .75em; /* 목록 내 뱃지는 필터 뱃지보다 작게 */
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .375rem;
+    color: #fff;
+}
+.item-status-badge.status-GSC001 { /* 판매중 */
+    background-color: #28a745; /* success */
+}
+.item-status-badge.status-GSC002 { /* 품절 */
+    background-color: #dc3545; /* danger */
+}
+
+/* 검색 폼 내 버튼 (기존 스타일 유지) */
+.ea-btn {
+    display: inline-block;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+.ea-btn:hover {
+    color: #212529;
+    background-color: #e2e6ea;
+    border-color: #dae0e5;
+}
+/* 검색 버튼 */
+.ea-btn .fas.fa-search {
+    margin-right: 5px;
+}
+</style>
+</head> 
+
+<body>
+<div class="emp-container">
+	<%@ include file="../../modules/header.jsp" %>
+	
+	<div class="emp-body-wrapper">
+            <%@ include file="../../modules/aside.jsp" %>
+            
+            <main class="emp-content">
+                <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/admin/goods/items/list" style="color:black;">굿즈샵 관리</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">품목 관리</li>
+                    </ol>
+                </nav>
+
+                <%-- <div class="filter-buttons-group"> ... </div> --%>
+
+                <section id="goodsItemsSection" class="ea-section active-section">
+                    <div class="ea-section-header">
+					    <h2>품목 관리</h2>
+						<%-- 필터 버튼 영역 --%>
+						<div class="filter-buttons d-flex mb-3"> <%-- "전체" 버튼 --%>
+						    <button type="button" class="status-filter-badge status-filter-all
+						        <c:if test="${empty param.statusFilter and empty param.artGroupNo and empty param.searchWord}">active</c:if>"
+						        onclick="location.href='${pageContext.request.contextPath}/admin/goods/items/list'">
+						        전체 (<c:out value="${totalAllGoodsCount}"/>건)
+						    </button>
+						
+						    <%-- 각 상태별 버튼 (판매중, 품절 등) --%>
+						    <c:forEach var="statusCountMap" items="${goodsStatusCounts}">
+						        <c:set var="statusCode" value="${statusCountMap.STATUS_CODE}"/>
+						        <c:set var="count" value="${statusCountMap.COUNT}"/>
+						        <c:set var="statusName" value="${statusCountMap.STATUS_NAME}"/>
+						
+						        <button type="button" class="status-filter-badge status-filter-${fn:toLowerCase(statusCode)}
+						            <c:if test="${param.statusFilter eq statusCode}">active</c:if>"
+						            onclick="location.href='${pageContext.request.contextPath}/admin/goods/items/list?statusFilter=${statusCode}'">
+						            <c:out value="${statusName}"/> (<c:out value="${count}"/>건)
+						        </button>
+						    </c:forEach>
+						</div>
+                        <div class="ea-header-actions">
+                            <form id="searchForm" method="GET" class="input-group input-group-sm" action="${pageContext.request.contextPath}/admin/goods/items/list">
+							    <input type="hidden" name="currentPage" value="1" id="page">
+							    <input type="hidden" name="statusFilter" id="hiddenStatusFilter" value="${pagingVO.searchMap.statusFilter}"> 
+							    
+							    <select id="artistGroupFilter" name="artGroupNo" class="ea-filter-select">
+							        <option value="">아티스트 전체</option>
+							        <c:forEach items="${artistGroups}" var="group">
+							            <option value="${group.artGroupNo}" ${pagingVO.searchMap.artGroupNo == group.artGroupNo ? 'selected' : ''}>
+							                ${group.artGroupNm}
+							            </option>
+							        </c:forEach>
+							    </select>
+							    <select id="goodsItemCategoryFilter" name="searchType" class="ea-filter-select">
+							        <option value="" ${pagingVO.searchMap.searchType == null || pagingVO.searchMap.searchType == '' ? 'selected' : ''}>최신 등록순</option>
+							        <option value="mod_desc" ${pagingVO.searchMap.searchType == 'mod_desc' ? 'selected' : ''}>최신 수정순</option>
+							        <option value="price_asc" ${pagingVO.searchMap.searchType == 'price_asc' ? 'selected' : ''}>낮은 가격순</option>
+							        <option value="price_desc" ${pagingVO.searchMap.searchType == 'price_desc' ? 'selected' : ''}>높은 가격순</option>
+							        <option value="stock_desc" ${pagingVO.searchMap.searchType == 'stock_desc' ? 'selected' : ''}>재고 많은 순</option>
+							        <option value="stock_asc" ${pagingVO.searchMap.searchType == 'stock_asc' ? 'selected' : ''}>재고 적은 순</option>
+							    </select>
+							
+							    <input type="text" id="searchWord" name="searchWord" value="${pagingVO.searchMap.searchWord}" class="ea-search-input" placeholder="상품명, 상품코드로 검색...">
+							    
+							    <div class="input-group-append">
+							        <button type="submit" class="ea-btn primary" id="goodsItemSearchBtn">
+							            <i class="fas fa-search"></i>검색
+							        </button>
+							    </div> 
+							</form> <a href="/admin/goods/items/form" class="ea-btn primary" id="itemsAddButton"><i class="fas fa-plus"></i>등록</a>
+					    </div>
+					</div>
+
+                    <table class="ea-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 8%;">상품코드</th>
+                                <th style="width: 10%;">판매상태</th>
+                                <th style="width: 8%;">이미지</th>
+                                <th style="width: 10%">아티스트</th>
+                                <th>상품명</th>
+                                <th style="width: 10%;">판매가격</th>
+                                <th style="width: 8%;">재고</th>
+                                <th style="width: 10%;">등록일</th>
+                            </tr>
+                        </thead>
+                        <tbody id="goodsItemsTableBody">
+                            <c:choose>
+                    			<c:when test="${not empty pagingVO.dataList and pagingVO.totalRecord > 0}">
+    								<c:forEach items="${pagingVO.dataList}" var="goods">
+                                        <tr>
+                                            <td>${goods.goodsNo}</td>
+                                            
+                                            <td>
+                                                <span class="status-badge status-${goods.statusEngKey.toLowerCase()}">${goods.statusKorName}</span>
+                                            </td>
+                                            
+                                            <td>
+                                                <c:choose>
+                                                    <c:when test="${not empty goods.representativeImageUrl}">
+                                                        <img src="${pageContext.request.contextPath}${goods.representativeImageUrl}" alt="${goods.goodsNm} 썸네일" class="item-thumbnail">
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <img src="https://via.placeholder.com/50?text=No+Image" alt="이미지 없음" class="item-thumbnail">
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                            <td>
+                                            	${goods.artGroupName}
+                                            </td>
+                                            <td><a href="${pageContext.request.contextPath}/admin/goods/items/detail?id=${goods.goodsNo}" class="doc-link">${goods.goodsNm}</a></td>
+								            <td><fmt:formatNumber value="${goods.goodsPrice}" type="number" pattern="#,##0" /> 원</td>
+								            <td>
+								                <%-- 재고 수량 표시 --%>
+								                <c:choose>
+								                    <c:when test="${goods.stockRemainQty == null || goods.stockRemainQty <= 0}">
+								                        <span style="color: red;">품절</span> (0개)
+								                    </c:when>
+								                    <c:otherwise>
+								                        ${goods.stockRemainQty} 개
+								                    </c:otherwise>
+								                </c:choose>
+								            </td>
+											
+								            <td><fmt:formatDate value="${goods.goodsRegDate}" pattern="yyyy-MM-dd"/></td>
+                                        </tr>
+                                    </c:forEach>
+                                </c:when>
+                                <c:otherwise>
+                                    <tr>
+                                        <td colspan="9" style="text-align: center; padding: 20px;">등록된 상품이 없습니다.</td>
+                                    </tr>
+                                </c:otherwise>
+                            </c:choose>
+                        </tbody>
+                    </table>
+                    <div class="ea-pagination" id="pagingArea">
+                    	${pagingVO.pagingHTML }
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+</body>
+<%@ include file="../../../modules/footerPart.jsp" %>
+
+<%@ include file="../../../modules/sidebar.jsp" %> 
+<script type="text/javascript">
+$(function(){
+    // 페이지네이션 처리
+    const searchForm = document.getElementById("searchForm");
+    const pageInput = searchForm.querySelector("input[name='currentPage']");
+    const paginationControls = document.getElementById("pagingArea");
+
+    // ⭐⭐⭐ 여기에 모든 DOM 요소 변수를 선언해야 합니다. ⭐⭐⭐
+    const hiddenStatusFilter = document.getElementById("hiddenStatusFilter");
+    const artistGroupFilter = document.getElementById("artistGroupFilter");
+    const goodsItemCategoryFilter = document.getElementById("goodsItemCategoryFilter");
+    const searchWordInput = document.getElementById("searchWord");
+    const goodsItemSearchBtn = document.getElementById("goodsItemSearchBtn"); // 검색 버튼 참조 추가
+
+    // 개발자 도구 콘솔에 각 요소가 제대로 참조되었는지 로그로 확인
+    console.log("hiddenStatusFilter:", hiddenStatusFilter);
+    console.log("artistGroupFilter:", artistGroupFilter);
+    console.log("goodsItemCategoryFilter:", goodsItemCategoryFilter);
+    console.log("searchWordInput:", searchWordInput);
+    console.log("goodsItemSearchBtn:", goodsItemSearchBtn);
+    // 만약 이들 중 하나라도 'null'로 출력되면, 해당 ID를 가진 HTML 요소가 없거나 ID가 잘못된 것임.
+
+
+    if (paginationControls) {
+        paginationControls.addEventListener("click", function(e) {
+            e.preventDefault(); 
+            if (e.target.classList.contains("page-link") && (e.target.nodeName === "A" || e.target.nodeName === "SPAN")) {
+                pageInput.value = e.target.dataset.page; 
+                searchForm.submit(); 
+            }
+        });
+    }
+
+    // ⭐ 뱃지 필터 버튼 클릭 이벤트 ⭐
+    $('.badge-filter-btn').on('click', function() {
+        const statusToFilter = $(this).data('status');
+        
+        // ⭐ 다른 모든 필터 초기화 ⭐
+        artistGroupFilter.value = ""; // 아티스트 필터 초기화
+        goodsItemCategoryFilter.value = ""; // 정렬 필터 초기화
+        searchWordInput.value = ""; // 검색어 초기화
+
+        hiddenStatusFilter.value = statusToFilter; // 선택된 상태 값 설정
+        pageInput.value = "1"; // 페이지 초기화
+        searchForm.submit();
+    });
+
+
+    //⭐ 아티스트 그룹 필터 변경 이벤트 ⭐
+    $('#artistGroupFilter').on('change', function() {
+            // ⭐ 다른 모든 필터 초기화 ⭐
+            hiddenStatusFilter.value = ""; // 상태 필터 초기화
+            goodsItemCategoryFilter.value = ""; // 정렬 필터 초기화
+            searchWordInput.value = ""; // 검색어 초기화
+
+            // 아티스트 필터 값은 select 태그의 value로 자동 전송됨
+            pageInput.value = "1"; // 페이지 초기화
+            searchForm.submit();
+    });
+
+    $('#goodsItemCategoryFilter').on('change', function() {
+        // ⭐ 다른 모든 필터 초기화 ⭐
+        hiddenStatusFilter.value = ""; // 상태 필터 초기화
+        artistGroupFilter.value = ""; // 아티스트 필터 초기화
+        searchWordInput.value = ""; // 검색어 초기화
+
+        // 정렬 필터 값은 select 태그의 value로 자동 전송됨
+        pageInput.value = "1"; // 페이지 초기화
+        searchForm.submit();
+    });
+
+    goodsItemSearchBtn.addEventListener('click', function(e) {
+        // ⭐ 다른 필터 초기화 (검색어와 정렬은 유지) ⭐
+        hiddenStatusFilter.value = ""; // 상태 필터 초기화
+        artistGroupFilter.value = ""; // 아티스트 필터 초기화
+        // goodsItemCategoryFilter.value = ""; // 필요시 정렬도 초기화
+
+        pageInput.value = "1"; // 페이지 초기화
+        // searchForm.submit()은 버튼의 기본 동작으로 수행됨
+    });
+
+    searchWordInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // 기본 폼 제출 방지
+
+            // ⭐ 다른 필터 초기화 (검색어와 정렬은 유지) ⭐
+            hiddenStatusFilter.value = ""; // 상태 필터 초기화
+            artistGroupFilter.value = ""; // 아티스트 필터 초기화
+            // goodsItemCategoryFilter.value = ""; // 필요시 정렬도 초기화
+
+            pageInput.value = "1"; // 페이지 초기화
+            searchForm.submit(); // 폼 제출
+        }
+    });
+
+    // 테이블 행 클릭 이벤트
+    $('#goodsItemsTableBody').on('click', 'tr', function() {
+        const goodsNo = $(this).find('td:first').text(); // 첫 번째 td (상품코드)의 텍스트 가져오기
+        if (goodsNo) {
+            location.href="${pageContext.request.contextPath}/admin/goods/items/detail?id=" + goodsNo; 
+        }
+
+    });
+});
+</script>
+</html>

@@ -1,0 +1,28 @@
+package kr.or.ddit.ddtown.mapper.emp.artist;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+
+@Mapper
+public interface ArtistGroupMapper {
+	
+	// 목록 불러오기
+	public List<ArtistGroupVO> retrieveArtistGroupList();
+	
+	// 그룹의 상세 정보 불러오기
+	public ArtistGroupVO retrieveArtistGroup(int artGroupNo);
+
+	// 그룹 기본 정보 업데이트
+	public int updateArtistGroup(ArtistGroupVO groupToUpdate);
+
+	// 특정 그룹에 속한 모든 아티스트들의 art_group_no를 NULL로 설정 (연결 해제)
+	public int unassignArtistsFromGroup(int artGroupNo);
+
+	// // 주어진 아티스트 ID 리스트에 대해 art_group_no를 특정 그룹 번호로 설정 (그룹에 배정)
+	public int assignArtistsToGroup(@Param("artGroupNo")int artGroupNo, @Param("artistIds")List<Integer> newMemberArtNoList);
+	
+}

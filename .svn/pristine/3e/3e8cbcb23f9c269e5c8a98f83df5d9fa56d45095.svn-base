@@ -1,0 +1,577 @@
+package kr.or.ddit.ddtown.service.community;
+
+import java.io.File;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.micrometer.common.util.StringUtils;
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.mapper.community.ICommunityMainPageMapper;
+import kr.or.ddit.ddtown.service.file.FileServiceImpl;
+import kr.or.ddit.vo.artist.AlbumVO;
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+import kr.or.ddit.vo.common.CommonCodeDetailVO;
+import kr.or.ddit.vo.community.CommunityLikeVO;
+import kr.or.ddit.vo.community.CommunityPostVO;
+import kr.or.ddit.vo.community.CommunityProfileVO;
+import kr.or.ddit.vo.community.CommunityReplyVO;
+import kr.or.ddit.vo.community.CommunityVO;
+import kr.or.ddit.vo.file.AttachmentFileDetailVO;
+
+@Service
+public class CommunityMainPageServiceImpl implements ICommunityMainPageService{
+	
+	@Value("${kr.or.ddit.upload.path}")
+	private String windowUploadBasePath;
+	
+	@Value("${kr.or.ddit.upload.path.mac}")
+	private String macUploadBasePath;
+	
+	@Autowired
+	private ICommunityMainPageMapper communityMainPageMapper;
+	
+	@Autowired
+	private FileServiceImpl fileService;
+		
+	@Override
+	public List<ArtistGroupVO> getGroupLists() {
+		return communityMainPageMapper.getGroupLists();
+	}
+
+	@Override
+	public ArtistGroupVO getGroupInfo(int artGroupNo) {
+		return communityMainPageMapper.getGroupInfo(artGroupNo);
+	}
+
+	@Override
+	public List<AlbumVO> getGroupAlbum(int artGroupNo) {
+		return communityMainPageMapper.getGroupAlbum(artGroupNo);
+	}
+
+	// 아티스트 탭 게시물 가져오기
+	@Override
+	public List<CommunityPostVO> getPostList(CommunityVO communityVO) {
+		
+		List<CommunityPostVO> postList = communityMainPageMapper.getPostList(communityVO);
+		
+		for(CommunityPostVO post : postList) {
+
+			boolean isArtist = communityVO.isArtistTabYn();
+			if(isArtist) {
+				// 멤버십 전용 게시물 체크
+				String mbsYn = post.getComuPostMbspYn();	
+				if(mbsYn.equals("Y")) {			// 멤버십 전용 게시물 이라면
+					post.setMemberShipYn(true);	// 멤버십 여부에 true 셋팅
+				}else {		// 멤버십 전용 게시물이 아니라면
+					post.setMemberShipYn(false); // 멤버십 여부에 false 셋팅
+				}
+			}
+			
+			// 댓글 사용 여부 체크
+			String boardReplyYn = post.getBoardReplyYn();
+			if(boardReplyYn.equals("Y")) {
+				post.setBoardReplyTf(true);
+			}else {
+				post.setBoardReplyTf(false);
+			}
+			
+			// 게시글 파일 가져오기
+			if(post.getFileGroupNo() != null) {	// 파일이 존재
+				Integer fileGroupNo = post.getFileGroupNo();
+				try {
+					List<AttachmentFileDetailVO> files = fileService.getFileDetailsByGroupNo(fileGroupNo);
+					post.setPostFiles(files);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		return postList;
+	}
+	
+	// 팬탭 게시물 가져오기
+	@Override
+	public List<CommunityPostVO> getFanPostList(CommunityVO communityVO) {
+		
+		List<CommunityPostVO> postList = communityMainPageMapper.getFanPostList(communityVO);
+		
+		for(CommunityPostVO post : postList) {
+			
+			if(post.getFileGroupNo() != null) {
+				Integer fileGroupNo = post.getFileGroupNo();
+				List<AttachmentFileDetailVO> files;
+				try {
+					files = fileService.getFileDetailsByGroupNo(fileGroupNo);
+					post.setPostFiles(files);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		
+		return postList;
+	}
+
+	@Override
+	public ArtistGroupVO getCommunityInfo(int artGroupNo) {
+		
+		ArtistGroupVO artistGroupVO = communityMainPageMapper.getCommunityInfo(artGroupNo);
+		
+		return artistGroupVO;
+	}
+
+	@Override
+	public int getPostTotal(CommunityVO communityVO) {
+		
+		int totalRecord = 0;
+		
+		if(communityVO.isArtistTabYn()) {
+			totalRecord = communityMainPageMapper.getArtistPostTotal(communityVO);
+		}else {
+			totalRecord = communityMainPageMapper.getFanPostTotal(communityVO);
+		}
+		
+		return totalRecord;
+	}
+
+	@Override
+	public ServiceResult postInsert(CommunityPostVO postVO) {
+		
+		ServiceResult result = null;
+		
+		CommunityProfileVO currentUserComu = communityMainPageMapper.currentUserComufollowing(postVO);
+		
+		postVO.setComuProfileNo(currentUserComu.getComuProfileNo());
+		
+		boolean flag = false;
+		
+		for(MultipartFile file : postVO.getFiles()) {
+			if(!file.isEmpty()) {
+				flag = true;
+			}
+			break;
+		}
+		
+		if(postVO.isArtistTabYn()) {	// 등록하려는 게시물이 아티스트이라면
+			String boardTypeCode = "ARTIST_BOARD";
+			postVO.setBoardTypeCode(boardTypeCode);
+			
+			String comuMbspYn = mebsYn(postVO);
+			postVO.setComuPostMbspYn(comuMbspYn);
+			
+			
+			
+			if(postVO.getFiles() != null && postVO.getFiles().length > 0 && flag) {
+				try {
+					Integer fileGroupNo = fileService.uploadAndProcessFiles(postVO.getFiles(), "FITC006", postVO.getMemUsername());
+					postVO.setFileGroupNo(fileGroupNo);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			
+		}else {
+			String boardTypeCode = "FAN_BOARD";
+			postVO.setBoardTypeCode(boardTypeCode);
+			
+			if(postVO.getFiles() != null && postVO.getFiles().length > 0 && flag) {
+				try {
+					Integer fileGroupNo = fileService.uploadAndProcessFiles(postVO.getFiles(), "FITC006");
+					postVO.setFileGroupNo(fileGroupNo);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		postVO.setComuPostStatCode("CPSC001");
+		
+		int status = communityMainPageMapper.postInsert(postVO);
+		
+		if(status > 0) {
+			result = ServiceResult.OK;
+		}else {
+			result = ServiceResult.FAILED;
+		}
+		
+		return result;
+	}
+
+	private String mebsYn(CommunityPostVO postVO) {
+		
+		if(postVO.isMemberShipYn()) {
+			return "Y";
+		}else {
+			return "N";
+		}
+	}
+
+	@Override
+	public ServiceResult postUpdate(CommunityPostVO postVO) {
+		
+		ServiceResult result = null;
+		
+		try {
+			boolean flag = false;
+			
+			for(MultipartFile file : postVO.getFiles()) {
+				if(!file.isEmpty()) {
+					flag = true;
+				}
+				break;
+			}
+			
+			if(postVO.getDeleteFiles().size() > 0 && postVO.getDeleteFiles() != null) {
+				flag = true;
+			}
+			
+			if(flag) {
+				List<AttachmentFileDetailVO> files = null;
+				Integer oldFileGroupNo = postVO.getFileGroupNo();
+				
+				if(oldFileGroupNo != null && oldFileGroupNo != 0) {
+					// 파일 그룹으로 이전 파일들을 가지고 옴
+					files = fileService.getFileDetailsByGroupNo(oldFileGroupNo);
+				}
+				
+				// 삭제할 파일 번호
+				Set<Integer> deleteFileNo = new HashSet<>(postVO.getDeleteFiles());
+				
+				// 이전 파일들의 상세번호가 담길 객체
+				List<Integer> filesNum = new ArrayList<>();
+				
+				// 이전 파일들이 비어있지 않으면 아래를 수행함
+				if(files != null && files.size() > 0 && !files.isEmpty()) {
+					
+					Iterator<AttachmentFileDetailVO> iter = files.iterator();
+					while(iter.hasNext()) {
+						AttachmentFileDetailVO file = iter.next();
+						
+						filesNum.add(file.getAttachDetailNo());
+						
+						if(deleteFileNo.contains(file.getAttachDetailNo())) {
+							iter.remove();
+						}
+					}
+					
+				}
+				
+				// 수정 폼에서 새롭게 추가한 파일을 newFiles에 담아줌
+				MultipartFile[] newFiles = postVO.getFiles();
+				
+				// 파일 그룹 번호를 초기화해줌
+				Integer fileGroupNo = null;
+				// 새롭게 추가된 파일이 비어있지 않으면 아래를 수행함
+				if(newFiles != null && newFiles.length > 0 ) {
+					// 새롭게 추가된 파일과 타입코드와 수정을 시도한 유저의 아이디를 넣어주고 개별 파일을 등록하고 새로운 파일그룹번호를 반환받음
+					fileGroupNo = fileService.uploadAndProcessFiles(newFiles, "FITC006", postVO.getMemUsername());
+					// 파일 그룹 번호를 받아온 파라미터 안에 있는 파일 그룹번호를 초기화해줌
+					postVO.setFileGroupNo(fileGroupNo);
+				}
+				
+				// 삭제하고 남은 기존에 있던 파일이 비어있지 않다면 아래를 수행함
+				if(files != null && files.size() > 0 && !files.isEmpty()) {
+					
+					// 1. 현재 OS에 맞는 기본 업로드 경로 선택
+					String os = System.getProperty("os.name").toLowerCase();
+					String currentUploadBasePath;
+					
+					if(os.contains("mac") || os.contains("darwin")) {
+						currentUploadBasePath = macUploadBasePath;
+					} else if(os.contains("win")) {
+						currentUploadBasePath = windowUploadBasePath;
+					} else {
+						currentUploadBasePath = windowUploadBasePath;
+					}
+					
+					List<AttachmentFileDetailVO> dbFiles = fileService.getFileDetailsByGroupNo(fileGroupNo);
+					String newFilesDate = dbFiles.get(0).getFileSavepath();
+					
+					// 기존에 있던 파일 경로
+					String path = currentUploadBasePath + File.separator + files.get(0).getFileSavepath();
+					String prePath = path.replace("\\", "/");
+					
+					File finalUploadDirectory = new File(currentUploadBasePath + File.separator + newFilesDate);
+					
+					if (!finalUploadDirectory.exists()) {
+						finalUploadDirectory.mkdirs();		// 폴더생성
+					}
+					
+					// 기존에 있던 파일을 반복을 통해 하나씩 꺼냄
+					for(AttachmentFileDetailVO file : files) {
+						
+						Path oldPath = Paths.get(prePath, file.getFileSaveNm());
+						
+						Path targetPath = Paths.get(currentUploadBasePath + File.separator + newFilesDate);
+						
+						Path targetFile = targetPath.resolve(file.getFileSaveNm());
+						
+						
+						File checkFile = new File(targetFile.toString());
+						String originalFileName = file.getFileOriginalNm();
+						String fileExtension = "";
+						String saveFileName = null;
+						if(checkFile.exists()) {
+							fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
+							saveFileName = UUID.randomUUID().toString() + fileExtension;
+							System.out.println("새로운 파일 명 : " + saveFileName);
+							targetFile = targetPath.resolve(saveFileName);
+						}
+						
+						Files.move(oldPath, targetFile,StandardCopyOption.REPLACE_EXISTING);
+						
+						file.setFileSavepath(newFilesDate);
+						// 기존에 있던 파일의 그룹번호를 변경
+						file.setFileGroupNo(fileGroupNo);
+						file.setFileSaveNm(saveFileName);
+						file.setAttachDetailNo(0);
+						// 기존에 있던 파일을 새롭게 추가된 파일들과 같은 그룹번호에 추가하는 작업
+						communityMainPageMapper.fileReUpload(file);
+					}
+				}
+				if(filesNum.size() > 0 && filesNum != null && !filesNum.isEmpty()) {
+					// 이전에 있던 모든 파일을 삭제함
+					fileService.deleteSpecificFiles(filesNum);
+				}
+				
+				if(oldFileGroupNo != null) {
+					// 이전에 있던 파일을 담고 있던 파일 그룹번호를 삭제함
+					fileService.deleteFilesByGroupNo(oldFileGroupNo);
+				}
+			}
+			
+
+			// 게시판 타입 코드가 비어있으면 아래를 수행함
+			if(postVO.getBoardTypeCode() == null) {
+				// 수정하는 게시판이 아티스트 게시판이라면 아래를 수행함
+				if(postVO.isArtistTabYn()) {
+					String boardTypeCode = "ARTIST_BOARD";
+					postVO.setBoardTypeCode(boardTypeCode);
+					
+					if(postVO.isMemberShipYn()) {
+						postVO.setComuPostMbspYn("Y");
+					}else {
+						postVO.setComuPostMbspYn("N");
+					}
+					
+				}else {	// 수정하는 게시판이 팬 게시판이라면 아래를 수행함
+					String boardTypeCode = "FAN_BOARD";
+					postVO.setBoardTypeCode(boardTypeCode);
+				}
+			}
+			
+			// 게시판 수정 진행
+			int status = communityMainPageMapper.updatePost(postVO);
+			
+			// 게시판 수정이 정상적으로 된다면 아래를 수행
+			if(status > 0) {
+				result = ServiceResult.OK;
+			}else {		// 게시판 수정이 되지 않으면 아래를 수행
+				result = ServiceResult.FAILED;
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return result;
+	}
+
+	/**
+	 * 팔로우중인 프로필 VO 가져오기 + 쓴 글 + 댓글 목록
+	 */
+	@Override
+	public CommunityProfileVO currentUserComufollowing(Map<String, Object> currentUser) {
+		
+		CommunityProfileVO currentUserComu = communityMainPageMapper.getComuProfile(currentUser);
+		if(currentUserComu != null) {
+			List<CommunityPostVO> postList = communityMainPageMapper.selectPostList(currentUserComu);
+			List<CommunityReplyVO> replyList = communityMainPageMapper.selectReplyList(currentUserComu);
+			currentUserComu.setPostList(postList);
+			currentUserComu.setReplyList(replyList);
+		}
+		
+		return currentUserComu;
+	}
+
+	@Override
+	public CommunityPostVO getPost(CommunityPostVO comuPostVO) {
+		
+		CommunityPostVO postVO = communityMainPageMapper.getPost(comuPostVO);
+		
+		String boardType = postVO.getBoardTypeCode();
+		
+		String memberShipYn = postVO.getComuPostMbspYn();
+		
+		if("ARTIST_BOARD".equals(boardType)) {
+			if("Y".equals(memberShipYn)) {
+				postVO.setMemberShipYn(true);
+			}
+			postVO.setArtistTabYn(true);
+		}else {
+			postVO.setArtistTabYn(false);
+		}
+		
+		if(postVO.getFileGroupNo() != null) {
+			try {
+				List<AttachmentFileDetailVO> files = fileService.getFileDetailsByGroupNo(postVO.getFileGroupNo());
+				postVO.setPostFiles(files);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return postVO;
+	}
+
+
+	/**
+	 * comuProfileNo, artGroupNo로 프로필VO 찾은 후 해당 프로필이 작성한 글 목록 및 댓글 목록 가져오기
+	 * @param profileVO
+	 * @return
+	 */
+	@Override
+	public CommunityProfileVO selectProfile(CommunityProfileVO profileVO) {
+		return communityMainPageMapper.selectProfile(profileVO);
+	}
+
+	@Override
+	public ServiceResult postDelete(CommunityPostVO comuPostVO) {
+		
+		ServiceResult result = null;
+		
+		CommunityPostVO postVO = communityMainPageMapper.getPost(comuPostVO);
+		
+		postVO.setComuPostDelYn("Y");
+		
+		int status = communityMainPageMapper.postDeleteUpdate(postVO);
+		
+		if(status > 0) {
+			result = ServiceResult.OK;
+		}else {
+			result = ServiceResult.FAILED;
+		}
+		
+		return result;
+	}
+
+	// 댓글 영역
+	
+	@Override
+	public ServiceResult replyInsert(CommunityReplyVO replyVO) {
+		ServiceResult result = null;
+		
+		int status = communityMainPageMapper.replyInsert(replyVO);
+		
+		if(status > 0) {
+			result = ServiceResult.OK;
+		}else {
+			result = ServiceResult.FAILED;
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 포스트 번호로 해당 포스트 가져오기 및 댓글 정보 가져오기
+	 */
+	@Override
+	public CommunityPostVO selectPost(int comuPostNo) {
+		return communityMainPageMapper.selectPostOne(comuPostNo);
+	}
+
+	@Override
+	public ServiceResult replyUpdate(CommunityReplyVO replyVO) {
+		ServiceResult result = null;
+		
+		int status = communityMainPageMapper.replyUpdate(replyVO);
+		
+		if(status > 0) {
+			result = ServiceResult.OK;
+		}else {
+			result = ServiceResult.FAILED;
+		}
+		
+		return result;
+	}
+
+	@Override
+	public ServiceResult replyDelete(int replyNo) {
+		ServiceResult result = null;
+		
+		int status = communityMainPageMapper.replyDelete(replyNo);
+		
+		if(status > 0) {
+			result = ServiceResult.OK;
+		}else {
+			result = ServiceResult.FAILED;
+		}
+		
+		return result;
+	}
+
+	@Override
+	public ServiceResult likeUpdate(CommunityLikeVO likeVO) {
+		ServiceResult result = null;
+		int status = 0;
+		int insertDelete = likeVO.getInsertDelete();
+		
+		// 등록
+		if(insertDelete > 0) {
+			status = communityMainPageMapper.likeInsert(likeVO);
+		}else if(insertDelete < 0) {
+			CommunityLikeVO deleteLikeVO = communityMainPageMapper.getLikeInfo(likeVO);
+			status = communityMainPageMapper.likeDelete(deleteLikeVO);
+		}else {
+			result = ServiceResult.EXIST;
+		}
+		
+		
+		if(status > 0) {
+			result = ServiceResult.OK;
+		}else {
+			result = ServiceResult.FAILED;
+		}
+		
+		return result;
+	}
+
+	@Override
+	public Map<Object, Object> getCodeDetail() {
+		
+		String reasonCodeGroupNo = "REPORT_REASON_CODE";
+		String reportTarCodeGroupNo = "REPORT_TAR_TYPE_CODE";
+		String reportStatCodeGroupNo = "REPORT_STAT_CODE";
+		
+		List<CommonCodeDetailVO> reportReasonCode = communityMainPageMapper.getCodeDetail(reasonCodeGroupNo);
+		List<CommonCodeDetailVO> reportTarTypeCode = communityMainPageMapper.getCodeDetail(reportTarCodeGroupNo);
+		List<CommonCodeDetailVO> reportStatCode = communityMainPageMapper.getCodeDetail(reportStatCodeGroupNo);
+		
+		Map<Object, Object> map = new HashMap<>();
+		map.put("reasonCode", reportReasonCode);
+		map.put("reportTarCode", reportTarTypeCode);
+		map.put("reportStatCode", reportStatCode);
+		
+		return map;
+	}
+		
+}

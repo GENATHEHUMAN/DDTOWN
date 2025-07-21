@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.emp.artist.IArtistMapper">
+ 
+ 	<select id="getAllArtists" resultType="kr.or.ddit.vo.artist.ArtistVO">
+        SELECT
+            A.ART_NO,
+            AG.ART_GROUP_NO,
+            A.MEM_USERNAME,
+            A.ART_NM,
+            A.ART_CONTENT,
+            A.ART_REG_DATE,
+            A.ART_MOD_DATE,
+            A.ART_PROFILE_IMG,
+            A.ART_DEBUTDATE AS artDebutDate 
+        FROM
+            ARTIST A
+        LEFT OUTER JOIN
+            ARTIST_GROUP_MAP AG ON A.ART_NO = AG.ART_NO
+        ORDER BY
+            A.ART_NM ASC
+    </select>
+ 	
+	<select id="getArtistList" resultType="kr.or.ddit.vo.artist.ArtistVO">
+		SELECT
+			ART_NO
+			, MEM_USERNAME
+			, ART_NM
+			, ART_CONTENT
+			, ART_REG_DATE
+			, ART_MOD_DATE
+			, ART_PROFILE_IMG
+			, ART_DEBUTDATE
+			, ART_DEL_YN
+		FROM
+			ARTIST
+	</select>
+	
+	<update id="updateArtist" parameterType="kr.or.ddit.vo.artist.ArtistVO">
+		UPDATE ARTIST
+		SET
+			ART_NM = #{artNm}
+			, ART_CONTENT = #{artContent}
+			, ART_MOD_DATE = SYSDATE
+			, ART_PROFILE_IMG = #{artProfileImg}
+		WHERE
+			ART_NO = #{artNo}
+	</update>
+	
+	<select id="artistListWithPage" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="kr.or.ddit.vo.artist.ArtistVO">
+		SELECT *
+        FROM (
+            SELECT inner_query.*, ROWNUM as rnum
+            FROM (
+                SELECT
+                    ART_NO
+					, MEM_USERNAME
+					, ART_NM
+					, ART_CONTENT
+					, ART_REG_DATE
+					, ART_MOD_DATE
+					, ART_PROFILE_IMG
+					, ART_DEBUTDATE
+					, ART_DEL_YN
+                FROM ARTIST
+                <where>
+                    <if test="searchWord != null and searchWord != ''">
+                        <choose>
+                            <when test="searchType == 'name'">
+                                AND ART_NM LIKE '%' || #{searchWord} || '%'
+                            </when>
+                            <when test="searchType == 'content'">
+                                AND ART_CONTENT LIKE '%' || #{searchWord} || '%'
+                            </when>
+                            </choose>
+                    </if>
+                </where>
+                ORDER BY ART_REG_DATE DESC, ART_NO DESC
+            ) inner_query
+            WHERE ROWNUM <![CDATA[ <= ]]> #{endRow}
+        )
+        WHERE rnum <![CDATA[ >= ]]> #{startRow}
+	</select>
+	
+	<select id="selectArtistCount" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+        SELECT COUNT(*)
+        FROM ARTIST
+        <where>
+            <if test="searchWord != null and searchWord != ''">
+                <choose>
+                    <when test="searchType == 'name'">
+                        AND ART_NM LIKE '%' || #{searchWord} || '%'
+                    </when>
+                    <when test="searchType == 'content'">
+                        AND ART_CONTENT LIKE '%' || #{searchWord} || '%'
+                    </when>
+                    </choose>
+            </if>
+        </where>
+    </select>
+    
+ </mapper>

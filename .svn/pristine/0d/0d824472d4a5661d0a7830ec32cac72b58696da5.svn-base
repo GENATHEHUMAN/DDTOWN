@@ -1,0 +1,169 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>굿즈샵 주문내역 관리 - DDTOWN 관리자 시스템</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <%@ include file="../../../modules/headerPart.jsp" %>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section class="ea-section">
+                    <div class="ea-section-header">
+                        <h2>굿즈샵 주문내역 관리</h2>
+                    </div>
+                    <div class="filter-group">
+                        <label for="orderDateStart">주문일자:</label>
+                        <input type="date" id="orderDateStart" name="orderDateStart">
+                        <span>~</span>
+                        <input type="date" id="orderDateEnd" name="orderDateEnd">
+                        <label for="orderStatusFilter" style="margin-left:15px;">주문상태:</label>
+                        <select id="orderStatusFilter" name="orderStatusFilter">
+                            <option value="">전체</option>
+                            <option value="payment_completed">결제완료</option>
+                            <option value="preparing">배송준비중</option>
+                            <option value="shipping">배송중</option>
+                            <option value="delivered">배송완료</option>
+                            <option value="refund">환불</option>
+                        </select>
+                        <input type="text" id="orderSearchInput" name="orderSearchInput" placeholder="주문번호, 주문자명/ID" style="margin-left:15px; min-width:200px;">
+                        <button id="orderSearchBtn" class="ea-btn"><i class="fas fa-search"></i> 검색</button>
+                    </div>
+                    <table class="ea-table">
+                        <thead>
+                            <tr>
+                                <th style="width:15%;">주문번호</th>
+                                <th style="width:15%;">주문일시</th>
+                                <th style="width:12%;">주문자(ID)</th>
+                                <th style="width:12%;">총 주문금액</th>
+                                <th style="width:10%;">결제상태</th>
+                                <th style="width:12%;">주문(배송)상태</th>
+                                <th style="width:10%;">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <tr>
+                                <td><a href="/admin/goods/orders/detail?orderId=ORD20250513-001" class="doc-link">ORD20250513-001</a></td>
+                                <td>2025-05-13 10:30:25</td>
+                                <td>홍길동 (user123)</td>
+                                <td>43,000 원</td>
+                                <td><span class="order-status-badge status-payment-completed">결제완료</span></td>
+                                <td><span class="order-status-badge status-preparing">배송준비중</span></td>
+                                <td><a href="/admin/goods/orders/detail?orderId=ORD20250513-001" class="ea-btn sm"><i class="fas fa-eye"></i> 상세보기</a></td>
+                            </tr>
+                            <tr>
+                                <td><a href="/admin/goods/orders/detail?orderId=ORD20250512-002" class="doc-link">ORD20250512-002</a></td>
+                                <td>2025-05-12 17:45:10</td>
+                                <td>김영희 (user456)</td>
+                                <td>28,000 원</td>
+                                <td><span class="order-status-badge status-payment-completed">결제완료</span></td>
+                                <td><span class="order-status-badge status-delivered">배송완료</span></td>
+                                <td><a href="/admin/goods/orders/detail?orderId=ORD20250512-002" class="ea-btn sm"><i class="fas fa-eye"></i> 상세보기</a></td>
+                            </tr>
+                            <tr>
+                                <td><a href="/admin/goods/orders/detail?orderId=ORD20250511-003" class="doc-link">ORD20250511-003</a></td>
+                                <td>2025-05-11 09:12:00</td>
+                                <td>이철수 (user789)</td>
+                                <td>15,000 원</td>
+                                <td><span class="order-status-badge status-pending-payment">입금대기</span></td>
+                                <td><span class="order-status-badge status-pending-payment">입금대기</span></td>
+                                <td><a href="/admin/goods/orders/detail?orderId=ORD20250511-003" class="ea-btn sm"><i class="fas fa-eye"></i> 상세보기</a></td>
+                            </tr>
+                            <tr>
+                                <td><a href="/admin/goods/orders/detail?orderId=ORD20250510-004" class="doc-link">ORD20250510-004</a></td>
+                                <td>2025-05-10 14:22:30</td>
+                                <td>박지민 (user000)</td>
+                                <td>72,000 원</td>
+                                <td><span class="order-status-badge status-payment-completed">결제완료</span></td>
+                                <td><span class="order-status-badge status-shipping">배송중</span></td>
+                                <td><a href="/admin/goods/orders/detail?orderId=ORD20250510-004" class="ea-btn sm"><i class="fas fa-eye"></i> 상세보기</a></td>
+                            </tr>
+                            <tr>
+                                <td><a href="/admin/goods/orders/detail?orderId=ORD20250509-005" class="doc-link">ORD20250509-005</a></td>
+                                <td>2025-05-09 11:50:55</td>
+                                <td>최수영 (user111)</td>
+                                <td>30,000 원</td>
+                                <td><span class="order-status-badge status-payment-completed">결제완료</span></td>
+                                <td><span class="order-status-badge status-cancelled">주문취소</span></td>
+                                <td><a href="/admin/goods/orders/detail?orderId=ORD20250509-005" class="ea-btn sm"><i class="fas fa-eye"></i> 상세보기</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="ea-pagination" id="ordersPagination">
+                        <a href="#" class="active">1</a>
+                        <a href="#">2</a>
+                        <a href="#">3</a>
+                        <span>...</span>
+                        <a href="#">8</a>
+                    </div>
+                </section>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (관리자 전용)</p>
+        </footer>
+    </div>
+    <script>
+    // 검색/필터 기능 (프론트엔드 예시)
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchBtn = document.getElementById('orderSearchBtn');
+        const searchInput = document.getElementById('orderSearchInput');
+        const statusFilter = document.getElementById('orderStatusFilter');
+        const dateStartInput = document.getElementById('orderDateStart');
+        const dateEndInput = document.getElementById('orderDateEnd');
+        const tableBody = document.getElementById('ordersTableBody');
+        if (searchBtn && tableBody) {
+            searchBtn.addEventListener('click', function() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedStatus = statusFilter.value;
+                const startDate = dateStartInput.value;
+                const endDate = dateEndInput.value;
+                const rows = tableBody.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const orderIdCell = row.querySelector('td:nth-child(1) a');
+                    const orderDateCell = row.querySelector('td:nth-child(2)');
+                    const customerCell = row.querySelector('td:nth-child(3)');
+                    const orderStatusCell = row.querySelector('td:nth-child(6) span');
+                    let showRow = true;
+                    if (searchTerm) {
+                        const orderIdText = orderIdCell ? orderIdCell.textContent.toLowerCase() : "";
+                        const customerText = customerCell ? customerCell.textContent.toLowerCase() : "";
+                        if (!orderIdText.includes(searchTerm) && !customerText.includes(searchTerm)) {
+                            showRow = false;
+                        }
+                    }
+                    if (showRow && selectedStatus && orderStatusCell) {
+                        let currentStatusValue = "";
+                        if (orderStatusCell.classList.contains('status-pending-payment')) currentStatusValue = 'pending_payment';
+                        else if (orderStatusCell.classList.contains('status-payment-completed')) currentStatusValue = 'payment_completed';
+                        else if (orderStatusCell.classList.contains('status-preparing')) currentStatusValue = 'preparing';
+                        else if (orderStatusCell.classList.contains('status-shipping')) currentStatusValue = 'shipping';
+                        else if (orderStatusCell.classList.contains('status-delivered')) currentStatusValue = 'delivered';
+                        else if (orderStatusCell.classList.contains('status-cancelled')) currentStatusValue = 'cancelled';
+                        if (currentStatusValue !== selectedStatus) {
+                            showRow = false;
+                        }
+                    }
+                    if (showRow && orderDateCell) {
+                        const orderDate = orderDateCell.textContent.substring(0, 10);
+                        if (startDate && orderDate < startDate) {
+                            showRow = false;
+                        }
+                        if (endDate && orderDate > endDate) {
+                            showRow = false;
+                        }
+                    }
+                    row.style.display = showRow ? '' : 'none';
+                });
+            });
+        }
+    });
+    </script>
+</body>
+</html> 

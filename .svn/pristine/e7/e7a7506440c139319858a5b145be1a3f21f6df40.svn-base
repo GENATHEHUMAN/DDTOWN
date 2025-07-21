@@ -1,0 +1,130 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDTOWN 관리자 - 아티스트 계정 관리</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <style>
+        /* 아티스트명 링크 스타일 */
+        .artist-name-link {
+            font-weight: 500;
+            color: #007bff; /* 기본 링크 색상 */
+            text-decoration: none;
+        }
+        .artist-name-link:hover {
+            text-decoration: underline;
+        }
+        #accountAddButton {
+		    width: auto; /* 내용에 맞게 너비 자동 조절 */
+		    min-width: max-content; /* 최소 너비를 내용만큼 확보 (예: "검색" 두 글자) */
+		    white-space: nowrap; /* 글자가 두 줄로 나뉘는 것을 방지 */
+		    writing-mode: horizontal-tb !important; /* 혹시라도 writing-mode가 세로로 설정된 경우 강제 변경 */
+		    padding-left: 12px; /* 버튼 내부 여백 (기존 .ea-btn 스타일에 따라 조절) */
+		    padding-right: 12px; /* 버튼 내부 여백 (기존 .ea-btn 스타일에 따라 조절) */
+		}
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+
+            <main class="emp-content">
+                <section class="ea-section">
+                    <div class="ea-section-header">
+                        <h2>아티스트 계정 관리</h2>
+                        <div class="ea-header-actions">
+                        
+                        	<form class="input-group input-group-sm" method="get" id="searchForm">
+                        	
+                        		<input type="hidden" name="currentPage" value="1" id="page">
+                        		
+	                            <input type="text" id="searchWord" name="searchWord" value="${pagingVO.searchWord }" class="ea-search-input" placeholder="아티스트명 검색">
+	                            
+	                            <div class="input-group-append">
+									<button type="submit" class="ea-btn primary">
+										<i class="fas fa-search"></i>검색
+									</button>
+								</div>
+                        	</form>
+                        	
+                            <a class="ea-btn primary" href="/admin/community/artist/form" id="accountAddButton"><i class="fas fa-plus"></i> 등록 </a>
+                        </div>
+                    </div>
+
+                    <table class="ea-table" id="artistAccountTable">
+                        <thead>
+                            <tr>
+                                <th>번호</th>
+                                <th>아티스트ID(내부용)</th>
+                                <th>아티스트명</th>
+                                <th>그룹명</th>
+                                <th>담당자</th>
+                                <th>데뷔일</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="artistAccountTableBody">
+                        	<c:forEach items="${pagingVO.dataList }" var="artist">
+                        		<tr>
+	                        		<td>${artist.artNo }</td>
+	                                <td>${artist.memUsername }</td>
+	                                <td>${artist.artNm }</td>
+	                                <td>${artist.groupList[0].artGroupNm }</td>
+	                                <td>${artist.groupList[0].empName }</td>
+	                                <td>${artist.artDebutdate }</td>
+	                                <td><button type="button" class="ea-btn sm outline" data-art-no=${artist.artNo }>보기</button></td>
+	                            </tr>
+                        	</c:forEach>
+                        </tbody>
+                    </table>
+                    <div class="ea-pagination" id="pagingArea">
+                    	${pagingVO.pagingHTML }
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+</body>
+<%@ include file="../../modules/footerPart.jsp" %>
+
+<%@ include file="../../modules/sidebar.jsp" %>
+<script type="text/javascript">
+$(function(){
+//페이지네이션 처리 시작
+const searchForm = document.getElementById("searchForm");
+const pageInput = searchForm.querySelector("input[name='currentPage']"); // hidden input의 name 사용
+const paginationControls = document.getElementById("pagingArea");
+
+if (paginationControls) { // paginationControls 요소가 존재할 때만 이벤트 리스너 추가
+    paginationControls.addEventListener("click", function(e) {
+        e.preventDefault(); // 기본 링크 이동 방지
+    
+        // 클릭된 요소가 'page-link' 클래스를 가지고 있고 'A' 또는 'SPAN' 태그인지 확인
+        if (e.target.classList.contains("page-link") && (e.target.nodeName === "A" || e.target.nodeName === "SPAN")) {
+            pageInput.value = e.target.dataset.page; // data-page 속성 값으로 hidden input 업데이트
+            searchForm.submit(); // 폼 제출
+        }
+    });
+ }
+ // 페이지네이션 처리 끝
+	// 검색결과 유지한채 이동
+	let artistAccountTableBody = $("#artistAccountTableBody");
+	artistAccountTableBody.on("click","button",function(){
+		const artNo = $(this).data("artNo");
+		let searchWord = "${pagingVO.searchWord}";
+		let currentPage = "${pagingVO.currentPage}";
+		
+		sessionStorage.setItem("currentPage",currentPage);
+		sessionStorage.setItem("searchWord",searchWord);
+		
+		location.href="/admin/community/artist/detail?artNo="+artNo;
+	})
+})
+</script>
+</html>

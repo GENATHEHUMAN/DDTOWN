@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.goods.IGoodsCartMapper">
+	<!-- 사용자 아이디 개별로 장바구니에 상품 가져오기 -->
+	<select id="selectCartItemsUsername" resultType="kr.or.ddit.vo.goods.GoodsCartVO">
+	    SELECT
+	        gc.cart_no,
+	        gc.mem_username,
+	        gc.goods_no,
+	        gc.goods_opt_no,
+	        gc.cart_qty,
+	        (g.goods_price + COALESCE(go.goods_opt_price, 0)) * gc.cart_qty AS cart_total_amount,
+	        g.goods_nm,
+	        g.goods_price,
+	        g.file_group_no AS fileGroupNo,
+	        go.goods_opt_nm,
+	        go.goods_opt_price
+	    FROM
+	        CART gc
+	    JOIN
+	        GOODS g ON gc.goods_no = g.goods_no
+	    LEFT JOIN
+	        GOODS_OPTION go ON gc.goods_opt_no = go.goods_opt_no AND gc.goods_no = go.goods_no
+	    WHERE
+	        gc.mem_username = #{userId}
+	    ORDER BY gc.cart_no DESC
+	</select>
+	
+	<!-- 장바구니에 중복으로 들어있는지 확인! -->
+	<select id="selectCartItem" resultType="kr.or.ddit.vo.goods.GoodsCartVO" parameterType="kr.or.ddit.vo.goods.GoodsCartVO">
+		select
+			cart_no,
+			mem_username,
+			goods_no,
+			goods_opt_no,
+			cart_qty,
+			cart_total_amount
+		from cart
+		where mem_username = #{memUsername}
+		  and goods_no = #{goodsNo}
+		  <if test="goodsOptNo != null">
+		  and goods_opt_no = #{goodsOptNo}
+		  </if>
+		  <if test="goodsOptNo == null">
+		  and goods_opt_no IS NULL
+		  </if>
+	</select>
+	
+	<!-- 새상품 장바구니에 추가!!!-->
+	<insert id="insertCartItem">
+		<selectKey keyProperty="cartNo" resultType="java.lang.Integer" order="BEFORE">
+        	SELECT cart_seq.nextval FROM dual
+        </selectKey>
+		insert into cart (
+			cart_no,
+			mem_username,
+			goods_no,
+			goods_opt_no,
+			cart_qty,
+			cart_total_amount
+		) values (
+			#{cartNo},
+			#{memUsername},
+			#{goodsNo},
+			#{goodsOptNo},
+			#{cartQty},
+			#{cartTotalAmount}
+		)
+	</insert>
+	
+	<!-- 장바구니 상품 수량 업뎃하기..! -->
+	<update id="updateCartItemQuantity">
+		update cart
+		   set
+		   	   cart_qty = #{cartQty},
+		   	   cart_total_amount = #{cartTotalAmount}
+		   where mem_username = #{memUsername}
+		     and goods_no = #{goodsNo}
+		     and goods_opt_no = #{goodsOptNo}
+	</update>
+	
+	<!-- 장바구니에 담긴 상품 개별 삭제 -->
+	<delete id="deleteCartItem" parameterType="int">
+		delete from cart
+		where cart_no = #{cartNo}
+	</delete>
+	
+	<!-- 장바구니에 담긴 상품 선택해서 일괄 삭제 -->
+	<delete id="deleteSelectedCartItems" parameterType="java.util.List">
+		delete from cart
+		where cart_no in
+		<foreach collection="list" item="cartNo" open="(" separator="," close=")">
+			#{cartNo}
+		</foreach>
+	</delete>
+	
+	<!-- 장바구니에 담긴 상품 수량 변경하기 -->
+	<update id="updateCartQuantity" parameterType="kr.or.ddit.vo.goods.GoodsCartVO">
+		update cart
+		set
+			cart_qty = #{cartQty}
+		where
+			cart_no = #{cartNo}
+	</update>
+	
+	<!-- 장바구니에 담긴 상품 결제하면서 비우기! -->
+	<delete id="deleteCartByUsername" parameterType="java.lang.String">
+	    DELETE FROM CART
+	    WHERE MEM_USERNAME = #{username}
+	</delete>
+	
+    <select id="getCartItemsByCartNosAndUser" parameterType="map" resultType="kr.or.ddit.vo.goods.GoodsCartVO">
+        SELECT
+            c.CART_NO,
+            c.MEM_USERNAME,
+            c.GOODS_NO,
+            COALESCE(c.GOODS_OPT_NO, 0) AS GOODS_OPT_NO,
+            c.CART_QTY,
+            g.GOODS_NM,
+            g.GOODS_PRICE,
+            g.GOODS_STAT_CODE,
+            g.FILE_GROUP_NO AS fileGroupNo,
+            go.GOODS_OPT_NM,
+            COALESCE(go.GOODS_OPT_PRICE, 0) AS goodsOptPrice,
+            (CASE
+			    WHEN c.GOODS_OPT_NO IS NOT NULL AND go.GOODS_OPT_PRICE != 0 THEN COALESCE(go.GOODS_OPT_PRICE, 0)
+			    ELSE g.GOODS_PRICE
+			END) * c.CART_QTY AS cartTotalAmount
+        FROM
+            CART c
+        INNER JOIN
+            GOODS g ON c.GOODS_NO = g.GOODS_NO
+        LEFT JOIN
+            GOODS_OPTION go ON c.GOODS_OPT_NO = go.GOODS_OPT_NO AND c.GOODS_NO = go.GOODS_NO
+        WHERE
+            c.MEM_USERNAME = #{username}
+            AND c.CART_NO IN
+            <foreach item="cartNo" collection="cartNoList" open="(" separator="," close=")">
+                #{cartNo}
+            </foreach>
+        ORDER BY c.CART_NO DESC
+    </select>
+    
+    <select id="selectCartItemByGoodsInfo" parameterType="map" resultType="kr.or.ddit.vo.goods.GoodsCartVO">
+        SELECT
+            CART_NO,
+            MEM_USERNAME,
+            GOODS_NO,
+            GOODS_OPT_NO,
+            CART_QTY
+        FROM CART
+        WHERE MEM_USERNAME = #{memUsername}
+          AND GOODS_NO = #{goodsNo}
+        <if test="goodsOptNo != null and goodsOptNo != 0">
+          AND GOODS_OPT_NO = #{goodsOptNo}
+        </if>
+        <if test="goodsOptNo == null or goodsOptNo == 0">
+          AND GOODS_OPT_NO IS NULL
+        </if>
+    </select>
+    
+    <select id="getCartItemCount" parameterType="string" resultType="int">
+        SELECT
+            NVL(SUM(CART_QTY), 0)
+        FROM CART
+        WHERE MEM_USERNAME = #{memUsername}
+    </select>
+	
+</mapper>

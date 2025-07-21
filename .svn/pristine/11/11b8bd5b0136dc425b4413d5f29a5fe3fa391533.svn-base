@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.emp.schedule.IScheduleMapper">
+ 
+ 	<resultMap type="kr.or.ddit.vo.artist.ArtistGroupVO" id="artistVO">
+ 		<result property="artGroupRegDate" column="emp_art_group_reg_date"/>
+		<result property="artGroupDelYn" column="emp_art_group_del_yn"/>
+		<result property="artGroupProfileImg" column="emp_art_group_profile_img"/>
+		<result property="artGroupModDate" column="emp_art_group_mod_date"/>
+		<result property="artGroupNo" column="emp_art_group_no"/>
+		<result property="artGroupTypeCode" column="emp_art_group_type_code"/>
+		<result property="empUsername" column="emp_username"/>
+		<result property="artGroupDebutdate" column="emp_art_group_debutdate"/>
+		<result property="artGroupNm" column="emp_art_group_nm"/>
+		<result property="artGroupContent" column="emp_art_group_content"/>
+		
+		<collection property="schedule" resultMap="scheduleList" />
+ 	</resultMap>
+ 	
+ 	
+ 	<resultMap type="kr.or.ddit.vo.schedule.ScheduleVO" id="scheduleList">
+		<result property="id" column="id"/>
+		<result property="title" column="title"/>
+		<result property="start" column="start"/>
+		<result property="end" column="end"/>
+		<result property="textColor" column="text_color"/>
+		<result property="backgroundColor" column="background_color"/>
+		<result property="url" column="url"/>
+		<result property="allDayStatus" column="all_day_status"/>
+		<result property="place" column="place"/>
+ 		<result property="artGroupNo" column="schedule_art_group_no"/>
+ 		<result property="content" column="content"/>
+ 	</resultMap>
+ 	
+ 
+ 	<select id="getList" parameterType="String" resultMap="artistVO" >
+ 		SELECT
+		    ag.art_group_no as emp_art_group_no,
+		    ag.art_group_type_code as emp_art_group_type_code,
+		    ag.emp_username as emp_username,
+		    ag.art_group_debutdate as emp_art_group_debutdate,
+		    ag.art_group_nm as emp_art_group_nm,
+		    ag.art_group_content as emp_art_group_content,
+		    ag.art_group_reg_date as emp_art_group_reg_date,
+		    ag.art_group_del_yn as emp_art_group_del_yn,
+		    ag.art_group_profile_img as emp_art_group_profile_img,
+		    ag.art_group_mod_date as emp_art_group_mod_date,
+		    
+		    sche.art_schedule_no as id,
+		    sche.art_group_no as schedule_art_group_no,
+		    sche.title as title,
+		    sche.start_date as "start",
+		    sche.end_date as "end",
+		    sche.place as place,
+		    sche.content as content,
+		    sche.text_color as text_color,
+		    sche.url as "url",
+		    sche.background_color as background_color,
+		    sche.all_day as all_day_status 
+		    
+		FROM
+		    artist_group ag
+		left join artist_schedule sche on ag.art_group_no = sche.art_group_no
+		where ag.emp_username = #{empUsername}
+ 	</select>
+ 	
+ 	<select id="getDes" parameterType="int" resultType="kr.or.ddit.vo.schedule.ScheduleDetailVO">
+ 		select 
+	 		place,
+			content
+		from artist_schedule
+		where art_schedule_no = #{id}
+ 	</select>
+ 	
+ 	<update id="dateUpdate" parameterType="kr.or.ddit.vo.schedule.ScheduleVO">
+ 		update artist_schedule set
+ 			  title	= #{title}
+ 			, start_date = #{start}
+ 			, end_date = #{end}
+ 			, place = #{place}
+ 			, content = #{content}
+ 			, text_color = #{textColor}
+ 			, url = #{url}
+ 			, background_color = #{backgroundColor}
+ 			, all_day = #{allDayStatus}
+ 		where art_schedule_no = #{id}
+ 	</update>
+ 	
+ 	<update id="dateMove" parameterType="kr.or.ddit.vo.schedule.ScheduleVO">
+ 		update artist_schedule set
+ 			  start_date = #{start}
+ 			, end_date = #{end}
+ 		where art_schedule_no = #{id}
+ 	</update>
+ 
+ 	<insert id="dateInsert" parameterType="kr.or.ddit.vo.schedule.ScheduleVO">
+ 	<selectKey resultType="int" keyProperty="id" order="BEFORE" >
+ 		select artist_schedule_seq.nextval from dual
+ 	</selectKey>
+ 		insert into artist_schedule (art_schedule_no, art_group_no, title, start_date, end_date, place, content, text_color, url, background_color, all_day, art_sch_cat_code)
+ 		values (#{id}, #{artGroupNo}, #{title}, #{start}, #{end}, #{place}, #{content}, #{textColor}, #{url}, #{backgroundColor}, #{allDayStatus}, #{artSchCatCode})
+ 	</insert>
+ 	
+ 	<delete id="dateDelete" parameterType="int">
+ 		delete from artist_schedule where art_schedule_no = #{id}
+ 	</delete>
+ </mapper>

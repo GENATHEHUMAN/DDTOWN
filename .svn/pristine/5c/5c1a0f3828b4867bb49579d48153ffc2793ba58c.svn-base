@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.concert.seat.ISeatMapper">
+
+	<resultMap type="kr.or.ddit.vo.concert.TicketVO" id="ticketMap">
+		<result property="ticketNo" column="TICKET_NO"/>
+		<result property="concertNo" column="CONCERT_NO"/>
+		<result property="seatNo" column="SEAT_NO"/>
+		<result property="concertHallNo" column="CONCERT_HALL_NO"/>
+		<result property="memUsername" column="MEM_USERNAME"/>
+		<result property="seatGradeCode" column="SEAT_GRADE_CODE"/>
+		<result property="orderDetNo" column="ORDER_DET_NO"/>
+		<result property="ticketPrice" column="TICKET_PRICE"/>
+		<result property="ticketReservationDate" column="TICKET_RESERVATION_DATE"/>
+		<result property="ticketOnlineYn" column="TICKET_ONLINE_YN"/>
+		<collection property="seatGradeList" resultMap="seatGradeMap"/>
+	</resultMap>
+	<resultMap type="kr.or.ddit.vo.common.CommonCodeDetailVO" id="seatGradeMap">
+		<result property="commCodeDetNo" column="COMM_CODE_DET_NO"/>
+		<result property="commCodeGrpNo" column="COMM_CODE_GRP_NO"/>
+		<result property="commCodeDetNm" column="COMM_CODE_DET_NM"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="description" column="DESCRIPTION"/>
+	</resultMap>
+
+    <select id="selectConcertList" resultType="kr.or.ddit.vo.concert.ConcertVO" >
+    	SELECT
+		    concert_no
+		  , art_group_no
+		  , concert_hall_no
+		  , concert_cat_code
+		  , concert_reservation_stat_code
+		  , concert_stat_code
+		  , concert_online_yn
+		  , concert_nm
+		  , concert_date
+		  , concert_address
+		  , concert_start_date
+		  , concert_end_date
+		  , concert_running_time
+		  , concert_guide
+		  , file_group_no
+		FROM
+		    concert
+		where
+			concert_reservation_stat_code = 'CRSC005'
+		and
+			concert_stat_code = 'CTSC001'
+    </select>
+
+    <insert id="insertSeat" parameterType="kr.or.ddit.vo.concert.SeatVO">
+    	INSERT INTO seat (
+		    seat_no
+		    , concert_hall_no
+		    , seat_stat_code
+		    , seat_row
+		    , seat_num
+		    , seat_section
+		) VALUES (
+		    #{seatNo}
+		  , #{concertHallNo}
+		  , #{seatStatCode}
+		  , #{seatRow}
+		  , #{seatNum}
+		  , #{seatSection}
+		)
+    </insert>
+
+    <select id="getTicketInfo" parameterType="int" resultType="kr.or.ddit.vo.concert.TicketVO">
+    	SELECT
+		    t.ticket_no
+		  , t.concert_no
+		  , t.seat_no
+		  , t.concert_hall_no
+		  , t.mem_username
+		  , t.seat_grade_code
+		  , t.order_det_no
+		  , t.ticket_price
+		  , t.ticket_reservation_date
+		  , t.ticket_online_yn
+		FROM
+		    ticket t
+		where
+			concert_no = #{concertNo}
+    </select>
+
+    <select id="getSeatGradeInfo" parameterType="int" resultType="kr.or.ddit.vo.concert.ConcertSeatMapVO">
+		SELECT
+		    cdc.comm_code_det_no as seat_grade_code
+		  , cdc.description as seat_grade_nm
+		  , csm.concert_no
+		  , csm.seat_section
+		  , csm.seat_price
+		  , (select count(*) from seat s where csm.seat_section = s.seat_section) as section_count
+		FROM
+		    common_detail_code cdc
+		left outer join
+		    concert_seat_map csm on(cdc.comm_code_det_no = csm.seat_grade_code)
+		WHERE
+		   cdc.comm_code_grp_no = 'SEAT_GRADE_CODE'
+		and
+		   csm.concert_no = #{concertNo}
+		order by csm.seat_section
+    </select>
+
+    <select id="getSeatInfo" parameterType="int" resultType="kr.or.ddit.vo.concert.SeatVO">
+    	SELECT
+		    seat_no
+		  , concert_hall_no
+		  , seat_stat_code
+		  , seat_row
+		  , seat_num
+		  , seat_section
+		FROM
+		    seat
+		where
+			concert_hall_no = #{concertHallNo}
+    </select>
+
+    <select id="selectSeatSection" parameterType="int" resultType="string">
+    	select
+    		seat_section
+    	from
+    		seat
+    	where
+    		concert_hall_no = #{concertHallNo}
+    	group by seat_section
+    </select>
+
+    <insert id="insertConcertSeatMap" parameterType="kr.or.ddit.vo.concert.ConcertSeatMapVO">
+    	INSERT INTO concert_seat_map (
+		    concert_no
+		    , seat_section
+		    , seat_grade_code
+		    , seat_price
+		) VALUES (
+		    #{concertNo}
+		  , #{seatSection}
+		  , #{seatGradeCode}
+		  , #{seatPrice}
+		)
+    </insert>
+
+    <insert id="insertTikcet" parameterType="kr.or.ddit.vo.concert.TicketVO">
+	    INSERT INTO ticket (
+		    ticket_no
+		    , concert_no
+		    , seat_no
+		    , concert_hall_no
+		    , seat_grade_code
+		    , ticket_price
+		) VALUES (
+		    TICKET_SEQ.nextval
+		  , #{concertNo}
+		  , #{seatNo}
+		  , #{concertHallNo}
+		  , (select seat_grade_code from concert_seat_map csm where csm.concert_no = #{concertNo} and csm.seat_section = substr(#{seatNo},1,1))
+		  , (select seat_price from concert_seat_map csm where csm.concert_no = #{concertNo} and csm.seat_section = substr(#{seatNo},1,1))
+		)
+    </insert>
+
+    <select id="selectGradeList" resultType="kr.or.ddit.vo.common.CommonCodeDetailVO">
+    	SELECT
+		    comm_code_det_no
+		  , description
+		FROM
+		    common_detail_code
+		where
+		    comm_code_grp_no = 'SEAT_GRADE_CODE'
+    </select>
+
+    <update id="updateConcertSeatMap" parameterType="kr.or.ddit.vo.concert.ConcertSeatMapVO">
+    	UPDATE concert_seat_map
+		SET
+		      seat_grade_code = #{seatGradeCode}
+		    , seat_price = #{seatPrice}
+		WHERE
+		        concert_no = #{concertNo}
+		    AND seat_section = #{seatSection}
+    </update>
+
+    <update id="updateTicket" parameterType="kr.or.ddit.vo.concert.ConcertSeatMapVO">
+    	UPDATE ticket t
+	    SET
+	          seat_grade_code = (select
+	          						seat_grade_code
+	          					 from concert_seat_map csm
+	          					 where
+	          					 	csm.concert_no = #{concertNo}
+	          					 and
+	          					 	substr(t.seat_no,1,1) = csm.seat_section
+	          					 )
+	        , ticket_price = (select
+	        					seat_price
+	        				  from
+	        				  	concert_seat_map csm
+	        				  where
+	        				  	csm.concert_no = #{concertNo}
+	        				  and
+	        				  	substr(t.seat_no,1,1) = csm.seat_section
+	        				  )
+	    WHERE
+	       t.concert_no = #{concertNo}
+	    and
+	       substr(t.seat_no,1,1) = #{seatSection}
+    </update>
+</mapper>

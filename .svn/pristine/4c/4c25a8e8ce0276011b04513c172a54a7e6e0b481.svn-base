@@ -1,0 +1,11 @@
+package kr.or.ddit.ddtown.mapper.member.membership;
+
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface MembershipMapper {
+
+	// 멤버십 구독 여부 확인
+	int hasValidMembershipSubscription(String memUsername, int artGroupNo);
+
+}

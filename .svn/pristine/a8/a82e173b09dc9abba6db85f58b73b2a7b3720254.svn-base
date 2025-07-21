@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.community.ICommunityFollowMapper">
+ 
+ 	<resultMap type="kr.or.ddit.vo.artist.ArtistGroupVO" id="artGroupMap">
+ 		<id property="artGroupNo" column="ART_GROUP_NO" />
+ 		<result property="artGroupName" column="ART_GROUP_NM" />
+ 	</resultMap>
+ 
+ 	<insert id="insertFollow">
+ 		INSERT INTO follow (
+		    mem_username
+		    , art_group_no
+		    , follow_date
+		) VALUES (
+		    #{memUsername}
+		  , #{artGroupNo}
+		  , sysdate
+		)
+ 	</insert>
+ 	
+ 	<delete id="deleteFollow">
+ 		DELETE FROM follow
+		WHERE
+	        mem_username = #{memUsername}
+	    AND art_group_no = #{artGroupNo}
+ 	</delete>
+ 	
+ 	<select id="selectFollowedArtistGroups" parameterType="string" resultMap="artGroupMap">
+ 		SELECT
+            ag.art_group_no,
+            ag.art_group_nm
+        FROM follow f
+        JOIN artist_group ag ON (f.art_group_no = ag.art_group_no)
+        WHERE f.mem_username = #{memUsername}
+        ORDER BY ag.art_group_nm ASC
+ 	</select>
+ 	
+ 	<select id="checkFollowExists" resultType="int">
+        SELECT COUNT(*)
+        FROM follow
+        WHERE mem_username = #{followerUsername}
+          AND art_group_no = #{artGroupNo}
+    </select>
+    
+    <select id="selectFollowerCnt" parameterType="int" resultType="int">
+        SELECT COUNT(*)
+        FROM follow
+        WHERE art_group_no = #{artGroupNo}
+    </select>
+    
+    <select id="selectFollowingCnt" parameterType="string" resultType="int">
+        SELECT COUNT(*)
+        FROM follow
+        WHERE mem_username = #{memUsername}
+    </select>
+    
+    <select id="selectArtistGroupName" parameterType="int" resultType="string">
+        SELECT art_group_nm 
+        FROM artist_group 
+        WHERE art_group_no = #{artGroupNo}
+    </select>
+ </mapper>

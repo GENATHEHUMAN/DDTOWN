@@ -1,0 +1,347 @@
+package kr.or.ddit.ddtown.controller.goods;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.ddtown.service.goods.main.IGoodsService;
+import kr.or.ddit.ddtown.service.goods.notice.IGoodsNoticeService;
+import kr.or.ddit.ddtown.service.goods.wishlist.IWishlistService;
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+import kr.or.ddit.vo.goods.goodsNoticeVO;
+import kr.or.ddit.vo.goods.goodsOptionVO;
+import kr.or.ddit.vo.goods.goodsVO;
+import kr.or.ddit.vo.security.CustomOAuth2User;
+import kr.or.ddit.vo.security.CustomUser;
+import kr.or.ddit.vo.user.MemberVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/goods")
+public class goodsController {
+	
+	@Autowired
+	public IGoodsService service;
+	
+	@Autowired
+	public IGoodsNoticeService noticeservice;
+	
+	@Autowired
+	public IWishlistService wishlistservice;
+	
+	@GetMapping("/main")
+    public String goodsShopList(
+            Model model,
+            @AuthenticationPrincipal Object principal,
+            // 1. 페이지네이션, 검색, 정렬 관련 요청 파라미터 추가
+            @RequestParam(name="currentPage", required = false, defaultValue = "1") int currentPage,
+            @RequestParam(required = false) String searchWord,
+            @RequestParam(name="searchType", required = false, defaultValue = "newest") String searchType
+            ) {
+
+        // 1. PaginationInfoVO 객체 생성 및 요청 파라미터 설정
+        PaginationInfoVO<goodsVO> pagingVO = new PaginationInfoVO<>();
+        pagingVO.setCurrentPage(currentPage);   // 현재 페이지 설정 시 startRow, endRow, startPage, endPage 자동 계산
+        pagingVO.setSearchWord(searchWord);     // 검색어 설정
+        pagingVO.setSearchType(searchType);     // 검색/정렬 타입 설정
+
+        log.info("### GoodsController - goodsShopList 호출: currentPage={}, searchWord={}, searchType={}",
+                 currentPage, searchWord, searchType);
+
+        // 2. 서비스 호출: 페이지네이션된 상품 목록을 가져옴 (총 레코드 수와 dataList가 pagingVO에 채워짐)
+        // 이 메서드 안에서 goodsMapper.selectUserGoodsListCount(pagingVO); 와 goodsMapper.selectUserGoodsList(pagingVO); 가 호출됩니다.
+        service.retrieveUserGoodsList(pagingVO);
+
+        log.info("### GoodsController - retrieveUserGoodsList 호출 결과: totalRecord={}, dataList.size={}",
+                 pagingVO.getTotalRecord(), pagingVO.getDataList() != null ? pagingVO.getDataList().size() : 0);
+
+        // 3. 로그인 상태 확인 및 MemberVO 추출 로직 (기존과 동일)
+        MemberVO authMember = null;
+        if (principal instanceof CustomUser) {
+            authMember = ((CustomUser) principal).getMemberVO();
+        } else if (principal instanceof CustomOAuth2User) {
+            authMember = ((CustomOAuth2User) principal).getMemberVO();
+        }
+
+        // 로그인 여부 판단
+        boolean isLoggedIn = (authMember != null && authMember.getMemUsername() != null && !authMember.getMemUsername().isEmpty());
+        model.addAttribute("isLoggedIn", isLoggedIn);
+
+        // 4. 상품 리스트의 찜 여부 처리 (isWishedMap 대신 goodsVO 객체 내부에 직접 설정)
+        if (isLoggedIn && pagingVO.getDataList() != null) { // 로그인 상태이고 상품 데이터가 있을 때만 처리
+            String username = authMember.getMemUsername();
+            // 현재 로그인한 사용자의 찜 목록을 가져옴
+            List<Integer> wishedGoodsNos = wishlistservice.getWishlistForUser(username)
+                                             .stream()
+                                             .map(wish -> wish.getGoodsNo())
+                                             .collect(Collectors.toList());
+
+            // PaginationInfoVO의 dataList에 있는 각 상품의 찜 여부를 설정
+            for (goodsVO goods : pagingVO.getDataList()) {
+                goods.setWished(wishedGoodsNos.contains(goods.getGoodsNo()));
+            }
+            // isWishedMap은 더 이상 필요 없습니다.
+        }
+
+        // 5. 모델에 PaginationInfoVO 객체 담기 (상품 목록, 페이지 정보, 검색어 등 모두 포함)
+        // 기존 goodsList 대신 pagingVO를 전달합니다.
+        model.addAttribute("pagingVO", pagingVO);
+
+        // 6. 굿즈샵 공지사항 (기존과 동일)
+        goodsNoticeVO noticeToShow = noticeservice.getMainNotice();
+        model.addAttribute("notice", noticeToShow);
+
+        // 7. 아티스트 그룹 목록 (기존 selectArtistGroups 대신 selectAllArtistGroups 호출)
+        List<ArtistGroupVO> artistList = service.getArtistGroups(); // IGoodsService에서 ArtistGroupVO를 반환하도록 변경 필요
+        model.addAttribute("artistList", artistList);
+
+        return "goods/main";
+    }
+	
+	@GetMapping("/detail")
+	public String goodsShopDetail(
+			@RequestParam("goodsNo") int goodsNo, 
+			Model model,
+			@AuthenticationPrincipal Object principal
+			) throws Exception {
+		
+		MemberVO authMember = null;
+		log.info("### 디버그: 주입된 principal 객체: {}", principal); // Principal 객체 타입 확인
+		
+		//회원 정보가 있다면 Model에 추가!
+		//비로그인 상태일 경우 authMember는 null 처리!
+		
+		if (principal instanceof CustomUser) { // 일반 로그인 (CustomUser)인 경우
+            CustomUser customUser = (CustomUser) principal;
+            authMember = customUser.getMemberVO();
+            log.info("### 디버그: CustomUser 타입에서 MemberVO 추출: {}", authMember);
+        } else if (principal instanceof CustomOAuth2User) { // OAuth2 로그인 (CustomOAuth2User)인 경우
+            CustomOAuth2User customOAuth2User = (CustomOAuth2User) principal;
+            authMember = customOAuth2User.getMemberVO();
+            log.info("### 디버그: CustomOAuth2User 타입에서 MemberVO 추출: {}", authMember);
+        } else {
+            // 다른 Principal 타입이 올 수도 있습니다 (예: DefaultOAuth2User).
+            // 이때는 직접 attribute에서 MemberVO를 구성해야 합니다.
+            // (이 경우는 거의 없을 것이므로 CustomUser, CustomOAuth2User만 다뤄도 충분)
+            log.warn("### 디버그: 알 수 없는 Principal 타입: {}", principal.getClass().getName());
+        }
+        
+        // authMember가 여전히 null이거나, username이 null인 경우 "비회원"으로 처리됩니다.
+        model.addAttribute("memberInfo", authMember);
+        log.info("상세 페이지 컨트롤러 호출! 인증된 회원 정보: {}", authMember != null ? authMember.getMemUsername(): "비회원");
+        
+        // JSP의 자바스크립트가 로그인 상태를 알 수 있도록 모델에 'isLoggedIn' 값을 추가합니다.
+        boolean isLoggedIn = (authMember != null && authMember.getMemUsername() != null && !authMember.getMemUsername().isEmpty());
+        model.addAttribute("isLoggedIn", isLoggedIn);
+        
+		//굿즈 상품 리스트 가져오기
+		List<goodsVO> goodsList = service.goodsList();
+		model.addAttribute("goodsList", goodsList);
+		
+		//굿즈 상품 하나 불러오기.........?
+		goodsVO goods = service.getGoodsDetail(goodsNo);
+		model.addAttribute("goods", goods);
+		log.info("서비스에서 반환된 goodsVO: {}", goods);
+		log.info("컨트롤러에서 받은 goodsNo: {}", goodsNo);
+		
+	    // ★★★★★ 이 로그를 추가해서 객체 내용을 확인해주세요! ★★★★★
+	    log.info("### DB에서 가져온 goods 객체 전체 내용: {}", goods);
+		
+		//굿즈 옵션 가져오기
+		List<goodsOptionVO> optionList = service.optionList(goodsNo);
+		model.addAttribute("optionList", optionList);
+		log.info("옵션 목록: {}", optionList);
+	
+		return "goods/detail";
+	}
+	
+	@PostMapping("/wishlist")
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> toggleWishlist (
+			@RequestBody Map<String, Integer> payload,
+			@AuthenticationPrincipal Object principal
+			) {
+		Map<String, Object> response = new HashMap<>();
+		MemberVO authMember = null;
+		String username = null;
+		
+		// 다른 메소드와 동일한 방식으로 MemberVO 추출 로직
+        if (principal instanceof CustomUser) {
+            authMember = ((CustomUser) principal).getMemberVO();
+        } else if (principal instanceof CustomOAuth2User) {
+            authMember = ((CustomOAuth2User) principal).getMemberVO();
+        }
+        
+        // authMember가 null이 아니면 username을 가져옴
+        if (authMember != null) {
+            username = authMember.getMemUsername();
+        }
+
+        // 1. 로그인 여부 확인 (username이 null이면 비로그인)
+        if (username == null || username.isEmpty()) { // authMember가 null일 수도 있으므로 username으로 최종 판단
+            response.put("status", "error");
+            response.put("message", "로그인이 필요합니다.");
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED); // 401 Unauthorized
+        }
+
+        Integer goodsNo = payload.get("goodsNo");
+        
+        //2. 필수 파라미터 (goodsNo) 누락 여부 확인
+        if(goodsNo == null) {
+        	response.put("status", "error");
+        	response.put("message", "상품 번호가 누락됐습니다!!!");
+        	
+        	return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); // 400 에러
+        }
+        
+        try {
+        	//3. 현재 찜 상태 확인 (DB 조회)
+			boolean isWished = wishlistservice.isGoodsWished(username, goodsNo);
+			
+			if (isWished) {
+				//4-1. 이미 찜된 상태 -> 찜 해제 (삭제)
+				if (wishlistservice.removeWishlist(username, goodsNo)) {
+					response.put("status", "success");
+					response.put("message", "찜이 해제됐습니다!!");
+					response.put("action", "removed");
+					
+				} else {
+					response.put("status", "error");
+					response.put("message", "찜 해제 실패했습니다!!");
+
+				}
+				
+			} else {
+				//4-2. 찜 안 된 상태 -> 찜 추가!!
+				if (wishlistservice.addWishlist(username, goodsNo)) {
+					response.put("status", "success");
+					response.put("message", "찜 목록에 추가됐습니다!!");
+					response.put("action", "added");
+					
+					 log.info(">>>>>> 컨트롤러: addWishlist 서비스 호출 성공! USER: {}, GOODS_NO: {}", username, goodsNo);
+				} else {
+					response.put("status", "error");
+					response.put("message", "찜 추가에 실패했습니다!!!");
+				}
+			}
+			
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		} catch (Exception e) {
+			log.error("찜 토글 중 서버 오류 발생!!!" + e.getMessage(), e);
+			response.put("status", "error");
+			response.put("message", "찜 처리 중 서버 오류가 발생했습니다!!");
+			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
+	@GetMapping("/wishlist")
+	public String getWishlistItem(
+			Model model,
+			@AuthenticationPrincipal Object principal,
+			RedirectAttributes ra
+			) {
+		log.info("getWishlistItem() 컨트롤러 호출!!!!");
+		
+		MemberVO authMember = null;
+        // Principal 객체에서 회원 정보 (MemberVO) 추출
+        if (principal instanceof CustomUser) {
+            authMember = ((CustomUser) principal).getMemberVO();
+        } else if (principal instanceof CustomOAuth2User) {
+            authMember = ((CustomOAuth2User) principal).getMemberVO();
+        }
+
+        // 1. 로그인 여부 확인 및 비로그인 시 처리
+        if (authMember == null || authMember.getMemUsername() == null || authMember.getMemUsername().isEmpty()) {
+            log.warn("getWishlistPage() - 비로그인 상태 접근 시도!");
+            // 로그인 페이지로 리다이렉트하면서 메시지 전달
+            ra.addFlashAttribute("message", "로그인이 필요한 페이지입니다.");
+            return "redirect:/login.html"; // 로그인 페이지 URL로 변경 (실제 프로젝트 경로 확인)
+        }
+
+        String username = authMember.getMemUsername();
+        model.addAttribute("isLoggedIn", true); // 로그인 상태임을 JSP에 전달
+
+        // 2. 찜 목록 데이터 조회
+        Collection<goodsVO> wishedGoodsList = new ArrayList<>(); // 초기화
+        try {
+            wishedGoodsList = wishlistservice.getWishlistForUser(username);
+            log.info("getWishlistPage() - 회원 {}의 찜 목록 상품 개수: {}", username, wishedGoodsList.size());
+        } catch (Exception e) {
+            log.error("getWishlistPage() - 찜 목록 조회 중 오류 발생: {}", e.getMessage(), e);
+            // 오류 발생 시 빈 리스트를 전달!
+            model.addAttribute("errorMessage", "찜 목록을 불러오는 중 오류가 발생했습니다.");
+        }
+        
+        // 3. 모델에 데이터 추가
+        model.addAttribute("wishedGoodsList", wishedGoodsList);
+
+        return "goods/wishlist";
+	}
+	
+	// '찜 상태 확인' 전용 GET 메소드
+	@GetMapping("/wishlist/status")
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> getWishlistStatus(
+	        // ★★★ int -> Integer, required = false 추가 ★★★
+	        @RequestParam(required = false) Integer goodsNo, 
+	        @AuthenticationPrincipal Object principal) {
+
+	    Map<String, Object> response = new HashMap<>();
+
+	    // ★★★ goodsNo가 null일 경우에 대한 처리 추가 ★★★
+	    // 상품번호가 아예 안 들어왔다면, 확인할 필요 없이 '찜 안함' 상태로 응답
+	    if (goodsNo == null) {
+	        response.put("isWished", false);
+	        return new ResponseEntity<>(response, HttpStatus.OK);
+	    }
+	    
+	    // 비로그인 사용자는 항상 '찜 안함' 상태
+	    if (principal == null) {
+	        response.put("isWished", false);
+	        return new ResponseEntity<>(response, HttpStatus.OK);
+	    }
+	    
+	    MemberVO authMember = null;
+	    if (principal instanceof CustomUser) {
+	        authMember = ((CustomUser) principal).getMemberVO();
+	    } else if (principal instanceof CustomOAuth2User) {
+	        authMember = ((CustomOAuth2User) principal).getMemberVO();
+	    }
+
+	    if (authMember == null || authMember.getMemUsername() == null) {
+	        response.put("isWished", false);
+	        return new ResponseEntity<>(response, HttpStatus.OK);
+	    }
+	    
+	    // 로그인 사용자일 경우, DB에서 실제 찜 상태를 확인
+	    String username = authMember.getMemUsername();
+	    
+	    // ★★★ 이 로그들 추가 ★★★
+	    log.info(">>>>>> getWishlistStatus: DB 조회 시작 (username: {}, goodsNo: {})", username, goodsNo);
+	    boolean isWished = wishlistservice.isGoodsWished(username, goodsNo);
+	    log.info(">>>>>> getWishlistStatus: DB 조회 결과 isWished = {}", isWished);
+	    
+	    response.put("isWished", isWished);
+	    return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+}

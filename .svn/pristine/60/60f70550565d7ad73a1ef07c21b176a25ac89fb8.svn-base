@@ -1,0 +1,21 @@
+package kr.or.ddit.ddtown.controller.admin.apt;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("/admin/community/apt")
+public class AdminAptController {
+	
+	@GetMapping("/list")
+	public String aptMain() {
+		return "admin/apt/aptList";
+	}
+	
+	@GetMapping("/detail")
+	public String aptDetail() {
+		return "admin/apt/aptDetail";
+	}
+	
+}

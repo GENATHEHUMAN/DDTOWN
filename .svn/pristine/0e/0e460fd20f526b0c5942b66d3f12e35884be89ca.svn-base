@@ -1,0 +1,105 @@
+package kr.or.ddit.ddtown.controller.community;
+
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.service.community.ICommunityMainPageService;
+import kr.or.ddit.ddtown.service.community.ICommunityProfileService;
+import kr.or.ddit.vo.community.CommunityPostVO;
+import kr.or.ddit.vo.community.CommunityProfileVO;
+import kr.or.ddit.vo.community.CommunityReplyVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RestController
+@RequestMapping("/api/community")
+public class CommunityAPIController {
+
+	@Autowired
+	private ICommunityProfileService profileService;
+
+	@Autowired
+	private ICommunityMainPageService postService;
+
+
+	@PostMapping("/joinapt")
+	public ResponseEntity<Object> joinApt(CommunityProfileVO profileVO){
+		log.info("profileVO : {}", profileVO);
+		int status = 0;
+		ResponseEntity<Object> entity = null;
+		//팔로우 테이블 추가
+		status = profileService.insertCommuProfile(profileVO);
+		if(status > 0) {
+			entity = new ResponseEntity<Object>(HttpStatus.OK);
+		}else {
+			entity = new ResponseEntity<Object>(HttpStatus.BAD_REQUEST);
+		}
+		// 커뮤니티 프로필 추가
+		return entity;
+	}
+
+	@PostMapping("/removeapt")
+	public ResponseEntity<Object> removeApt(@RequestBody CommunityProfileVO profileVO){
+		log.info("profileVO : {}", profileVO);
+		ResponseEntity<Object> entity = null;
+		// 프로필 del 처리
+		int status = profileService.deleteCommuProfile(profileVO);
+		if(status > 0) {
+			entity = new ResponseEntity<Object>(HttpStatus.OK);
+		}else {
+			entity = new ResponseEntity<Object>(HttpStatus.BAD_REQUEST);
+		}
+
+		return entity;
+	}
+
+	@GetMapping("/getPost")
+	public ResponseEntity<CommunityPostVO> getPost(CommunityPostVO cPostVO){
+		log.info("postVO : {}",cPostVO);
+		ResponseEntity<CommunityPostVO> entity = null;
+		CommunityPostVO postVO = postService.selectPost(cPostVO);
+		log.info("postVO : {}", postVO);
+		if(postVO != null) {
+			entity = new ResponseEntity<CommunityPostVO>(postVO,HttpStatus.OK);
+		}else {
+			entity = new ResponseEntity<CommunityPostVO>(HttpStatus.BAD_REQUEST);
+		}
+
+		return entity;
+	}
+
+	@PostMapping("/reply/insert")
+	public ResponseEntity<Object> insertReply(@RequestBody CommunityReplyVO replyVO){
+		log.info("replyVO : {}", replyVO);
+		Map<Object, Object> map = postService.replyInsert(replyVO);
+		ResponseEntity<Object> entity = null;
+		if(ServiceResult.OK.equals(map.get("result"))) {
+			entity = new ResponseEntity<Object>(map,HttpStatus.OK);
+		}else {
+			entity = new ResponseEntity<Object>(HttpStatus.BAD_REQUEST);
+		}
+		return entity;
+	}
+
+	@PostMapping("/reply/delete")
+	public ResponseEntity<Object> deleteReply(int comuReplyNo){
+		log.info("comuReplyNo : {}", comuReplyNo);
+		ResponseEntity<Object> entity = null;
+		ServiceResult result = postService.replyDelete(comuReplyNo);
+		if(ServiceResult.OK.equals(result)) {
+			entity = new ResponseEntity<Object>(result,HttpStatus.OK);
+		}else {
+			entity = new ResponseEntity<Object>(HttpStatus.BAD_REQUEST);
+		}
+		return entity;
+	}
+}

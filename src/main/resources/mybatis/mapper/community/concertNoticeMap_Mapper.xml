@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.community.IConcertNoticeMapMapper">
+ 	
+ 	<insert id="insertConcertNoticeMap" parameterType="kr.or.ddit.vo.community.ConcertNoticeMapVO">
+ 		INSERT INTO CONCERT_NOTICE_MAP(
+ 			ART_SCHEDULE_NO, COMU_NOTI_NO, COMU_NOTI_REG_DATE
+ 		) VALUES (
+ 			#{artScheduleNo}, #{comuNotiNo}, SYSDATE
+ 		)
+ 	</insert>
+ 	
+ 	<select id="selectNoticeByArtScheduleNo" resultType="kr.or.ddit.vo.community.CommunityNoticeVO">
+        SELECT n.*
+          FROM CONCERT_NOTICE_MAP m
+          JOIN COMMUNITY_NOTICE n ON m.COMU_NOTI_NO = n.COMU_NOTI_NO
+         WHERE m.ART_SCHEDULE_NO = #{artScheduleNo}
+    </select>
+
+    <select id="selectMapByArtScheduleNoAndNotiNo" resultType="kr.or.ddit.vo.community.ConcertNoticeMapVO">
+        SELECT *
+          FROM CONCERT_NOTICE_MAP
+         WHERE ART_SCHEDULE_NO = #{artScheduleNo}
+           AND COMU_NOTI_NO = #{comuNotiNo}
+    </select>
+ 	
+ 	<delete id="deleteConcertNoticeMap">
+ 		DELETE FROM CONCERT_NOTICE_MAP
+ 		 WHERE ART_SCHEDULE_NO = #{artScheduleNo}
+ 		   AND COMU_NOTI_NO = #{comuNotiNo}
+ 	</delete>
+ 	
+ </mapper>

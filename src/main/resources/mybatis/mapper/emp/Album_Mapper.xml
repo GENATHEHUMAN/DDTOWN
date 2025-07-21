@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="kr.or.ddit.ddtown.mapper.emp.artist.IAlbumMapper">
+	
+	<resultMap type="kr.or.ddit.vo.artist.AlbumVO" id="album">
+ 		<id property="albumNo" column="ALBUM_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="albumImg" column="ALBUM_IMG"/>
+		<result property="albumNm" column="ALBUM_NM"/>
+		<result property="albumDetail" column="ALBUM_DETAIL"/>
+		<result property="albumRegDate" column="ALBUM_REG_DATE"/>
+		
+		<collection property="albumSongs" resultMap="songs"></collection>
+ 	</resultMap>
+	 
+	 <resultMap type="kr.or.ddit.vo.artist.AlbumSongVO" id="songs">
+	 	<id property="songNo" column="SONG_NO"/>
+		<result property="albumNo" column="ALBUM_NO"/>
+		<result property="songNm" column="SONG_NM"/>
+		<result property="songTitleYn" column="SONG_TITLE_YN"/>
+	 </resultMap>
+	
+	<select id="getAllAlbums" resultMap="album">
+		SELECT
+			A.ALBUM_NO
+			, A.ART_GROUP_NO
+			, A.ALBUM_IMG
+			, A.ALBUM_NM
+			, A.ALBUM_DETAIL 
+			, A.ALBUM_REG_DATE
+
+			, B.SONG_NO
+			, B.ALBUM_NO
+			, B.SONG_NM
+			, B.SONG_TITLE_YN
+		FROM
+			ARTIST_ALBUM A
+		LEFT JOIN
+			ALBUM_SONG B ON A.ALBUM_NO = B.ALBUM_NO
+		ORDER BY
+			A.ALBUM_REG_DATE DESC
+	</select>
+	
+	<select id="getAlbumsWithoutGroup" resultMap="album">
+		SELECT
+			A.ALBUM_NO
+			, A.ART_GROUP_NO
+			, A.ALBUM_IMG
+			, A.ALBUM_NM
+			, A.ALBUM_DETAIL 
+			, A.ALBUM_REG_DATE
+
+			, B.SONG_NO
+			, B.ALBUM_NO
+			, B.SONG_NM
+			, B.SONG_TITLE_YN
+		FROM
+			ARTIST_ALBUM A
+		LEFT JOIN
+			ALBUM_SONG B ON A.ALBUM_NO = B.ALBUM_NO
+		WHERE A.ART_GROUP_NO IS NULL
+		ORDER BY
+			A.ALBUM_REG_DATE DESC
+	</select>
+</mapper>

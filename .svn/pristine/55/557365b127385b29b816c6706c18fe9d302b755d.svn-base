@@ -1,0 +1,18 @@
+package kr.or.ddit.vo.edms;
+
+import java.util.Date;
+
+import lombok.Data;
+
+@Data
+public class EdmsVO {
+	private int edmsNo;
+	private int formNo;
+	private String empUsername;
+	private int fileGroupNo;
+	private String edmsStatCode;
+	private String edmsTitle;
+	private String edmsContent;
+	private Date edmsReqDate;
+	private String edmsUrgenYn;
+}

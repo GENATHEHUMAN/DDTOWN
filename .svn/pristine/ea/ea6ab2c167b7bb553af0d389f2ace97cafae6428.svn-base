@@ -1,0 +1,40 @@
+package kr.or.ddit.ddtown.service.community.notice;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.ddtown.mapper.community.IConcertNoticeMapMapper;
+import kr.or.ddit.vo.community.CommunityNoticeVO;
+import kr.or.ddit.vo.community.ConcertNoticeMapVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class ConcertNoticeMapServiceImpl implements IConcertNoticeMapService {
+
+	@Autowired
+    private IConcertNoticeMapMapper mapper;
+
+    @Override
+    public int insertConcertNoticeMap(ConcertNoticeMapVO mapVO) {
+        return mapper.insertConcertNoticeMap(mapVO);
+    }
+
+    @Override
+    public int deleteConcertNoticeMap(int concertNo, int comuNotiNo) {
+        return mapper.deleteConcertNoticeMap(concertNo, comuNotiNo);
+    }
+
+    @Override
+    public List<CommunityNoticeVO> selectNoticeByConcertNo(int concertNo) {
+        return mapper.selectNoticeByConcertNo(concertNo);
+    }
+
+    @Override
+    public ConcertNoticeMapVO selectMapByConcertNoAndNotiNo(int concertNo, int comuNotiNo) {
+        return mapper.selectMapByConcertNoAndNotiNo(concertNo, comuNotiNo);
+    }
+
+}

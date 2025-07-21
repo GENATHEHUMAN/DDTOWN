@@ -1,0 +1,257 @@
+@charset "UTF-8";
+/* 스크롤바 숨김 (공통) */
+.post-pane-body::-webkit-scrollbar,
+.comment-pane-body::-webkit-scrollbar {
+    display: none; /* Chrome, Safari 등 */
+}
+.post-pane-body,
+.comment-pane-body {
+    scrollbar-width: none; /* Firefox */
+    -webkit-overflow-scrolling: touch; /* iOS 스크롤 부드럽게 */
+}
+
+/* 드롭다운 메뉴 z-index */
+.dropdown-menu {
+    z-index: 1100;
+    min-width: 5rem;
+}
+
+/* ========================================= */
+/* 2. 모달 컨테이너 및 기본 구조 */
+/* ========================================= */
+
+/* 전체 화면과 유사하지만, 약간의 여백을 둔 커스텀 크기 */
+.modal-dialog.modal-fullscreen-custom {
+    width: 100vw;
+    max-width: none;
+    height: 90vh; /* 모달 전체 높이 조절 */
+    position: relative;
+    display: flex;
+    align-items: center; /* 세로 중앙 정렬 */
+    justify-content: center; /* 가로 중앙 정렬 */
+}
+
+/* 외부 닫기 버튼 */
+.modal-dialog.modal-fullscreen-custom > .btn-close {
+    position: absolute;
+    top: -10px;
+    right: -25px;
+    z-index: 1070;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    padding: 0.5rem;
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* 모달 콘텐츠 */
+.modal-dialog.modal-fullscreen-custom .modal-content {
+    min-width: 90vw; /* 최소 너비 (필요시 유지) */
+    width: 95vw; /* 모달 전체 너비 조절 */
+    height: 100%; /* 부모(modal-dialog)의 높이를 꽉 채움 */
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 모달 바디 (Post Pane과 Comment Pane의 부모) */
+.modal-content > .modal-body {
+    flex-grow: 1; /* 남은 공간을 모두 차지 */
+    display: flex; /* 내부 패널들을 가로로 배치 */
+    height: 100%; /* 부모(modal-content)의 높이를 꽉 채움 */
+    padding: 0;
+}
+
+/* post-pane과 comment-pane을 감싸는 div (HTML의 d-flex h-100 div) */
+.modal-content > .modal-body > div {
+    flex-grow: 1;
+    display: flex;
+    /* justify-content: center; 가로 중앙 정렬이 필요 없으면 제거 */
+    height: 100%; /* 부모(modal-body)의 높이를 꽉 채움 */
+    padding: 0;
+}
+
+/* ========================================= */
+/* 3. Post Pane (왼쪽 본문 패널) */
+/* ========================================= */
+.post-pane {
+    flex: 7; /* 7:3 비율의 7 */
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Post Pane 헤더 */
+.post-pane-header {
+    flex-shrink: 0;
+    height: 60px; /* <--- 헤더 높이 고정 (수평 맞춤 핵심) */
+    display: flex;
+    justify-content: space-between; /* 사용자 정보와 드롭다운 분리 */
+    align-items: center; /* 세로 중앙 정렬 */
+    padding: 1rem;
+    border-bottom: 1px solid #efefef;
+}
+
+/* Post Pane 푸터 */
+.post-pane-footer {
+    flex-shrink: 0;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #efefef;
+}
+
+/* Post Pane 본문 (스크롤 영역) */
+.post-pane-body {
+    flex-grow: 1; /* 남은 공간 모두 차지 */
+    overflow-y: auto;
+}
+
+/* ========================================= */
+/* 4. Comment Pane (오른쪽 댓글 패널) */
+/* ========================================= */
+.comment-pane {
+    flex: 3; /* 7:3 비율의 3 */
+    background-color: #f7f7f7;
+    border-left: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Comment Pane 헤더 */
+.comment-pane-header {
+    flex-shrink: 0;
+    height: 60px; /* <--- 헤더 높이 고정 (수평 맞춤 핵심) */
+    background-color: #fff;
+    display: flex;
+    justify-content: center; /* 댓글 수 텍스트 중앙 정렬 */
+    align-items: center; /* 세로 중앙 정렬 */
+    padding: 1rem;
+    border-bottom: 1px solid #efefef;
+}
+
+/* Comment Pane 본문 (스크롤 영역) */
+.comment-pane-body {
+    flex-grow: 1; /* 남은 공간 모두 차지 */
+    overflow-y: auto;
+    padding: 0; /* 개별 comment-item에서 패딩 처리 */
+}
+
+/* Comment Pane 푸터 (댓글 입력 영역) */
+.comment-pane-footer {
+    flex-shrink: 0;
+    padding: 1rem;
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #efefef;
+}
+
+/* 댓글 입력 폼 (form#replyForm) */
+.comment-pane-footer form#replyForm {
+    flex-grow: 1; /* 부모 footer의 남은 공간을 모두 차지 */
+    display: flex; /* 내부 input-group을 위한 flex 컨테이너 */
+}
+
+/* 입력 그룹 (textarea + button) */
+.comment-pane-footer form#replyForm .input-group {
+    width: 100%; /* form 내에서 100% 너비 차지 */
+}
+
+/* 댓글 입력 textarea */
+.comment-pane-footer .input-group textarea {
+    flex-grow: 1; /* 가능한 많은 공간을 차지 */
+}
+
+/* 댓글 등록 버튼 */
+.comment-pane-footer .input-group #commentSubmitBtn {
+    flex-shrink: 0; /* 버튼이 줄어들지 않도록 */
+}
+
+/* ========================================= */
+/* 5. 개별 댓글 아이템 스타일 */
+/* ========================================= */
+.comment-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    padding: 0 1rem; /* 좌우 패딩 */
+}
+
+.comment-item .comment-avatar,
+.comment-item img { /* 이미지 관련 스타일 통합 */
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+/* 댓글 주 내용 래퍼 (닉네임+드롭다운, 댓글내용+날짜) */
+.comment-item .comment-main-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 댓글 헤더 (닉네임 + 드롭다운) */
+.comment-item .comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.comment-item .comment-header strong {
+    font-size: 0.95rem;
+    margin-right: 1rem;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+/* 댓글 내용과 날짜 텍스트 */
+.comment-item .comment-body-text p {
+    margin-bottom: 0.25rem;
+    color: #333;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.comment-item .comment-body-text small {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+/* ========================================= */
+/* 6. 좋아요 버튼 스타일 */
+/* ========================================= */
+.btn-like {
+    background-color: transparent;
+    border: none;
+    color: #555;
+    font-size: 1rem;
+    padding: 0.25rem 0.5rem;
+    transition: color 0.2s ease-in-out;
+}
+
+.btn-like:hover {
+    color: #000;
+}
+
+.btn-like.active {
+    color: #fd6083;
+    font-weight: bold;
+}
+
+.btn-like .bi-heart-fill {
+    color: #fd6083;
+}
+#scheduleModal .modal-content > .modal-body,
+#scheduleModal .modal-content > .modal-body > div,
+#commProfileModal .modal-content > .modal-body,
+#commProfileModal .modal-content > .modal-body > div {
+	display:block;
+}

@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.concert.schedule.IConcertScheduleMapper">
+ 
+ 	<select id="selectConcertCount" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+        SELECT COUNT(*)
+        FROM CONCERT c
+        LEFT JOIN ARTIST_GROUP ag ON c.art_group_no = ag.art_group_no
+        LEFT JOIN CONCERT_HALL ch ON c.concert_hall_no = ch.concert_hall_no 
+        <where>
+            <if test="searchWord != null and searchWord != ''">
+                <choose>
+                    <when test="searchType == 'concertNm'">
+                        AND c.concert_nm LIKE '%' || #{searchWord} || '%'
+                    </when>
+                    <when test="searchType == 'artistName'">
+                        AND ag.art_group_nm LIKE '%' || #{searchWord} || '%'
+                    </when>
+                    <when test="searchType == 'hallName'">
+                        AND ch.concert_hall_nm LIKE '%' || #{searchWord} || '%'
+                    </when>
+                    <otherwise>
+                        AND (
+                            c.concert_nm LIKE '%' || #{searchWord} || '%'
+                            OR ag.art_group_nm LIKE '%' || #{searchWord} || '%'
+                        )
+                    </otherwise>
+                </choose>
+            </if>
+        </where>
+    </select>
+ 
+ 	<select id="selectConcertList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="kr.or.ddit.vo.concert.ConcertVO">
+        SELECT b.*
+        FROM (
+            SELECT a.*, ROWNUM AS rnum
+            FROM (
+                SELECT
+                    c.concert_no, c.art_group_no, c.concert_hall_no, c.concert_cat_code,
+                    c.concert_reservation_stat_code, c.concert_stat_code,
+                    c.concert_online_yn, c.concert_nm, c.concert_date, c.concert_address,
+                    c.concert_start_date, c.concert_end_date, c.concert_running_time,
+                    c.concert_guide, c.file_group_no,
+                    ag.art_group_nm AS artGroupName,
+                    ch.concert_hall_nm AS concertHallName
+                FROM CONCERT c
+                LEFT JOIN ARTIST_GROUP ag ON c.art_group_no = ag.art_group_no
+                LEFT JOIN CONCERT_HALL ch ON c.concert_hall_no = ch.concert_hall_no
+                <where>
+                    <if test="searchWord != null and searchWord != ''">
+                        <choose>
+                            <when test="searchType == 'concertNm'"> AND c.concert_nm LIKE '%' || #{searchWord} || '%'
+                            </when>
+                            <when test="searchType == 'artistName'">
+                                AND ag.art_group_nm LIKE '%' || #{searchWord} || '%'
+                            </when>
+                            <when test="searchType == 'hallName'">
+                                AND ch.concert_hall_nm LIKE '%' || #{searchWord} || '%'
+                            </when>
+                            <otherwise> AND (
+                                    c.concert_nm LIKE '%' || #{searchWord} || '%'
+                                    OR ag.art_group_nm LIKE '%' || #{searchWord} || '%'
+                                )
+                            </otherwise>
+                        </choose>
+                    </if>
+                </where>
+                ORDER BY c.concert_no DESC ) a
+        ) b
+        <![CDATA[
+        WHERE rnum >= #{startRow} AND rnum <= #{endRow}
+        ]]>
+    </select>
+    
+    <insert id="insertSchedule" parameterType="kr.or.ddit.vo.concert.ConcertVO">
+    	<selectKey keyProperty="concertNo" resultType="int" order="BEFORE">
+    		SELECT CONCERT_SEQ.NEXTVAL FROM DUAL
+    	</selectKey>
+    	INSERT INTO CONCERT(
+    		concert_no, art_group_no, concert_hall_no, concert_cat_code, concert_reservation_stat_code, concert_stat_code,
+    		concert_online_yn, concert_nm, concert_date, concert_address, concert_start_date, concert_end_date,
+    		concert_running_time, concert_guide, file_group_no
+    	) VALUES (
+    		#{concertNo},
+            #{artGroupNo, jdbcType=NUMERIC},
+            #{concertHallNo, jdbcType=NUMERIC},
+            #{concertCatCode, jdbcType=VARCHAR},
+            #{concertReservationStatCode, jdbcType=VARCHAR},
+            #{concertStatCode, jdbcType=VARCHAR},
+            #{concertOnlineYn, jdbcType=CHAR},
+            #{concertNm, jdbcType=VARCHAR},
+            #{concertDate, jdbcType=DATE},
+            #{concertAddress, jdbcType=VARCHAR},
+            #{concertStartDate, jdbcType=TIMESTAMP},
+            #{concertEndDate, jdbcType=TIMESTAMP},
+            #{concertRunningTime, jdbcType=NUMERIC},
+            #{concertGuide, jdbcType=CLOB},
+            #{fileGroupNo, jdbcType=NUMERIC}
+    	)
+    </insert>
+    
+    <select id="selectSchedule" parameterType="int" resultType="kr.or.ddit.vo.concert.ConcertVO">
+    	SELECT 
+    		c.concert_no, c.art_group_no, c.concert_hall_no, c.concert_cat_code,
+            c.concert_reservation_stat_code, c.concert_stat_code,
+            c.concert_online_yn, c.concert_nm, c.concert_date, c.concert_address,
+            c.concert_start_date, c.concert_end_date, c.concert_running_time, c.concert_guide,
+            c.file_group_no, ag.art_group_nm AS artGroupName,
+            ch.concert_hall_nm AS concertHallName
+        FROM CONCERT c
+        LEFT JOIN ARTIST_GROUP ag ON c.art_group_no = ag.art_group_no
+        LEFT JOIN CONCERT_HALL ch ON c.concert_hall_no = ch.concert_hall_no
+        WHERE c.concert_no = #{concertNo}
+    </select>
+ 	
+ 	<update id="updateSchedule" parameterType="kr.or.ddit.vo.concert.ConcertVO">
+ 		UPDATE CONCERT
+ 		SET
+ 			art_group_no = #{artGroupNo, jdbcType=NUMERIC},
+            concert_hall_no = #{concertHallNo, jdbcType=NUMERIC},
+            concert_cat_code = #{concertCatCode, jdbcType=VARCHAR},
+            concert_reservation_stat_code = #{concertReservationStatCode, jdbcType=VARCHAR},
+            concert_stat_code = #{concertStatCode, jdbcType=VARCHAR},
+            concert_online_yn = #{concertOnlineYn, jdbcType=CHAR},
+            concert_nm = #{concertNm, jdbcType=VARCHAR},
+            concert_date = #{concertDate, jdbcType=DATE},
+            concert_address = #{concertAddress, jdbcType=VARCHAR},
+            concert_start_date = #{concertStartDate, jdbcType=TIMESTAMP},
+            concert_end_date = #{concertEndDate, jdbcType=TIMESTAMP},
+            concert_running_time = #{concertRunningTime, jdbcType=NUMERIC},
+            concert_guide = #{concertGuide, jdbcType=CLOB},
+            file_group_no = #{fileGroupNo, jdbcType=NUMERIC}
+        WHERE concert_no = #{concertNo}
+ 	</update>
+ 	
+ 	<delete id="deleteSchedule" parameterType="int">
+        DELETE FROM CONCERT 
+        WHERE concert_no = #{concertNo}
+    </delete>
+    
+    <select id="getConcertList" parameterType="kr.or.ddit.vo.concert.ConcertVO" resultType="kr.or.ddit.vo.concert.ConcertVO">
+    	SELECT
+    		c.CONCERT_NO
+		  , c.ART_GROUP_NO
+		  , c.CONCERT_HALL_NO
+		  , c.CONCERT_CAT_CODE
+		  , c.CONCERT_RESERVATION_STAT_CODE
+		  , c.CONCERT_STAT_CODE
+		  , c.CONCERT_ONLINE_YN
+		  , c.CONCERT_NM
+		  , c.CONCERT_DATE
+		  , c.CONCERT_ADDRESS
+		  , c.CONCERT_START_DATE
+		  , c.CONCERT_END_DATE
+		  , c.CONCERT_RUNNING_TIME
+		  , c.CONCERT_GUIDE
+		  , c.FILE_GROUP_NO
+		  , ag.ART_GROUP_NM as artGroupName
+		  , ch.CONCERT_HALL_NM as concertHallName
+        FROM
+        	CONCERT c
+        LEFT JOIN
+        	ARTIST_GROUP ag ON c.art_group_no = ag.art_group_no
+        LEFT JOIN 
+        	CONCERT_HALL ch ON c.concert_hall_no = ch.concert_hall_no
+       	ORDER BY
+       		c.CONCERT_RESERVATION_STAT_CODE
+    </select>
+    
+    <select id="getConcertSeatMap" parameterType="int" resultType="kr.or.ddit.vo.concert.ConcertSeatMapVO">
+    	SELECT
+    		c.CONCERT_NO
+    	  , sm.SEAT_SECTION
+    	  , sm.SEAT_GRADE_CODE
+    	  , sm.SEAT_PRICE
+    	FROM
+    		CONCERT c
+    	JOIN
+    		CONCERT_SEAT_MAP sm ON c.CONCERT_NO = sm.CONCERT_NO
+    	WHERE
+    		c.CONCERT_NO = sm.CONCERT_NO
+    	AND
+    		c.CONCERT_NO = #{concertNo}
+    </select>
+    
+    <select id="getAllTicketList" parameterType="int" resultType="kr.or.ddit.vo.concert.TicketVO">
+    	SELECT
+		    TICKET_NO
+		  , CONCERT_NO
+		  , SEAT_NO
+		  , CONCERT_HALL_NO
+		  , MEM_USERNAME
+		  , SEAT_GRADE_CODE
+		  , ORDER_DET_NO
+		  , TICKET_PRICE
+		  , TICKET_RESERVATION_DATE
+		  , TICKET_ONLINE_YN
+		  , GOODS_NO
+		FROM
+			TICKET
+		WHERE
+			CONCERT_NO = #{concertNo}
+    </select>
+    
+    <update id="updateTicketReservation" parameterType="kr.or.ddit.vo.concert.TicketVO">
+    	UPDATE ticket
+		SET
+		    mem_username = #{memUsername}
+		    , order_det_no = #{orderDetNo}
+		    , ticket_reservation_date = sysdate
+		WHERE
+		    ticket_no = #{ticketNo}
+    </update>
+    
+    <select id="selectConcertListWithStatusFilter" parameterType="map" resultType="kr.or.ddit.vo.concert.ConcertVO">
+    SELECT b.*
+    FROM (
+        SELECT a.*, ROWNUM AS rnum
+        FROM (
+            SELECT
+                c.concert_no, c.art_group_no, c.concert_hall_no, c.concert_cat_code,
+                c.concert_reservation_stat_code, c.concert_stat_code,
+                c.concert_online_yn, c.concert_nm, c.concert_date, c.concert_address,
+                c.concert_start_date, c.concert_end_date, c.concert_running_time,
+                c.concert_guide, c.file_group_no,
+                ag.art_group_nm AS artGroupName,
+                ch.concert_hall_nm AS concertHallName
+            FROM CONCERT c
+            LEFT JOIN ARTIST_GROUP ag ON c.art_group_no = ag.art_group_no
+            LEFT JOIN CONCERT_HALL ch ON c.concert_hall_no = ch.concert_hall_no
+            <where>
+                <if test="statusFilter != null and statusFilter != ''">
+                    c.concert_reservation_stat_code = #{statusFilter}
+                </if>
+                <if test="pagingVO.searchWord != null and pagingVO.searchWord != ''">
+                	<if test="statusFilter != null and statusFilter != ''">AND</if>
+                    <choose>
+                        <when test="pagingVO.searchType == 'concertNm'">
+                            c.concert_nm LIKE '%' || #{pagingVO.searchWord} || '%'
+                        </when>
+                        <when test="pagingVO.searchType == 'artistName'">
+                            ag.art_group_nm LIKE '%' || #{pagingVO.searchWord} || '%'
+                        </when>
+                        <when test="pagingVO.searchType == 'hallName'">
+                            ch.concert_hall_nm LIKE '%' || #{pagingVO.searchWord} || '%'
+                        </when>
+                        <otherwise>
+                            c.concert_nm LIKE '%' || #{pagingVO.searchWord} || '%'
+                            OR ag.art_group_nm LIKE '%' || #{pagingVO.searchWord} || '%'
+                        </otherwise>
+                    </choose>
+                </if>
+            </where>
+            ORDER BY c.concert_no DESC
+        ) a
+    ) b
+    <![CDATA[
+    WHERE rnum >= #{pagingVO.startRow} AND rnum <= #{pagingVO.endRow}
+    ]]>
+</select>
+    
+    <select id="selectConcertCountWithStatusFilter" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM CONCERT c
+        LEFT JOIN ARTIST_GROUP ag ON c.art_group_no = ag.art_group_no
+        LEFT JOIN CONCERT_HALL ch ON c.concert_hall_no = ch.concert_hall_no 
+        <where>
+            <if test="statusFilter != null and statusFilter != ''">
+                AND c.concert_reservation_stat_code = #{statusFilter}
+            </if>
+            <if test="pagingVO.searchWord != null and pagingVO.searchWord != ''">
+                <choose>
+                    <when test="pagingVO.searchType == 'concertNm'">
+                        AND c.concert_nm LIKE '%' || #{pagingVO.searchWord} || '%'
+                    </when>
+                    <when test="pagingVO.searchType == 'artistName'">
+                        AND ag.art_group_nm LIKE '%' || #{pagingVO.searchWord} || '%'
+                    </when>
+                    <when test="pagingVO.searchType == 'hallName'">
+                        AND ch.concert_hall_nm LIKE '%' || #{pagingVO.searchWord} || '%'
+                    </when>
+                    <otherwise>
+                        AND (
+                            c.concert_nm LIKE '%' || #{pagingVO.searchWord} || '%'
+                            OR ag.art_group_nm LIKE '%' || #{pagingVO.searchWord} || '%'
+                        )
+                    </otherwise>
+                </choose>
+            </if>
+        </where>
+    </select>
+    
+    <select id="selectConcertCountsByStatus" resultType="map">
+	    SELECT UPPER(concert_reservation_stat_code) AS status, COUNT(*) AS count
+	     FROM CONCERT
+	    WHERE concert_reservation_stat_code IS NOT NULL
+	    GROUP BY UPPER(concert_reservation_stat_code)
+	</select>
+	
+	<select id="selectTicketsByConcertNo" parameterType="int" resultType="map">
+		SELECT
+        ticket_no,
+        concert_no,
+        seat_no,
+        concert_hall_no,
+        mem_username,
+        seat_grade_code,
+        order_det_no,
+        ticket_price,
+        ticket_reservation_date,
+        ticket_online_yn,
+        goods_no
+    FROM
+        ticket
+    WHERE
+        concert_no = #{concertNo}
+        AND mem_username IS NOT NULL
+        AND order_det_no IS NOT NULL
+	</select>
+	
+	<select id="selectTotalSeatsByConcertNo" resultType="java.lang.Integer" parameterType="int">
+	    SELECT COUNT(*)
+	    FROM seat s
+	    JOIN concert c ON s.concert_hall_no = c.concert_hall_no
+	    WHERE c.concert_no = #{concertNo}
+	</select>
+	
+	<select id="selectTotalSalesByConcertNo" resultType="java.lang.Integer" parameterType="int">
+	    SELECT COALESCE(SUM(ticket_price), 0)
+	    FROM ticket
+	    WHERE concert_no = #{concertNo}
+	        AND mem_username IS NOT NULL
+	        AND order_det_no IS NOT NULL
+	</select>
+    
+    <select id="selectDailyTicketStats" resultType="map">
+        SELECT
+            TO_CHAR(TICKET_RESERVATION_DATE, 'YYYY-MM-DD') AS DAY,
+            COUNT(*) AS RESERVE_COUNT,
+            SUM(TICKET_PRICE) AS TOTAL_SALES
+        FROM TICKET
+        WHERE CONCERT_NO = #{concertNo}
+          AND TICKET_RESERVATION_DATE BETWEEN #{startDate} AND #{endDate}
+        GROUP BY TO_CHAR(TICKET_RESERVATION_DATE, 'YYYY-MM-DD')
+        ORDER BY DAY
+    </select>
+    
+    <select id="selectDailyTicketStatsByGradeSection" resultType="map">
+        SELECT
+            TO_CHAR(TICKET_RESERVATION_DATE, 'YYYY-MM-DD') AS DAY,
+            SEAT_GRADE_CODE,
+            (SELECT SEAT_SECTION FROM SEAT WHERE SEAT.SEAT_NO = TICKET.SEAT_NO) AS SEAT_SECTION,
+            COUNT(*) AS RESERVE_COUNT,
+            SUM(TICKET_PRICE) AS TOTAL_SALES
+        FROM TICKET
+        WHERE CONCERT_NO = #{concertNo}
+          AND TICKET_RESERVATION_DATE BETWEEN #{startDate} AND #{endDate}
+        GROUP BY TO_CHAR(TICKET_RESERVATION_DATE, 'YYYY-MM-DD'), SEAT_GRADE_CODE, (SELECT SEAT_SECTION FROM SEAT WHERE SEAT.SEAT_NO = TICKET.SEAT_NO)
+        ORDER BY DAY, SEAT_GRADE_CODE, SEAT_SECTION
+    </select>
+
+    <select id="selectDailyReservedSeats" resultType="map">
+        SELECT
+            d.day AS DAY,
+            NVL(SUM(t.cnt), 0) AS RESERVED_SEATS
+        FROM (
+            SELECT TO_CHAR(TO_DATE(#{startDate}, 'YYYY-MM-DD') + LEVEL - 1, 'YYYY-MM-DD') AS day
+            FROM dual
+            <![CDATA[
+            CONNECT BY LEVEL <= (TO_DATE(#{endDate}, 'YYYY-MM-DD') - TO_DATE(#{startDate}, 'YYYY-MM-DD') + 1)
+            ]]>
+        ) d
+        LEFT JOIN (
+            SELECT
+                TO_CHAR(TICKET_RESERVATION_DATE, 'YYYY-MM-DD') AS day,
+                COUNT(*) AS cnt
+            FROM TICKET
+            WHERE CONCERT_NO = #{concertNo}
+            GROUP BY TO_CHAR(TICKET_RESERVATION_DATE, 'YYYY-MM-DD')
+        ) t ON <![CDATA[d.day >= t.day]]>
+        GROUP BY d.day
+        ORDER BY d.day
+    </select>
+ </mapper>

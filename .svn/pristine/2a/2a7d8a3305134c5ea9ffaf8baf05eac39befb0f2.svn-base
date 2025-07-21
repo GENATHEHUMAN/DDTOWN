@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.stat.IStatMapper">
+
+	<sql id="userSignupData">
+		<if test="searchType == 'daily'">
+			select
+			    to_char(sevenday.dt,'YYYY/MM/DD') as tdate
+			    , nvl(a.count,0) as count
+			from
+			    (
+			        select
+			            trunc(sysdate) - level + 1 as dt
+			        from
+			            dual
+			        connect by
+			        <![CDATA[
+			            level <= 7
+			        ]]>
+			    ) sevenday
+			left join
+			        (
+			            select
+			                trunc(m.mem_reg_date) as sortdate
+			                ,count(m.mem_username) as count
+			            from
+			                people p
+			            inner join
+			                member m on (p.username = m.mem_username)
+			            where
+			                p.user_type_code != 'UTC002'
+			            group by
+			                trunc(m.mem_reg_date)
+			    ) a on (sevenday.dt = a.sortdate)
+			order by sevenday.dt
+		</if>
+		<if test="searchType == 'weekly'">
+			select
+			    to_char(four_week.dt,'YYYY/MM/DD') as tdate,
+			    nvl(a.count,0) as count
+			from
+			    (
+			        select
+			            trunc(sysdate,'IW') - (level-1) * 7 as dt
+			        from
+			            dual
+			        connect by
+			        <![CDATA[
+			            level <= 7
+			        ]]>
+			    ) four_week
+			left join
+			    (
+			    select
+			         trunc(m.mem_reg_date,'IW') as sortdate
+			         , count(m.mem_username) as count
+			    from
+			        people p
+			    inner join
+			        member m on (p.username = m.mem_username)
+			    where
+			        p.user_type_code != 'UTC002'
+			    group by trunc(mem_reg_date,'IW')
+			    )a on(four_week.dt = a.sortdate)
+			order by tdate
+		</if>
+		<if test="searchType=='monthly'">
+			select
+			    to_char(allMonth.dt,'YYYY"년"MM"월"') as tdate,
+			    nvl(a.count,0) as count
+			from
+			    (
+			        select
+			            trunc(add_months(sysdate,- (level-1)),'MM') as dt
+			        from
+			            dual
+			        connect by
+			        <![CDATA[
+			            level <= 7
+			        ]]>
+			    ) allMonth
+			left join
+			    (
+			    select
+			         trunc(m.mem_reg_date,'MM') as sortdate
+			         , count(m.mem_username) as count
+			    from
+			        people p
+			    inner join
+			        member m on (p.username = m.mem_username)
+			    where
+			        p.user_type_code != 'UTC002'
+			    group by trunc(mem_reg_date,'MM')
+			    )a on(allMonth.dt = a.sortdate)
+			order by tdate
+		</if>
+	</sql>
+
+	<sql id="mostBuyUserData">
+		<if test="searchType =='daily'">
+			select
+				  a.mem_username
+				, a.sortdate
+				, a.totalprice
+				, a.totalqty
+				, a.rank
+			from
+				(
+					SELECT
+					    p.peo_last_nm || p.peo_first_nm as mem_username
+					  , trunc(o.order_date) as sortdate
+					  , sum(o.order_total_price) as totalprice
+					  , count(od.order_det_qty) as totalqty
+					  , rank() over (order by sum(o.order_total_price) desc, count(od.order_det_qty) desc) as rank
+					FROM
+					    orders o
+					inner join
+					    order_detail od on (o.order_no = od.order_no)
+					inner join
+				    	people p on (o.mem_username = p.username)
+					where
+					    order_stat_code in ('OSC001','OSC003', 'OSC004', 'OSC005','OSC006')
+					and
+					    order_type_code = 'OTC002'
+					group by
+						trunc(o.order_date), p.peo_last_nm || p.peo_first_nm
+					having
+						trunc(o.order_date) = trunc(sysdate)
+					order by rank
+				) a
+			where
+			<![CDATA[
+				a.rank <= 5
+			]]>
+		</if>
+		<if test="searchType == 'weekly'">
+			select
+				  a.mem_username
+				, a.sortdate
+				, a.totalprice
+				, a.totalqty
+				, a.rank
+			from
+				(
+					SELECT
+				        p.peo_last_nm || p.peo_first_nm as mem_username
+				      , to_char(trunc(o.order_date,'IW'),'YYYY/MM/DD') as sortdate
+				      , sum(o.order_total_price) as totalprice
+				      , count(od.order_det_qty) as totalqty
+				      , rank() over (order by count(od.order_det_qty) desc) as rank
+				    FROM
+				        orders o
+				    inner join
+				        order_detail od on (o.order_no = od.order_no)
+				    inner join
+				    	people p on (o.mem_username = p.username)
+				    where
+				        order_stat_code in ('OSC001','OSC003', 'OSC004', 'OSC005','OSC006')
+				    and
+				        order_type_code = 'OTC002'
+				    group by trunc(o.order_date,'IW'), p.peo_last_nm || p.peo_first_nm
+				    having trunc(o.order_date,'IW') = trunc(sysdate,'IW')
+				    order by rank
+			    ) a
+			where
+			<![CDATA[
+				a.rank <= 5
+			]]>
+		</if>
+		<if test="searchType == 'monthly'">
+			select
+				  a.mem_username
+				, a.sortdate
+				, a.totalprice
+				, a.totalqty
+				, a.rank
+			from
+				(
+					SELECT
+				        p.peo_last_nm || p.peo_first_nm as mem_username
+				      , to_char(trunc(o.order_date,'MM'),'YYYY"년"MM"월"') as sortdate
+				      , sum(o.order_total_price) as totalprice
+				      , count(od.order_det_qty) as totalqty
+				      , rank() over (order by count(od.order_det_qty) desc) as rank
+				    FROM
+				        orders o
+				    inner join
+				        order_detail od on (o.order_no = od.order_no)
+				    inner join
+				    	people p on (o.mem_username = p.username)
+				    where
+				        order_stat_code in ('OSC001','OSC003', 'OSC004', 'OSC005','OSC006')
+				    and
+				        order_type_code = 'OTC002'
+				    group by trunc(o.order_date,'MM'), p.peo_last_nm || p.peo_first_nm
+				    having trunc(o.order_date,'MM') = trunc(sysdate,'MM')
+				    order by rank
+			    ) a
+			where
+			<![CDATA[
+				a.rank <= 5
+			]]>
+		</if>
+	</sql>
+
+	<sql id="revenueBySector">
+		<if test="searchType == 'all'">
+			select
+			    (select '전체' from dual) as name
+			    , a.totalprice as totalprice
+			from(
+				SELECT
+				  sum(order_total_price) as totalprice
+				FROM
+				    orders
+				where
+				    order_stat_code in ('OSC001','OSC003', 'OSC004', 'OSC005','OSC006')
+			)a
+			union
+			SELECT
+			    (select substr(description,1, instr(description,' ',1)-1) from common_detail_code cdc where cdc.comm_code_det_no = order_type_code) as nm
+			  , sum(order_total_price) as membershipprice
+			FROM
+			    orders
+			where
+			    order_stat_code in ('OSC001','OSC003', 'OSC004', 'OSC005','OSC006')
+			group by order_type_code
+		</if>
+		<if test="searchType == 'goodsshop'">
+			SELECT
+			     nvl(sum(go.goods_opt_price * od.order_det_qty),0) as totalprice
+			   , ag.art_group_nm as name
+			FROM
+			    artist_group ag
+			left join
+			    goods g on (ag.art_group_no = g.art_group_no)
+			left join
+			    order_detail od on (g.goods_no = od.goods_no)
+			left join
+			    goods_option go on (od.goods_opt_no = go.goods_opt_no)
+			left join
+			    orders o on (od.order_no = o.order_no
+			        and order_type_code = 'OTC002'
+			        and order_stat_code in ('OSC001','OSC003','OSC004','OSC005','OSC006')
+			    )
+			group by
+			    ag.art_group_nm
+			order by
+				ag.art_group_nm
+		</if>
+		<if test="searchType == 'membership'">
+			select
+			      ag.art_group_nm as name
+			    , nvl(sum(o.order_total_price),0) as totalprice
+			from
+			    artist_group ag
+			left join
+			    goods g on(ag.art_group_no = g.art_group_no)
+			left join
+			    order_detail od on(g.goods_no = od.goods_no)
+			left join
+			    orders o on (od.order_no = o.order_no
+			            and
+			                order_type_code = 'OTC001'
+			            and
+			                order_stat_code in ('OSC001','OSC003','OSC004','OSC005','OSC006')
+			    )
+			group by
+				ag.art_group_nm
+			order by
+				ag.art_group_nm
+		</if>
+		<if test="searchType == 'concert'">
+			select
+			      ag.art_group_nm as name
+			    , nvl(sum(o.order_total_price),0) as totalprice
+			from
+			    artist_group ag
+			left join
+			    goods g on(ag.art_group_no = g.art_group_no)
+			left join
+			    order_detail od on(g.goods_no = od.goods_no)
+			left join
+			    orders o on (od.order_no = o.order_no
+			            and
+			                order_type_code = 'OTC003'
+			            and
+			                order_stat_code in ('OSC001','OSC003','OSC004','OSC005','OSC006')
+			    )
+			group by
+				ag.art_group_nm
+			order by
+				ag.art_group_nm
+		</if>
+	</sql>
+
+
+ 	<select id="getUserSignupData" parameterType="string" resultType="map">
+		<include refid="userSignupData"/>
+ 	</select>
+
+ 	<select id="getMostBuyUserData" parameterType="string" resultType="map">
+		<include refid="mostBuyUserData"/>
+ 	</select>
+
+ 	<select id="getRevenueBySector" parameterType="string" resultType="map">
+ 		<include refid="revenueBySector"></include>
+ 	</select>
+ </mapper>

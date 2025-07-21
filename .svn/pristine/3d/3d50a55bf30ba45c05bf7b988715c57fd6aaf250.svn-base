@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.audition.AuditionMapper">
+ 
+ 	<sql id="auditionSearch">
+		<if test="searchType != null and searchType != '' and searchType != 'all'">
+        	AND AUDI_STAT_CODE = #{searchType}
+	    </if>
+	    <if test="searchWord != null and searchWord != ''">
+	        AND AUDI_TITLE LIKE '%' || #{searchWord} || '%'
+	    </if>
+	</sql>
+ 
+ 	<resultMap type="kr.or.ddit.vo.corporate.audition.AuditionVO" id="auditionMap">
+ 		<id property="audiNo" column="audi_no"/>
+ 		<result property="audiNo" column="audi_no"/>
+ 		<result property="empUsername" column="emp_username"/>
+ 		<result property="audiTypeCode" column="audi_type_code"/>
+ 		<result property="audiStatCode" column="audi_stat_code"/>
+ 		<result property="fileGroupNo" column="file_group_no"/>
+ 		<result property="audiTitle" column="audi_title"/>
+ 		<result property="audiContent" column="audi_content"/>
+ 		<result property="audiStartDate" column="audi_start_date"/>
+ 		<result property="audiEndDate" column="audi_end_date"/>
+ 		<result property="audiRegDate" column="audi_reg_date"/>
+ 		<result property="audiModDate" column="audi_mod_date"/>
+ 		<collection property="fileList" ofType="kr.or.ddit.vo.file.AttachmentFileDetailVO" resultMap="FileDetailMap"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.file.AttachmentFileDetailVO" id="FileDetailMap">
+		<result property="attachDetailNo" column="ATTACH_DETAIL_NO"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalNm" column="FILE_ORIGINAL_NM"/>
+		<result property="fileSaveNm" column="FILE_SAVE_NM"/>
+		<result property="fileSavepath" column="FILE_SAVEPATH"/>
+		<result property="fileUseYn" column="FILE_USE_YN"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMimeType" column="FILE_MIME_TYPE"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+	</resultMap>
+ 	<!-- 목록페이지 -->
+ 	<select id="auditionList" resultType="kr.or.ddit.vo.corporate.audition.AuditionVO">
+ 		SELECT A.*
+        FROM (
+            SELECT
+                ROWNUM AS RNUM,
+                B.*
+            FROM (
+                SELECT
+                    AUDI_NO,
+                    EMP_USERNAME,
+                    AUDI_TYPE_CODE,
+                    AUDI_STAT_CODE,
+                    FILE_GROUP_NO,
+                    AUDI_TITLE,
+                    AUDI_CONTENT,
+                    AUDI_START_DATE,
+                    AUDI_END_DATE,
+                    AUDI_REG_DATE,
+                    AUDI_MOD_DATE
+                FROM AUDITION
+                WHERE 1=1
+                <include refid="auditionSearch"/>
+                ORDER BY 
+					CASE AUDI_STAT_CODE
+						WHEN 'ADSC002' THEN 1 
+						WHEN 'ADSC001' THEN 2
+						WHEN 'ADSC003' THEN 3
+					END,
+					AUDI_END_DATE  DESC
+				) B
+	        ) A
+	    WHERE A.RNUM BETWEEN #{startRow} AND #{endRow}
+    </select>
+ <!--   오디션 목록 수  -->
+ 	<select id="selectAuditionCount" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+ 		select count(AUDI_NO)
+ 		  from AUDITION
+ 		 where 1=1
+ 		<include refid="auditionSearch"/>
+ 	</select>
+ 	<!-- 상세보기 -->
+ 	<select id="detailAudition" parameterType="int" resultMap="auditionMap">
+ 		select a.AUDI_NO
+ 			 , a.EMP_USERNAME
+ 			 , a.AUDI_TYPE_CODE
+ 			 , a.AUDI_STAT_CODE
+ 			 , a.FILE_GROUP_NO
+ 			 , a.AUDI_TITLE
+ 			 , a.AUDI_CONTENT
+ 			 , a.AUDI_START_DATE
+ 			 , a.AUDI_END_DATE
+ 			 , a.AUDI_REG_DATE
+ 			 , a.AUDI_MOD_DATE
+ 			 , F.FILE_ORIGINAL_NM
+ 			 , F.ATTACH_DETAIL_NO
+			 , F.FILE_GROUP_NO
+			 , F.FILE_ORIGINAL_NM
+			 , F.FILE_SAVE_NM
+			 , F.FILE_SAVEPATH
+			 , F.FILE_EXT
+			 , F.FILE_MIME_TYPE
+			 , F.FILE_FANCYSIZE
+			 , F.FILE_SAVE_DATE
+ 		from AUDITION a
+ 		left join
+        	   ATTACHMENT_FILE_DETAIL F ON A.FILE_GROUP_NO = F.FILE_GROUP_NO
+ 		where AUDI_NO = #{audiNo}
+ 		order by
+        	A.AUDI_NO, F.FILE_SAVE_DATE ASC
+ 	</select>
+ 		
+ 	<!-- 
+	APSC001	지원 완료
+	APSC002	합격
+	APSC003	불합격 	
+ 	 -->
+ 	<!-- 지원하기 -->
+ 	<insert id="signup" parameterType="kr.or.ddit.vo.corporate.audition.AuditionUserVO">
+
+ 		<selectKey keyProperty="appNo" resultType="int" order="BEFORE">
+            SELECT NVL(MAX(APP_NO),0)+1 FROM AUDITION_APPLICATION
+        </selectKey>
+        insert into AUDITION_APPLICATION(
+        	APP_NO, AUDI_NO, APP_STAT_CODE, FILE_GROUP_NO, APPLICANT_NO, APPLICANT_NM, APPLICANT_BIRTH, 
+        	APPLICANT_GENDER, APPLICANT_PHONE, APPLICANT_EMAIL, APP_COVER_LETTER, APP_REG_DATE, APPLICANT_AGREE
+        )values(
+        	#{appNo}, #{audiNo}, 'APSC001', #{fileGroupNo}
+        	, (SELECT #{audiTypeCode} || '_' || TRIM(TO_CHAR((COUNT(*)+1),'000')) FROM AUDITION_APPLICATION WHERE AUDI_NO = #{audiNo})
+        	, #{applicantNm}, #{applicantBirth}, 
+        	#{applicantGender}, #{applicantPhone}, #{applicantEmail}, #{appCoverLetter}, SYSDATE, #{applicantAgree}
+        )
+ 	</insert>
+ 
+ <!--  이메일 중복 확인
+  	<select id="emailCheck" parameterType="kr.or.ddit.vo.corporate.audition.AuditionUserVO" resultType="kr.or.ddit.vo.corporate.audition.AuditionUserVO">
+ 		select *
+ 		from audition_application
+ 		where audi_no = #{audiNo} and applicant_email = #{applicantEmail} 
+ 	</select> -->
+ 
+ </mapper>

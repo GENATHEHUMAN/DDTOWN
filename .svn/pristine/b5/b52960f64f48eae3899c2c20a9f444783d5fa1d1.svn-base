@@ -1,0 +1,261 @@
+/* admin_items_detail.css */
+
+/* --- 전체 컨테이너 및 섹션 스타일 --- */
+.ea-section {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+.item-detail-container {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.item-detail-header {
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.item-detail-header h2 {
+    font-size: 2.2em;
+    color: #333;
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+
+/* --- 이미지 섹션 스타일 --- */
+.item-images {
+    margin-bottom: 30px;
+    background-color: #fcfcfc;
+    border: 1px solid #e9e9e9;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.item-images h3 {
+    font-size: 1.5em;
+    color: #444;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.item-images h3 .fas {
+    margin-right: 10px;
+    color: #007bff; /* 아이콘 색상 */
+}
+
+.main-image-display {
+    max-width: 100%;
+    height: auto;
+    max-height: 400px; /* 메인 이미지 최대 높이 제한 */
+    object-fit: contain; /* 이미지가 잘리지 않고 전체 보이도록 */
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 10px;
+}
+
+.additional-images-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px; /* 이미지 간 간격 */
+    margin-top: 15px;
+    justify-content: center; /* 이미지를 중앙 정렬 */
+}
+
+.additional-images-display img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover; /* 이미지가 영역을 채우도록 하되 비율 유지 */
+    border-radius: 6px;
+    border: 1px solid #eee;
+    padding: 5px;
+    background-color: #fff;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease-in-out;
+}
+
+.additional-images-display img:hover {
+    transform: translateY(-3px); /* 호버 시 약간 위로 올라오는 효과 */
+}
+
+.additional-images-display p {
+    color: #777;
+    font-style: italic;
+    text-align: center;
+    width: 100%;
+    padding: 10px;
+}
+
+/* --- 정보 그리드 스타일 --- */
+.item-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 반응형 그리드 */
+    gap: 25px;
+    margin-bottom: 30px;
+    padding: 10px 0;
+}
+
+.item-info-section {
+    padding: 15px;
+    background-color: #fefefe;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+
+.item-info-section dt {
+    font-weight: 700;
+    color: #555;
+    margin-bottom: 8px;
+    font-size: 1em;
+    border-bottom: 1px dashed #eee;
+    padding-bottom: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.item-info-section dt::before {
+    content: "•"; /* 리스트 마커처럼 사용 */
+    color: #007bff;
+    margin-right: 8px;
+    font-size: 1.2em;
+    line-height: 1;
+}
+
+.item-info-section dd {
+    margin-left: 0;
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 1.1em;
+    line-height: 1.6;
+    padding-left: 18px; /* 마커 때문에 들여쓰기 */
+}
+
+/* 마지막 dd 요소의 마진 조정 */
+.item-info-section dd:last-child {
+    margin-bottom: 0;
+}
+
+/* 상품 설명 스타일 */
+#itemDescription {
+    padding: 15px;
+    background-color: #fcfcfc;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    min-height: 150px;
+    line-height: 1.8;
+    color: #444;
+}
+
+/* --- 상태 뱃지 스타일 (현재 JSP의 class명에 맞춰 세분화) --- */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px; /* 더 둥글게 */
+    font-size: 0.85em;
+    font-weight: 600;
+    color: white;
+    display: inline-block;
+    min-width: 70px; /* 좀 더 여유 있게 */
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease-in-out;
+}
+
+.status-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.status-selling { background-color: #28a745; } /* 판매중 - 더 진한 초록 */
+.status-soldout { background-color: #dc3545; } /* 품절 - 더 진한 빨강 */
+.status-hidden { background-color: #6c7784; } /* 숨김 - 좀 더 어두운 회색 */
+
+/* 재고 0일 때 품절 표시 */
+.item-info-section dd .stock-soldout {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* --- 액션 버튼 스타일 --- */
+.item-actions {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+    text-align: right;
+    display: flex; /* 버튼 정렬을 위해 flexbox 사용 */
+    justify-content: flex-end; /* 오른쪽 정렬 */
+    gap: 10px; /* 버튼 사이 간격 */
+}
+
+.ea-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex; /* 아이콘과 텍스트 정렬 */
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.ea-btn .fas {
+    margin-right: 8px;
+}
+
+.ea-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* 버튼 색상 정의 */
+.ea-btn.primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.ea-btn.primary:hover {
+    background-color: #0056b3;
+}
+
+.ea-btn.danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.ea-btn.danger:hover {
+    background-color: #bd2130;
+}
+
+.ea-btn:not(.primary):not(.danger) {
+    background-color: #f0f0f0;
+    color: #555;
+    border: 1px solid #ddd;
+}
+
+.ea-btn:not(.primary):not(.danger):hover {
+    background-color: #e2e6ea;
+    border-color: #c4c8cb;
+    color: #333;
+}
+
+/* 수평선 스타일 */
+hr {
+    border: 0;
+    height: 1px;
+    background: #f0f0f0;
+    margin: 30px 0;
+}

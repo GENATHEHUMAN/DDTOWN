@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.orders.ICancelMapper">
+
+    <resultMap id="cancelListMap" type="kr.or.ddit.vo.order.OrderCancelVO">
+        <id property="cancelNo" column="CANCEL_NO" />
+        <result property="orderNo" column="ORDER_NO" />
+        <result property="goodsNo" column="GOODS_NO" />
+        <result property="cancelType" column="CANCEL_TYPE" />
+        <result property="cancelReasonCode" column="CANCEL_REASON_CODE" />
+        <result property="cancelStatCode" column="CANCEL_STAT_CODE" />
+        <result property="empUsername" column="EMP_USERNAME" />
+        <result property="memUsername" column="MEM_USERNAME" />
+        <result property="cancelReasonDetail" column="CANCEL_REASON_DETAIL" />
+        <result property="cancelItemQty" column="CANCEL_ITEM_QTY" />
+        <result property="cancelReqPrice" column="CANCEL_REQ_PRICE" />
+        <result property="cancelResPrice" column="CANCEL_RES_PRICE" />
+        <result property="cancelReqDate" column="CANCEL_REQ_DATE" />
+        <result property="cancelResDate" column="CANCEL_RES_DATE" />
+        <result property="cancelAccountNo" column="CANCEL_ACCOUNT_NO" />
+        <result property="cancelAccountHol" column="CANCEL_ACCOUNT_HOL" />
+
+        <result property="goodsNm" column="GOODS_NM" />
+        <result property="cancelTypeName" column="CANCEL_TYPE_NAME" />
+        <result property="cancelStatName" column="CANCEL_STAT_NAME" />
+        <result property="otherGoodsCount" column="OTHER_GOODS_COUNT" /> </resultMap>
+	
+	<insert id="insertCancel" parameterType="kr.or.ddit.vo.order.OrderCancelVO">
+	    INSERT INTO ORDER_CANCEL (
+	        CANCEL_NO,
+	        ORDER_NO,
+	        GOODS_NO,
+	        CANCEL_TYPE,
+	        CANCEL_REASON_CODE,
+	        CANCEL_STAT_CODE,
+	        EMP_USERNAME,
+	        MEM_USERNAME,
+	        CANCEL_REASON_DETAIL,
+	        CANCEL_ITEM_QTY,
+	        CANCEL_REQ_PRICE,
+	        CANCEL_REQ_DATE,
+	        <trim suffixOverrides=",">
+	            <if test="cancelResPrice != null">CANCEL_RES_PRICE,</if>
+	            <if test="cancelResDate != null">CANCEL_RES_DATE,</if>
+	            <if test="cancelAccountNo != null and cancelAccountNo != ''">CANCEL_ACCOUNT_NO,</if>
+	            <if test="cancelAccountHol != null and cancelAccountHol != ''">CANCEL_ACCOUNT_HOL,</if>
+	        </trim>
+	    ) VALUES (
+	        ORDER_CANCEL_SEQ.NEXTVAL,
+	        #{orderNo},
+	        #{goodsNo},
+	        #{cancelType},
+	        #{cancelReasonCode},
+	        #{cancelStatCode},
+	        #{empUsername},
+	        #{memUsername},
+	        #{cancelReasonDetail},
+	        #{cancelItemQty},
+	        #{cancelReqPrice},
+	        SYSDATE,
+	        <trim suffixOverrides=",">
+	            <if test="cancelResPrice != null">#{cancelResPrice},</if>
+	            <if test="cancelResDate != null">SYSDATE,</if>
+	            <if test="cancelAccountNo != null and cancelAccountNo != ''">#{cancelAccountNo},</if>
+	            <if test="cancelAccountHol != null and cancelAccountHol != ''">#{cancelAccountHol},</if>
+	        </trim>
+	    )
+	</insert>
+    
+    <update id="updateCancelStatus" parameterType="kr.or.ddit.vo.order.OrderCancelVO">
+        UPDATE ORDER_CANCEL
+        SET
+            CANCEL_STAT_CODE = #{cancelStatCode}
+            <if test="empUsername != null and empUsername != ''">, EMP_USERNAME = #{empUsername}</if>
+            <if test="cancelReasonDetail != null and cancelReasonDetail != ''">, CANCEL_REASON_DETAIL = #{cancelReasonDetail}</if>
+            <if test="cancelResPrice != null">, CANCEL_RES_PRICE = #{cancelResPrice}</if>
+            <if test="cancelResDate != null">, CANCEL_RES_DATE = SYSDATE</if>
+            <if test="cancelAccountNo != null and cancelAccountNo != ''">, CANCEL_ACCOUNT_NO = #{cancelAccountNo}</if>
+            <if test="cancelAccountHol != null and cancelAccountHol != ''">, CANCEL_ACCOUNT_HOL = #{cancelAccountHol}</if>
+        WHERE
+            CANCEL_NO = #{cancelNo}
+    </update>
+    
+    <select id="selectFilteredCancelRefunds" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultMap="cancelListMap">
+	    SELECT
+	        A.*
+	    FROM (
+	        SELECT
+	            ROWNUM AS RNUM,
+	            OC.CANCEL_NO,
+	            OC.ORDER_NO,
+	            OC.MEM_USERNAME,
+	            -- 해당 ORDER_NO의 주문 상세 중 첫 번째 상품의 이름 가져오기
+	            (
+	                SELECT G_DETAIL.GOODS_NM
+	                FROM ORDER_DETAIL OD_FIRST
+	                JOIN GOODS G_DETAIL ON OD_FIRST.GOODS_NO = G_DETAIL.GOODS_NO
+	                WHERE OD_FIRST.ORDER_NO = OC.ORDER_NO
+	                ORDER BY OD_FIRST.ORDER_DET_NO ASC
+	                FETCH FIRST 1 ROWS ONLY
+	            ) AS GOODS_NM,
+	
+	            -- 해당 ORDER_NO의 총 고유 상품 개수에서 1(대표 상품)을 뺀 나머지 개수 계산
+	            (
+	                SELECT COUNT(DISTINCT OD_COUNT.GOODS_NO) - 1
+	                FROM ORDER_DETAIL OD_COUNT
+	                WHERE OD_COUNT.ORDER_NO = OC.ORDER_NO
+	            ) AS OTHER_GOODS_COUNT,
+	
+	            OC.CANCEL_TYPE,
+	            CDC_TYPE.DESCRIPTION AS CANCEL_TYPE_NAME,
+	            OC.CANCEL_STAT_CODE,
+	            CDC_STAT.DESCRIPTION AS CANCEL_STAT_NAME,
+	            OC.CANCEL_REQ_DATE,
+	            OC.CANCEL_RES_DATE
+	        FROM ORDER_CANCEL OC
+	        LEFT JOIN COMMON_DETAIL_CODE CDC_TYPE ON OC.CANCEL_TYPE = CDC_TYPE.COMM_CODE_DET_NO AND CDC_TYPE.COMM_CODE_GRP_NO = 'CANCEL_TYPE'
+	        LEFT JOIN COMMON_DETAIL_CODE CDC_STAT ON OC.CANCEL_STAT_CODE = CDC_STAT.COMM_CODE_DET_NO AND CDC_STAT.COMM_CODE_GRP_NO = 'CANCEL_STAT_CODE'
+	        WHERE 1=1
+	        <if test="searchMap != null">
+	            <if test="searchMap.searchKeyword != null and searchMap.searchKeyword != ''">
+	                AND (
+	                       OC.MEM_USERNAME LIKE '%' || #{searchMap.searchKeyword} || '%'
+	                    OR TO_CHAR(OC.ORDER_NO) LIKE '%' || #{searchMap.searchKeyword} || '%'
+	                    OR EXISTS (
+	                        SELECT 1
+	                        FROM ORDER_DETAIL OD_SEARCH
+	                        JOIN GOODS G_SEARCH ON OD_SEARCH.GOODS_NO = G_SEARCH.GOODS_NO
+	                        WHERE OD_SEARCH.ORDER_NO = OC.ORDER_NO AND G_SEARCH.GOODS_NM LIKE '%' || #{searchMap.searchKeyword} || '%'
+	                    )
+	                )
+	            </if>
+	            <if test="searchMap.statusCode != null and searchMap.statusCode != ''">
+	                AND OC.CANCEL_STAT_CODE = #{searchMap.statusCode}
+	            </if>
+	        </if>
+	        ORDER BY OC.CANCEL_REQ_DATE DESC
+	    ) A
+	    <![CDATA[
+	    WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	    ]]>
+	</select>
+	    
+    <select id="selectTotalCancelRefundCount" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+	    SELECT COUNT(*)
+	    FROM ORDER_CANCEL OC
+	    WHERE 1=1
+	    <if test="searchMap != null">
+	        <if test="searchMap.searchKeyword != null and searchMap.searchKeyword != ''">
+	            AND (
+	                   OC.MEM_USERNAME LIKE '%' || #{searchMap.searchKeyword} || '%'
+	                OR TO_CHAR(OC.ORDER_NO) LIKE '%' || #{searchMap.searchKeyword} || '%'
+	                OR EXISTS (
+	                    SELECT 1
+	                    FROM ORDER_DETAIL OD_SEARCH
+	                    JOIN GOODS G_SEARCH ON OD_SEARCH.GOODS_NO = G_SEARCH.GOODS_NO
+	                    WHERE OD_SEARCH.ORDER_NO = OC.ORDER_NO AND G_SEARCH.GOODS_NM LIKE '%' || #{searchMap.searchKeyword} || '%'
+	                )
+	            )
+	        </if>
+	        <if test="searchMap.statusCode != null and searchMap.statusCode != ''">
+	            AND OC.CANCEL_STAT_CODE = #{searchMap.statusCode}
+	        </if>
+	    </if>
+	</select>
+    
+	<select id="selectCancelDetail" resultMap="cancelListMap" parameterType="int">
+	    SELECT
+	        OC.CANCEL_NO,
+	        OC.ORDER_NO,
+	        OC.MEM_USERNAME,
+	        G.GOODS_NM,
+	        OC.CANCEL_TYPE,
+	        CDC_TYPE.DESCRIPTION AS CANCEL_TYPE_NAME,
+	        OC.CANCEL_STAT_CODE,
+	        CDC_STAT.DESCRIPTION AS CANCEL_STAT_NAME,
+	        OC.CANCEL_REQ_DATE,
+	        OC.CANCEL_RES_DATE,
+	        OC.CANCEL_ACCOUNT_NO,
+	        OC.CANCEL_ACCOUNT_HOL,
+	        OC.CANCEL_REASON_DETAIL,
+	        OC.CANCEL_ITEM_QTY,
+	        OC.CANCEL_REQ_PRICE,
+	        OC.CANCEL_RES_PRICE,
+	        OC.GOODS_NO,
+	        OC.CANCEL_REASON_CODE,
+	        OC.EMP_USERNAME
+	    FROM ORDER_CANCEL OC
+	    LEFT JOIN GOODS G ON OC.GOODS_NO = G.GOODS_NO
+	    LEFT JOIN COMMON_DETAIL_CODE CDC_TYPE
+	        ON OC.CANCEL_TYPE = CDC_TYPE.COMM_CODE_DET_NO
+	        AND CDC_TYPE.COMM_CODE_GRP_NO = 'CANCEL_TYPE' LEFT JOIN COMMON_DETAIL_CODE CDC_STAT
+	        ON OC.CANCEL_STAT_CODE = CDC_STAT.COMM_CODE_DET_NO
+	        AND CDC_STAT.COMM_CODE_GRP_NO = 'CANCEL_STAT_CODE'
+	    WHERE OC.CANCEL_NO = #{cancelNo}
+	</select>
+    
+    <update id="updateCancelRefund" parameterType="kr.or.ddit.vo.order.OrderCancelVO">
+        UPDATE ORDER_CANCEL
+        <set>
+            <if test="cancelStatCode != null and !cancelStatCode.isEmpty()">
+                CANCEL_STAT_CODE = #{cancelStatCode},
+            </if>
+            <if test="cancelReasonDetail != null">
+                CANCEL_REASON_DETAIL = #{cancelReasonDetail},
+            </if>
+            <if test="cancelResDate != null">
+                CANCEL_RES_DATE = #{cancelResDate},
+            </if>
+            EMP_USERNAME = #{empUsername} </set>
+        WHERE CANCEL_NO = #{cancelNo}
+    </update>
+    
+	<insert id="insertOrderCancel" parameterType="kr.or.ddit.vo.order.OrderCancelVO">
+        <selectKey keyProperty="cancelNo" resultType="int" order="BEFORE">
+            SELECT ORDER_CANCEL_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        
+        INSERT INTO ORDER_CANCEL (
+            CANCEL_NO,           
+            ORDER_NO,            
+            GOODS_NO,            
+            CANCEL_TYPE,         
+            CANCEL_REASON_CODE,  
+            CANCEL_STAT_CODE,    
+            MEM_USERNAME,        
+            CANCEL_REASON_DETAIL,
+            CANCEL_ITEM_QTY,     
+            CANCEL_REQ_PRICE,    
+            CANCEL_REQ_DATE,     
+            CANCEL_ACCOUNT_NO,   
+            CANCEL_ACCOUNT_HOL   
+        ) VALUES (
+            #{cancelNo},          
+            #{orderNo},           
+            #{goodsNo},           
+            #{cancelType},
+            #{cancelReasonCode},
+            #{cancelStatCode},
+            #{memUsername},
+            #{cancelReasonDetail},
+            #{cancelItemQty},
+            #{cancelReqPrice},
+            SYSDATE,              
+            #{cancelAccountNo},   
+            #{cancelAccountHol}   
+        )
+    </insert>
+
+    <select id="selectCancelRefundStatusCounts" resultType="map">
+        SELECT
+            CDC.comm_code_det_no AS STATUS_CODE,
+            CDC.description AS STATUS_NAME,
+            NVL(COUNT(OC.cancel_no), 0) AS COUNT
+        FROM
+            COMMON_DETAIL_CODE CDC
+        LEFT JOIN
+            ORDER_CANCEL OC ON CDC.comm_code_det_no = OC.cancel_stat_code
+        WHERE
+            CDC.comm_code_grp_no = 'CANCEL_STAT_CODE'
+        GROUP BY
+            CDC.comm_code_det_no, CDC.description
+        ORDER BY
+            CDC.comm_code_det_no ASC
+    </select>
+
+    <select id="getTotalCancelRefundCountIgnoreFilter" resultType="int">
+        SELECT COUNT(CANCEL_NO) FROM ORDER_CANCEL
+    </select>
+    
+    <select id="selectCancelReasonCounts" resultType="map">
+        SELECT
+            OC.CANCEL_REASON_CODE AS CANCELREASONCODE,  COUNT(OC.CANCEL_NO) AS REASONCOUNT          FROM ORDER_CANCEL OC
+        WHERE OC.CANCEL_REASON_CODE IS NOT NULL
+        GROUP BY OC.CANCEL_REASON_CODE
+        ORDER BY REASONCOUNT DESC
+    </select>
+
+    <select id="selectDailyCancelCounts" resultType="map" parameterType="map">
+        SELECT
+            TO_CHAR(OC.CANCEL_REQ_DATE, 'YYYY-MM-DD') AS CANCELDATE,  COUNT(OC.CANCEL_NO) AS DAILYCOUNT                         FROM ORDER_CANCEL OC
+        WHERE OC.CANCEL_REQ_DATE IS NOT NULL
+        <if test="orderDateStart != null and orderDateStart != ''">
+            AND OC.CANCEL_REQ_DATE <![CDATA[>=]]> TO_DATE(#{orderDateStart}, 'YYYY-MM-DD')
+        </if>
+        <if test="orderDateEnd != null and orderDateEnd != ''">
+            AND OC.CANCEL_REQ_DATE <![CDATA[<]]> TO_DATE(#{orderDateEnd}, 'YYYY-MM-DD') + 1
+        </if>
+        <if test="orderDateStart == null or orderDateStart == ''">
+            AND OC.CANCEL_REQ_DATE <![CDATA[>=]]> TRUNC(SYSDATE) - 6
+            AND OC.CANCEL_REQ_DATE <![CDATA[<]]> TRUNC(SYSDATE) + 1
+        </if>
+        GROUP BY TO_CHAR(OC.CANCEL_REQ_DATE, 'YYYY-MM-DD')
+        ORDER BY CANCELDATE ASC
+    </select>
+    
+</mapper>

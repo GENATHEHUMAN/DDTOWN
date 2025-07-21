@@ -1,0 +1,19 @@
+.search-filter-controls {
+    display: flex; /* 자식 요소들을 한 줄로 정렬 */
+    align-items: center; /* 자식 요소들을 세로축 중앙에 정렬 */
+    gap: 10px; /* 요소들 사이에 간격 추가 (원하는 값으로 조정) */
+    flex-wrap: wrap; /* 화면이 작아질 경우 줄 바꿈 허용 */
+    /* 기존 인라인 스타일 margin-bottom: 20px; 는 여기에 옮겨도 좋습니다. */
+    /* margin-bottom: 20px; */ 
+}
+
+/* 개별 요소의 너비 및 스타일 조정 (선택 사항) */
+.search-filter-controls .ea-search-input {
+    flex-grow: 1; /* 검색 입력창이 남은 공간을 채우도록 함 */
+    min-width: 200px; /* 최소 너비 */
+    max-width: 350px; /* 최대 너비 (너무 길어지는 것을 방지) */
+}
+
+.search-filter-controls .ea-filter-select {
+    width: 120px; /* 드롭다운 메뉴 너비 조정 */
+}

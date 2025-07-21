@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.goods.IGoodsNoticeMapper">
+	 <resultMap id="goodsNoticeWithFilesMap" type="kr.or.ddit.vo.goods.goodsNoticeVO">
+        <id property="goodsNotiNo" column="GOODS_NOTI_NO"/>
+        <result property="empUsername" column="EMP_USERNAME"/>
+        <result property="fileGroupNo" column="FILE_GROUP_NO"/>
+        <result property="goodsNotiTitle" column="GOODS_NOTI_TITLE"/>
+        <result property="goodsNotiContent" column="GOODS_NOTI_CONTENT"/>
+        <result property="goodsRegDate" column="GOODS_REG_DATE"/>
+        <result property="goodsModDate" column="GOODS_MOD_DATE"/>
+        
+        <collection property="fileDetailList" ofType="kr.or.ddit.vo.file.AttachmentFileDetailVO" javaType="java.util.ArrayList">
+            <id property="attachDetailNo" column="ATTACH_DETAIL_NO"/>
+            <result property="fileGroupNo" column="ATT_FILE_GROUP_NO"/>
+            <result property="fileOriginalNm" column="FILE_ORIGINAL_NM"/>
+            <result property="fileSaveNm" column="FILE_SAVE_NM"/>
+            <result property="fileSavepath" column="FILE_SAVEPATH"/>
+            <result property="fileExt" column="FILE_EXT"/>
+            <result property="fileMimeType" column="FILE_MIME_TYPE"/>
+            <result property="fileFancySize" column="FILE_FANCYSIZE"/>
+            <result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+        </collection>
+    </resultMap>
+	 
+	 <select id="noticeList" resultType="kr.or.ddit.vo.goods.goodsNoticeVO">
+	 	select 
+		 	goods_noti_no, 
+		 	emp_username, 
+		 	file_group_no, 
+		 	goods_noti_title, 
+		 	goods_noti_content, 			
+		 	goods_reg_date, 
+		 	goods_mod_date
+		from goods_notice
+		order by goods_noti_no desc
+	 </select>
+	 
+	 <select id="search" parameterType="kr.or.ddit.vo.goods.goodsNoticeVO" resultType="kr.or.ddit.vo.goods.goodsNoticeVO">
+	 	select
+	 		goods_noti_no, 
+		 	emp_username, 
+		 	file_group_no, 
+		 	goods_noti_title, 
+		 	goods_noti_content, 			
+		 	goods_reg_date, 
+		 	goods_mod_date
+		 from goods_notice
+		 where 1=1
+		 <if test="title != null and title != ''">
+			and goods_noti_title like '%' || #{title} || '%'
+		</if>
+		order by goods_noti_no desc
+	 </select>
+	 
+	 <select id="selectMainNotice" resultType="kr.or.ddit.vo.goods.goodsNoticeVO">
+	 	select
+	 		goods_noti_no,
+	 		goods_noti_title
+	 	from goods_notice
+	 	order by goods_reg_date DESC
+	 	fetch first 1 rows only
+	 </select>
+	 
+	 <select id="selectTotalGoodsNoticeCount" resultType="int" parameterType="paginationInfoVO">
+        SELECT COUNT(*)
+        FROM GOODS_NOTICE
+        <where>
+            <if test="searchType != null and searchType == 'title'">
+                AND GOODS_NOTI_TITLE LIKE '%' || #{searchWord} || '%'
+            </if>
+            <if test="searchType != null and searchType == 'content'">
+                AND GOODS_NOTI_CONTENT LIKE '%' || #{searchWord} || '%'
+            </if>
+        </where>
+    </select>
+
+    <select id="selectAllGoodsNotices" resultType="goodsNoticeVO" parameterType="paginationInfoVO">
+        SELECT
+            B.GOODS_NOTI_NO,
+            B.EMP_USERNAME,
+            B.GOODS_NOTI_TITLE,
+            B.GOODS_REG_DATE
+        FROM (
+            SELECT
+                ROW_NUMBER() OVER (ORDER BY GOODS_REG_DATE DESC) AS RNUM,
+                A.GOODS_NOTI_NO,
+                A.EMP_USERNAME,
+                A.GOODS_NOTI_TITLE,
+                A.GOODS_REG_DATE
+            FROM GOODS_NOTICE A
+            <where>
+                <if test="searchType != null and searchType == 'title'">
+                    AND A.GOODS_NOTI_TITLE LIKE '%' || #{searchWord} || '%'
+                </if>
+                <if test="searchType != null and searchType == 'content'">
+                    AND A.GOODS_NOTI_CONTENT LIKE '%' || #{searchWord} || '%'
+                </if>
+            </where>
+        ) B
+        WHERE B.RNUM BETWEEN #{startRow} AND #{endRow}
+        ORDER BY B.RNUM
+    </select>
+    
+     <select id="getGoodsNotice" resultMap="goodsNoticeWithFilesMap" parameterType="int">
+	    SELECT
+	        GN.GOODS_NOTI_NO,
+	        GN.EMP_USERNAME,
+	        GN.FILE_GROUP_NO,
+	        GN.GOODS_NOTI_TITLE,
+	        GN.GOODS_NOTI_CONTENT,
+	        GN.GOODS_REG_DATE,
+	        GN.GOODS_MOD_DATE,
+	
+	        AFD.ATTACH_DETAIL_NO,
+	        AFD.FILE_GROUP_NO AS ATT_FILE_GROUP_NO,
+	        AFD.FILE_ORIGINAL_NM,
+	        AFD.FILE_SAVE_NM,
+	        AFD.FILE_SAVEPATH,
+	        AFD.FILE_EXT,
+	        AFD.FILE_MIME_TYPE,
+	        AFD.FILE_FANCYSIZE,
+	        AFD.FILE_SAVE_DATE
+	    FROM
+	        GOODS_NOTICE GN
+	    LEFT JOIN
+	        ATTACHMENT_FILE_DETAIL AFD ON GN.FILE_GROUP_NO = AFD.FILE_GROUP_NO
+	    WHERE
+	        GN.GOODS_NOTI_NO = #{goodsNotiNo}
+	</select>
+	
+	<select id="selectRecentGoodsNotices" parameterType="int" resultType="kr.or.ddit.vo.goods.goodsNoticeVO">
+        <![CDATA[
+        SELECT
+            GOODS_NOTI_NO,       -- 링크 연결을 위해 필요
+            GOODS_NOTI_TITLE,    -- 공지사항 제목 표시
+            GOODS_REG_DATE       -- 등록일 표시
+        FROM (
+            SELECT
+                GOODS_NOTI_NO,
+                GOODS_NOTI_TITLE,
+                GOODS_REG_DATE,
+                ROW_NUMBER() OVER (ORDER BY GOODS_REG_DATE DESC, GOODS_NOTI_NO DESC) AS RNUM
+            FROM GOODS_NOTICE
+            -- 삭제된 공지사항을 제외하려면 아래 주석을 해제하세요.
+            -- WHERE GOODS_NOTI_DELETE_YN = 'N'
+        )
+        WHERE RNUM <= #{limit} -- ⭐ 서비스에서 전달된 limit 값(예: 3) 적용 ⭐
+        ]]>
+    </select>
+
+ </mapper>

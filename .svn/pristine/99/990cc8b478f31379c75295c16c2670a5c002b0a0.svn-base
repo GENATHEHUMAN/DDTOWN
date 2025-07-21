@@ -1,0 +1,243 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDTOWN 전자결재 - 결재 요청 리스트</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="approval-content">
+                <div class="approval-title">결재할 문서함</div>
+                <div class="approval-list-search-row" style="display:flex; justify-content: flex-end; align-items: center; margin-bottom:18px;">
+                    <input type="text" id="approval-search-input" class="approval-search-input" placeholder="검색 (제목, 작성자...)" style="width:260px; height:36px; border-radius:5px; border:1px solid #ccc; padding:0 12px; font-size:1em;">
+                    <button id="approval-search-btn" class="approval-btn" style="margin-left:8px; height:36px; min-width:70px;"><i class="fas fa-search"></i> 검색</button>
+                </div>
+                <div class="approval-list-table-wrap">
+                    <table class="approval-list-table">
+                        <thead>
+                            <tr>
+                                <th>문서번호</th>
+                                <th>긴급도</th>
+                                <th>제목</th>
+                                <th>기안자</th>
+                                <th>기안일</th>
+                                <th>결재상태</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approval-list-tbody">
+                            <!-- JS로 동적 렌더링 -->
+                        </tbody>
+                    </table>
+                    <div class="approval-pagination" id="approval-pagination"></div>
+                </div>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (직원 전용)</p>
+        </footer>
+    </div>
+</body>
+<script>
+// 사이드바 토글 및 활성화 스크립트 (emp_portal.html과 동일하게)
+document.addEventListener('DOMContentLoaded', function() {
+    const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+    navItemsWithSubmenu.forEach(item => {
+        const arrow = item.querySelector('.submenu-arrow');
+        item.addEventListener('click', function(event) {
+            event.preventDefault();
+            const parentLi = this.parentElement;
+            const submenu = this.nextElementSibling;
+            if (submenu && submenu.classList.contains('emp-submenu')) {
+                const parentUl = parentLi.parentElement;
+                if (parentUl) {
+                    Array.from(parentUl.children).forEach(siblingLi => {
+                        if (siblingLi !== parentLi) {
+                            const siblingSubmenuControl = siblingLi.querySelector('.emp-nav-item.has-submenu.open');
+                            if (siblingSubmenuControl) {
+                                const siblingSubmenu = siblingSubmenuControl.nextElementSibling;
+                                siblingSubmenuControl.classList.remove('open');
+                                if (siblingSubmenu && siblingSubmenu.classList.contains('emp-submenu')) {
+                                    siblingSubmenu.style.display = 'none';
+                                }
+                                const siblingArrow = siblingSubmenuControl.querySelector('.submenu-arrow');
+                                if (siblingArrow) siblingArrow.style.transform = 'rotate(0deg)';
+                            }
+                        }
+                    });
+                }
+            }
+            this.classList.toggle('open');
+            if (submenu && submenu.classList.contains('emp-submenu')) {
+                submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                if (arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+            }
+        });
+    });
+
+    // 현재 페이지 URL 기반으로 사이드바 메뉴 활성화
+    const currentFullHref = window.location.href;
+
+    document.querySelectorAll('.emp-sidebar .emp-nav-item[href]').forEach(link => {
+        const linkHrefAttribute = link.getAttribute('href');
+
+        if (linkHrefAttribute && linkHrefAttribute !== "#" && currentFullHref.endsWith(linkHrefAttribute)) {
+            link.classList.add('active');
+
+            let currentActiveElement = link;
+
+            while (true) {
+                const parentLi = currentActiveElement.parentElement;
+                if (!parentLi) break;
+
+                const parentSubmenuUl = parentLi.closest('.emp-submenu');
+
+                if (parentSubmenuUl) {
+                    parentSubmenuUl.style.display = 'block';
+
+                    const controllingAnchor = parentSubmenuUl.previousElementSibling;
+
+                    if (controllingAnchor && controllingAnchor.tagName === 'A' && controllingAnchor.classList.contains('has-submenu')) {
+                        controllingAnchor.classList.add('active', 'open');
+                        const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                        if (arrow) {
+                            arrow.style.transform = 'rotate(90deg)';
+                        }
+                        currentActiveElement = controllingAnchor;
+                    } else {
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+    });
+});
+        // 샘플 데이터
+        const approvalDocs = [
+            {
+                docId: '2025-00123',
+                priority: '긴급',
+                priorityClass: 'high',
+                title: '2025년 하반기 워크샵 개최 품의',
+                drafter: '이기안 사원',
+                date: '2025-05-10',
+                status: '결재대기',
+                statusClass: 'pending'
+            },
+            {
+                docId: '2025-00122',
+                priority: '보통',
+                priorityClass: 'normal',
+                title: '외부 행사용 비품 구매 요청',
+                drafter: '최기획 대리',
+                date: '2025-05-09',
+                status: '결재대기',
+                statusClass: 'pending'
+            },
+            {
+                docId: '2025-00121',
+                priority: '보통',
+                priorityClass: 'normal',
+                title: '5월 경비 지출결의서',
+                drafter: '박회계 주임',
+                date: '2025-05-08',
+                status: '승인됨',
+                statusClass: 'approved'
+            }
+        ];
+        // 상태/긴급도 뱃지
+        function getStatusBadge(status, statusClass) {
+            if(status === '결재대기') return `<span style="background:#ff9800;color:#fff;padding:4px 12px;border-radius:16px;font-size:0.97em;">결재대기</span>`;
+            if(status === '승인됨') return `<span style="background:#4caf50;color:#fff;padding:4px 12px;border-radius:16px;font-size:0.97em;">승인됨</span>`;
+            if(status === '반려됨') return `<span style="background:#b71c1c;color:#fff;padding:4px 12px;border-radius:16px;font-size:0.97em;">반려됨</span>`;
+            return status;
+        }
+        function getPriorityBadge(priority, priorityClass) {
+            if(priority === '긴급') return `<span style="background:#e53935;color:#fff;padding:4px 12px;border-radius:16px;font-size:0.97em;">긴급</span>`;
+            if(priority === '보통') return `<span style="background:#2196f3;color:#fff;padding:4px 12px;border-radius:16px;font-size:0.97em;">보통</span>`;
+            return priority;
+        }
+        // 테이블 렌더링
+        function renderTable(docs) {
+            const tbody = document.getElementById('approval-list-tbody');
+            tbody.innerHTML = '';
+            if(docs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">검색 결과가 없습니다.</td></tr>`;
+                return;
+            }
+            docs.forEach(doc => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>\${doc.docId}</td>
+                    <td>\${getPriorityBadge(doc.priority, doc.priorityClass)}</td>
+                    <td><a href="#" class="approval-doc-link" data-doc-id="\${doc.docId}">\${doc.title}</a></td>
+                    <td>\${doc.drafter}</td>
+                    <td>\${doc.date}</td>
+                    <td>\${getStatusBadge(doc.status, doc.statusClass)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        // 검색 및 페이징
+        let currentPage = 1;
+        const pageSize = 10;
+        function getFilteredDocs() {
+            const keyword = document.getElementById('approval-search-input').value.trim();
+            return approvalDocs.filter(doc =>
+                doc.title.includes(keyword) || doc.drafter.includes(keyword)
+            );
+        }
+        function renderPagination(total, pageSize, currentPage) {
+            const totalPages = Math.ceil(total / pageSize);
+            const pagDiv = document.getElementById('approval-pagination');
+            pagDiv.innerHTML = '';
+            if(totalPages <= 1) return;
+            for(let i=1; i<=totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.className = 'approval-btn' + (i === currentPage ? ' active' : '');
+                btn.style.minWidth = '36px';
+                btn.style.margin = '0 2px';
+                btn.addEventListener('click', () => {
+                    goToPage(i);
+                });
+                pagDiv.appendChild(btn);
+            }
+        }
+        function goToPage(page) {
+            currentPage = page;
+            const filtered = getFilteredDocs();
+            const paged = filtered.slice((page-1)*pageSize, page*pageSize);
+            renderTable(paged);
+            renderPagination(filtered.length, pageSize, currentPage);
+        }
+        // 검색 버튼 이벤트
+        document.getElementById('approval-search-btn').addEventListener('click', () => {
+            goToPage(1);
+        });
+        document.getElementById('approval-search-input').addEventListener('keyup', e => {
+            if(e.key === 'Enter') goToPage(1);
+        });
+        // 문서 클릭 시 상세페이지 이동
+        document.getElementById('approval-list-tbody').addEventListener('click', function(e) {
+            const link = e.target.closest('.approval-doc-link');
+            if(link) {
+                e.preventDefault();
+                // 상세페이지로 이동
+                window.location.href = 'emp/edms/detail';
+            }
+        });
+        // 초기 렌더링
+        goToPage(1);
+    </script>
+</html> 

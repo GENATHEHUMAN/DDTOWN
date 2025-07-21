@@ -1,0 +1,199 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDTOWN 관리자 - 아티스트 계정 관리</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <style>
+        /* 아티스트명 링크 스타일 */
+        .artist-name-link {
+            font-weight: 500;
+            color: #007bff; /* 기본 링크 색상 */
+            text-decoration: none;
+        }
+        .artist-name-link:hover {
+            text-decoration: underline;
+        }
+        #accountAddButton {
+		    width: auto; /* 내용에 맞게 너비 자동 조절 */
+		    min-width: max-content; /* 최소 너비를 내용만큼 확보 (예: "검색" 두 글자) */
+		    white-space: nowrap; /* 글자가 두 줄로 나뉘는 것을 방지 */
+		    writing-mode: horizontal-tb !important; /* 혹시라도 writing-mode가 세로로 설정된 경우 강제 변경 */
+		    padding-left: 12px; /* 버튼 내부 여백 (기존 .ea-btn 스타일에 따라 조절) */
+		    padding-right: 12px; /* 버튼 내부 여백 (기존 .ea-btn 스타일에 따라 조절) */
+		}
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+
+            <main class="emp-content">
+                <section class="ea-section">
+                    <div class="ea-section-header">
+                        <h2>아티스트 계정 관리</h2>
+                        <div class="ea-header-actions">
+                        	<form class="input-group input-group-sm" method="get" id="searchForm">
+                        		<input type="hidden" name="currentPage" value="1" id="page">
+	                            <input type="text" id="searchWord" name="searchWord" value="${pagingVO.searchWord }" class="ea-search-input" placeholder="아티스트명 검색">
+	                            <div class="input-group-append">
+									<button type="submit" class="ea-btn primary">
+										<i class="fas fa-search"></i>검색
+									</button>
+								</div>
+                        	</form>
+                            <a class="ea-btn primary" href="/admin/community/artist/form" id="accountAddButton"><i class="fas fa-plus"></i> 등록 </a>
+                        </div>
+                    </div>
+
+                    <table class="ea-table" id="artistAccountTable">
+                        <thead>
+                            <tr>
+                                <th>번호</th>
+                                <th>아티스트ID(내부용)</th>
+                                <th>아티스트명</th>
+                                <th>그룹명</th>
+                                <th>담당자</th>
+                                <th>데뷔일</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="artistAccountTableBody">
+                        	<c:forEach items="${pagingVO.dataList }" var="artist">
+                        		<tr>
+	                        		<td>${artist.artNo }</td>
+	                                <td>${artist.memUsername }</td>
+	                                <td>${artist.artNm }</td>
+	                                <td>${artist.groupList[0].artGroupNm }</td>
+	                                <td>${artist.groupList[0].empName }</td>
+	                                <td>${artist.artDebutdate }</td>
+	                                <td><button type="button" class="ea-btn sm outline" data-art-no=${artist.artNo }>보기</button></td>
+	                            </tr>
+                        	</c:forEach>
+                        </tbody>
+                    </table>
+                    <div class="ea-pagination" id="pagingArea">
+                    	${pagingVO.pagingHTML }
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (관리자 전용)</p>
+        </footer>
+    </div>
+</body>
+<%@ include file="../../modules/footerPart.jsp" %>
+
+<script type="text/javascript">
+//사이드바 메뉴 기능
+document.addEventListener('DOMContentLoaded', function() {
+    const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+    navItemsWithSubmenu.forEach(item => {
+        const arrow = item.querySelector('.submenu-arrow');
+        item.addEventListener('click', function(event) {
+            if (this.getAttribute('href') === '#') {
+                event.preventDefault();
+            }
+            const parentLi = this.parentElement;
+            const submenu = this.nextElementSibling;
+
+            if (submenu && submenu.classList.contains('emp-submenu')) {
+                const parentUl = parentLi.parentElement;
+                if (parentUl) {
+                    Array.from(parentUl.children).forEach(siblingLi => {
+                        if (siblingLi !== parentLi) {
+                            const siblingSubmenuControl = siblingLi.querySelector('.emp-nav-item.has-submenu.open');
+                            if (siblingSubmenuControl) {
+                                const siblingSubmenuElement = siblingSubmenuControl.nextElementSibling;
+                                siblingSubmenuControl.classList.remove('open');
+                                if (siblingSubmenuElement && siblingSubmenuElement.classList.contains('emp-submenu')) {
+                                    siblingSubmenuElement.style.display = 'none';
+                                }
+                                const siblingArrow = siblingSubmenuControl.querySelector('.submenu-arrow');
+                                if (siblingArrow) siblingArrow.style.transform = 'rotate(0deg)';
+                            }
+                        }
+                    });
+                }
+            }
+            
+            this.classList.toggle('open');
+            if (submenu && submenu.classList.contains('emp-submenu')) {
+                submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                if (arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+            }
+        });
+    });
+
+    // 현재 페이지 URL 기반으로 사이드바 메뉴 활성화
+    const currentFullHref = window.location.href;
+    document.querySelectorAll('.emp-sidebar .emp-nav-item[href]').forEach(link => {
+        if (link.href === currentFullHref) {
+            link.classList.add('active');
+            let currentActiveElement = link;
+            while (true) {
+                const parentLi = currentActiveElement.parentElement;
+                if (!parentLi) break;
+                const parentSubmenuUl = parentLi.closest('ul.emp-submenu');
+                if (parentSubmenuUl) {
+                    parentSubmenuUl.style.display = 'block';
+                    const controllingAnchor = parentSubmenuUl.previousElementSibling;
+                    if (controllingAnchor && controllingAnchor.classList.contains('has-submenu')) {
+                        controllingAnchor.classList.add('active', 'open');
+                        const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                        if (arrow) arrow.style.transform = 'rotate(90deg)';
+                        currentActiveElement = controllingAnchor;
+                    } else break;
+                } else break;
+            }
+        }
+    });
+    
+ 	// 페이지네이션 로직
+    const pagingArea = $('#pagingArea');
+    if(pagingArea.length > 0) {
+        pagingArea.on('click', 'a', function(event) { 
+            event.preventDefault();
+            const page = $(this).data('page');
+            
+            // 현재 URL에서 검색 파라미터 유지
+            const currentSearchUrl = new URL(window.location.href);
+            const searchType = currentSearchUrl.searchParams.get("searchType");
+            const searchWord = currentSearchUrl.searchParams.get("searchWord");
+
+            let targetPageUrl = '${pageContext.request.contextPath}/emp/artist/artist-management?page=' + page;
+
+            if (searchType && searchWord) {
+                targetPageUrl += '&searchType=' + encodeURIComponent(searchType);
+                targetPageUrl += '&searchWord=' + encodeURIComponent(searchWord);
+            }
+            window.location.href = targetPageUrl;
+        });
+    }
+});
+	
+$(function(){
+	// 검색결과 유지한채 이동
+	let artistAccountTableBody = $("#artistAccountTableBody");
+	artistAccountTableBody.on("click","button",function(){
+		const artNo = $(this).data("artNo");
+		let searchWord = "${pagingVO.searchWord}";
+		let currentPage = "${pagingVO.currentPage}";
+		
+		sessionStorage.setItem("currentPage",currentPage);
+		sessionStorage.setItem("searchWord",searchWord);
+		
+		location.href="/admin/community/artist/detail?artNo="+artNo;
+	})
+	
+})
+</script>
+</html>

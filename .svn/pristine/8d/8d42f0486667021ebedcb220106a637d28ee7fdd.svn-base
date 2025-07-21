@@ -1,0 +1,84 @@
+package kr.or.ddit.ddtown.service.admin.blacklist;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.mapper.admin.blacklist.IBlacklistMapper;
+import kr.or.ddit.ddtown.mapper.admin.report.IReportMapper;
+import kr.or.ddit.vo.blacklist.BlacklistVO;
+
+@Service
+public class BlacklistSerivceImpl implements IBlacklistService{
+
+	@Autowired
+	public IBlacklistMapper blacklistMapper;
+	
+	@Autowired
+    private IReportMapper reportMapper;
+	
+	//목록페이지
+	@Override
+	public List<BlacklistVO> blackList() {
+		List<BlacklistVO> blackList = blacklistMapper.blackList();
+		System.out.println("리스트" + blackList);
+		return blackList;
+	}
+	//상세페이지
+	@Override
+	public BlacklistVO blackDetail(int banNo) {	
+		return blacklistMapper.blackDetail(banNo);
+	}
+	//등록하기
+	@Override
+	public ServiceResult blackSignup(BlacklistVO blacklistVO) throws Exception {
+		//회원인지 아닌지 체크
+		int checkMemberId = blacklistMapper.checkMemberId(blacklistVO.getMemUsername());
+		
+		if(checkMemberId == 0 ) {
+			return ServiceResult.NOTEXIST;
+		}
+		
+		int status = blacklistMapper.blackSignup(blacklistVO);
+		if(status > 0) {
+			 return ServiceResult.OK;	//성공
+		}else {
+			return ServiceResult.FAILED;//실패
+		}
+
+	}
+	//신고상세에서 블랙리스트 추가 누를시 회원 아이디 가지고 오기
+	@Override
+	public String getUsernameReportNo(Integer reportNo) {
+
+		return reportMapper.getUsernameReportNo(reportNo);
+	}
+	//수정하기
+	@Override
+	public ServiceResult blackUpdate(BlacklistVO blacklistVO) throws Exception {
+		int status = blacklistMapper.blackUpdate(blacklistVO);
+		if(status > 0) {
+			return ServiceResult.OK;
+		}else {
+			return ServiceResult.FAILED;
+		}
+		
+	}
+	//해제(삭제)하기
+	@Override
+	public ServiceResult blackDelete(int banNo) {
+		ServiceResult result = null;
+		
+		int status = blacklistMapper.blackDelete(banNo);
+		
+		if(status >0) {
+			result = ServiceResult.OK;
+		}else {
+			result = ServiceResult.FAILED;
+		}
+		return result;
+	}
+
+}

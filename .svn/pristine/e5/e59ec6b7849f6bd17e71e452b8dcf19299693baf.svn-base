@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.orders.IOrderMapper">
+
+	<resultMap type="kr.or.ddit.vo.order.OrderDetailVO" id="orderDetailMap">
+	    <id property="orderDetNo" column="ORDER_DET_NO"/>
+	    <result property="orderNo" column="ORDER_NO"/>
+	    <result property="goodsNo" column="GOODS_NO"/>
+	    <result property="goodsOptNo" column="GOODS_OPT_NO"/>
+	    <result property="orderDetQty" column="ORDER_DET_QTY"/>
+	    <result property="goodsNm" column="GOODS_NM"/>
+	    <result property="goodsPrice" column="GOODS_PRICE"/>
+	    <result property="goodsFileGroupNo" column="GOODS_FILE_GROUP_NO"/>
+	    <result property="goodsStatusCode" column="GOODS_STAT_CODE"/>
+	    <result property="goodsOptNm" column="GOODS_OPT_NM"/>
+	    <result property="goodsOptPrice" column="GOODS_OPT_PRICE"/>
+	</resultMap>
+
+	<resultMap type="kr.or.ddit.vo.order.OrdersVO" id="ordersWithDetailsAndPaymentMap">
+	    <id property="orderNo" column="O_ORDER_NO"/>
+	    <result property="memUsername" column="O_MEM_USERNAME"/>
+	    <result property="orderTypeCode" column="O_ORDER_TYPE_CODE"/>
+	    <result property="orderStatCode" column="O_ORDER_STAT_CODE"/>
+	    <result property="orderStatName" column="O_ORDER_STAT_NAME"/>
+	    <result property="orderPayMethodNm" column="O_ORDER_PAY_METHOD_NM"/>
+	    <result property="orderDate" column="O_ORDER_DATE"/>
+	    <result property="orderTotalPrice" column="O_ORDER_TOTAL_PRICE"/>
+	    <result property="orderRecipientNm" column="O_ORDER_RECIPIENT_NM"/>
+	    <result property="orderRecipientPhone" column="O_ORDER_RECIPIENT_PHONE"/>
+	    <result property="orderZipCode" column="O_ORDER_ZIP_CODE"/>
+	    <result property="orderAddress1" column="O_ORDER_ADDRESS1"/>
+	    <result property="orderAddress2" column="O_ORDER_ADDRESS2"/>
+	    <result property="orderEmail" column="O_ORDER_EMAIL"/>
+	    <result property="orderMemo" column="O_ORDER_MEMO"/>
+	    <association property="paymentVO" javaType="kr.or.ddit.vo.order.PaymentVO">
+	        <id property="orderNo" column="P_ORDER_NO"/>
+	        <result property="tid" column="P_TID"/>
+	        <result property="cid" column="P_CID"/>
+	        <result property="aid" column="P_AID"/>
+	        <result property="paymentStatCode" column="P_PAYMENT_STAT_CODE"/>
+	        <result property="paymentStatCodeNm" column="P_PAYMENT_STAT_CODE_NM"/> <result property="totalAmount" column="P_TOTAL_AMOUNT"/>           <result property="subSid" column="P_SUB_SID"/>
+	        <result property="requestedAt" column="P_REQUESTED_AT"/>
+	        <result property="completedAt" column="P_COMPLETED_AT"/>
+	    </association>
+	    <collection property="orderDetailList" ofType="kr.or.ddit.vo.order.OrderDetailVO">
+	        <id property="orderDetNo" column="OD_ORDER_DET_NO"/>
+	        <result property="orderNo" column="OD_ORDER_NO_DETAIL"/>
+	        <result property="goodsNo" column="OD_GOODS_NO"/>
+	        <result property="goodsOptNo" column="OD_GOODS_OPT_NO"/>
+	        <result property="orderDetQty" column="OD_ORDER_DET_QTY"/>
+	        <result property="goodsNm" column="G_GOODS_NM"/>
+	        <result property="goodsPrice" column="G_GOODS_PRICE"/>
+	        <result property="goodsFileGroupNo" column="G_GOODS_FILE_GROUP_NO"/>
+	        <result property="goodsStatusCode" column="G_GOODS_STAT_CODE"/>
+	        <result property="goodsOptNm" column="GO_GOODS_OPT_NM"/>
+	        <result property="goodsOptPrice" column="GO_GOODS_OPT_PRICE"/>
+	    </collection>
+	</resultMap>
+
+	<insert id="insertOrder" parameterType="kr.or.ddit.vo.order.OrdersVO">
+        <selectKey keyProperty="orderNo" resultType="int" order="BEFORE">
+            SELECT ORDERS_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO ORDERS (
+            ORDER_NO, MEM_USERNAME, ORDER_TOTAL_PRICE, ORDER_STAT_CODE,
+            ORDER_TYPE_CODE, ORDER_PAY_METHOD_NM, ORDER_DATE,
+            ORDER_RECIPIENT_NM, ORDER_RECIPIENT_PHONE, ORDER_ZIP_CODE,
+            ORDER_ADDRESS1, ORDER_ADDRESS2, ORDER_EMAIL, ORDER_MEMO,
+            ORDER_FROM_CART
+        ) VALUES (
+            #{orderNo},
+            #{memUsername}, #{orderTotalPrice}, #{orderStatCode},
+            #{orderTypeCode}, #{orderPayMethodNm}, SYSDATE,
+            #{orderRecipientNm}, #{orderRecipientPhone}, #{orderZipCode},
+            #{orderAddress1}, #{orderAddress2}, #{orderEmail}, #{orderMemo},
+            #{orderFromCart}
+        )
+    </insert>
+
+    <insert id="insertOrderDetail" parameterType="kr.or.ddit.vo.order.OrderDetailVO">
+        INSERT INTO ORDER_DETAIL (
+            ORDER_DET_NO, ORDER_NO, GOODS_NO, GOODS_OPT_NO, ORDER_DET_QTY ) VALUES (
+            ORDER_DETAIL_SEQ.NEXTVAL, #{orderNo}, #{goodsNo}, #{goodsOptNo}, #{orderDetQty} )
+    </insert>
+
+    <insert id="insertPaymentReadyInfo" parameterType="kr.or.ddit.vo.order.PaymentVO">
+        INSERT INTO PAYMENT_API (
+            TID, ORDER_NO, CID, TOTAL_AMOUNT, PAYMENT_STAT_CODE, SUB_SID, REQUESTED_AT, AID, COMPLETED_AT
+        ) VALUES (
+            #{tid}, #{orderNo}, #{cid}, #{totalAmount}, #{paymentStatCode}, #{subSid}, SYSDATE, #{aid}, #{completedAt}
+        )
+    </insert>
+
+	<update id="updateOrderStatus" parameterType="map">
+	    UPDATE ORDERS
+	    SET
+	        ORDER_STAT_CODE = #{statusCode}
+	        WHERE ORDER_NO = #{orderNo}
+	</update>
+
+    <update id="updatePaymentStatus" parameterType="map">
+        UPDATE PAYMENT_API
+        SET
+            PAYMENT_STAT_CODE = #{statusCode},
+            COMPLETED_AT = SYSDATE
+        WHERE ORDER_NO = #{orderNo}
+    </update>
+
+    <select id="selectOrderByOrderNo" parameterType="int" resultType="kr.or.ddit.vo.order.OrdersVO">
+	    SELECT
+	        ORDER_NO,
+	        MEM_USERNAME,
+	        ORDER_TOTAL_PRICE,
+	        ORDER_STAT_CODE,
+	        ORDER_TYPE_CODE,
+	        ORDER_PAY_METHOD_NM,
+	        ORDER_DATE,
+	        ORDER_RECIPIENT_NM,
+	        ORDER_RECIPIENT_PHONE,
+	        ORDER_ZIP_CODE,
+	        ORDER_ADDRESS1,
+	        ORDER_ADDRESS2,
+	        ORDER_EMAIL,
+	        ORDER_MEMO,
+	        ORDER_FROM_CART FROM ORDERS
+	    WHERE ORDER_NO = #{orderNo}
+	</select>
+
+    <select id="selectPaymentReadyInfoByOrderNo" parameterType="int" resultType="kr.or.ddit.vo.order.PaymentVO">
+        SELECT
+            TID, ORDER_NO, CID, TOTAL_AMOUNT, PAYMENT_STAT_CODE, SUB_SID, REQUESTED_AT, AID, COMPLETED_AT
+        FROM PAYMENT_API
+        WHERE ORDER_NO = #{orderNo}
+        ORDER BY REQUESTED_AT DESC FETCH FIRST 1 ROW ONLY
+    </select>
+
+	<update id="updateOrder" parameterType="kr.or.ddit.vo.order.OrdersVO">
+	    UPDATE ORDERS
+	    SET
+	        ORDER_STAT_CODE = #{orderStatCode},
+	        ORDER_TYPE_CODE = #{orderTypeCode},
+	        ORDER_TOTAL_PRICE = #{orderTotalPrice}, ORDER_RECIPIENT_NM = #{orderRecipientNm},
+	        ORDER_RECIPIENT_PHONE = #{orderRecipientPhone},
+	        ORDER_ZIP_CODE = #{orderZipCode},
+	        ORDER_ADDRESS1 = #{orderAddress1},
+	        ORDER_ADDRESS2 = #{orderAddress2},
+	        ORDER_EMAIL = #{orderEmail},
+	        ORDER_MEMO = #{orderMemo}
+	        WHERE ORDER_NO = #{orderNo}
+	</update>
+
+    <update id="updatePaymentInfo" parameterType="kr.or.ddit.vo.order.PaymentVO">
+        UPDATE PAYMENT_API
+        SET
+            PAYMENT_STAT_CODE = #{paymentStatCode},
+            COMPLETED_AT = #{completedAt},
+            TOTAL_AMOUNT = #{totalAmount},
+            AID = #{aid},
+            SUB_SID = #{subSid}
+            WHERE ORDER_NO = #{orderNo} AND TID = #{tid}
+    </update>
+
+    <select id="selectOrderDetailsByOrderNo" resultMap="orderDetailMap" parameterType="int">
+        SELECT
+            OD.ORDER_DET_NO,
+            OD.ORDER_NO,
+            OD.GOODS_NO,
+            OD.GOODS_OPT_NO,
+            OD.ORDER_DET_QTY,
+            G.GOODS_NM,
+            G.GOODS_PRICE,
+            G.FILE_GROUP_NO as GOODS_FILE_GROUP_NO,
+            G.GOODS_STAT_CODE,
+            GO.GOODS_OPT_NM,
+            GO.GOODS_OPT_PRICE
+        FROM ORDER_DETAIL OD
+        JOIN GOODS G ON OD.GOODS_NO = G.GOODS_NO
+        LEFT JOIN GOODS_OPTION GO ON OD.GOODS_OPT_NO = GO.GOODS_OPT_NO
+        WHERE OD.ORDER_NO = #{orderNo}
+    </select>
+
+	<select id="getOrderDetailsWithAllInfo" resultMap="ordersWithDetailsAndPaymentMap">
+        SELECT
+            O.ORDER_NO AS O_ORDER_NO,
+            O.MEM_USERNAME AS O_MEM_USERNAME,
+            O.ORDER_TYPE_CODE AS O_ORDER_TYPE_CODE,
+            O.ORDER_STAT_CODE AS O_ORDER_STAT_CODE,
+            OS.DESCRIPTION AS O_ORDER_STAT_NAME,
+            O.ORDER_PAY_METHOD_NM AS O_ORDER_PAY_METHOD_NM,
+            O.ORDER_DATE AS O_ORDER_DATE,
+            O.ORDER_TOTAL_PRICE AS O_ORDER_TOTAL_PRICE,
+            O.ORDER_RECIPIENT_NM AS O_ORDER_RECIPIENT_NM,
+            O.ORDER_RECIPIENT_PHONE AS O_ORDER_RECIPIENT_PHONE,
+            O.ORDER_ZIP_CODE AS O_ORDER_ZIP_CODE,
+            O.ORDER_ADDRESS1 AS O_ORDER_ADDRESS1,
+            O.ORDER_ADDRESS2 AS O_ORDER_ADDRESS2,
+            O.ORDER_EMAIL AS O_ORDER_EMAIL,
+            O.ORDER_MEMO AS O_ORDER_MEMO,
+            OD.ORDER_DET_NO AS OD_ORDER_DET_NO,
+            OD.ORDER_NO AS OD_ORDER_NO_DETAIL, OD.GOODS_NO AS OD_GOODS_NO,
+            OD.GOODS_OPT_NO AS OD_GOODS_OPT_NO,
+            OD.ORDER_DET_QTY AS OD_ORDER_DET_QTY,
+            G.GOODS_NM AS G_GOODS_NM,
+            G.GOODS_PRICE AS G_GOODS_PRICE,
+            G.FILE_GROUP_NO AS G_GOODS_FILE_GROUP_NO,  G.GOODS_STAT_CODE AS G_GOODS_STAT_CODE,
+            GO.GOODS_OPT_NM AS GO_GOODS_OPT_NM,
+            GO.GOODS_OPT_PRICE AS GO_GOODS_OPT_PRICE,
+            P.ORDER_NO AS P_ORDER_NO,
+            P.TID AS P_TID,
+            P.CID AS P_CID,
+            P.AID AS P_AID,
+            P.TOTAL_AMOUNT AS P_TOTAL_AMOUNT,
+            P.PAYMENT_STAT_CODE AS P_PAYMENT_STAT_CODE,
+            PS.DESCRIPTION AS P_PAYMENT_STAT_CODE_NM,
+            P.COMPLETED_AT AS P_COMPLETED_AT,
+            P.SUB_SID AS P_SUB_SID,
+            P.REQUESTED_AT AS P_REQUESTED_AT
+        FROM ORDERS O
+        INNER JOIN ORDER_DETAIL OD ON O.ORDER_NO = OD.ORDER_NO
+        INNER JOIN GOODS G ON OD.GOODS_NO = G.GOODS_NO
+        LEFT OUTER JOIN GOODS_OPTION GO ON OD.GOODS_OPT_NO = GO.GOODS_OPT_NO
+        LEFT OUTER JOIN PAYMENT_API P ON O.ORDER_NO = P.ORDER_NO
+    		LEFT OUTER JOIN COMMON_DETAIL_CODE OS ON O.ORDER_STAT_CODE = OS.COMM_CODE_DET_NO
+                                           AND OS.COMM_CODE_GRP_NO = 'ORDER_STAT_CODE'
+    		LEFT OUTER JOIN COMMON_DETAIL_CODE PS ON P.PAYMENT_STAT_CODE = PS.COMM_CODE_DET_NO
+                                           AND PS.COMM_CODE_GRP_NO = 'PAYMENT_STAT_CODE'
+        WHERE O.ORDER_NO = #{orderNo} ORDER BY OD.ORDER_DET_NO
+    </select>
+
+    <select id="getCommonCodeDetNm" parameterType="string" resultType="string">
+        SELECT COMM_CODE_DET_NM
+        FROM COMMON_DETAIL_CODE
+        WHERE COMM_CODE_DET_NO = #{commCodeDetNo}
+    </select>
+
+    <select id="getCommonCodeDetailsByGroup" parameterType="string" resultType="map">
+        SELECT
+            COMM_CODE_DET_NO AS key,
+            COMM_CODE_DET_NM AS value
+        FROM COMMON_DETAIL_CODE
+        WHERE COMM_CODE_GRP_NO = #{commCodeGrpNo}
+        ORDER BY COMM_CODE_DET_NO
+    </select>
+
+    <select id="getGoodsByGoodsNo" parameterType="int" resultType="kr.or.ddit.vo.goods.goodsVO">
+    	SELECT
+    		GOODS_NO
+    		, ART_GROUP_NO
+    		, GOODS_STAT_CODE
+    		, GOODS_NM
+    		, GOODS_PRICE
+    	FROM
+    		GOODS
+    	WHERE
+    		GOODS_NO = #{goodsNo}
+    </select>
+
+    <select id="selectMyOrderCount" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+        SELECT COUNT(DISTINCT O.ORDER_NO)
+        FROM ORDERS O
+        LEFT JOIN ORDER_DETAIL OD ON O.ORDER_NO = OD.ORDER_NO
+        LEFT JOIN GOODS G ON OD.GOODS_NO = G.GOODS_NO
+        WHERE 1=1
+        AND O.MEM_USERNAME = #{memUsername}
+        AND O.ORDER_TYPE_CODE != 'OTC001'
+
+        <if test="searchWord != null and !searchWord.equals('')">
+            AND (
+                O.ORDER_NO LIKE '%' || #{searchWord} || '%'
+                OR G.GOODS_NM LIKE '%' || #{searchWord} || '%'
+            )
+        </if>
+
+        <if test="searchStatType != null and !searchStatType.equals('')">
+            AND O.ORDER_STAT_CODE = #{searchStatType}
+        </if>
+
+        <if test="searchMap != null">
+            <if test="searchMap.orderDateStart != null and !searchMap.orderDateStart.equals('')">
+                AND O.ORDER_DATE <![CDATA[>=]]> TO_DATE(#{searchMap.orderDateStart}, 'YYYY-MM-DD')
+            </if>
+            <if test="searchMap.orderDateEnd != null and !searchMap.orderDateEnd.equals('')">
+                AND O.ORDER_DATE <![CDATA[<=]]> TO_DATE(#{searchMap.orderDateEnd}, 'YYYY-MM-DD') + 0.99999
+            </if>
+        </if>
+    </select>
+
+    <select id="selectMyOrderList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultMap="ordersWithDetailsAndPaymentMap">
+        SELECT *
+        FROM (
+            SELECT
+                A.*,
+                ROWNUM AS RN
+            FROM (
+                SELECT
+                    O.ORDER_NO AS O_ORDER_NO,
+                    O.MEM_USERNAME AS O_MEM_USERNAME,
+                    O.ORDER_TYPE_CODE AS O_ORDER_TYPE_CODE,
+                    O.ORDER_STAT_CODE AS O_ORDER_STAT_CODE,
+                    OS.DESCRIPTION AS O_ORDER_STAT_NAME,
+                    O.ORDER_PAY_METHOD_NM AS O_ORDER_PAY_METHOD_NM,
+                    O.ORDER_DATE AS O_ORDER_DATE,
+                    O.ORDER_TOTAL_PRICE AS O_ORDER_TOTAL_PRICE,
+                    O.ORDER_RECIPIENT_NM AS O_ORDER_RECIPIENT_NM,
+                    O.ORDER_RECIPIENT_PHONE AS O_ORDER_RECIPIENT_PHONE,
+                    O.ORDER_ZIP_CODE AS O_ORDER_ZIP_CODE,
+                    O.ORDER_ADDRESS1 AS O_ORDER_ADDRESS1,
+                    O.ORDER_ADDRESS2 AS O_ORDER_ADDRESS2,
+                    O.ORDER_EMAIL AS O_ORDER_EMAIL,
+                    O.ORDER_MEMO AS O_ORDER_MEMO,
+                    P.ORDER_NO AS P_ORDER_NO,
+                    P.TID AS P_TID,
+                    P.CID AS P_CID,
+                    P.AID AS P_AID,
+                    P.TOTAL_AMOUNT AS P_TOTAL_AMOUNT,
+                    P.PAYMENT_STAT_CODE AS P_PAYMENT_STAT_CODE,
+                    PS.DESCRIPTION AS P_PAYMENT_STAT_CODE_NM,
+                    P.COMPLETED_AT AS P_COMPLETED_AT,
+                    P.SUB_SID AS P_SUB_SID,
+                    P.REQUESTED_AT AS P_REQUESTED_AT,
+                    OD.ORDER_DET_NO AS OD_ORDER_DET_NO,
+                    OD.ORDER_NO AS OD_ORDER_NO_DETAIL,
+                    OD.GOODS_NO AS OD_GOODS_NO,
+                    OD.GOODS_OPT_NO AS OD_GOODS_OPT_NO,
+                    OD.ORDER_DET_QTY AS OD_ORDER_DET_QTY,
+                    G.GOODS_NM AS G_GOODS_NM,
+                    G.GOODS_PRICE AS G_GOODS_PRICE,
+                    G.FILE_GROUP_NO AS G_GOODS_FILE_GROUP_NO,
+                    G.GOODS_STAT_CODE AS G_GOODS_STAT_CODE,
+                    GO.GOODS_OPT_NM AS GO_GOODS_OPT_NM,
+                    GO.GOODS_OPT_PRICE AS GO_GOODS_OPT_PRICE
+                FROM ORDERS O
+                LEFT OUTER JOIN ORDER_DETAIL OD ON O.ORDER_NO = OD.ORDER_NO
+                LEFT OUTER JOIN GOODS G ON OD.GOODS_NO = G.GOODS_NO
+                LEFT OUTER JOIN GOODS_OPTION GO ON OD.GOODS_OPT_NO = GO.GOODS_OPT_NO
+                LEFT OUTER JOIN COMMON_DETAIL_CODE OS ON O.ORDER_STAT_CODE = OS.COMM_CODE_DET_NO
+                                               AND OS.COMM_CODE_GRP_NO = 'ORDER_STAT_CODE'
+                LEFT OUTER JOIN (
+                    SELECT PA.*,
+                           ROW_NUMBER() OVER (PARTITION BY PA.ORDER_NO ORDER BY PA.REQUESTED_AT DESC) AS rn_payment
+                    FROM PAYMENT_API PA
+                ) P ON O.ORDER_NO = P.ORDER_NO AND P.rn_payment = 1
+                LEFT OUTER JOIN COMMON_DETAIL_CODE PS ON P.PAYMENT_STAT_CODE = PS.COMM_CODE_DET_NO
+                                               AND PS.COMM_CODE_GRP_NO = 'PAYMENT_STAT_CODE'
+                WHERE 1=1
+                AND O.MEM_USERNAME = #{memUsername}
+                AND P.PAYMENT_STAT_CODE NOT IN ('PSC002', 'PSC004')
+                AND O.ORDER_TYPE_CODE != 'OTC001'
+                <if test="searchWord != null and !searchWord.equals('')">
+                    AND (
+                        O.ORDER_NO LIKE '%' || #{searchWord} || '%'
+                        OR G.GOODS_NM LIKE '%' || #{searchWord} || '%'
+                    )
+                </if>
+
+                <if test="searchStatType != null and !searchStatType.equals('')">
+                    AND O.ORDER_STAT_CODE = #{searchStatType}
+                </if>
+
+                <if test="searchMap != null">
+                    <if test="searchMap.orderDateStart != null and !searchMap.orderDateStart.equals('')">
+                        AND O.ORDER_DATE <![CDATA[>=]]> TO_DATE(#{searchMap.orderDateStart}, 'YYYY-MM-DD')
+                    </if>
+                    <if test="searchMap.orderDateEnd != null and !searchMap.orderDateEnd.equals('')">
+                        AND O.ORDER_DATE <![CDATA[<=]]> TO_DATE(#{searchMap.orderDateEnd}, 'YYYY-MM-DD') + 0.99999
+                    </if>
+                </if>
+
+                ORDER BY O.ORDER_DATE DESC, O.ORDER_NO DESC, OD.ORDER_DET_NO ASC
+            ) A
+        )
+        WHERE RN BETWEEN #{startRow} AND #{endRow}
+<!--         ORDER BY O_ORDER_NO DESC, OD_ORDER_DET_NO ASC -->
+    </select>
+
+   	<select id="getConcertCheck" parameterType="int" resultType="int">
+   		select
+   			count(*)
+   		from
+   			order_detail od
+   		inner join
+   			goods g on(od.goods_no = g.goods_no)
+   		where
+   			od.order_no = #{orderNo}
+   		and
+   			g.goods_div_code = 'GDC001'
+   	</select>
+
+   	<select id="getTicketNameAndPrice" parameterType="int" resultMap="ordersWithDetailsAndPaymentMap">
+   		SELECT
+            O.ORDER_NO AS O_ORDER_NO,
+            O.MEM_USERNAME AS O_MEM_USERNAME,
+            O.ORDER_TYPE_CODE AS O_ORDER_TYPE_CODE,
+            O.ORDER_STAT_CODE AS O_ORDER_STAT_CODE,
+            OS.DESCRIPTION AS O_ORDER_STAT_NAME,
+            O.ORDER_PAY_METHOD_NM AS O_ORDER_PAY_METHOD_NM,
+            O.ORDER_DATE AS O_ORDER_DATE,
+            O.ORDER_TOTAL_PRICE AS O_ORDER_TOTAL_PRICE,
+            O.ORDER_RECIPIENT_NM AS O_ORDER_RECIPIENT_NM,
+            O.ORDER_RECIPIENT_PHONE AS O_ORDER_RECIPIENT_PHONE,
+            O.ORDER_ZIP_CODE AS O_ORDER_ZIP_CODE,
+            O.ORDER_ADDRESS1 AS O_ORDER_ADDRESS1,
+            O.ORDER_ADDRESS2 AS O_ORDER_ADDRESS2,
+            O.ORDER_EMAIL AS O_ORDER_EMAIL,
+            O.ORDER_MEMO AS O_ORDER_MEMO,
+            OD.ORDER_DET_NO AS OD_ORDER_DET_NO,
+            OD.ORDER_NO AS OD_ORDER_NO_DETAIL, OD.GOODS_NO AS OD_GOODS_NO,
+            OD.GOODS_OPT_NO AS OD_GOODS_OPT_NO,
+            OD.ORDER_DET_QTY AS OD_ORDER_DET_QTY,
+            G.GOODS_NM AS G_GOODS_NM,
+            G.GOODS_PRICE AS G_GOODS_PRICE,
+            G.FILE_GROUP_NO AS G_GOODS_FILE_GROUP_NO,  G.GOODS_STAT_CODE AS G_GOODS_STAT_CODE,
+            t.seat_no AS GO_GOODS_OPT_NM,
+            t.ticket_price AS GO_GOODS_OPT_PRICE,
+            P.ORDER_NO AS P_ORDER_NO,
+            P.TID AS P_TID,
+            P.CID AS P_CID,
+            P.AID AS P_AID,
+            P.TOTAL_AMOUNT AS P_TOTAL_AMOUNT,
+            P.PAYMENT_STAT_CODE AS P_PAYMENT_STAT_CODE,
+            PS.DESCRIPTION AS P_PAYMENT_STAT_CODE_NM,
+            P.COMPLETED_AT AS P_COMPLETED_AT,
+            P.SUB_SID AS P_SUB_SID,
+            P.REQUESTED_AT AS P_REQUESTED_AT
+        FROM ORDERS O
+        INNER JOIN ORDER_DETAIL OD ON O.ORDER_NO = OD.ORDER_NO
+        INNER JOIN GOODS G ON OD.GOODS_NO = G.GOODS_NO
+        LEFT OUTER JOIN GOODS_OPTION GO ON OD.GOODS_OPT_NO = GO.GOODS_OPT_NO
+        LEFT OUTER JOIN PAYMENT_API P ON O.ORDER_NO = P.ORDER_NO
+    		LEFT OUTER JOIN COMMON_DETAIL_CODE OS ON O.ORDER_STAT_CODE = OS.COMM_CODE_DET_NO
+                                           AND OS.COMM_CODE_GRP_NO = 'ORDER_STAT_CODE'
+    		LEFT OUTER JOIN COMMON_DETAIL_CODE PS ON P.PAYMENT_STAT_CODE = PS.COMM_CODE_DET_NO
+                                           AND PS.COMM_CODE_GRP_NO = 'PAYMENT_STAT_CODE'
+        left join ticket t on (od.goods_opt_no = t.ticket_no)
+        WHERE O.ORDER_NO = #{orderNo}
+        ORDER BY OD.ORDER_DET_NO
+   	</select>
+
+   	<select id="getTodayOrdersCount" resultType="int">
+        SELECT
+            COUNT(ORDER_NO)
+        FROM
+            ORDERS
+        WHERE
+            TO_CHAR(ORDER_DATE, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')
+            AND ORDER_TYPE_CODE = 'OTC002'
+     </select>
+
+
+</mapper>

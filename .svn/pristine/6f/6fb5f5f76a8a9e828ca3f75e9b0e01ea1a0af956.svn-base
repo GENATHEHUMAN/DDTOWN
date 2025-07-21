@@ -1,0 +1,25 @@
+package kr.or.ddit.ddtown.service.stat;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.ddtown.mapper.stat.IStatMapper;
+
+@Service
+public class StatServiceImpl implements IStatService {
+
+	@Autowired
+	private IStatMapper statMapper;
+
+	/**
+	 * 일간 주간 월별 가입자 수 가져오기
+	 */
+	@Override
+	public List<Map<String, Object>> getUserSignupData(String searchType) {
+		return statMapper.getUserSignupData(searchType);
+	}
+
+}

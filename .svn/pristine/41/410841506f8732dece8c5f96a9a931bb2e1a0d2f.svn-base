@@ -1,0 +1,271 @@
+package kr.or.ddit.ddtown.controller.emp.audition;
+
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.View;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.service.audition.AuditionService;
+import kr.or.ddit.ddtown.service.emp.audition.IEmpAuditionService;
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.corporate.audition.AuditionUserVO;
+import kr.or.ddit.vo.corporate.audition.AuditionVO;
+import kr.or.ddit.vo.file.AttachmentFileDetailVO;
+import kr.or.ddit.vo.security.CustomUser;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/emp/audition")
+public class EmpAuditionController {
+
+	@Autowired
+	private IEmpAuditionService empAuditionService;
+
+	private String getCurrentEmpUsername() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication != null && authentication.getPrincipal() instanceof CustomUser) {
+			CustomUser customUser = (CustomUser) authentication.getPrincipal();
+			if (customUser.getEmployeeVO() != null) {
+				return customUser.getEmployeeVO().getEmpUsername();
+			}
+		}
+		return null;
+	}
+
+	// 일정목록 이동
+	@GetMapping("/schedule")
+	public String auditionList(
+			@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+            @RequestParam(name = "searchType", required = false, defaultValue = "all") String searchType,
+            @RequestParam(name = "searchWord", required = false, defaultValue = "") String searchWord,
+            @RequestParam(name = "badgeSearchType", required = false, defaultValue = "") String badgeSearchType,
+			Model model) {
+		log.info("currentPage: {}, searchType: {}, searchWord: {}, badgeSearchType: {}", currentPage, searchType, searchWord, badgeSearchType);
+		PaginationInfoVO<AuditionVO> pagingVO = new PaginationInfoVO<>();
+		
+		pagingVO.setSearchType(searchType);
+		pagingVO.setSearchWord(searchWord);
+		pagingVO.setBadgeSearchType(badgeSearchType);
+		
+		pagingVO.setCurrentPage(currentPage);
+		//검색 후 목록 페이지로 이동 할 때
+		
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = empAuditionService.selectAuditionCount(pagingVO);	//총 게시글 수
+		pagingVO.setTotalRecord(totalRecord);	//총 게시글 수 전달 후, 총 페이지 수 설정
+		
+		int fixedScreenSize = 10;
+		
+		int startRow = (currentPage - 1) * fixedScreenSize + 1;
+	    int endRow = currentPage * fixedScreenSize;
+		pagingVO.setStartRow(startRow); // 계산된 startRow 설정
+	    pagingVO.setEndRow(endRow);     // 계산된 endRow 설정	 
+		
+		//오디션 진행상테 현황 수
+		Map<String, Integer> auditionStatCnts = empAuditionService.auditionStatCnts();
+		
+		log.info("audition() 실행...!");
+		List<AuditionVO> EmpauditionList = empAuditionService.auditionList(pagingVO);
+		pagingVO.setDataList(EmpauditionList);
+
+		log.info("가져온 오디션 리스트: {}", EmpauditionList);
+		log.info("컨트롤러: JSP로 전달되는 auditionStatCnts: {}", auditionStatCnts);
+		model.addAttribute("auditionList", EmpauditionList);
+		model.addAttribute("pagingVO", pagingVO);
+		model.addAttribute("searchType", searchType);
+        model.addAttribute("searchWord", searchWord);
+        model.addAttribute("badgeSearchType", badgeSearchType);
+		model.addAttribute("auditionStatCnts", auditionStatCnts);
+
+		return "emp/audition/schedule/list";
+	}
+
+	// 일정 상세보기
+	@GetMapping("/detail.do")
+	public String auditionDetail(int audiNo, Model model) {
+		AuditionVO auditionVO = empAuditionService.detailAudition(audiNo);
+		model.addAttribute("audition", auditionVO);
+		return "emp/audition/schedule/detail";
+	}
+
+	// 등록페이지 이동
+	@GetMapping("/form.do")
+	public String auditionForm() {
+		return "emp/audition/schedule/form";
+	}
+
+	//일정 등록하기
+	@PostMapping("/insert.do")
+	public String auditionInsert(AuditionVO auditionVO, Model model, RedirectAttributes ra, Principal principal) {
+		
+		
+		log.info("----------------------------------- insert start");
+		log.info(auditionVO.toString());
+		log.info("----------------------------------- insert end");
+		
+		String goPage = "";
+
+		String empUsername = principal.getName();
+		log.info("auditionInsert->empUsername : {}", empUsername);
+
+		auditionVO.setEmpUsername(empUsername);
+
+		log.info("register->auditionVO : {}", auditionVO);
+
+		Map<String, String> errors = new HashMap<>();
+		if (StringUtils.isBlank(auditionVO.getAudiTitle())) {
+			errors.put("ApplicantNm", "제목을 입력해주세요!");
+		}
+		if (StringUtils.isBlank(auditionVO.getAudiContent())) {
+			errors.put("ApplicantNm", "제목을 입력해주세요!");
+		}
+		if (errors.size() > 0) { // 실패
+			model.addAttribute("errors", errors);
+			model.addAttribute("auditionVO", auditionVO);
+			goPage = "redirect:/emp/audition/form.do";
+		} else {
+			ServiceResult result;
+			try {
+				result = empAuditionService.insertAudition(auditionVO);
+
+				if (result.equals(ServiceResult.OK)) {
+					ra.addFlashAttribute("message", "오디션 일정이 등록되었습니다.");
+					goPage = "redirect:/emp/audition/schedule";
+				} else {
+					model.addAttribute("message", "서버에러, 다시 시도해주세요!");
+					model.addAttribute("audition", auditionVO);
+					goPage = "/emp/audition/form.do";
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				model.addAttribute("Message", "데이터 처리 중 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요!");
+				model.addAttribute("auditionVO", auditionVO);
+				goPage = "redirect:/emp/audition/form.do"; // 등록 페이지로 이동
+			}
+
+		}
+		return goPage;
+	}
+
+	// 수정하기 이동
+	@GetMapping("/updateForm.do")
+	public String auditionUpdate(int audiNo, Model model) {
+		AuditionVO auditionVO = empAuditionService.detailAudition(audiNo);
+		model.addAttribute("audition", auditionVO);
+		model.addAttribute("status", "u");
+		return "emp/audition/schedule/mod";
+	}
+	//오디션 수정하기
+	@PostMapping("/update.do")
+	public String auditionupdate(AuditionVO auditionVO, Model model, RedirectAttributes ra, Principal principal)
+			throws Exception {
+		
+		
+		log.info("----------------------------------- update start");
+		log.info(auditionVO.toString());
+		log.info("----------------------------------- update end");
+
+		String goPage = "";
+
+		String empUsername = principal.getName();
+		log.info("auditionInsert->empUsername : {}", empUsername);
+
+		auditionVO.setEmpUsername(empUsername);
+
+		log.info("register->auditionVO : {}", auditionVO);
+		ServiceResult result = empAuditionService.updateAudition(auditionVO);
+		if (result.equals(ServiceResult.OK)) {
+			ra.addFlashAttribute("message", " 수정이 완료 되었습니다!");
+			goPage = "redirect:/emp/audition/detail.do?audiNo=" + auditionVO.getAudiNo();
+		} else {
+			model.addAttribute("message", "수정에 실패하였습니다! 다시 시도해주세요...!");
+			model.addAttribute("auditionVO", auditionVO);
+			goPage = "/emp/audition/updateForm.do";
+		}
+		return goPage;
+	}
+	
+	// 오디션 일정 삭제하기
+	@PostMapping("/delete.do")
+	public String auditionDelete(int audiNo, Model model, RedirectAttributes ra) {
+		String goPage = "";
+		ServiceResult result = empAuditionService.deleteAudition(audiNo);
+		if (result.equals(ServiceResult.OK)) {// 삭제완료
+			ra.addFlashAttribute("message", "삭제가 완료되었습니다!");
+			goPage = "redirect:/emp/audition/schedule";
+		} else { // 삭제 실패
+			ra.addFlashAttribute("message", "서버오류, 다시 시도해주세요!");
+			goPage = "redirect:/emp/audition/detail.do?audiNo=" + audiNo;
+		}
+		return goPage;
+	}
+	
+	/**
+	 * 지원자 정보 매핑
+	 * 
+	 * @return
+	 */
+	 @GetMapping("/applicant") public String applicantList(
+//			 @RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+//			 @RequestParam(name = "searchType", required = false, defaultValue = "all") String searchType,
+//			 @RequestParam(name = "searchCode", required = false, defaultValue = "all") String searchCode,
+//		  	 @RequestParam(name = "searchWord", required = false, defaultValue = "") String searchWord,
+			 Model model) {
+		 
+		 List<AuditionVO> auditionDropdownList = empAuditionService.auditionDropdownList();
+//		 PaginationInfoVO<AuditionUserVO> pagingVO = new PaginationInfoVO<>();
+		 
+//		 pagingVO.setSearchType(searchType);
+//		 pagingVO.setSearchCode(searchCode);
+//		 pagingVO.setSearchWord(searchWord);
+		 
+//		 pagingVO.setCurrentPage(currentPage);
+//		 int totalRecord = empAuditionService.auditionUserCount(pagingVO);
+//		 pagingVO.setTotalRecord(totalRecord);
+
+
+//		 int fixedScreenSize = 10;
+
+//		 int startRow = (currentPage - 1) * fixedScreenSize + 1;
+//		 int endRow = currentPage * fixedScreenSize;
+//		 pagingVO.setStartRow(startRow); // 계산된 startRow 설정
+//		 pagingVO.setEndRow(endRow); // 계산된 endRow 설정
+		 		 
+//		 List<AuditionUserVO> auditionUserList = empAuditionService.auditionUserList(pagingVO);
+//		 pagingVO.setDataList(auditionUserList);
+		 
+//		 log.info("가져온 지원자 리스트: {}", auditionUserList);
+		 log.info("-----------------------------------------------------");
+		 model.addAttribute("auditionDropdownList", auditionDropdownList);
+//		 model.addAttribute("auditionUserList", auditionUserList);
+//		 model.addAttribute("pagingVO", pagingVO);
+		 
+		 return "emp/audition/applicant/list"; 
+	 }
+	 
+
+	
+	
+}

@@ -1,0 +1,53 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index</title>
+	<%@ include file="./modules/headerPart.jsp" %>
+</head>
+<body>
+	<sec:authorize access="isAnonymous()">
+		<a href="/auth/form">회원가입하기</a>
+		<a href="/login">로그인하기</a>
+		<a href="/corporate/audition/schedule">오디션 목록</a>
+		<a href="/corporate/notice/list">기업공지</a>
+	</sec:authorize>
+	<sec:authorize access="isAuthenticated()">
+		<form action="/logout" method="post">
+			<sec:csrfInput/>
+			<button type="submit" class="btn btn-sm btn-primary">로그아웃하기</button>		
+		</form>
+		<a href="/inquiry/main">1:1문의</a>
+		<a href="/faq/main">FAQ</a>
+		<br>
+		<a href="/community/fan.do">팬 커뮤니티</a><br/>
+		<a href="/concert/schedule/list">콘서트 일정</a><br/>
+		<a href="/concert/notice/list">콘서트 공지사항</a><br/>
+		<a href="/mypage">마이페이지</a><br/>
+		
+		<a href="/goods/main">굿즈샵</a>
+		<br>
+		<a href="/corporate/artist/profile">기업 아티스트 프로필</a>
+		<br>
+		<a href="/emp/audition/schedule">오디션 관리</a>
+		<br/>
+
+		
+		
+		<a href="/community/mainPage"> 커뮤니티 메인 페이지</a>
+		<br>
+		<div>
+		<sec:authentication property="principal" var="principal"/>
+		<sec:authentication property="principal.memberVO" var="member"/>
+		<p>${principal }</p>
+		<p>${member }</p>
+		</div>
+	</sec:authorize>      
+
+    <%@ include file="./modules/footerPart.jsp" %>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.faq.IFaqMapper">
+ 	<sql id="faqSearch">
+ 		<if test="searchWord != null and searchWord !='' ">
+ 			and faq_title like '%'|| #{searchWord} || '%'
+ 		</if>
+ 		<if test="searchType != null and searchType != ''">
+ 			and faq_category like '%'|| #{searchType}|| '%'
+ 		</if>
+ 	</sql>
+ 
+ 	<select id="getList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="kr.or.ddit.vo.faq.FaqVO">
+ 		select *
+		from(
+			select 
+			    faq_no
+			    , emp_username
+			    , faq_category
+			    , faq_title
+			    , faq_answer
+			    , faq_reg_date
+			    , faq_mod_date
+			    , description
+			    , totalcount total_record
+			    , rownum faq_total_row
+			from (
+				select 
+				  faq_no
+				, emp_username
+				, faq_category
+				, faq_title
+				, faq_answer
+				, faq_reg_date
+				, faq_mod_date
+				, description
+				, count(faq_no) over() totalcount
+				from faq f left outer join common_detail_code cdc on f.faq_category = cdc.comm_code_det_no
+				where 1=1
+				<include refid="faqSearch"/>
+				order by faq_no desc, faq_title desc) OrderedFAQ
+				)
+		where faq_total_row between #{startRow} and #{endRow}
+ 	</select>
+ 	
+ 	<select id="getCodeList" resultType="kr.or.ddit.vo.faq.FaqCodeVO">
+ 		select 
+		  comm_code_det_no
+		, comm_code_grp_no
+		, comm_code_det_nm
+		, use_yn
+		, description
+		from common_detail_code
+		where comm_code_grp_no = 'FAQ_CARTEGORY'
+ 	</select>
+ 
+ </mapper>

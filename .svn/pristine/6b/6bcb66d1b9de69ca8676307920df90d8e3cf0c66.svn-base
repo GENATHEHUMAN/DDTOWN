@@ -1,0 +1,41 @@
+package kr.or.ddit.security;
+
+import java.io.IOException;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
+
+	private final String ADMINROLE = "ROLE_ADMIN";
+	private final String EMPROLE= "ROLE_EMPLOYEE";
+
+	@Override
+	public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+			throws IOException, ServletException {
+//		boolean isAdminOrEmployee = false;
+//		for(GrantedAuthority auth : authentication.getAuthorities()) {
+//			if(ADMINROLE.equals(auth.getAuthority()) || EMPROLE.equals(auth.getAuthority()) ) {
+//				isAdminOrEmployee = true;
+//				break;
+//			}
+//		}
+//		log.info("isAdminOrEmployee: {}", isAdminOrEmployee);
+//
+//		if(isAdminOrEmployee){
+//			response.sendRedirect("/emplogin");
+//		}else {
+//			response.sendRedirect("/");
+//		}
+
+		// 로그아웃시 일반 로그인창으로 이동
+		response.sendRedirect("/login");
+	}
+}

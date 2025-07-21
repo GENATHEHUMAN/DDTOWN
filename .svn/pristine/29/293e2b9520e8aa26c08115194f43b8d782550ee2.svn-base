@@ -1,0 +1,16 @@
+package kr.or.ddit.ddtown.service.admin.report;
+
+import java.util.List;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.vo.report.ReportVO;
+
+public interface IReportService {
+	//신고 목록페이지
+	public List<ReportVO> reportList();
+	//신고 상세페이지
+	public ReportVO reportDetail(int reportNo);
+	//신고 처리
+	public ServiceResult reportUpdate(ReportVO reportVO);
+
+}

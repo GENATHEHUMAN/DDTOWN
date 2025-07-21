@@ -1,0 +1,47 @@
+.search-filter-controls {
+    display: flex; /* 자식 요소들을 한 줄로 정렬 */
+    align-items: center; /* 자식 요소들을 세로축 중앙에 정렬 */
+    gap: 10px; /* 요소들 사이에 간격 추가 (원하는 값으로 조정) */
+    flex-wrap: wrap; /* 화면이 작아질 경우 줄 바꿈 허용 */
+    /* 기존 인라인 스타일 margin-bottom: 20px; 는 여기에 옮겨도 좋습니다. */
+    /* margin-bottom: 20px; */ 
+    flex-direction: row-reverse;
+}
+
+/* 개별 요소의 너비 및 스타일 조정 (선택 사항) */
+.search-filter-controls .ea-search-input {
+    flex-grow: 1; /* 검색 입력창이 남은 공간을 채우도록 함 */
+    min-width: 200px; /* 최소 너비 */
+    max-width: 350px; /* 최대 너비 (너무 길어지는 것을 방지) */
+}
+
+.search-filter-controls .ea-filter-select {
+    width: 120px; /* 드롭다운 메뉴 너비 조정 */
+}
+.btn-info {
+    background-color: white !important; /* 원하는 색상 코드로 변경 */
+    color: #0080ff!important; /* 텍스트 색상이 어두울 경우 대비 */
+}
+
+/* admin_refund.css 또는 <style> 태그 내부에 추가 */
+
+/* 취소 요청 접수 상태일 때 select 박스 스타일 */
+.ea-filter-select.status-csc001 {
+    background-color: #e0f7fa; /* 연한 하늘색 */
+    border-color: #00bcd4;
+    color: #00796b; /* 텍스트 색상 */
+}
+
+/* 취소 처리중 상태일 때 select 박스 스타일 */
+.ea-filter-select.status-csc002 {
+    background-color: #fff3e0; /* 연한 주황색 */
+    border-color: #ff9800;
+    color: #e65100; /* 텍스트 색상 */
+}
+
+/* 취소 완료 상태일 때 select 박스 스타일 */
+.ea-filter-select.status-csc003 {
+    background-color: #e8f5e9; /* 연한 초록색 */
+    border-color: #4caf50;
+    color: #2e7d32; /* 텍스트 색상 */
+}

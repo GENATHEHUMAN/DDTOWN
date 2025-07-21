@@ -1,0 +1,168 @@
+body {
+    background-color: #f9f9f9;
+    font-family: 'Noto Sans KR', sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.payment-container {
+    max-width: 600px;
+    margin: 40px auto 30px auto;
+    padding: 0 20px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    flex: 1;
+}
+
+.payment-title {
+    text-align: center;
+    font-size: 2em;
+    font-weight: 700;
+    color: #222;
+    margin: 0;
+    padding: 32px 0 18px 0;
+}
+
+.payment-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding: 0 24px 24px 24px;
+}
+
+.payment-grid section {
+    background: #faf8ff;
+    border-radius: 8px;
+    padding: 18px 18px 12px 18px;
+    margin-bottom: 0;
+}
+
+.payment-grid h2 {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #8a2be2;
+    margin-bottom: 10px;
+}
+
+.info-row {
+    font-size: 1em;
+    color: #444;
+    margin-bottom: 7px;
+}
+.info-row .price {
+    color: #8a2be2;
+    font-weight: 700;
+}
+
+.method-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+}
+.method-list label {
+    font-size: 1em;
+    color: #555;
+    cursor: pointer;
+}
+
+.btn-pay {
+    display: block;
+    width: 90%;
+    max-width: 340px;
+    margin: 32px auto 32px auto;
+    padding: 18px 0;
+    background: #8a2be2;
+    color: #fff;
+    font-size: 1.15em;
+    font-weight: 600;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.2s;
+    letter-spacing: 1px;
+    text-align: center;
+}
+.btn-pay:hover {
+    background: #6d1fc2;
+}
+
+@media (max-width: 700px) {
+    .payment-container {
+        max-width: 98vw;
+        padding: 0 4px;
+    }
+    .payment-grid {
+        padding: 0 4px 18px 4px;
+    }
+}
+
+.payment-orderer {
+    background: #faf8ff;
+    border-radius: 8px;
+    padding: 18px 18px 12px 18px;
+    margin-bottom: 0;
+}
+.payment-orderer h2 {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #8a2be2;
+    margin-bottom: 10px;
+}
+#ordererForm {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+#ordererForm label {
+    font-size: 1em;
+    color: #444;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+#ordererForm input[type="text"],
+#ordererForm input[type="email"],
+#ordererForm input[type="tel"] {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 6px 10px;
+    font-size: 1em;
+    color: #333;
+    background: #fff;
+    margin-left: 4px;
+    width: 180px;
+    transition: border 0.2s;
+}
+#ordererForm input:read-only {
+    background: #f5f5f5;
+    color: #888;
+    border: 1px solid #eee;
+}
+.btn-edit {
+    display: inline-block;
+    margin-top: 6px;
+    margin-right: 6px;
+    padding: 5px 16px;
+    font-size: 0.95em;
+    background: #e0e0e0;
+    color: #444;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-edit:hover {
+    background: #d1c4e9;
+    color: #5e35b1;
+}
+.payment-guide {
+    text-align: center;
+    color: #888;
+    font-size: 0.95em;
+    margin-top: 8px;
+    margin-bottom: 18px;
+} 

@@ -1,0 +1,175 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>굿즈샵 품목 관리 - DDTOWN 관리자 시스템</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/admin_items.css">
+    <%@ include file="../../../modules/headerPart.jsp" %>
+</head> 
+
+<body>
+<div class="emp-container">
+	<%@ include file="../../modules/header.jsp" %>
+	
+	<div class="emp-body-wrapper">
+            <%@ include file="../../modules/aside.jsp" %>
+            
+            <main class="emp-content">
+                <section id="goodsItemsSection" class="ea-section active-section">
+                    <div class="ea-section-header">
+                        <h2>굿즈샵 품목 관리</h2>
+                        <div class="ea-header-actions">
+                        
+	                        <form id="searchForm" method="GET" class="input-group input-group-sm" action="${pageContext.request.contextPath}/admin/goods/items/list" style="flex-wrap: nowrap; gap: 10px;">
+	                            <input type="hidden" name="currentPage" value="1" id="page">
+	                            
+			                    <select id="goodsItemCategoryFilter" name="searchType" class="ea-filter-select">
+			                        <option value="" ${pagingVO.searchType == null || pagingVO.searchType == '' ? 'selected' : ''}>최신 등록순</option>
+			                        <option value="mod_desc" ${pagingVO.searchType == 'mod_desc' ? 'selected' : ''}>최신 수정순</option>
+			                        <option value="price_asc" ${pagingVO.searchType == 'price_asc' ? 'selected' : ''}>낮은 가격순</option>
+			                        <option value="price_desc" ${pagingVO.searchType == 'price_desc' ? 'selected' : ''}>높은 가격순</option>
+			                        <option value="stock_desc" ${pagingVO.searchType == 'stock_desc' ? 'selected' : ''}>재고 많은 순</option>
+			                        <option value="stock_asc" ${pagingVO.searchType == 'stock_asc' ? 'selected' : ''}>재고 적은 순</option>
+			                    </select>
+                    
+			                    <input type="text" id="searchWord" name="searchWord" value="${pagingVO.searchWord}" class="ea-search-input" placeholder="상품명, 상품코드로 검색...">
+	                            <div class="input-group-append">
+									<button type="submit" class="ea-btn primary" id="goodsItemSearchBtn">
+										<i class="fas fa-search"></i>검색
+									</button>
+								</div>
+	                        </form>
+							<a href="/admin/goods/items/form" class="ea-btn primary" id="itemsAddButton"><i class="fas fa-plus"></i>등록</a>
+	                    </div>
+                    </div>
+
+                    <table class="ea-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 8%;">상품코드</th>
+                                
+                                <th style="width: 10%;">판매상태</th>
+                                
+                                <th style="width: 8%;">이미지</th>
+                                <th style="width: 10%">아티스트</th>
+                                <th>상품명</th>
+                                <th style="width: 10%;">판매가격</th>
+                                <th style="width: 8%;">재고</th>
+                                
+                                <th style="width: 10%;">등록일</th>
+                            </tr>
+                        </thead>
+                        <tbody id="goodsItemsTableBody">
+                            <c:choose>
+                    			<c:when test="${not empty pagingVO.dataList and pagingVO.totalRecord > 0}">
+    								<c:forEach items="${pagingVO.dataList}" var="goods">
+                                        <tr>
+                                            <td>${goods.goodsNo}</td>
+                                            
+                                            <td>
+                                                <c:choose>
+                                                    <c:when test="${goods.statusEngKey == 'IN_STOCK'}">
+                                                        <%-- 기존: <span class="status-badge status-selling">${goods.statusKorName}</span> --%>
+                                                        <span class="status-badge status-${goods.statusEngKey.toLowerCase()}">${goods.statusKorName}</span>
+                                                    </c:when>
+                                                    <c:when test="${goods.statusEngKey == 'SOLD_OUT'}">
+                                                        <%-- 기존: <span class="status-badge status-soldout">${goods.statusKorName}</span> --%>
+                                                        <span class="status-badge status-${goods.statusEngKey.toLowerCase()}">${goods.statusKorName}</span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <%-- 기존: <span class="status-badge">${goods.statusKorName}</span> --%>
+                                                        <%-- 기타 상태가 있다면 여기에 해당 클래스를 추가할 수 있습니다. --%>
+                                                        <span class="status-badge status-${goods.statusEngKey.toLowerCase()}">${goods.statusKorName}</span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                             </td>
+                                            
+                                            <td>
+                                                <c:choose>
+                                                    <c:when test="${not empty goods.representativeImageUrl}">
+                                                        <img src="${pageContext.request.contextPath}${goods.representativeImageUrl}" alt="${goods.goodsNm} 썸네일" class="item-thumbnail">
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <img src="https://via.placeholder.com/50?text=No+Image" alt="이미지 없음" class="item-thumbnail">
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                            <td>
+                                            	${goods.artGroupName}
+                                            </td>
+                                            <td><a href="${pageContext.request.contextPath}/admin/goods/items/detail?id=${goods.goodsNo}" class="doc-link">${goods.goodsNm}</a></td>
+								            <td><fmt:formatNumber value="${goods.goodsPrice}" type="number" pattern="#,##0" /> 원</td>
+								            <td>
+								                <%-- 재고 수량 표시 --%>
+								                <c:choose>
+								                    <c:when test="${goods.stockRemainQty == null || goods.stockRemainQty <= 0}">
+								                        <span style="color: red;">품절</span> (0개)
+								                    </c:when>
+								                    <c:otherwise>
+								                        ${goods.stockRemainQty} 개
+								                    </c:otherwise>
+								                </c:choose>
+								            </td>
+											
+								            <td><fmt:formatDate value="${goods.goodsRegDate}" pattern="yyyy-MM-dd"/></td>
+                                        </tr>
+                                    </c:forEach>
+                                </c:when>
+                                <c:otherwise>
+                                    <tr>
+                                        <td colspan="9" style="text-align: center; padding: 20px;">등록된 상품이 없습니다.</td>
+                                    </tr>
+                                </c:otherwise>
+                            </c:choose>
+                        </tbody>
+                    </table>
+                    <div class="ea-pagination" id="pagingArea">
+                    	${pagingVO.pagingHTML }
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+</body>
+<%@ include file="../../../modules/footerPart.jsp" %>
+
+<%@ include file="../../../modules/sidebar.jsp" %> 
+<script type="text/javascript">
+$(function(){
+//페이지네이션 처리 시작
+const searchForm = document.getElementById("searchForm");
+const pageInput = searchForm.querySelector("input[name='currentPage']"); // hidden input의 name 사용
+const paginationControls = document.getElementById("pagingArea");
+
+if (paginationControls) { // paginationControls 요소가 존재할 때만 이벤트 리스너 추가
+    paginationControls.addEventListener("click", function(e) {
+        e.preventDefault(); // 기본 링크 이동 방지
+    
+        // 클릭된 요소가 'page-link' 클래스를 가지고 있고 'A' 또는 'SPAN' 태그인지 확인
+        if (e.target.classList.contains("page-link") && (e.target.nodeName === "A" || e.target.nodeName === "SPAN")) {
+            pageInput.value = e.target.dataset.page; // data-page 속성 값으로 hidden input 업데이트
+            searchForm.submit(); // 폼 제출
+        }
+    });
+ }
+ // 페이지네이션 처리 끝
+	// 검색결과 유지한채 이동
+	let goodsItemsTableBody = $("#goodsItemsTableBody");
+	goodsItemsTableBody.on("click","button",function(){
+		const artNo = $(this).data("artNo");
+		let searchWord = "${pagingVO.searchWord}";
+		let currentPage = "${pagingVO.currentPage}";
+		
+		sessionStorage.setItem("currentPage",currentPage);
+		sessionStorage.setItem("searchWord",searchWord);
+		
+		location.href="/admin/goods/items/itemsDetail?goodsNo="+goodsNo;
+	})
+})
+</script>
+</html>

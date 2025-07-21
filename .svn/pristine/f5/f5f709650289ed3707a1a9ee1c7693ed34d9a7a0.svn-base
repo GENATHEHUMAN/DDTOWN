@@ -1,0 +1,59 @@
+package kr.or.ddit.ddtown.controller.faq;
+
+import java.util.Base64;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import io.micrometer.common.util.StringUtils;
+import kr.or.ddit.ddtown.service.faq.IFaqService;
+import kr.or.ddit.vo.BaseVO;
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.faq.FaqVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/faq")
+public class FaqController {
+
+	@Autowired
+	private IFaqService faqService;
+	
+	@RequestMapping("/main")
+	public String faqMainPage(BaseVO baseVO,Model model) {
+		
+		log.info("FAQ 메인페이지 요청됨...");
+		
+		PaginationInfoVO<FaqVO> pagingVO = new PaginationInfoVO<>();
+		
+		int currentPage = baseVO.getPage();
+		String searchType = baseVO.getSearchType();
+		String searchWord = baseVO.getSearchWord();
+		
+		if(StringUtils.isNotBlank(searchWord)) {
+			pagingVO.setSearchWord(searchWord);
+		}
+		
+		if(StringUtils.isNotBlank(searchType)) {
+			pagingVO.setSearchType(searchType);
+		}
+
+		pagingVO.setCurrentPage(currentPage);
+		Map<Object, Object> map = faqService.getList(pagingVO);
+		
+		log.info("map : " + map);
+		
+		model.addAttribute("list", map.get("list"));
+		model.addAttribute("codeList", map.get("codeList"));
+		model.addAttribute("pagingVO", map.get("pagingVO"));
+		
+		
+		return "users/faq/main";
+	}
+	
+}

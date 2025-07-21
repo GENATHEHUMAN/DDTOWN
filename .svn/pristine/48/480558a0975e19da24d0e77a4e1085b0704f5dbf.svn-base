@@ -1,0 +1,341 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+
+<sec:authentication property="principal.username" var="currentUsername"/>
+<c:set var="isUserLoggedIn" value="${not empty currentUsername && currentUsername ne 'anonymousUser'}"/>
+
+<style>
+	/* alertDisplay.jsp의 <style> 태그 내용 또는 공통 CSS 파일에 추가 */
+
+	/* 우측 상단 유틸리티 메뉴 정렬 */
+	.utility-nav {
+	    display: flex; /* 자식 요소들을 가로로 정렬 */
+	    align-items: center; /* 세로 중앙 정렬 */
+	}
+	.utility-nav > ul {
+	    display: flex; /* li 요소들을 가로로 정렬 */
+	    align-items: center; /* 세로 중앙 정렬 */
+	    list-style: none; /* 리스트 기본 스타일 제거 */
+	    margin: 0;
+	    padding: 0;
+	}
+	.utility-nav > ul > li {
+	    margin-left: 15px; /* 각 메뉴 항목 사이의 간격 */
+	}
+	.utility-nav a.icon-btn {
+	    font-size: 1.5rem; /* 아이콘 크기를 키움 (기존 1.5em과 유사) */
+	    color: #4f5962; /* 아이콘 색상 (AdminLTE 테마와 유사하게) */
+	    text-decoration: none;
+	}
+	.utility-nav a.auth-link {
+	    font-size: 1rem;
+	    color: #4f5962;
+	    text-decoration: none;
+	}
+	.utility-nav a:hover {
+	    color: #007bff; /* 마우스 오버 시 색상 변경 */
+	}
+
+
+	/* 알림 아이콘 컨테이너 스타일 */
+	.alert-icon-container { 
+	    position: relative;
+	    display: flex; /* 내부 요소 정렬을 위해 flex로 설정 */
+	    align-items: center;
+	    justify-content: center;
+	}
+
+	/* 알림 종 아이콘 스타일 */
+	.alert-bell { 
+	    font-size: 1.5rem; /* 아이콘 크기 (em -> rem 변경, 일관성) */
+	    color: #333;
+	    cursor: pointer;
+	    line-height: 1; /* 아이콘의 수직 정렬을 위해 추가 */
+	}
+
+	/* 알림 배지(숫자) 스타일 - 아이콘을 가리지 않도록 위치 조정 */
+	.alert-badge { 
+	    position: right;
+	    top: -8px;       /* 위쪽으로 더 올림 */
+	    right: -10px;    /* 오른쪽으로 더 이동 */
+	    background-color: #dc3545; /* Bootstrap danger color */
+	    color: white;
+	    border-radius: 50%;
+	    padding: 1px 5px; /* 패딩 조정 */
+	    font-size: 0.7rem; /* 폰트 크기 조정 */
+	    font-weight: bold;
+	    border: 2px solid white; /* 아이콘과 구분되도록 테두리 추가 */
+	    display: none; /* 기본 숨김 */
+	    line-height: 1; /* 숫자 수직 정렬 */
+	    min-width: 18px; /* 한 자리 숫자도 원형 유지 */
+	    text-align: center;
+	}
+
+	/* 알림 드롭다운 메뉴 스타일 */
+	.alert-dropdown { 
+	    display: none;
+	    position: absolute;
+	    top: calc(100% + 10px); /* 아이콘 아래에 약간의 간격을 두고 표시 */
+	    right: 0;
+	    background-color: white;
+	    border: 1px solid #ddd;
+	    border-radius: 0.25rem; /* 약간의 둥근 모서리 */
+	    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+	    width: 320px; /* 너비 조정 */
+	    max-height: 400px;
+	    overflow-y: auto;
+	    z-index: 1000;
+	}
+
+	/* ... (나머지 .alert-item, .timestamp 등 스타일은 기존 것을 사용해도 좋습니다) ... */
+    .alert-dropdown-header { 
+        padding: 10px;
+        font-weight: bold;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .alert-dropdown-header a {
+        font-size: 0.9em;
+        color: #007bff;
+        text-decoration: none;
+    }
+    .alert-item { 
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        font-size: 0.9em;
+        cursor: pointer;
+    }
+    .alert-item:last-child {
+        border-bottom: none;
+    }
+    .alert-item.unread {
+        background-color: #f8f9fa;
+    }
+    .alert-item:hover {
+        background-color: #e9ecef;
+    }
+    .alert-item .message { 
+        display: block;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    .alert-item .timestamp { 
+        font-size: 0.8em;
+        color: #777;
+    }
+    .no-alerts { 
+        padding: 20px;
+        text-align: center;
+        color: #888;
+    }
+</style>
+
+<!--로그인 했을때만 알림 아이콘 영역 표시-->
+<c:if test="${isUserLoggedIn}">
+    <div class="alert-icon-container">
+        <span class="alert-bell" id="alertBellIcon">🔔</span>
+        <span class="alert-badge" id="alertBadge">0</span>	<!--안읽은 알림 개수 표시-->
+        <div class="alert-dropdown" id="alertDropdownList">
+            <div class="alert-dropdown-header">
+                <span>알림</span>
+                <a href="<c:url value='/mypage/alerts'/>" id="viewAllAlertsLink">모두 보기</a>
+            </div>
+            <div id="alertItemsContainer">
+                <div class="no-alerts">새로운 알림이 없습니다.</div>		<!--초기값-->
+            </div>
+        </div>
+    </div>
+</c:if>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function() {		// 페이지 HTML 코드 모두 실행 후 스크립트 실행
+    const csrfToken = $("meta[name='_csrf']").attr("content");
+    const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+
+    const alertBellIcon = $('#alertBellIcon');
+    const alertBadge = $('#alertBadge');
+    const alertDropdownList = $('#alertDropdownList');
+    const alertItemsContainer = $('#alertItemsContainer');
+    
+    const currentUsername = "<c:out value='${currentUsername}'/>"; 
+    const isUserLoggedIn = ${isUserLoggedIn};
+
+    if (!isUserLoggedIn || !currentUsername) {
+        console.log("사용자가 로그인하지 않았거나 사용자 ID를 가져올 수 없어 알림 기능을 초기화하지 않습니다.");
+        return;
+    }
+
+    let stompClient = null;		// STOMP 클라리언트 객체 저장용 변수
+    let unreadAlertCount = 0;		// 안읽은 알림 개수 변수
+
+    function loadInitialAlerts() { 		// 페이지 로드 시 최근 알림목록, 안읽은 알림 개수 가져오기
+        $.ajax({
+            url: '<c:url value="/mypage/alerts/latestAndUnreadCnt"/>', 
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    unreadAlertCount = response.unreadCnt || 0;
+                    updateAlertBadge(unreadAlertCount); 
+                    if (response.alerts && response.alerts.length > 0) { 
+                        alertItemsContainer.empty();		// no-alerts 알림 메시지 제거
+                        response.alerts.forEach(function(alertData) { 
+                            prependAlertToList(alertData); 		// 각 알림 목록에 추가
+                        });
+                    } else {
+                        alertItemsContainer.html('<div class="no-alerts">새로운 알림이 없습니다.</div>');
+                    }
+                } else {
+                    console.error("초기 알림 로드 실패:", response.message);
+                }
+            },
+            error: function(xhr) {
+                console.error("초기 알림 로드 중 오류 발생:", xhr.responseText);
+            }
+        });
+    }
+	
+    function updateAlertBadge(count) {		// 안읽은 알림 개수 받아서 UI 업데이트 
+        unreadAlertCount = count;
+        if (unreadAlertCount > 0) {
+            alertBadge.text(unreadAlertCount > 99 ? "99+" : unreadAlertCount).show();
+        } else {
+            alertBadge.hide();
+        }
+    }
+
+    function prependAlertToList(alertData) { // 단일 알림 데이터 -> HTML 요소 추가 후 목록 상단에 추가, alertData - 서버로부터 반환받은 알림 객체 (AlertVO)
+        if (alertItemsContainer.find('.no-alerts').length > 0) {
+            alertItemsContainer.empty();
+        }
+
+        // WebSocket으로 오는 새 알림은 기본값 안읽음 'N' , alertData(AlerVO)에서 readYn값 꺼냄
+        const isUnread = alertData.alertReadYn === 'N' || alertData.alertReadYn === false || typeof alertData.alertReadYn === 'undefined';
+        
+        const itemHtml = `
+            <div class="alert-item \${isUnread ? 'unread' : 'read'}" data-alert-no="\${alertData.alertNo}"> 
+                <div class="alert-content"> 
+                    <span class="message">\${alertData.alertContent || '새로운 알림'}</span>
+                    <span class="timestamp">\${formatAlertTimestamp(alertData.alertCreateDate)}</span> 
+                </div>
+            </div>
+        `;
+        const newItem = $(itemHtml);
+
+        if (alertData.alertUrl) {		// 알림 클릭 시 동작 정의용
+            newItem.on('click', function() {
+                markAlertAsRead($(this).data('alertNo'), $(this)); 	// 읽음 처리 후
+                window.location.href = "<c:url value='/'/>" + alertData.alertUrl.replace(/^\//, '');		// 해당 URL로 이동
+            });
+        } else {
+             newItem.on('click', function() { // URL 없어도 동작
+                markAlertAsRead($(this).data('alertNo'), $(this)); 
+            });
+        }
+        alertItemsContainer.prepend(newItem);
+    }
+    
+    function formatAlertTimestamp(timestamp) { 		// TIMESTAMP 이용해서 방금전, N분전 동작, timestamp - Date 객체로 변환 가능
+        if (!timestamp) return "";
+        const date = new Date(timestamp); 
+        const now = new Date();
+        const diffMs = now - date;
+        const diffSeconds = Math.round(diffMs / 1000);
+        const diffMinutes = Math.round(diffSeconds / 60);
+        const diffHours = Math.round(diffMinutes / 60);
+        const diffDays = Math.round(diffHours / 24);
+
+        if (diffSeconds < 60) return "방금 전";
+        if (diffMinutes < 60) return `\${diffMinutes}분 전`;
+        if (diffHours < 24) return `\${diffHours}시간 전`;
+        if (diffDays < 7) return `\${diffDays}일 전`;
+        return `\${date.getFullYear()}-\${String(date.getMonth() + 1).padStart(2, '0')}-\${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    function markAlertAsRead(alertNo, itemElement) { 		// 특정 알림 읽음처리 (개별) , alertNo - 읽음처리할 알림번호, itemElement - 화면에서 상태 변경할 알림 요소
+        if (!itemElement || !itemElement.hasClass('unread')) return;		// 이미 읽은건 요청 안보냄
+
+        $.ajax({
+            url: '<c:url value="/mypage/alerts/read"/>', 
+            type: 'POST',
+            data: { alertNo: alertNo }, 
+            headers: csrfHeader && csrfToken ? { [csrfHeader]: csrfToken } : {},
+            success: function(response) {
+                if (response.success) {
+                    itemElement.removeClass('unread').addClass('read');
+                    unreadAlertCount = Math.max(0, unreadAlertCount - 1);
+                    updateAlertBadge(unreadAlertCount); // 개별 알림 읽음처리 이후에 안읽은 개수 1 감소
+                } else {
+                    console.warn("알림 읽음 처리 실패(서버):", response.message);
+                }
+            },
+            error: function(xhr) {
+                console.error("알림 읽음 처리 중 오류:", xhr.responseText);
+            }
+        });
+    }
+
+    function connectWebSocket() {		// WebSocket 서버 연결, 엔드포인트를 통해서 실시간 알림 수신
+        const socket = new SockJS('<c:url value="/ws-stomp"/>');		// WebSocketConfig 엔드포인트
+        stompClient = Stomp.over(socket);
+        
+        stompClient.connect({}, function (frame) { 
+            console.log('STOMP Connected: ' + frame);
+            stompClient.subscribe('/user/' + currentUsername + '/queue/alert', function (alertMessage) { 		// /user/{username}/queue/alerts 경로로 자신에게 오는 알림만 받음
+                try {
+                    const newAlert = JSON.parse(alertMessage.body); 
+                    console.log("새 알림 수신:", newAlert);
+                    prependAlertToList(newAlert); 
+                    updateAlertBadge(++unreadAlertCount); 
+                    if (Notification && Notification.permission === "granted") { // 브라우저 알림 API 사용 시 알림 객체 확인
+                        new Notification("새 알림 from DDTOWN", { body: newAlert.alertContent });
+                    }
+                } catch (e) {
+                    console.error("알림 메시지 파싱 오류:", e, alertMessage.body);
+                }
+            });
+        }, function(error) {
+            console.error('STOMP 연결 오류: ' + error);
+            setTimeout(connectWebSocket, 5000);		// 에러 시 5초후 재연결 시도
+        });
+    }
+
+    alertBellIcon.on('click', function(event) {		// 알림 아이콘 클릭하면 드롭다운 메뉴 노출용 핸들러
+        event.stopPropagation();		// 이벤트 버블링 방지 (event.preventDefault())
+        alertDropdownList.toggle();
+    });
+
+    $(document).on('click', function(event) {		// 드롭다운 외부 영역 클릭하면 메뉴ㅗ 숨기기
+        if (!alertBellIcon.is(event.target) && alertDropdownList.has(event.target).length === 0) {
+            alertDropdownList.hide();
+        }
+    });
+    
+    function requestBrowserNotificationPermission() { 	// 브라우저에서 알림 권한 요청
+        if (typeof Notification !== 'undefined' && Notification.permission !== "granted" && Notification.permission !== "denied") {
+            Notification.requestPermission().then(function (permission) {
+                if (permission === "granted") {
+                    console.log("브라우저 알림 권한 허용됨");
+                } else {
+                    console.log("브라우저 알림 권한 거부됨");
+                }
+            });
+        }
+    }
+
+    if (isUserLoggedIn) {		// 페이지 로드 시 로그인 상태면 알림기능 초기화 실행
+        requestBrowserNotificationPermission(); 
+        loadInitialAlerts();    
+        connectWebSocket();
+    }
+});
+</script>

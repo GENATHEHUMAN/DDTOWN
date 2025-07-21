@@ -1,0 +1,293 @@
+body {
+  margin: 0;
+  font-family: 'Noto Sans KR', Arial, sans-serif;
+  background: #fff;
+  color: #222;
+}
+.profile-header {
+  background: #fff;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 40px 0 20px 0;
+  text-align: center;
+  border-radius : 20px;
+}
+.profile-header-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.profile-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #e9ecef;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.profile-nickname {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 18px;
+}
+.profile-search-form {
+  display: flex;
+  align-items: center;
+  background: #f7f7f7;
+  border-radius: 8px;
+  padding: 6px 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  margin-bottom: 10px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.profile-search-input {
+  border: none;
+  background: transparent;
+  font-size: 1.1em;
+  padding: 8px;
+  outline: none;
+  flex: 1;
+}
+.profile-search-btn {
+  background: #fff;
+  border: 2px solid #222;
+  border-radius: 6px;
+  font-size: 1em;
+  padding: 4px 18px;
+  margin-left: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.profile-main {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 32px 16px;
+}
+.profile-tabs {
+  display: flex;
+  gap: 24px;
+  border-bottom: 2px solid #e5e5e5;
+  margin-bottom: 24px;
+}
+.profile-tabs .tab {
+  background: none;
+  border: none;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #888;
+  padding: 8px 0;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-bottom 0.2s;
+}
+.profile-tabs .tab.active {
+  color: #aa76da;
+  border-bottom: 2px solid #8a2be2;
+}
+.profile-tab-content {
+  min-height: 180px;
+}
+.no-content {
+  text-align: center;
+  color: #bbb;
+  font-size: 1.1em;
+  padding: 60px 0;
+}
+
+
+
+.apt-tabs {
+	background-color: #ffffff;
+	border: 1px solid #e0e0e0;
+	border-radius: 8px;
+	margin-top: 20px;
+	padding: 10px;
+	display: flex;
+	justify-content: space-around;
+}
+
+.apt-tabs .tab-item {
+	padding: 15px 10px;
+	text-decoration: none;
+	color: #6c757d;
+	font-weight: bold;
+	position: relative;
+	font-size: 0.95em;
+	border-bottom: 3px solid transparent;
+	transition: color 0.2s, border-bottom-color 0.2s;
+	text-align: center;
+	flex-grow: 1;
+}
+
+.apt-tabs .tab-item:not(:last-child) {
+	border-right: 1px solid #e0e0e0;
+}
+
+.apt-tabs .tab-item:hover {
+	color: #1c1e21;
+}
+
+.apt-tabs .tab-item.active {
+	color: #8a2be2;
+	border-bottom-color: #8a2be2;
+}
+
+#postModal .modal-dialog.modal-fullscreen-custom>.btn-close.btn-close-white
+	{
+	top: 10px;
+	right: 50px;
+}
+
+#postModal .modal-dialog.modal-fullscreen-custom .modal-content {
+	min-width: 80vw;
+	width: 85vw;
+}
+
+#postUpdateModal modal-dialog.modal-fullscreen-custom {
+	position: relative;
+}
+
+#postUpdateModal .btn-close.btn-close-white {
+	position: absolute;
+	top: 10px;
+	right: -30px;
+	color: white;
+	cursor: pointer;
+	z-index: 2000;
+}
+/* 게시물 카드 스타일 */
+.post-card {
+	margin-bottom: 20px; /* 각 게시물 카드 아래 여백 */
+	border-radius: 12px; /* 카드 모서리 둥글게 */
+	overflow: hidden; /* 이미지 모서리가 둥글게 잘리도록 */
+	transition: all 0.2s ease-in-out; /* 마우스 오버 전환 효과 */
+}
+
+.post-card:hover {
+	transform: translateY(-3px); /* 살짝 위로 뜨는 효과 */
+	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15); /* 그림자 강화 */
+}
+
+/* 게시물 이미지 컨테이너 스타일 */
+.post-images-container {
+	display: flex;
+	gap: 5px; /* 이미지 사이 간격 */
+	margin-bottom: 15px; /* 이미지 아래 내용과의 간격 */
+	overflow: hidden; /* 이미지가 넘치면 숨김 */
+}
+/* 게시물 개별 이미지 스타일 (한 줄에 최대 2개) */
+.post-images-container .post-single-img {
+	width: 50%; /* 한 줄에 2개씩 배치되도록 50% 너비 */
+	height: 300px; /* 높이 고정 */
+	object-fit: cover; /* 이미지가 잘리지 않고 영역을 채우도록 */
+	border-radius: 8px; /* 이미지 모서리 둥글게 */
+}
+/* 이미지가 하나만 있을 경우 너비 조정 */
+.post-images-container.single-img .post-single-img {
+	width: 50%;
+}
+
+/* 본문 내용 스타일 */
+.post-content {
+	font-size: 0.95rem;
+	line-height: 1.5;
+	color: #333;
+}
+
+/* 좋아요/댓글 아이콘 및 텍스트 스타일 */
+.post-meta-bottom .icon-text {
+	font-size: 1rem;
+	font-weight: bold;
+}
+
+.post-meta-bottom .icon-text i {
+	margin-right: 5px;
+	font-size: 1.1rem; /* 아이콘 크기 약간 키우기 */
+}
+/* 파일 아이콘 정렬을 위한 스타일 */
+.post-content-text .file-icon { /* 클래스 이름 변경 */
+	vertical-align: middle; /* 아이콘과 텍스트를 중간에 정렬 */
+	margin-right: 5px; /* 텍스트와의 간격 */
+}
+/* 모달 내 이미지 스타일 */
+.modal-img-full {
+	max-width: 100%;
+	height: auto;
+	display: block;
+	margin: 0 auto 15px auto; /* 중앙 정렬 및 하단 여백 */
+	border-radius: 8px;
+}
+
+.comment-avatar {
+	width: 32px;
+	height: 32px;
+}
+
+.profile-tabs {
+	gap: 40px;
+}
+
+.profile-tabs .nav-link {
+	color: #6c757d;
+	border-radius: .5rem;
+	padding: 0.75rem 1.5rem;
+}
+
+.profile-tabs .nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+	background-color: #8a2be2;
+	color: #fff;
+	font-weight: bold;
+}
+
+.profile-tabs .nav-link:hover:not(.active) {
+	background-color: #e9ecef;
+	color: #495057;
+}
+.text-bg-purple{
+	background: #8a2be2;
+    color: #fff;
+}
+.detailBox{
+	position: relative;
+}
+.apt-sidebar { width: 300px; flex-shrink: 0; }
+.sidebar-widget { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px; }
+.sidebar-widget h3 { font-size: 1.1em; color: #333; margin-top: 0; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+.apt-level-widget .apt-floor-display { font-size: 1.5em; font-weight: bold; color: #8a2be2; text-align: center; margin-bottom: 5px; }
+.fan-count-tooltip-wrapper { position: relative; text-align: center; }
+.apt-level-widget .fan-count-display { font-size: 0.95em; color: #555; cursor: default; display: inline-block; }
+.fan-count-tooltip { visibility: hidden; width: auto; min-width: 100px; background-color: #333; color: #fff; text-align: center; border-radius: 6px; padding: 8px 10px; position: absolute; z-index: 10; bottom: 125%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.2s, visibility 0s linear 0.2s; white-space: nowrap; font-size: 0.85em; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+.fan-count-tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #333 transparent transparent transparent; }
+.fan-count-tooltip-wrapper:hover .fan-count-tooltip { visibility: visible; opacity: 1; transition: opacity 0.2s; }
+.membership-widget { text-align: center; background-color: #f8f0ff; border: 1px solid #e0cffc; }
+.membership-widget .membership-icon { font-size: 1.8em; color: #8a2be2; margin-bottom: 8px; }
+.membership-widget h3 { font-size: 1.2em; color: #333; margin-bottom: 8px; border-bottom: none; }
+.membership-widget p { font-size: 0.9em; color: #555; margin-bottom: 15px; line-height: 1.5; }
+.membership-widget .btn-join-membership { display: block; width: 100%; padding: 12px; background-color: #fff; color: #333; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 1em; border: 1px solid #ddd; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: background-color 0.2s ease, box-shadow 0.2s ease; }
+.membership-widget .btn-join-membership:hover { background-color: #f9f9f9; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.membership-widget .btn-join-membership span.arrow { margin-left: 5px; }
+#membershipModalOverlay .modal-close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 2em; color: #888; cursor: pointer; line-height: 1; padding: 0 5px; }
+#membershipModalOverlay .modal-close-btn:hover { color: #333; }
+#membershipModalOverlay .modal-header { flex-direction: column; }
+#membershipModalOverlay .modal-header h2 { font-size: 1.6em; color: #333; margin: 0 0 5px 0; }
+#membershipModalOverlay .modal-header .membership-duration { font-size: 0.9em; color: #666; }
+#membershipModalOverlay .membership-main-image img { width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; }
+#membershipModalOverlay .modal-body h3 { font-size: 1.1em; color: #444; margin-top: 20px; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #f0f0f0; }
+#membershipModalOverlay .modal-benefits-list, .modal-notes-list { list-style: none; padding-left: 0; font-size: 0.9em; color: #555; line-height: 1.6; }
+#membershipModalOverlay .modal-benefits-list li { margin-bottom: 8px; }
+#membershipModalOverlay .modal-notes-list li { margin-bottom: 6px; padding-left: 15px; position: relative; }
+#membershipModalOverlay .modal-notes-list li::before { content: '•'; position: absolute; left: 0; color: #8a2be2; }
+#membershipModalOverlay .modal-footer { flex-direction: column; margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; }
+#membershipModalOverlay .membership-price { margin-left: auto; font-size: 1.5em; font-weight: bold; color: #d92148; margin-bottom: 15px; }
+#membershipModalOverlay .membership-price .vat-notice { font-size: 0.7em; font-weight: normal; color: #777; }
+#membershipModalOverlay .btn-modal-purchase { display: block; width: 100%; padding: 12px; background-color: #8a2be2; color: white; border: none; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; text-decoration: none; transition: background-color 0.2s ease; }
+#membershipModalOverlay .btn-modal-purchase:hover { background-color: #7b24c9; }

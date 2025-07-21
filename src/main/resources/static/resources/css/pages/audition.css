@@ -1,0 +1,135 @@
+/* Audition Schedule Page Styles */
+
+.audition-hero,
+.audition-detail-hero {
+    background-color: var(--background-color-dark);
+    color: var(--text-color-light);
+    padding: var(--spacing-xl) 0;
+    text-align: center;
+    margin-top: 80px;
+    margin-bottom: 0;
+    border-bottom: none;
+}
+.audition-hero h2, .audition-detail-hero h2 {
+    font-size: var(--font-size-xxlarge);
+    color: var(--text-color-light);
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+    letter-spacing: -0.02em;
+}
+.audition-hero p, .audition-detail-hero p {
+    color: #aeb6c2;
+    font-size: 1.15rem;
+    margin-bottom: 0;
+}
+
+.audition-list-section {
+    background: var(--background-color);
+    padding: var(--spacing-xl) 0;
+}
+
+.audition-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xl);
+    justify-content: flex-start;
+}
+
+.audition-card {
+    background: #fff;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-md);
+    padding: var(--spacing-lg);
+    width: 320px;
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+.audition-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+}
+
+.audition-status {
+    display: inline-block;
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-bold);
+    border-radius: 999px;
+    padding: 0.3em 1em;
+    margin-bottom: var(--spacing-md);
+    margin-right: var(--spacing-md);
+    color: #fff;
+    background: var(--border-color);
+    letter-spacing: 0.05em;
+}
+.audition-status.recruiting {
+    background: #2ecc40;
+}
+.audition-status:not(.recruiting) {
+    background: #7b7b7b;
+}
+
+.audition-title {
+    font-size: var(--font-size-large);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-md);
+    color: var(--text-color-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.audition-info {
+    color: var(--text-color-secondary);
+    font-size: var(--font-size-small);
+    margin-bottom: var(--spacing-lg);
+    min-height: 70px;
+}
+
+.audition-detail-btn {
+    margin-top: auto;
+    width: 100%;
+    font-size: var(--font-size-large);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.05em;
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md) 0;
+}
+
+.btn-disabled {
+    background: #e0e0e0 !important;
+    color: #888 !important;
+    cursor: not-allowed !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 1200px) {
+    .audition-list {
+        gap: var(--spacing-lg);
+    }
+    .audition-card {
+        width: 45%;
+    }
+}
+@media (max-width: 768px) {
+    .audition-list {
+        flex-direction: column;
+        gap: var(--spacing-lg);
+    }
+    .audition-card {
+        width: 100%;
+        min-width: 0;
+    }
+    .audition-title {
+        font-size: var(--font-size-medium);
+    }
+    .audition-hero, .audition-detail-hero {
+        padding-top: 70px;
+    }
+    .audition-hero h2, .audition-detail-hero h2 {
+        font-size: 2rem;
+    }
+} 

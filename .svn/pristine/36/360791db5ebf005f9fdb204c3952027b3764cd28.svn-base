@@ -1,0 +1,16 @@
+package kr.or.ddit.ddtown.service.community;
+
+import java.util.List;
+
+import kr.or.ddit.vo.artist.AlbumVO;
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+
+public interface ICommunityMainPageService {
+
+	public List<ArtistGroupVO> getGroupLists();
+
+	public ArtistGroupVO getGroupInfo(int artGroupNo);
+
+	public List<AlbumVO> getGroupAlbum(int artGroupNo);
+
+}

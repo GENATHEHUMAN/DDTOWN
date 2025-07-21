@@ -1,0 +1,110 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>블랙리스트 관리 - DDTOWN 관리자</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .current-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+        .current-info strong {
+            color: #333;
+        }
+        .emp-form .form-group textarea#blacklistReasonText {
+            min-height: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section id="blacklistReasonFormSection" class="ea-section active-section">
+                    <div class="ea-section-header">
+                        <h2 id="blacklistFormTitle">블랙리스트 사유 수정</h2>
+                    </div>
+
+                    <div class="current-info">
+                        <p><strong>대상 회원 ID:</strong> <span id="targetUserId">troublemaker</span></p>
+                        <p><strong>현재 지정 사유:</strong> <span id="currentBlacklistReason">반복적인 욕설 및 비방 (신고 누적 15회)</span></p>
+                    </div>
+
+                    <form class="ea-form" id="blacklistReasonForm">
+                        <input type="hidden" id="blacklistRecordId" name="blacklistRecordId">
+                        <input type="hidden" id="targetMemberIdHidden" name="targetMemberId">
+
+                        <div class="form-group">
+                            <label for="blacklistReasonText">새로운 사유 또는 수정 사유</label>
+                            <textarea id="blacklistReasonText" name="reason" placeholder="수정할 사유를 입력하거나, 새로운 사유를 상세히 작성해주세요." required></textarea>
+                        </div>
+
+                        <div class="form-group-group" style="display: flex; gap: 16px; align-items: flex-end;">
+                            <div class="form-group" style="flex:1;">
+                                <label for="blacklistReleaseDate">해제 예정일 (선택)</label>
+                                <input type="date" id="blacklistReleaseDate" name="releaseDate">
+                            </div>
+                            <div class="form-group" style="flex:1;">
+                                <label for="blacklistScope">블랙리스트</label>
+                                <select id="blacklistScope" name="blacklistScope">
+                                    <option value="7">7일</option>
+                                    <option value="30">30일</option>
+                                    <option value="90">90일</option>
+                                    <option value="180">180일</option>
+                                    <option value="???">뭘 넣어야 할지 모르겠음</option>
+                                </select>
+                            </div>
+                        </div>
+                        <p class="help-text">특정 날짜에 자동으로 해제되도록 설정할 수 있습니다. 비워두면 수동 해제 전까지 유지됩니다.</p>
+
+                        <div class="ea-form-actions">
+                            <a href="/admin/community/blacklist/list" class="ea-btn outline">취소</a>
+                            <button type="button" class="ea-btn success" id="releaseNowBtn"><i class="fas fa-undo"></i> 즉시 해제</button>
+                            <button type="submit" class="ea-btn primary" id="saveBlacklistReasonBtn">사유 저장</button>
+                        </div>
+                    </form>
+                </section>
+            </main>
+        </div>
+    </div>
+<%@ include file="../../modules/footerPart.jsp" %>
+
+<%@ include file="../../modules/sidebar.jsp" %>     
+ <script>
+      
+   	// 페이지네이션 로직
+      const pagingArea = $('#pagingArea');
+      if(pagingArea.length > 0) {
+          pagingArea.on('click', 'a', function(event) { 
+              event.preventDefault();
+              const page = $(this).data('page');
+              
+              // 현재 URL에서 검색 파라미터 유지
+              const currentSearchUrl = new URL(window.location.href);
+              const searchType = currentSearchUrl.searchParams.get("searchType");
+              const searchWord = currentSearchUrl.searchParams.get("searchWord");
+
+              let targetPageUrl = '${pageContext.request.contextPath}/emp/artist/artist-management?page=' + page;
+
+              if (searchType && searchWord) {
+                  targetPageUrl += '&searchType=' + encodeURIComponent(searchType);
+                  targetPageUrl += '&searchWord=' + encodeURIComponent(searchWord);
+              }
+              window.location.href = targetPageUrl;
+          });
+      }
+  });
+</script>
+</body>
+</html> 

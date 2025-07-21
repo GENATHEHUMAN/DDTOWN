@@ -1,0 +1,223 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+
+	<main>
+	    <section class="apply-hero">
+	        <div class="container">
+	            <h2>온라인 지원</h2>
+	            <p>DD TOWN의 새로운 스타가 될 기회! 아래 지원서를 작성해주세요.</p>
+	        </div>
+	    </section>
+ 		
+        <section class="apply-form-section">
+            <div class="apply-form-container">
+                <form class="apply-form" method="post" enctype="multipart/form-data">
+					
+					 
+                    <label>오디션 종류 / 모집분야</label>
+                    <input type="hidden" id="audiNo" name="audiNo" value="${audition.audiNo}">
+                    <div style="display: flex; gap: 1em; margin-bottom: var(--spacing-md);">
+                        <input type="text" id="audition-type" name="audition_type" value="${audition.audiTitle}" readonly style="flex:1;">
+                        <input type="text" id="audition-field" name="audition_field" value="${audition.audiTypeCode}" readonly style="flex:1;">
+                    </div>
+
+                    <label for="name">이름</label>
+                    <input type="text" id="memName" name="memName" placeholder="이름을 입력하세요." required><br/>
+
+                    <label>성별</label>
+                    <div class="gender-group">
+                        <label><input type="radio" id="genderM" name="gender" value="M" required> 남자</label>
+                        <label><input type="radio" id="genderF" name="gender" value="F"> 여자</label>
+                    </div>
+
+                    <label>생년월일</label>
+                    <div class="birth-group">
+                        <select name="birthYear" id="birthYear" required>
+                            <option value="">년</option>
+                            <!-- 1980~2015 예시 -->
+                            <c:set var="currentYear" value="<%= java.time.Year.now().getValue() %>" />
+                             <c:forEach var="i" begin="0" end="100">
+                             <c:set var="year" value="${currentYear - i}" />
+				            <option value="${year}">${year}</option>
+				        </c:forEach>
+                        </select>
+                        <select name="birthMonth" id="birthMonth" required>
+                            <option value="">월</option>
+                            <c:forEach var="month" begin="1" end="12">
+            					<option value="${month}">${month}</option>
+        					</c:forEach>
+                        </select>
+                        <select name="birthDay" id="birthDay" required>
+                            <option value="">일</option>
+                            <c:forEach var="day" begin="1" end="31">
+           						<option value="${day}">${day}</option>
+        					</c:forEach>
+                        </select>
+                    </div>
+
+                    <label for="email">이메일</label>
+                    <div class="email-group">
+                        <input type="email" id="email" name="email" placeholder="이메일을 입력하세요." required>
+                        <button type="button" class="btn btn-secondary" id="emailCheckBtn">중복체크</button>
+                    </div>
+
+                    <label for="phone">휴대폰 번호</label>
+                    <input type="tel" id="memPhone" name="memPhone" placeholder="휴대폰 번호를 입력하세요. (예: 010-1234-5678)" required>
+
+                    <label for="file">사진/동영상 첨부</label>
+                    <div class="file-group">
+                        <input type="file" id="file" name="file" accept=".jpg,.jpeg,.png,.gif,.mp4,.mov,.wmv,.avi" required>
+                        <div class="file-desc">최대 용량 100MB. JPG, PNG, GIF, MP4, MOV, WMV, AVI 등 지원</div>
+                    </div>
+
+                    <label for="intro">자기소개서</label>
+                    <textarea id="memIntro" name="memIntro" placeholder="자기소개 및 지원 동기를 입력하세요." required></textarea>
+
+                    <label>개인정보 수집·이용 동의</label>
+                    <div class="privacy-box" readonly>
+                        <strong>㈜디디타운엔터테인먼트(이하 '회사')는 오디션 지원과 관련하여 아래와 같이 개인정보를 수집·이용합니다.</strong><br><br>
+                        1. 수집하는 개인정보 항목<br>
+                        - 필수항목: 성명, 생년월일(또는 성별), 성별, 연락처(이메일 주소, 휴대전화번호), 지원분야, 사진, 영상 등<br>
+                        2. 이용목적: 오디션 지원자 관리 및 심사, 합격자 안내 등<br>
+                        3. 보유 및 이용기간: 지원일로부터 1년간 보관 후 파기<br>
+                        4. 동의 거부 시 지원이 제한될 수 있습니다.<br>
+                    </div>
+                    <div class="privacy-check">
+                        <label><input type="checkbox" id="memAgree" name="memAgree" required> 위 개인정보 수집 및 이용에 동의합니다.</label>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary" id="signupBtn" >지원하기</button>
+                        <button type="reset" class="btn btn-secondary"
+                        	onclick="javascript:location.href='/corporate/audition/detail.do'">취소하기</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+</body>
+<script type="text/javascript">
+$(function(){
+	let emailCheckBtn = $("#emailCheckBtn");	// 이메일중복확인 Element
+	let emailCheckFlag = false;	
+	let signupBtn = $("#signupBtn");			//등록하기 Element
+	
+	//이메일 중복확인버튼 이벤트
+	emailCheckBtn.on("click", function(){
+		let email = $("#email").val();	//입력한 이메일 값
+		let audiNo = $("#audiNo").val();
+		
+		console.log("이메일:", email);
+		console.log("오디션 넘버:", audiNo);
+		
+		if(email == null || email == ""){
+			sweetAlert("error", "이메일을 입력해주세요!");
+			return false;
+		}
+		let data ={
+				audiNo : audiNo,
+				applicantEmail : email
+		};
+		
+		$.ajax({
+			url : "/corporate/audition/emailCheck.do",
+			type : "post",
+			data : JSON.stringify(data),
+			contentType : "application/json; charset=utf-8",
+			beforeSend : function(xhr) {
+		        xhr.setRequestHeader("${_csrf.headerName}", "${_csrf.token}");
+		    },
+			success: function(res){
+				let err = $(".errors")[0];
+				if(res == "NOTEXIST"){	//이메일 사용가능
+					sweetAlert("success", "사용 가능한 이메일입니다!");
+					$(err).html("사용 가능한 이메일 입니다!").css("color", "green");
+					emailCheckFlag =true;
+				}else{
+					sweetAlert("error", "이미 사용중인 이메일입니다!");
+					$(err).html("이미 사용중인 이메일 입니다!").css("color", "red");
+					emailCheckFlag = false;
+				}
+			}
+		})
+	});
+	
+	// 지원하기 버튼
+	signupBtn.on("click",function(){
+		let memName = $("#memName").val();		//이름
+		let memPhone = $("#memPhone").val();	//휴대폰 번호
+		let memIntro = $("#memIntro").val();	//자기소개서
+		let email = $("#email").val();			//이메일
+		let memBirth = $("#file").val();		//파일
+
+		let genderCheck = $("input[name='gender']:checked").val();	//성별 값
+		let agreeFlag = $("#memAgree").is(":checked");		//개인정보 동의
+		
+		let year = birthYear.val();		//년
+		let month = birthMonth.val();	//월
+		let day = birthDay.val();		//일
+		
+		//생년월일 유효성 검사
+	    if(year && month && day){
+			let memBirth = year + "/" + month + "/" + day;
+		}else{
+			sweetAlert("error","생년월일을 모두 선택해주세요!");
+			return false;
+		}
+	    
+	    //성별 유효성 검사
+	    if (!genderCheck) {
+	        sweetAlert("error", "성별을 선택해주세요!");
+	        return false;
+	    }
+
+
+		// 개인정보 동의 
+	    if (!agreeFlag) { // agreeFlag가 false이면 (체크 안 되어 있으면)
+	        sweetAlert("error", "개인정보 수집 및 이용에 동의해야 합니다.");
+	        return false; 
+	    }	
+		
+	 	// 유효성 검사
+		if(memName == null || memName.trim() == ""){
+			sweetAlert("error","이름을 입력해주세요!");
+			return false;
+		}
+		if(memPhone == null || memPhone.trim() == ""){
+			sweetAlert("error","전화번호를 입력해주세요!");
+			return false;
+		}
+		if(memIntro == null || memIntro.trim() == ""){
+			sweetAlert("error","자기소개를 입력해주세요!");
+			return false;
+		}
+		if (email == null || email.trim() === "") {
+	        sweetAlert("error", "이메일을 입력해주세요!");
+	        return false;
+	    }
+	    
+	    console.log("이름:", memName);
+	    console.log("선택된 성별:", genderCheck);
+	    console.log("생년월일 (년):", year);
+	    console.log("생년월일 (월):", month);
+	    console.log("생년월일 (일):", day);
+	    console.log("휴대폰 번호:", memPhone);
+	    console.log("개인정보 동의:", agreeFlag);
+	    console.log("첨부 파일:", file);
+	    console.log("자기소개서:", memIntro);
+	})
+
+})
+</script>
+</html>

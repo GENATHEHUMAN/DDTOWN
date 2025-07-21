@@ -1,0 +1,161 @@
+package kr.or.ddit.ddtown.service.concert.schedule;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.mapper.concert.schedule.IConcertScheduleMapper;
+import kr.or.ddit.ddtown.service.file.IFileService;
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.concert.ConcertVO;
+import kr.or.ddit.vo.file.AttachmentFileDetailVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class ConcertServiceImpl implements IConcertService { 
+
+    @Autowired
+    private IConcertScheduleMapper concertMapper; 
+    
+    @Autowired
+    private IFileService fileService;
+
+    @Override
+    public List<ConcertVO> selectConcertList(PaginationInfoVO<ConcertVO> pagingVO) throws Exception {
+        log.info("selectConcertList() 실행...!");
+        List<ConcertVO> list = concertMapper.selectConcertList(pagingVO);
+        if (list != null) {
+            for (ConcertVO item : list) { // 변수명 concert -> item (개별 항목 의미 명확화)
+                item.setRepresentativeImageUrl(null); // 루프 시작 시 초기화 (안전장치)
+                if (item.getFileGroupNo() != null && item.getFileGroupNo() > 0) {
+                    try {
+                        log.debug("콘서트 ID {}의 파일 그룹 {}에 대한 대표 이미지 조회 시도.", item.getConcertNo(), item.getFileGroupNo());
+                        AttachmentFileDetailVO repFile = fileService.getRepresentativeFileByGroupNo(item.getFileGroupNo());
+                        if (repFile != null && repFile.getWebPath() != null && !repFile.getWebPath().isEmpty()) {
+                            // *** 수정된 부분: VO에 대표 이미지 URL 설정 ***
+                            item.setRepresentativeImageUrl(repFile.getWebPath());
+                            log.info("목록 - 콘서트 ID {}: 설정된 대표 이미지 URL: [{}]", item.getConcertNo(), item.getRepresentativeImageUrl());
+                        } else {
+                            log.warn("목록 - 콘서트 ID {}: 대표 이미지 파일 정보를 찾지 못했거나 webPath가 비어있습니다. FileGroupNo: {}", item.getConcertNo(), item.getFileGroupNo());
+                        }
+                    } catch (Exception e) {
+                        log.error("목록 - 콘서트 ID {}의 대표 이미지 조회 중 오류 발생: {}", item.getConcertNo(), e.getMessage());
+                        // 개별 항목 오류 시 전체 목록 조회를 막지 않도록 예외를 계속 전파하지 않을 수 있음
+                    }
+                } else {
+                    // 파일 그룹 번호가 없는 경우 로그 (디버그 레벨)
+                    log.debug("목록 - 콘서트 ID {}: 파일 그룹 번호가 없거나 유효하지 않습니다.", item.getConcertNo());
+                }
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public int selectConcertCount(PaginationInfoVO<ConcertVO> pagingVO) throws Exception {
+    	log.info("selectConcertCount() 실행...!");
+        return concertMapper.selectConcertCount(pagingVO);
+    }
+
+    @Override
+    public ConcertVO selectSchedule(int concertNo) throws Exception {
+    	
+    	log.info("selectSchedule() 실행...! 조회할 콘서트 번호: {}", concertNo);
+    	ConcertVO concertVO = concertMapper.selectSchedule(concertNo); // 매퍼 호출
+        if (concertVO != null && concertVO.getFileGroupNo() != null && concertVO.getFileGroupNo() > 0) {
+            // *** VO에 전체 첨부파일 목록 설정 ***
+            List<AttachmentFileDetailVO> files = fileService.getFileDetailsByGroupNo(concertVO.getFileGroupNo());
+            concertVO.setAttachmentFileList(files);
+            log.debug("콘서트 ID {}: 파일 그룹 {}의 파일 {}개 로드", concertNo, concertVO.getFileGroupNo(), (files != null ? files.size() : 0));
+        }
+        return concertVO;
+    }
+
+    @Transactional
+    @Override
+    public ServiceResult insertSchedule(ConcertVO concertVO) throws Exception {
+    	log.info("insertSchedule() 실행...!");
+    	
+    	// 1. 파일 업로드 처리 및 파일 그룹 번호 받기
+        if (concertVO.getConcertFiles() != null && concertVO.getConcertFiles().length > 0 && !concertVO.getConcertFiles()[0].isEmpty()) {
+
+            Integer fileGroupNo = fileService.uploadAndProcessFiles(concertVO.getConcertFiles(), "CONCERT_SCHEDULE");
+            concertVO.setFileGroupNo(fileGroupNo); // 생성된 파일 그룹 번호를 ConcertVO에 설정
+        } else {
+            concertVO.setFileGroupNo(null);
+        }
+
+        // 2. 콘서트 일정 정보 DB에 삽입
+        int row = concertMapper.insertSchedule(concertVO); // 이 때 fileGroupNo도 함께 저장됨
+        log.info("DB 등록 후 concertNo (from VO after selectKey): {}", concertVO.getConcertNo());
+
+        if (row > 0) {
+            log.info("콘서트 일정 DB 등록 성공: {}", concertVO.getConcertNm());
+            return ServiceResult.OK;
+        }
+        log.warn("콘서트 일정 DB 등록 실패: {}", concertVO.getConcertNm());
+        return ServiceResult.FAILED;
+    }
+
+    @Transactional
+    @Override
+    public ServiceResult updateSchedule(ConcertVO concertVO) throws Exception {
+    	log.info("updateSchedule() 실행...!");
+    	
+    	// 기존 파일 그룹 번호 유지 또는 새로 설정하는 로직 필요
+        ConcertVO originalConcert = concertMapper.selectSchedule(concertVO.getConcertNo());
+        Integer existingFileGroupNo = (originalConcert != null) ? originalConcert.getFileGroupNo() : null;
+
+        // 새로 첨부된 파일 처리
+        if (concertVO.getConcertFiles() != null && concertVO.getConcertFiles().length > 0 && !concertVO.getConcertFiles()[0].isEmpty()) {
+            Integer newFileGroupNo;
+            if (existingFileGroupNo == null) { // 기존 파일 그룹이 없으면 새로 생성
+                newFileGroupNo = fileService.uploadAndProcessFiles(concertVO.getConcertFiles(), "CONCERT_SCHEDULE_UPD"); // 사용자 FileServiceImpl에 맞게 uploaderId 제거
+            } else {
+                // 기존 파일 그룹에 파일을 추가하거나, 기존 그룹을 삭제하고 새로 만드는 정책 필요
+                // 여기서는 기존 그룹을 유지하고 새 파일만 추가하는 개념으로 가정 (FileService 수정 필요)
+                // 또는, 간단하게는 기존 파일 그룹을 삭제 후 새 그룹 생성
+                // fileService.deleteFilesByGroupNo(existingFileGroupNo); // 예시: 기존 파일 모두 삭제
+                newFileGroupNo = fileService.uploadAndProcessFiles(concertVO.getConcertFiles(), "CONCERT_SCHEDULE_UPD"); // 사용자 FileServiceImpl에 맞게 uploaderId 제거
+                log.info("수정 시 기존 파일 그룹 {} 처리 후 새 파일 그룹 {} 생성됨", existingFileGroupNo, newFileGroupNo);
+            }
+            concertVO.setFileGroupNo(newFileGroupNo); // 새로 생성되거나 업데이트된 파일 그룹 번호로 설정
+        } else if (existingFileGroupNo != null && (concertVO.getConcertFiles() == null || concertVO.getConcertFiles().length == 0 || concertVO.getConcertFiles()[0].isEmpty())) {
+            // 새 파일은 없고 기존 파일 그룹만 있는 경우, 삭제 로직이 없다면 기존 fileGroupNo 유지
+            // 만약 모든 파일을 삭제하고 싶다면, 컨트롤러에서 fileGroupNo를 null로 설정하거나,
+            // deleteFileNos 등으로 모든 기존 파일을 삭제하도록 요청해야 함.
+            // 여기서는 concertVO에 이미 fileGroupNo가 설정되어 있다고 가정 (컨트롤러에서 조회 후 전달).
+            // concertVO.setFileGroupNo(existingFileGroupNo); // 이 라인은 컨트롤러에서 이미 조회된 concertVO를 사용한다면 불필요
+        }
+
+        int row = concertMapper.updateSchedule(concertVO); // 사용자 매퍼 메소드명 사용
+        if (row > 0) {
+            log.info("콘서트 일정 수정 성공 (번호: {})", concertVO.getConcertNo());
+            return ServiceResult.OK;
+        }
+        log.warn("콘서트 일정 수정 실패 (번호: {}): {}", concertVO.getConcertNo());
+        return ServiceResult.FAILED;
+    }
+
+    @Transactional
+    @Override
+    public ServiceResult deleteSchedule(int concertNo) throws Exception {
+    	log.info("deleteSchedule() 실행...!");
+        
+    	ConcertVO concertToDelete = concertMapper.selectSchedule(concertNo); // 파일 그룹 번호 확인을 위해 조회
+
+        if (concertToDelete != null && concertToDelete.getFileGroupNo() != null && concertToDelete.getFileGroupNo() > 0) {
+            fileService.deleteFilesByGroupNo(concertToDelete.getFileGroupNo()); // 연관된 파일 모두 삭제
+        }
+
+        int row = concertMapper.deleteSchedule(concertNo);
+        if (row > 0) {
+            return ServiceResult.OK;
+        }
+        return ServiceResult.FAILED;
+    }
+}

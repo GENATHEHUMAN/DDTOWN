@@ -1,0 +1,13 @@
+package kr.or.ddit.ddtown.service.emp.edms;
+
+import java.util.List;
+
+import kr.or.ddit.vo.edms.EdmsFormVO;
+
+public interface IEdmsService {
+
+	public List<EdmsFormVO> getFormList();
+
+	public EdmsFormVO getForm(int formNo);
+
+}

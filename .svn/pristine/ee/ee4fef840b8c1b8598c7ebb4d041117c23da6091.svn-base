@@ -1,0 +1,21 @@
+package kr.or.ddit.ddtown.controller.admin.report;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("/admin/community/report")
+public class AdminReportController {
+
+
+	@GetMapping("/list")
+	public String ReportMain() {
+		return "admin/report/reportList";
+	}
+	
+	@GetMapping("/detail")
+	public String ReportDetail() {
+		return "admin/report/reportDetail";
+	}
+}

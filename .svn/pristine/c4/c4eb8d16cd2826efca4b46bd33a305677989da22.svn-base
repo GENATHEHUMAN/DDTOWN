@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.community.CommunityProfileMapper">
+
+ 	<!-- DM : 아티스트 회원 아이디 조회 -->
+ 	<select id="getMemUsernameByComuProfile" resultType="String">
+ 		SELECT
+ 			MEM_USERNAME
+ 		FROM
+ 			COMMUNITY_PROFILE
+ 		WHERE
+ 			COMU_PROFILE_NO = #{comuProfileNo}
+ 	</select>
+
+ 	<select id="selectArtistGroupNoByComuProfileNo" parameterType="int" resultType="int">
+ 		SELECT
+ 			ART_GROUP_NO
+ 		FROM
+ 			COMMUNITY_PROFILE
+ 		WHERE
+ 			COMU_PROFILE_NO = #{comuProfileNo}
+ 	</select>
+
+ 	<select id="selectComuprofileNoByMember" resultType="int">
+ 		SELECT
+ 			COMU_PROFILE_NO
+ 		FROM
+ 			COMMUNITY_PROFILE
+ 		WHERE
+ 			MEM_USERNAME = #{memUsername}
+ 		AND
+ 			ART_GROUP_NO = #{artGroupNo}
+ 		AND
+ 			(COMU_MEM_CAT_CODE = 'CMCC002' OR COMU_MEM_CAT_CODE = 'CMCC003')
+ 	</select>
+
+ 	<select id="getComuNicknmByUsername" resultType="String">
+ 		SELECT DISTINCT
+ 			COMU_NICKNM
+ 		FROM
+ 			COMMUNITY_PROFILE
+ 		WHERE
+ 			MEM_USERNAME = #{currentUser}
+ 		AND
+ 			ART_GROUP_NO = #{artGroupNo}
+ 	</select>
+
+ 	<select id="selectProfileImgPathByUsername" resultType="String">
+ 		SELECT
+ 			COMU_PROFILE_IMG
+ 		FROM
+ 			COMMUNITY_PROFILE
+ 		WHERE
+ 			MEM_USERNAME = #{msgUsername}
+ 		AND
+ 			ART_GROUP_NO = #{artGroupNo}
+ 	</select>
+
+ 	<insert id="registCommProfileArtist" parameterType="kr.or.ddit.vo.community.CommunityProfileVO" useGeneratedKeys="true">
+ 		<selectKey keyProperty="comuProfileNo" resultType="int" order="BEFORE">
+ 			select community_profile_seq.nextval from dual
+ 		</selectKey>
+ 		INSERT INTO community_profile (
+		    comu_profile_no
+		    , art_group_no
+		    , mem_username
+		    , comu_mem_cat_code
+		    , comu_profile_img
+		    , comu_nicknm
+		    , comu_reg_date
+		    , comu_del_yn
+		) VALUES (
+		    #{comuProfileNo}
+		  , #{artGroupNo}
+		  , #{memUsername}
+		  , #{comuMemCatCode}
+		  , #{comuProfileImg}
+		  , #{comuNicknm}
+		  , to_char(sysdate,'YYYY/MM/DD')
+		  , 'N'
+		)
+ 	</insert>
+
+ 	<select id="selectCommProfileArtist" parameterType="kr.or.ddit.vo.artist.ArtistVO" resultType="kr.or.ddit.vo.community.CommunityProfileVO">
+ 		SELECT
+		    comu_profile_no
+		  , art_group_no
+		  , mem_username
+		  , comu_mem_cat_code
+		  , comu_profile_img
+		  , comu_nicknm
+		  , comu_reg_date
+		  , comu_del_yn
+		FROM
+		    community_profile
+		where
+			art_group_no = #{artGroupNo}
+		and
+			mem_username = #{memUsername}
+ 	</select>
+
+ 	<update id="updateCommProfileArtistDelYN" parameterType="kr.or.ddit.vo.community.CommunityProfileVO">
+ 		UPDATE community_profile
+		SET
+		    comu_del_yn = case when comu_del_yn = 'Y' then 'N'
+		                        else 'Y'
+		                        end
+		WHERE
+		    comu_profile_no = #{comuProfileNo}
+ 	</update>
+
+ 	<insert id="insertCommuProfile" parameterType="kr.or.ddit.vo.community.CommunityProfileVO" useGeneratedKeys="true">
+ 		<selectKey keyProperty="comuProfileNo" order="BEFORE" resultType="int">
+ 			select community_profile_seq.nextval from dual
+ 		</selectKey>
+ 		INSERT INTO community_profile (
+		    comu_profile_no
+		    , art_group_no
+		    , mem_username
+		    , comu_mem_cat_code
+		    , comu_profile_img
+		    , comu_nicknm
+		    , comu_reg_date
+		    , comu_del_yn
+		) VALUES (
+		    #{comuProfileNo}
+		  , #{artGroupNo}
+		  , #{memUsername}
+		  , 'CMCC001'
+		  ,	#{comuProfileImg}
+		  , #{comuNicknm}
+		  , sysdate
+		  , 'N'
+		)
+ 	</insert>
+
+ 	<update id="deleteCommuProfile" parameterType="kr.or.ddit.vo.community.CommunityProfileVO">
+ 		UPDATE community_profile
+		SET
+		    comu_del_yn = 'Y'
+		WHERE
+	        comu_profile_no = #{comuProfileNo}
+ 	</update>
+
+ 	<select id="getCommunityProfile" resultType="kr.or.ddit.vo.community.CommunityProfileVO">
+ 		SELECT
+ 			COMU_PROFILE_NO
+		  , ART_GROUP_NO
+		  , MEM_USERNAME
+		  , COMU_MEM_CAT_CODE
+		  , COMU_PROFILE_IMG
+		  , COMU_NICKNM
+		  , COMU_REG_DATE
+		  , COMU_DEL_YN
+		FROM
+			COMMUNITY_PROFILE
+		WHERE
+			MEM_USERNAME = #{username}
+		AND
+			ART_GROUP_NO = #{artGroupNo}
+		AND comu_del_yn = 'N'
+ 	</select>
+
+ 	<update id="updateCommunityProfile" parameterType="kr.or.ddit.vo.community.CommunityProfileVO">
+ 		UPDATE COMMUNITY_PROFILE
+		SET
+    		COMU_MEM_CAT_CODE = #{comuMemCatCode}
+		WHERE
+        	COMU_PROFILE_NO = #{comuProfileNo}
+ 	</update>
+
+ 	<update id="updateProfile" parameterType="kr.or.ddit.vo.community.CommunityProfileVO">
+ 		UPDATE community_profile
+		SET
+		      comu_profile_img = #{comuProfileImg}
+		    , comu_nicknm = #{comuNicknm}
+		WHERE
+	        comu_profile_no = #{comuProfileNo}
+ 	</update>
+
+ 	<update id="updateArtistProfileImg" >
+ 		UPDATE community_profile
+		SET
+		    comu_profile_img = #{comuProfileImg}
+		WHERE
+		    mem_username = #{memUsername}
+	    AND
+	    	comu_del_yn = 'N'
+ 	</update>
+ 	
+ 	<select id="selectArtNoByUsername" parameterType="string" resultType="int">
+ 		SELECT
+ 			art_no
+ 		  FROM
+ 		  	ARTIST
+ 		 WHERE
+ 		 	mem_username = #{memUsername}
+ 	</select>
+ </mapper>

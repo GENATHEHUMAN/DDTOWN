@@ -1,0 +1,14 @@
+package kr.or.ddit.ddtown.service.emp.artist;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.vo.artist.ArtistVO;
+
+@Service
+public interface IArtistService {
+	
+	// 전체 아티스트 조회
+	List<ArtistVO> getAllArtists();
+}

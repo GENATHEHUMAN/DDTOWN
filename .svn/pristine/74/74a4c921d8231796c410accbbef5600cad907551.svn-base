@@ -1,0 +1,424 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c"%>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DDTOWN SQUARE</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath}/resources/css/pages/mainservice_home.css" />
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath}/resources/css/pages/mainservice_common.css" />
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath}/resources/css/pages/artist_community.css" />
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath}/resources/css/pages/artist_community_main.css" />
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"
+/>
+<style type="text/css">
+	/* 기존 스타일 유지 */
+	.artist-grid {
+	  display: grid;
+	  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	  gap: 30px;
+	  padding: 30px; /* .container 클래스에서 이미 설정 */
+	  max-width: 1400px; /* .container 클래스에서 이미 설정 */
+	  margin: 0 auto; /* .container 클래스에서 이미 설정 */
+	}
+
+	.artist-item {
+	  background: #fff;
+	  border-radius: 12px;
+	  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+	  transition: transform 0.3s ease, box-shadow 0.3s ease;
+	  height: 100%;
+	}
+
+	.artist-item:hover {
+	  transform: translateY(-5px);
+	  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+	}
+
+	.artist-link {
+	  text-decoration: none;
+	  color: inherit;
+	  display: block;
+	  padding: 20px;
+	  height: 100%;
+	}
+
+	.artist-image-placeholder {
+	  width: 100%;
+	  height: 300px;
+	  background: #f5f5f5;
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	  border-radius: 8px;
+	  margin-bottom: 15px;
+	  overflow: hidden;
+	}
+
+	.artist-image {
+	  width: 100%;
+	  height: 100%;
+	  object-fit: cover;
+	  border-radius: 8px;
+	}
+
+	.artist-name {
+	  text-align: center;
+	  font-weight: bold;
+	  margin: 0;
+	  color: #333;
+	  font-size: 1.2em;
+	  padding: 10px 0;
+	}
+
+    .followed-artists-section { 	
+        background-color: #f9f9f9; 
+        margin-top: 30px;
+        margin-bottom: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+
+    .followed-artists-section .section-title {
+        text-align: center;
+        margin: 0 0 20px 0;
+        color: #333;
+        font-size: 1.5em;
+        padding-top: 10px;
+    }
+
+    .followed-artists-section .followed-list {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        gap: 30px;
+        flex-wrap: wrap;
+    }
+
+    .followed-artists-section .followed-list li {
+        margin-bottom: 0;
+    }
+
+    .followed-artists-section .followed-artist-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* 가운데 정렬 */
+        text-decoration: none;
+        color: #555;
+        transition: color 0.2s ease;
+        font-size: 1.0em; /* 텍스트 크기 조절 */
+        white-space: nowrap; /* 이름 줄바꿈 방지 */
+    }
+
+    .followed-artists-section .followed-artist-link:hover {
+        color: #8a2be2; /* 호버 시 보라색으로 변경 */
+    }
+    
+    .followed-artist-profile-wrapper {
+        position: relative; /* 배지 위치의 기준점 */
+        width: 70px; /* .followed-artist-profile과 동일한 너비 */
+        height: 70px; /* .followed-artist-profile과 동일한 높이 */
+        border-radius: 50%; /* 원형 모양 유지 */
+        margin-bottom: 8px; /* 이름과의 간격 유지 */
+        display: flex; /* 이미지가 없어도 '이미지' 텍스트를 중앙에 정렬하기 위함 */
+        align-items: center;
+        justify-content: center;
+        overflow: hidden; /* 배지가 원형 밖으로 나가지 않도록 */
+    }
+
+    .followed-artists-section .followed-artist-profile {
+        width: 70px; 
+        height: 70px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 8px; /* 이름과의 간격 */
+        border: 2px solid #ddd; 
+        transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .followed-artists-section .followed-artist-link:hover .followed-artist-profile,
+    .followed-artists-section .followed-artist-link:hover .followed-artist-profile-placeholder {
+        border-color: #8a2be2; /* 호버 시 테두리 색상 변경 */
+        transform: scale(1.05); /* 호버 시 약간 확대 */
+    }
+    
+    /* 멤버십 배지 스타일 */
+    .membership-badge {
+        position: absolute;
+        bottom: 33px; /* 오른쪽 아래 위치 조절 (필요에 따라 값 변경) */
+        right: -7px; /* 오른쪽 아래 위치 조절 (필요에 따라 값 변경) */
+        background-color: #8a2be2;
+        color: #ffffff; /* 아이콘 색상 (어두운 주황색 계열) */
+        border: 1px solid #6a0dad;
+        border-radius: 50%; /* 원형 모양 */
+        padding: 8px; /* 아이콘 크기 조절을 위한 패딩 */
+        font-size: 0.8em; /* 아이콘 자체의 크기 */
+        display: flex; /* 아이콘 중앙 정렬 */
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2); /* 은은한 그림자 */
+        z-index: 10; /* 프로필 이미지 위에 표시되도록 */
+    }
+    
+    .swiper{
+    	height: 400px;
+    }
+    .container {
+        max-width: 1200px;
+	    margin: 30px auto;
+	    padding: 20px;
+	    background-color: #ffffff;
+	    border-radius: 8px;
+	    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+    .goods-shop-section {
+        background-color: #ffffff;
+        margin-top: 30px;
+        margin-bottom: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        padding: 40px 0;
+        max-width: 1245px;
+        height: 400px;
+        position: relative;
+    }
+
+    .goods-shop-section .section-title {
+        text-align: center;
+        margin: 0 0 20px 0;
+        color: #333;
+        font-size: 1.5em;
+    }
+    
+    .goods-shop-section .more-button {
+        position: absolute;
+        top: 40px;
+        right: 20px; 
+        padding: 8px 15px;
+        color: #666;
+        text-decoration: none; /* 밑줄 제거 */
+        font-size: 15px; /* 폰트 크기 조절 */
+        transition: background-color 0.3s ease; /* 호버 효과 */
+        white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+        z-index: 1; /* 다른 요소 위에 표시 */
+        font-family: "Noto Sans KR", 돋움, Dotum, 굴림, Gulim, Tahoma, Verdana, sans-serif;
+    }
+    
+    .goods-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* 굿즈 5개에 맞춰 조정 */
+        gap: 20px;
+        justify-content: center; /* 가운데 정렬 */
+        padding: 0 20px; /* 좌우 패딩 */
+    }
+
+    .goods-item {
+        background: #fff; 
+        border-radius: 12px; 
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+        padding: 15px;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease; 
+        height: 100%; 
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .goods-item:hover {
+        transform: translateY(-5px); 
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    .goods-image-placeholder {
+        width: 100%;
+        height: 180px;
+        background: #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        overflow: hidden;
+    }
+
+    .goods-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .goods-name {
+        font-weight: bold;
+        margin: 0 0 5px 0;
+        color: #333;
+        font-size: 1.1em;
+    }
+
+    .goods-price {
+        color: #8a2be2; 
+        font-weight: bold;
+        font-size: 1.15em;
+    }
+</style>
+</head>
+
+<body>
+    <jsp:include page="/WEB-INF/views/modules/communityHeader.jsp" />
+
+	<section class="slider-section">
+		<div class="slider-container swiper">
+			<div class="slider-wrapper swiper-wrapper">
+				<div class="slide-item swiper-slide" style="background-color: #ffb6c1">
+					<span>Slide 1: Event</span>
+				</div>
+				<div class="slide-item swiper-slide" style="background-color: #add8e6">
+					<span>Slide 2: Notice</span>
+				</div>
+				<div class="slide-item swiper-slide" style="background-color: #90ee90">
+					<span>Slide 3: Promotion</span>
+				</div>
+				<div class="slide-item swiper-slide" style="background-color: #ffd700">
+					<span>Slide 4: New Artist</span>
+				</div>
+				<div class="slide-item swiper-slide" style="background-color: #f08080">
+					<span>Slide 5: Special</span>
+				</div>
+			</div>
+			<button class="slide-button prev" aria-label="이전 슬라이드">
+				&#10094;</button>
+			<button class="slide-button next" aria-label="다음 슬라이드">
+				&#10095;</button>
+		</div>
+		<div class="slide-dots"></div>
+	</section>
+
+    <div class="followed-artists-section container">
+        <ul class="followed-list">
+        	<c:forEach items="${following }" var="following">
+				<div style="position: relative;">
+					<a href="/community/gate/${following.artGroupNo}/apt" class="followed-artist-link">
+						<c:if test="${not empty following.artGroupProfileImg }">
+							<img alt="${following.artGroupNm }" src="${following.artGroupProfileImg }" class="followed-artist-profile">
+							<span>${following.artGroupNm }</span>
+						</c:if>
+						<c:if test="${empty following.artGroupProfileImg }">
+							<span>이미지</span>
+						</c:if>
+						<c:if test="${following.isMembership == 1 }">
+							<i class="fas fa-crown membership-badge" title="멤버십 회원"></i>
+						</c:if>
+					</a>
+				</div>
+			</c:forEach>
+			<c:if test="${empty following }">
+				<span style="color: gray">아직 팔로우한 아티스트가 없습니다! 아티스트를 팔로우하세요!</span>
+			</c:if>
+        </ul>
+    </div>
+
+	<div class="container">
+		<h2>DDTOWN ARTIST</h2>
+		<div class="artist-grid">
+			<c:forEach items="${groups }" var="group">
+				<div class="artist-item">
+					<a href="/community/gate/${group.artGroupNo}" class="artist-link">
+						<div class="artist-image-placeholder">
+							<c:if test="${not empty group.artGroupProfileImg }">
+								<img alt="${group.artGroupNm }" src="${group.artGroupProfileImg }" class="artist-image">
+							</c:if>
+							<c:if test="${empty group.artGroupProfileImg }">
+								<span>이미지</span>
+							</c:if>
+						</div>
+						<p class="artist-name">${group.artGroupNm }</p>
+					</a>
+				</div>
+			</c:forEach>
+		</div>
+	</div>
+	
+	<%-- 굿즈샵 상품 5개 공간 추가 --%>
+    <div class="goods-shop-section container">
+        <h3 class="section-title">BEST ITEM</h3><a href="${pageContext.request.contextPath}/goods/main" class="more-button">상품 더보기 ></a>
+        <div class="goods-grid">
+            <div class="goods-item">
+                <a href="#" class="goods-link">
+                    <div class="goods-image-placeholder">
+                        <img src="${pageContext.request.contextPath}/resources/images/goods_example1.jpg" alt="굿즈 상품 1" class="goods-image" onerror="this.onerror=null; this.src='https://via.placeholder.com/180x180?text=Goods+1';">
+                    </div>
+                    <p class="goods-name">공식 응원봉 V3</p>
+                    <p class="goods-price">₩ 35,000</p>
+                </a>
+            </div>
+            <div class="goods-item">
+                <a href="#" class="goods-link">
+                    <div class="goods-image-placeholder">
+                        <img src="${pageContext.request.contextPath}/resources/images/goods_example2.jpg" alt="굿즈 상품 2" class="goods-image" onerror="this.onerror=null; this.src='https://via.placeholder.com/180x180?text=Goods+2';">
+                    </div>
+                    <p class="goods-name">한정판 포토카드 세트</p>
+                    <p class="goods-price">₩ 15,000</p>
+                </a>
+            </div>
+            <div class="goods-item">
+                <a href="#" class="goods-link">
+                    <div class="goods-image-placeholder">
+                        <img src="${pageContext.request.contextPath}/resources/images/goods_example3.jpg" alt="굿즈 상품 3" class="goods-image" onerror="this.onerror=null; this.src='https://via.placeholder.com/180x180?text=Goods+3';">
+                    </div>
+                    <p class="goods-name">아티스트 로고 티셔츠</p>
+                    <p class="goods-price">₩ 28,000</p>
+                </a>
+            </div>
+            <div class="goods-item">
+                <a href="#" class="goods-link">
+                    <div class="goods-image-placeholder">
+                        <img src="${pageContext.request.contextPath}/resources/images/goods_example4.jpg" alt="굿즈 상품 4" class="goods-image" onerror="this.onerror=null; this.src='https://via.placeholder.com/180x180?text=Goods+4';">
+                    </div>
+                    <p class="goods-name">DIY 키링 만들기 세트</p>
+                    <p class="goods-price">₩ 22,000</p>
+                </a>
+            </div>
+            <div class="goods-item">
+                <a href="#" class="goods-link">
+                    <div class="goods-image-placeholder">
+                        <img src="${pageContext.request.contextPath}/resources/images/goods_example5.jpg" alt="굿즈 상품 5" class="goods-image" onerror="this.onerror=null; this.src='https://via.placeholder.com/180x180?text=Goods+5';">
+                    </div>
+                    <p class="goods-name">미니 피규어 컬렉션</p>
+                    <p class="goods-price">₩ 40,000</p>
+                </a>
+            </div>
+        </div>
+    </div>
+	<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script type="text/javascript">
+    	const swiper = new Swiper('.swiper', {
+	    	  loop: true,
+	    	  autoplay : {
+	    		  delay : 3000,
+	    	  },
+
+	    	  // Navigation arrows
+	    	  navigation: {
+	    	    nextEl: '.slide-button.next',
+	    	    prevEl: '.slide-button.prev',
+	    	  },
+	    	  
+	    	  parallax: true, 	//패럴랙스 효과 활성화
+
+    	});
+    </script>
+</body>
+</html>

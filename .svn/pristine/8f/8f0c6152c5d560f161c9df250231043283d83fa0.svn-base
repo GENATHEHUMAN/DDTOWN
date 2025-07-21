@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.community.ICommunityNoticeMapper">
+
+    <select id="selectNoticeCount" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+        SELECT COUNT(*)
+        FROM COMMUNITY_NOTICE
+        <where>
+        	<if test="artGroupNo != null and artGroupNo > 0">
+                AND art_group_no = #{artGroupNo}
+            </if>
+            <if test="searchCategoryCode != null and searchCategoryCode != ''">
+            AND comu_noti_cat_code = #{searchCategoryCode}
+	        </if>
+	        <if test="searchWord != null and searchWord != ''">
+	            AND (comu_noti_title LIKE '%' || #{searchWord} || '%' OR comu_noti_content LIKE '%' || #{searchWord} || '%')
+	        </if>
+        </where>
+    </select>
+
+    <select id="selectNoticeList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="kr.or.ddit.vo.community.CommunityNoticeVO">
+        SELECT b.*
+        FROM (
+            SELECT a.*, ROWNUM AS rnum
+            FROM (
+                SELECT
+                    cn.comu_noti_no, cn.emp_username, cn.file_group_no, cn.art_group_no,
+                    cn.comu_noti_title, cn.comu_noti_content, cn.comu_noti_reg_date, cn.comu_noti_mod_date,
+                    cn.comu_noti_cat_code, ag.art_group_nm
+                    FROM COMMUNITY_NOTICE cn
+                    INNER JOIN artist_group ag on(ag.art_group_no = cn.art_group_no)
+                <where>
+                	<if test="artGroupNo != null and artGroupNo > 0">
+                        AND cn.art_group_no = #{artGroupNo}
+                    </if>
+                    <if test="searchCategoryCode != null and searchCategoryCode != ''">
+		            	AND cn.comu_noti_cat_code = #{searchCategoryCode}
+			        </if>
+                    <if test="searchWord != null and searchWord != ''">
+                        <choose>
+                            <when test="searchType == 'title'">
+                                AND cn.comu_noti_title LIKE '%' || #{searchWord} || '%'
+                            </when>
+                            <when test="searchType == 'content'">
+                                AND cn.comu_noti_content LIKE '%' || #{searchWord} || '%'
+                            </when>
+                            <otherwise>
+                                AND (
+                                    cn.comu_noti_title LIKE '%' || #{searchWord} || '%'
+                                    OR cn.comu_noti_content LIKE '%' || #{searchWord} || '%'
+                                )
+                            </otherwise>
+                        </choose>
+                    </if>
+                </where>
+                ORDER BY cn.comu_noti_no DESC
+            ) a
+        ) b
+        <![CDATA[
+        WHERE rnum >= #{startRow} AND rnum <= #{endRow}
+        ]]>
+    </select>
+
+    <insert id="insertNotice" parameterType="kr.or.ddit.vo.community.CommunityNoticeVO">
+        <selectKey keyProperty="comuNotiNo" resultType="int" order="BEFORE">
+            SELECT COMMUNITY_NOTICE_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO COMMUNITY_NOTICE(
+            comu_noti_no, emp_username, file_group_no, art_group_no, comu_noti_cat_code,
+            comu_noti_title, comu_noti_content, comu_noti_reg_date, comu_noti_mod_date
+        ) VALUES (
+            #{comuNotiNo}
+            , #{empUsername, jdbcType=VARCHAR}
+            , #{fileGroupNo, jdbcType=NUMERIC}
+            , #{artGroupNo, jdbcType=NUMERIC}
+            , #{comuNotiCatCode, jdbcType=VARCHAR}
+            , #{comuNotiTitle, jdbcType=VARCHAR}
+            , #{comuNotiContent, jdbcType=CLOB}
+            , SYSDATE
+            , SYSDATE
+        )
+    </insert>
+
+    <select id="selectNotice" parameterType="int" resultType="kr.or.ddit.vo.community.CommunityNoticeVO">
+        SELECT
+            cn.comu_noti_no, cn.emp_username, cn.file_group_no, cn.art_group_no,
+            cn.comu_noti_title, cn.comu_noti_content, cn.comu_noti_reg_date, cn.comu_noti_mod_date,
+            cn.comu_noti_cat_code, ag.art_group_nm, p.username
+        FROM COMMUNITY_NOTICE cn
+        LEFT OUTER JOIN ARTIST_GROUP ag on(ag.art_group_no = cn.art_group_no)
+        LEFT OUTER JOIN EMPLOYEE e on(cn.emp_username = e.emp_username)
+        LEFT OUTER JOIN PEOPLE p on(e.emp_username = p.username)
+        WHERE cn.comu_noti_no = #{comuNotiNo}
+    </select>
+
+    <update id="updateNotice" parameterType="kr.or.ddit.vo.community.CommunityNoticeVO">
+        UPDATE COMMUNITY_NOTICE
+        SET
+            file_group_no = #{fileGroupNo, jdbcType=NUMERIC},
+            comu_noti_title = #{comuNotiTitle, jdbcType=VARCHAR},
+            comu_noti_content = #{comuNotiContent, jdbcType=CLOB},
+            comu_noti_cat_code = #{comuNotiCatCode, jdbcType=VARCHAR},
+            comu_noti_mod_date = SYSDATE 
+        WHERE comu_noti_no = #{comuNotiNo}
+    </update>
+
+    <delete id="deleteNotice" parameterType="int">
+        DELETE FROM COMMUNITY_NOTICE
+        WHERE comu_noti_no = #{comuNotiNo}
+    </delete>
+    
+    <select id="clientPointOfViewCommunityNoticeList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="kr.or.ddit.vo.community.CommunityNoticeVO">
+    	select *
+			from (
+			select rownum as rnum,
+			      a.*
+			from
+			(SELECT
+			    comu_noti_no,
+			    emp_username,
+			    file_group_no,
+			    art_group_no,
+			    comu_noti_content,
+			    comu_noti_reg_date,
+			    comu_noti_mod_date,
+			    comu_noti_title,
+			    comu_noti_cat_code
+			FROM
+			    community_notice
+			where art_group_no = #{artGroupNo}
+			<if test="searchWord != null and searchWord != ''">
+			and comu_noti_title like '%'||#{searchWord}||'%'
+			</if>
+			<if test="searchType != null and searchType != ''">
+			and comu_noti_cat_code like '%'||#{searchType}||'%'
+			</if>
+			order by comu_noti_reg_date desc)a
+			)b
+			<![CDATA[
+	       WHERE rnum >= #{startRow} AND rnum <= #{endRow}
+	       ]]>
+    </select>
+</mapper>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.orders.IPaymentMapper">
+	<update id="updatePaymentStatus" parameterType="kr.or.ddit.vo.order.PaymentVO">
+        UPDATE PAYMENT_API
+        SET
+            PAYMENT_STAT_CODE = #{paymentStatCode}
+        WHERE
+            ORDER_NO = #{orderNo}
+     </update>
+     
+	<select id="selectPaymentByOrderNo" parameterType="int" resultType="kr.or.ddit.vo.order.PaymentVO">
+        SELECT
+            P.TID             AS tid,
+            P.ORDER_NO        AS orderNo,
+            P.CID             AS cid,
+            P.AID             AS aid,
+            P.TOTAL_AMOUNT    AS totalAmount,
+            P.PAYMENT_STAT_CODE AS paymentStatCode,
+            -- COMMON_DETAIL_CODE 테이블의 DESCRIPTION 컬럼을 사용
+            CDC.DESCRIPTION AS paymentStatCodeNm, 
+            P.SUB_SID         AS subSid,
+            -- DB의 TIMESTAMP 컬럼을 PaymentVO의 String requestedAt 필드에 맞게 변환
+            TO_CHAR(P.REQUESTED_AT, 'YYYY-MM-DD HH24:MI:SS') AS requestedAt, 
+            P.COMPLETED_AT    AS completedAt
+        FROM (
+            -- 내부 쿼리에서 ROW_NUMBER() 함수를 사용하여 정렬된 순위를 부여
+            SELECT
+                T.*, -- PAYMENT_API 테이블의 모든 컬럼 선택
+                ROW_NUMBER() OVER (ORDER BY T.REQUESTED_AT DESC) as rn
+            FROM 
+                PAYMENT_API T
+            WHERE
+                T.ORDER_NO = #{orderNo}
+        ) P
+        LEFT JOIN
+            COMMON_DETAIL_CODE CDC ON P.PAYMENT_STAT_CODE = CDC.COMM_CODE_DET_NO
+                                    AND CDC.COMM_CODE_GRP_NO = 'PAYMENT_STAT_CODE' -- 'PAYMENT_STAT_CODE'는 공통 코드 그룹 ID
+        WHERE
+            P.rn = 1
+    </select>
+
+</mapper>

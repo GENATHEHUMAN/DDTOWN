@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.admin.goods.notice.IAdminGoodsNoticeMapper">
+
+	<resultMap type="kr.or.ddit.vo.goods.goodsNoticeVO" id="goodsNoticeMap">
+	    <id property="goodsNotiNo" column="GOODS_NOTI_NO"/>
+	    <result property="empUsername" column="EMP_USERNAME"/>
+	    <result property="fileGroupNo" column="FILE_GROUP_NO"/>
+	    <result property="goodsNotiTitle" column="GOODS_NOTI_TITLE"/>
+	    <result property="goodsNotiContent" column="GOODS_NOTI_CONTENT"/>
+	    <result property="goodsRegDate" column="GOODS_REG_DATE"/>
+	    <result property="goodsModDate" column="GOODS_MOD_DATE"/>
+	
+	    <collection property="fileDetailList" ofType="kr.or.ddit.vo.file.AttachmentFileDetailVO">
+	        <id property="attachDetailNo" column="ATTACH_DETAIL_NO"/>
+	        <result property="fileGroupNo" column="FILE_GROUP_NO"/>
+	        <result property="fileOriginalNm" column="FILE_ORIGINAL_NM"/>
+	        <result property="fileSaveNm" column="FILE_SAVE_NM"/>
+	        <result property="fileSavepath" column="FILE_SAVEPATH"/>
+	        <result property="fileExt" column="FILE_EXT"/>
+	        <result property="fileMimeType" column="FILE_MIME_TYPE"/>
+	        <result property="fileFancysize" column="FILE_FANCYSIZE"/>
+	        <result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+	    </collection>
+	</resultMap>
+	
+	<select id="selectTotalGoodsNoticeCount" resultType="int">
+	    SELECT
+	        COUNT(GN.GOODS_NOTI_NO)
+	    FROM GOODS_NOTICE GN
+	    WHERE 1=1
+	    <if test="searchType != null and searchWord != null and !searchWord.equals('')">
+	        <choose>
+	            <when test="searchType == 'title'">
+	                AND GN.GOODS_NOTI_TITLE LIKE '%' || #{searchWord} || '%'
+	            </when>
+	            <when test="searchType == 'content'">
+	                AND GN.GOODS_NOTI_CONTENT LIKE '%' || #{searchWord} || '%'
+	            </when>
+	            <when test="searchType == 'writer'">
+	                AND GN.EMP_USERNAME LIKE '%' || #{searchWord} || '%'
+	            </when>
+	            <otherwise>
+	                AND (
+	                    GN.GOODS_NOTI_TITLE LIKE '%' || #{searchWord} || '%'
+	                    OR GN.GOODS_NOTI_CONTENT LIKE '%' || #{searchWord} || '%'
+	                    OR GN.EMP_USERNAME LIKE '%' || #{searchWord} || '%'
+	                )
+	            </otherwise>
+	        </choose>
+	    </if>
+	</select>
+
+    <select id="selectAllGoodsNotices" resultType="kr.or.ddit.vo.goods.goodsNoticeVO">
+	    SELECT A.*
+	    FROM (
+	        SELECT
+	            ROW_NUMBER() OVER (
+	                <if test="searchType == null or searchType.equals('')">
+	                    ORDER BY GN.GOODS_REG_DATE DESC, GN.GOODS_NOTI_NO DESC
+	                </if>
+	                <if test="searchType != null">
+	                    <choose>
+	                        <when test="searchType == 'newest'">
+	                            ORDER BY GN.GOODS_REG_DATE DESC, GN.GOODS_NOTI_NO ASC
+	                        </when>
+	                        <when test="searchType == 'oldest'">
+	                            ORDER BY GN.GOODS_REG_DATE ASC, GN.GOODS_NOTI_NO DESC
+	                        </when>
+	                        <otherwise>
+	                            ORDER BY GN.GOODS_REG_DATE DESC, GN.GOODS_NOTI_NO DESC
+	                        </otherwise>
+	                    </choose>
+	                </if>
+	            ) RNUM,
+	            GN.GOODS_NOTI_NO,
+	            GN.EMP_USERNAME,
+	            GN.FILE_GROUP_NO,
+	            GN.GOODS_NOTI_TITLE,
+	            GN.GOODS_NOTI_CONTENT,
+	            GN.GOODS_REG_DATE,
+	            GN.GOODS_MOD_DATE
+	            FROM GOODS_NOTICE GN
+	        WHERE 1=1
+	        <if test="searchType != null and searchWord != null and !searchWord.equals('')">
+	            <choose>
+	                <when test="searchType == 'title'">
+	                    AND GN.GOODS_NOTI_TITLE LIKE '%' || #{searchWord} || '%'
+	                </when>
+	                <when test="searchType == 'content'">
+	                    AND GN.GOODS_NOTI_CONTENT LIKE '%' || #{searchWord} || '%'
+	                </when>
+	                <when test="searchType == 'writer'">
+	                    AND GN.EMP_USERNAME LIKE '%' || #{searchWord} || '%'
+	                </when>
+	                <otherwise>
+	                    AND (
+	                        GN.GOODS_NOTI_TITLE LIKE '%' || #{searchWord} || '%'
+	                        OR GN.GOODS_NOTI_CONTENT LIKE '%' || #{searchWord} || '%'
+	                        OR GN.EMP_USERNAME LIKE '%' || #{searchWord} || '%'
+	                    )
+	                </otherwise>
+	            </choose>
+	        </if>
+	    ) A
+	    WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+
+	<select id="selectGoodsNotice" parameterType="int" resultMap="goodsNoticeMap">
+	    SELECT
+	        GN.GOODS_NOTI_NO,
+	        GN.EMP_USERNAME,
+	        GN.FILE_GROUP_NO,
+	        GN.GOODS_NOTI_TITLE,
+	        GN.GOODS_NOTI_CONTENT,
+	        GN.GOODS_REG_DATE,
+	        GN.GOODS_MOD_DATE,
+	        AFD.ATTACH_DETAIL_NO,
+	        AFD.FILE_GROUP_NO AS AFD_FILE_GROUP_NO,
+	        AFD.FILE_ORIGINAL_NM,
+	        AFD.FILE_SAVE_NM,
+	        AFD.FILE_SAVEPATH,
+	        AFD.FILE_EXT,
+	        AFD.FILE_MIME_TYPE,
+	        AFD.FILE_FANCYSIZE,
+	        AFD.FILE_SAVE_DATE
+	    FROM GOODS_NOTICE GN
+	    LEFT OUTER JOIN ATTACHMENT_FILE_DETAIL AFD ON GN.FILE_GROUP_NO = AFD.FILE_GROUP_NO
+	    WHERE GN.GOODS_NOTI_NO = #{goodsNotiNo}
+	</select>
+
+    <delete id="deleteGoodsNotice">
+        DELETE FROM GOODS_NOTICE
+        WHERE GOODS_NOTI_NO = #{goodsNotiNo}
+    </delete>
+
+	<insert id="insertGoodsNotice" useGeneratedKeys="true" keyProperty="goodsNotiNo">
+	    <selectKey keyProperty="goodsNotiNo" resultType="int" order="BEFORE">
+	        SELECT GOODS_NOTICE_SEQ.NEXTVAL FROM DUAL
+	    </selectKey>
+	    INSERT INTO GOODS_NOTICE (
+	        GOODS_NOTI_NO,
+	        EMP_USERNAME,
+	        FILE_GROUP_NO,
+	        GOODS_NOTI_TITLE,
+	        GOODS_NOTI_CONTENT,
+	        GOODS_REG_DATE,
+	        GOODS_MOD_DATE
+	    ) VALUES (
+	        #{goodsNotiNo},
+	        #{empUsername},
+	        #{fileGroupNo},
+	        #{goodsNotiTitle},
+	        #{goodsNotiContent},
+	        SYSDATE,
+	        SYSDATE
+	    )
+	</insert>
+	
+	<update id="updateGoodsNotice" parameterType="goodsNoticeVO">
+	    UPDATE GOODS_NOTICE
+	    SET
+	        GOODS_NOTI_TITLE = #{goodsNotiTitle},
+	        GOODS_NOTI_CONTENT = #{goodsNotiContent},
+	        GOODS_MOD_DATE = SYSDATE,
+	        FILE_GROUP_NO = #{fileGroupNo, jdbcType=NUMERIC}
+	
+	    WHERE GOODS_NOTI_NO = #{goodsNotiNo}
+	</update>
+    
+</mapper>

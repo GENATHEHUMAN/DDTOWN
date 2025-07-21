@@ -1,0 +1,293 @@
+package kr.or.ddit.ddtown.service.goods.order;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.ddtown.mapper.orders.ICancelMapper;
+import kr.or.ddit.ddtown.mapper.orders.IOrderMapper;
+import kr.or.ddit.ddtown.service.file.IFileService;
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.file.AttachmentFileDetailVO;
+import kr.or.ddit.vo.goods.goodsVO;
+import kr.or.ddit.vo.order.OrderCancelVO;
+import kr.or.ddit.vo.order.OrderDetailVO;
+import kr.or.ddit.vo.order.OrdersVO;
+import kr.or.ddit.vo.order.PaymentVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class OrderServiceImpl implements IOrderService {
+	
+	@Autowired
+	private IOrderMapper orderMapper;
+	
+	@Autowired
+	private IFileService fileService; // FileService 주입
+	
+	@Autowired
+	private ICancelMapper cancelMapper;
+	
+    // (선택 사항) 코드명을 자주 조회한다면 캐싱하여 성능 향상
+    private final Map<String, String> commonCodeCache = new ConcurrentHashMap<>();
+
+
+	@Override
+	@Transactional // 주문과 주문 상세는 한 트랜잭션으로 묶여야 합니다.
+	public int createOrder(OrdersVO order, List<OrderDetailVO> orderDetails) {
+		log.info("createOrder() 호출 - 주문 생성 시작. username: {}", order.getMemUsername());
+
+		try {
+			// 1. ORDERS 테이블에 주문 기본 정보 삽입
+            // MyBatis Mapper XML에서 useGeneratedKeys="true" keyProperty="orderNo" 설정 시
+            // insert 후 order 객체의 orderNo 필드에 생성된 PK 값이 자동으로 채워집니다.
+			int orderResult = orderMapper.insertOrder(order);
+			if (orderResult == 0) {
+				throw new RuntimeException("OrdersVO 삽입 실패: 데이터베이스에 주문 기본 정보를 저장할 수 없습니다.");
+			}
+			
+			int createdOrderNo = order.getOrderNo(); // 생성된 orderNo 가져오기
+			log.info("새로운 주문 생성 완료. orderNo: {}", createdOrderNo);
+
+			// 2. ORDER_DETAIL 테이블에 주문 상세 정보 삽입
+			if (orderDetails != null && !orderDetails.isEmpty()) {
+				for (OrderDetailVO detail : orderDetails) {
+					detail.setOrderNo(createdOrderNo); // 생성된 주문 번호 설정
+					int detailResult = orderMapper.insertOrderDetail(detail);
+					if (detailResult == 0) {
+						throw new RuntimeException("OrderDetailVO 삽입 실패: 주문 상세 정보를 저장할 수 없습니다. 상품번호: " + detail.getGoodsNo());
+					}
+				}
+				log.info("주문 상세 {}건 삽입 완료.", orderDetails.size());
+			}
+
+			return createdOrderNo; // 생성된 주문 번호 반환
+		} catch (Exception e) {
+			log.error("createOrder() 주문 생성 중 오류 발생: {}", e.getMessage(), e);
+			// @Transactional에 의해 런타임 예외 발생 시 자동으로 롤백됩니다.
+			throw new RuntimeException("주문 생성 실패", e);
+		}
+	}
+
+	@Override
+	public void savePaymentReadyInfo(PaymentVO payment) {
+		log.info("savePaymentReadyInfo() 호출 - 결제 준비 정보 저장. orderNo: {}, tid: {}",
+	             payment.getOrderNo(), payment.getTid());
+		try {
+			// PAYMENT_API 테이블에 결제 준비 정보 삽입
+			int result = orderMapper.insertPaymentReadyInfo(payment);
+			if (result == 0) {
+				throw new RuntimeException("PaymentVO 결제 준비 정보 삽입 실패: 데이터베이스에 결제 준비 정보를 저장할 수 없습니다.");
+			}
+			log.info("PaymentVO 결제 준비 정보 저장 완료. orderNo: {}", payment.getOrderNo());
+		} catch (Exception e) {
+			log.error("savePaymentReadyInfo() 결제 준비 정보 저장 중 오류 발생: {}", e.getMessage(), e);
+			throw new RuntimeException("결제 준비 정보 저장 실패", e);
+		}
+	}
+
+    // --- 주문 및 결제 상태 업데이트 메서드 ---
+
+	@Override
+	public void updateOrderStatus(int orderNo, String statusCode) {
+		log.info("updateOrderStatus() 호출 - orderNo: {}, statusCode: {}", orderNo, statusCode);
+		try {
+            // Map을 사용하여 orderNo와 statusCode를 Mapper로 전달
+			Map<String, Object> params = new HashMap<>();
+			params.put("orderNo", orderNo);
+			params.put("statusCode", statusCode);
+			int result = orderMapper.updateOrderStatus(params);
+			if (result == 0) {
+				log.warn("updateOrderStatus() 주문 상태 업데이트 실패 또는 대상 없음. orderNo: {}", orderNo);
+                // 특정 상황에서 0이 반환될 수 있으므로, 반드시 예외를 던질지는 정책에 따라 다름.
+                // 여기서는 로그만 남기도록 함.
+			}
+		} catch (Exception e) {
+			log.error("updateOrderStatus() 주문 상태 업데이트 중 오류 발생: {}", e.getMessage(), e);
+			throw new RuntimeException("주문 상태 업데이트 실패", e);
+		}
+	}
+
+	@Override
+	public void updatePaymentStatus(int orderNo, String statusCode) {
+		log.info("updatePaymentStatus() 호출 - orderNo: {}, statusCode: {}", orderNo, statusCode);
+		try {
+			Map<String, Object> params = new HashMap<>();
+			params.put("orderNo", orderNo);
+			params.put("statusCode", statusCode);
+			int result = orderMapper.updatePaymentStatus(params);
+			if (result == 0) {
+				log.warn("updatePaymentStatus() 결제 상태 업데이트 실패 또는 대상 없음. orderNo: {}", orderNo);
+			}
+		} catch (Exception e) {
+			log.error("updatePaymentStatus() 결제 상태 업데이트 중 오류 발생: {}", e.getMessage(), e);
+			throw new RuntimeException("결제 상태 업데이트 실패", e);
+		}
+	}
+
+    // --- 주문 및 결제 정보 조회 메서드 ---
+
+	@Override
+	public OrdersVO getOrderByOrderNo(int orderNo) {
+		log.info("getOrderByOrderNo() 호출 - orderNo: {}", orderNo);
+		try {
+			return orderMapper.selectOrderByOrderNo(orderNo);
+		} catch (Exception e) {
+			log.error("getOrderByOrderNo() 주문 정보 조회 중 오류 발생: {}", e.getMessage(), e);
+			throw new RuntimeException("주문 정보 조회 실패", e);
+		}
+	}
+
+	@Override
+	public PaymentVO getPaymentReadyInfoByOrderNo(int orderNo) {
+		log.info("getPaymentReadyInfoByOrderNo() 호출 - orderNo: {}", orderNo);
+		try {
+			return orderMapper.selectPaymentReadyInfoByOrderNo(orderNo);
+		} catch (Exception e) {
+			log.error("getPaymentReadyInfoByOrderNo() 결제 준비 정보 조회 중 오류 발생: {}", e.getMessage(), e);
+			throw new RuntimeException("결제 준비 정보 조회 실패", e);
+		}
+	}
+
+    // --- 주문 및 결제 정보 전체 업데이트 메서드 (Approve 성공 후 사용) ---
+
+    // 이 메서드도 @Transactional로 묶는 것이 좋습니다.
+    // 결제 승인 후 주문 상태 업데이트, 결제 정보 업데이트, 재고 감소, 장바구니 비우기 등
+    // 여러 DB 작업이 연쇄적으로 일어날 수 있기 때문입니다.
+    // 또는 OrderRestController에서 각 update 메서드를 호출할 때,
+    // 컨트롤러 레벨에서 @Transactional을 걸고 여러 서비스 메서드를 호출할 수도 있습니다.
+    // 하지만 서비스 계층에서 트랜잭션을 관리하는 것이 일반적입니다.
+	@Override
+	@Transactional // 트랜잭션 관리 (필요시)
+	public void updateOrder(OrdersVO order) {
+		log.info("updateOrder() 호출 - orderNo: {}", order.getOrderNo());
+		try {
+			int result = orderMapper.updateOrder(order);
+			if (result == 0) {
+				log.warn("updateOrder() 주문 정보 전체 업데이트 실패 또는 대상 없음. orderNo: {}", order.getOrderNo());
+			}
+		} catch (Exception e) {
+			log.error("updateOrder() 주문 정보 전체 업데이트 중 오류 발생: {}", e.getMessage(), e);
+			throw new RuntimeException("주문 정보 전체 업데이트 실패", e);
+		}
+	}
+
+	@Override
+	@Transactional // 트랜잭션 관리 (필요시)
+	public void updatePaymentInfo(PaymentVO payment) {
+		log.info("updatePaymentInfo() 호출 - orderNo: {}", payment.getOrderNo());
+		try {
+			int result = orderMapper.updatePaymentInfo(payment);
+			if (result == 0) {
+				log.warn("updatePaymentInfo() 결제 정보 전체 업데이트 실패 또는 대상 없음. orderNo: {}", payment.getOrderNo());
+			}
+		} catch (Exception e) {
+			log.error("updatePaymentInfo() 결제 정보 전체 업데이트 중 오류 발생: {}", e.getMessage(), e);
+			throw new RuntimeException("결제 정보 전체 업데이트 실패", e);
+		}
+	}
+
+	@Override
+    public List<OrderDetailVO> getOrderDetailsByOrderNo(int orderNo) {
+        log.info("getOrderDetailsByOrderNo() 호출 - orderNo: {}", orderNo);
+        List<OrderDetailVO> orderDetails = orderMapper.selectOrderDetailsByOrderNo(orderNo);
+
+        // 각 OrderDetailVO에 대표 이미지 URL 설정 (선택 사항, 필요하다면)
+        if (orderDetails != null) {
+            for (OrderDetailVO detail : orderDetails) {
+                // goodsFileGroupNo가 null이 아닌지 확인하고, 0보다 큰지 확인
+                if (detail.getGoodsFileGroupNo() != 0) {
+                    try {
+                        AttachmentFileDetailVO representativeFile = fileService.getRepresentativeFileByGroupNo(detail.getGoodsFileGroupNo());
+                        if (representativeFile != null && representativeFile.getWebPath() != null) {
+                            detail.setRepresentativeImageUrl(representativeFile.getWebPath());
+                        }
+                    } catch (Exception e) {
+                        log.error("대표 이미지 조회 중 오류 발생 (goodsNo: {}): {}", detail.getGoodsNo(), e.getMessage());
+                        // 오류 발생 시 이미지를 설정하지 않고 넘어감
+                    }
+                }
+            }
+        }
+        return orderDetails;
+    }
+
+	@Override
+    public OrdersVO retrieveOrderDetail(int orderNo) {
+		// 콘서트 인지 아닌지 확인하기위한 변수
+		int concertCheck = orderMapper.getConcertCheck(orderNo);
+		OrdersVO order = null;
+		if(concertCheck > 0) {
+			order = orderMapper.getTicketNameAndPrice(orderNo);			
+		}else {
+			order = orderMapper.getOrderDetailsWithAllInfo(orderNo);
+		}
+		
+		if (order != null && order.getOrderDetailList() != null) {
+	        for (OrderDetailVO detail : order.getOrderDetailList()) {
+	            if (detail.getGoodsFileGroupNo() != 0 && detail.getGoodsFileGroupNo() > 0) {
+	                try {
+	                    AttachmentFileDetailVO representativeFile = fileService.getRepresentativeFileByGroupNo(detail.getGoodsFileGroupNo());
+	                    if (representativeFile != null && representativeFile.getWebPath() != null) {
+	                        detail.setRepresentativeImageUrl(representativeFile.getWebPath());
+	                    }
+	                } catch (Exception e) {
+	                    log.error("대표 이미지 조회 중 오류 발생 (goodsNo: {}): {}", detail.getGoodsNo(), e.getMessage());
+	                }
+	            }
+	        }
+	    }
+		
+        return order;
+    }
+
+	@Transactional
+	@Override
+	public void insertOrderCancel(OrderCancelVO orderCancelVO) {
+		log.info("### [OrderService.insertOrderCancel] 서비스 진입. OrderCancelVO: {}", orderCancelVO);
+        try {
+            // ★★★★★ 여기! 이 한 줄이 빠져 있었던 겁니다 ★★★★★
+        		cancelMapper.insertOrderCancel(orderCancelVO); // DAO(Mapper) 호출
+            log.info("### [OrderService.insertOrderCancel] ORDER_CANCEL DAO 호출 성공.");
+        } catch (Exception e) {
+            log.error("### [OrderService.insertOrderCancel] ORDER_CANCEL 정보 삽입 중 DB 오류 발생: {}", e.getMessage(), e);
+            throw e; // 트랜잭션 롤백을 위해 예외를 다시 던져줍니다.
+        }
+    }
+	
+	@Override
+	public goodsVO getGoodsByGoodsNo(int goodsNo) {
+		return orderMapper.getGoodsByGoodsNo(goodsNo);
+	}
+
+	@Override
+    public int selectMyOrderCount(PaginationInfoVO<OrdersVO> pagingVO) {
+        return orderMapper.selectMyOrderCount(pagingVO);
+    }
+
+    @Override
+    public List<OrdersVO> selectMyOrderList(PaginationInfoVO<OrdersVO> pagingVO) {
+        return orderMapper.selectMyOrderList(pagingVO);
+    }
+
+    @Override
+    public int getTodayOrders() {
+        log.info("getTodayOrders() 호출 - 오늘 주문 건수 조회");
+        try {
+            // IOrderMapper의 getTodayOrdersCount() 메서드 호출
+            return orderMapper.getTodayOrdersCount();
+        } catch (Exception e) {
+            log.error("getTodayOrders() 오늘 주문 건수 조회 중 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("오늘 주문 건수 조회 실패", e);
+        }
+    }
+
+
+    
+}

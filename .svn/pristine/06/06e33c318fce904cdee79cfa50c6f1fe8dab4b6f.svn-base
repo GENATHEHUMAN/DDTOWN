@@ -1,0 +1,84 @@
+package kr.or.ddit.ddtown.service.chat.dm;
+
+
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.ddtown.mapper.chat.dm.ChatRoomMapper;
+import kr.or.ddit.vo.chat.dm.ChatRoomVO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+@Service
+public class ChatService {
+	
+	private final ChatRoomMapper chatRoomMapper;
+	
+//	private final ObjectMapper objectMapper;
+//	private Map<String, ChatRoom> chatRooms;	// 모든 채팅방 정보 모아둠.
+//	
+//	@PostConstruct
+//	private void init() {
+//		chatRooms = new LinkedHashMap<>();
+//	}
+//	
+//	// 채팅방 조회
+//	public List<ChatRoom> findAllRoom() {
+//		return new ArrayList<>(chatRooms.values());
+//	}
+//	
+//	public ChatRoom findRoomById(String roomId) {
+//		return chatRooms.get(roomId);
+//	}
+//	
+//	// 채팅방 생성
+//	public ChatRoom createRoom(String name) {
+//		String randomId = UUID.randomUUID().toString();
+//		ChatRoom chatRoom = ChatRoom.builder()
+//				.roomId(randomId)
+//				.name(name)
+//				.build();
+//		chatRooms.put(randomId, chatRoom);
+//		return chatRoom;
+//	}
+//	
+//	// 메세지 발송
+//	public <T> void sendMessage(WebSocketSession session, T message) {
+//		try {
+//			session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
+//		} catch (IOException e) {
+//			log.error(e.getMessage(), e);
+//		}
+//	}
+	
+	// 모든 채팅방 조회 (최신순)
+	public List<ChatRoomVO> findAllRoom() {
+		return chatRoomMapper.selectAllRooms();
+	}
+	
+	public ChatRoomVO findRoomByChannelNo(int chatChannelNo) {
+		return chatRoomMapper.selectRoomByChannelNo(chatChannelNo);
+	}
+	
+	// 새로운 채팅방 생성
+	public ChatRoomVO createChatRoom(int comuProfileNo, int artGroupNo, String chatTypeCode) {
+		// ChatRoom 객체를 빌더를 사용하여 생성하고, 매퍼를 통해 저장
+		ChatRoomVO chatRoom = ChatRoomVO.builder()
+                .comuProfileNo(comuProfileNo)
+                .artGroupNo(artGroupNo)
+                .chatTypeCode(chatTypeCode)
+                .build();
+		
+		chatRoomMapper.insertChatRoom(chatRoom);	// DB 삽입
+		return chatRoom;
+	}
+	
+	// 마지막 메세지 일자 업데이트
+	public void updateChatLastDate(int chatChannelNo) {
+		chatRoomMapper.updateChatLastDate(chatChannelNo, new Date());	// 현재 시간으로 업데이트
+	}
+}

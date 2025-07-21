@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>임시 비밀번호 발급 안내</title>
+    <style type="text/css">
+        /* 이메일 클라이언트 간 호환성을 위한 기본 스타일 (기존 JSP 템플릿과 동일하게 유지) */
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; font-family: 'Malgun Gothic', '맑은 고딕', AppleSDGothicNeo-Regular, sans-serif; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+        table { border-collapse: collapse !important; }
+        body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #f4f4f4; }
+
+        /* 메인 컨테이너 스타일 */
+        .email-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* 헤더 스타일 */
+        .header {
+            background-color: #007bff; /* 포인트 색상 (예: 파란색) */
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        /* 컨텐츠 영역 스타일 */
+        .content {
+            padding: 30px 25px;
+            color: #333333;
+            line-height: 1.7;
+            font-size: 16px;
+        }
+        .content p {
+            margin: 0 0 15px 0;
+        }
+        .content strong {
+            color: #007bff; /* 포인트 색상 */
+        }
+
+        /* 비밀번호 박스 스타일 */
+        .password-box {
+            background-color: #f0f8ff; /* 연한 하늘색 배경 */
+            border: 1px dashed #007bff; /* 포인트 색상 점선 테두리 */
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        .password-box .password-label {
+            font-size: 15px;
+            color: #555555;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .password-box .password-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #d6336c; /* 강조 색상 (예: 핑크 계열) */
+            letter-spacing: 1px; /* 자간을 약간 넓게 */
+            padding: 8px;
+            background-color: #ffffff;
+            border-radius: 4px;
+            display: inline-block; /* 비밀번호 길이에 맞게 박스 크기 조정 */
+        }
+
+        /* 버튼 스타일 */
+        .button-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #28a745; /* 버튼 색상 (예: 녹색) */
+            color: #ffffff !important; /* 이메일 클라이언트에서 !important 필요할 수 있음 */
+            padding: 12px 25px;
+            text-decoration: none !important;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+        }
+
+        /* 푸터 스타일 */
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+            border-top: 1px solid #e0e0e0;
+        }
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f4;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f4;">
+        <tr>
+            <td align="center" valign="top" style="padding: 20px;">
+                <table border="0" cellpadding="0" cellspacing="0" class="email-container" style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                    <tr>
+                        <td class="header" style="background-color: #007bff; color: #ffffff; padding: 30px 20px; text-align: center;">
+                            <h1 style="margin: 0; font-size: 26px; font-weight: bold;">임시 비밀번호 발급</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content" style="padding: 30px 25px; color: #333333; line-height: 1.7; font-size: 16px;">
+                            <p style="margin: 0 0 15px 0;">안녕하세요, <strong style="color: #007bff;" th:text="${name}"></strong>님.</p>
+                            <p style="margin: 0 0 15px 0;">요청하신 계정의 임시 비밀번호가 아래와 같이 발급되었습니다.</p>
+                            <p style="margin: 0 0 15px 0;">아래 임시 비밀번호를 사용하여 로그인하신 후, 즉시 새로운 비밀번호로 변경해 주시기 바랍니다.</p>
+
+                            <div class="password-box" style="background-color: #f0f8ff; border: 1px dashed #007bff; padding: 20px; margin: 25px 0; text-align: center;">
+                                <span class="password-label" style="font-size: 15px; color: #555555; margin-bottom: 8px; display: block;">임시 비밀번호:</span>
+                                <span class="password-value" style="font-size: 22px; font-weight: bold; color: #d6336c; letter-spacing: 1px; padding: 8px; background-color: #ffffff; border-radius: 4px; display: inline-block;"
+                                      th:text="${message}"></span>
+                            </div>
+
+                            <p style="margin: 0 0 15px 0;">보안을 위해 임시 비밀번호는 로그인 후 바로 변경해 주시는 것을 권장합니다.</p>
+
+                            <div class="button-container" style="text-align: center; margin-top: 25px;">
+                                <a th:href="${loginPageUrl}" href="http://localhost:6688/login" target="_blank" class="button" style="display: inline-block; background-color: #28a745; color: #ffffff !important; padding: 12px 25px; text-decoration: none !important; border-radius: 5px; font-size: 16px; font-weight: bold; border: none;">로그인 페이지로 이동</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="footer" style="background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #6c757d; border-top: 1px solid #e0e0e0;">
+                            <p style="margin:0 0 5px 0;">본 메일은 발신 전용이므로 회신되지 않습니다.</p>
+                            <p style="margin:0;">
+							    <span th:text="${companyName}">[DDTOWN]</span> | 
+							    문의: <span th:text="${contactEmail}">[ddtownmaster@gmail.com]</span> 
+							</p>
+                            <p style="margin:5px 0 0 0;"><a th:href="${websiteUrl}" href="http://localhost:6688/" target="_blank" style="color: #007bff; text-decoration: none;">웹사이트 방문하기</a></p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

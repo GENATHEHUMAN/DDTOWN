@@ -1,0 +1,26 @@
+package kr.or.ddit.ddtown.service.order.payment;
+
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class KakaoPayServiceImpl implements IKakaoPayService {
+	
+	@Override
+	public Map<String, String> kakaoPayReady(String goodsName, Integer totalAmount, Integer totalQuantity,
+			String username, String valueOf) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getCid() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+}

@@ -1,0 +1,177 @@
+<%@page import="java.util.Date"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c"%>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/mainservice_home.css" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/mainservice_common.css" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/concert_detail.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.1/themes/base/jquery-ui.min.css">
+<script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js" defer integrity="sha256-9zljDKpE/mQxmaR4V2cGVaQ7arF3CcXxarvgr7Sj8Uc=" crossorigin="anonymous"></script>
+<title>DDTOWN SQUARE</title>
+
+<style type="text/css">
+
+/* 예약 정보 (달력 + 버튼)를 위한 새로운 컨테이너 */
+.concert-selectedseat-section {
+    width: 20%;
+    flex-grow: 0; /* 남은 공간이 있어도 확장하지 않음 */
+    flex-shrink: 0; /* 공간이 부족해도 축소하지 않음 (이 값을 1로 주면 축소될 수 있음) */
+    padding: 20px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #eee;
+    display: flex;
+    flex-direction: column; /* 세로 방향으로 요소 배치 */
+    align-items: center; /* 중앙 정렬 */
+}
+
+.concert-selectedseat-section h3 {
+    margin-top: 25px;
+    color: #333;
+	padding: 10px;
+}
+
+/* 예매하기 버튼 스타일 */
+.btn-reserve {
+    width: 100%; /* 부모 너비에 맞춤 */
+    max-width: 300px; /* 최대 너비 설정 */
+    padding: 15px 20px;
+    background-color: #8a2be2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+}
+
+.btn-cancel {
+    width: 100%; /* 부모 너비에 맞춤 */
+    max-width: 300px; /* 최대 너비 설정 */
+    padding: 15px 20px;
+    background-color: #eee;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+}
+
+
+</style>
+</head>
+<body>
+	<jsp:include page="/WEB-INF/views/modules/communityHeader.jsp" />
+
+	<h3>좌석 선택</h3>
+	<div class="concert-detail-container">
+	<c:choose>
+        <c:when test="${not empty concertVO }">
+		    <div class="concert-detail-grid">
+		        <div class="seat-map-container" style="position: relative; height: 400px;">
+	            	<object data="${pageContext.request.contextPath}/resources/concertHall.svg" type="image/svg+xml" id="hallSvg" style="transform : scale(0.5); position: absolute; top:-168px; left:-70px;"></object>
+	            </div>
+		    </div>
+    	</c:when>
+    	<c:otherwise>
+    		<div>콘서트 상세 내용을 불러올 수 없습니다.</div>
+    	</c:otherwise>
+    </c:choose>
+    </div>
+    
+	<div class="concert-selectedseat-section">
+    	<h3>좌석 등급 / 가격</h3>
+    	<div class="concert-seat-display">
+    		<hr>
+            <c:choose>
+	            <c:when test="${not empty seatList }">
+		            <div class="concert-price">
+		                <c:forEach var="seat" items="${seatList }">
+			                <div>
+			                	<c:if test="${seat.seatGradeCode == 'SGC001' }">
+			                		STANDING석: ${ seat.seatPrice}원
+			                	</c:if>
+			                	<c:if test="${seat.seatGradeCode == 'SGC002' }">
+			                		VIP석: ${ seat.seatPrice}원
+			                	</c:if>
+			                	<c:if test="${seat.seatGradeCode == 'SGC003' }">
+			                		R석: ${ seat.seatPrice}원
+			                	</c:if>
+			                	<c:if test="${seat.seatGradeCode == 'SGC004' }">
+			                		S석: ${ seat.seatPrice}원
+			                	</c:if>
+			                </div>
+		                </c:forEach>
+		            </div>
+	            </c:when>
+	            <c:otherwise>
+	            	<div>가격 정보가 없습니다.</div>
+	            </c:otherwise>
+            </c:choose>
+    	</div>
+    	<hr>
+    	<h3>선택 좌석 정보</h3>
+    	<div id="selectedSeatInfo">
+    		선택된 자석이 없습니다.
+    	</div>
+    	
+    	<hr>
+    	<h3>총 결제 금액</h3><span id="totalPrice">0원</span>
+    	<hr>
+    	<a type="button" href="/concert/detail/${concertVO.concertNo}"class="btn-cancel" id="btnCancel">취소</a>
+    	<button class="btn-reserve" id="btnReserve">결제하기</button>
+    </div>
+	<div id="footer-placeholder"></div>
+</body>
+<script>
+
+	$(function() {
+		
+		const hallSvg = document.getElementById("hallSvg");
+		console.log("svg : ", hallSvg);
+		let seat;
+		const selectedSeatMap = new Map();
+		const totalPrice = $('#totalPrice');
+		
+		const allTicketList = JSON.parse('${allTicketList}');
+		const bookedSeatNo = JSON.parse('${bookedSeatNo}');
+		
+		console.log("모든 티켓 정보: ", allTicketList);
+		console.log("예매된 티켓 정보: ", allTicketList);
+		
+		hallSvg.onload = function(){
+			console.log("SVG 파일이 성공적으로 로드되었습니다.");
+		    const svgDocument = this.contentDocument;
+		
+		    let svg = svgDocument.querySelector("svg");
+		    
+		    if(svg) {
+		    	seat = svg.querySelectorAll("rect, circle");
+		    	
+		    }
+		    
+		    seat = $("rect", svg);
+		    
+		    console.log("seat ????? ", seat);
+		};
+		
+		// 결제하기 버튼 이벤트
+		$('#btnReserve').on('click', function() {
+	    	console.log("결제하기 클릭됨");
+		});
+		
+	});
+
+
+</script>
+</html>

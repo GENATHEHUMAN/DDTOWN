@@ -1,0 +1,22 @@
+package kr.or.ddit.ddtown.controller.admin.blacklist;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("/admin/community/blacklist")
+public class AdminBlacklistController {
+
+	@GetMapping("/list")
+	public String blackListMain() {
+		return "admin/blacklist/blacklistList";
+	}
+	
+	@GetMapping("/detail")
+	public String blackListDetail() {
+		return "admin/blacklist/blacklistDetail";
+	}
+	
+	
+}

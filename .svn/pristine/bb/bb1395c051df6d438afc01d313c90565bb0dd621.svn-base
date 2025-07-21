@@ -1,0 +1,510 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDTOWN 굿즈샵 - 주문 상세</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/mainservice_common.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/goods.css">
+    	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/mainservice_common.css" />
+	
+    <style>
+        /* CSS 스타일은 이전 답변과 동일하게 유지 */
+        .order-detail-container {
+            max-width: 900px;
+            margin: 80px auto 50px;
+            padding: 40px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .order-detail-container h2 {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+        .section-title {
+            font-size: 1.5em;
+            color: #555;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            border-left: 5px solid #007bff;
+            padding-left: 10px;
+        }
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .detail-table th, .detail-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+            vertical-align: top;
+        }
+        .detail-table th {
+            background-color: #f8f8f8;
+            width: 150px;
+            font-weight: 600;
+            color: #666;
+        }
+        .order-items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .order-items-table th, .order-items-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        .order-items-table th {
+            background-color: #f2f2f2;
+        }
+        .order-items-table td.text-left {
+            text-align: left;
+        }
+        .product-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .product-info img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+        /* 이미지 없음 처리 시 추가될 스타일 */
+        .no-image-placeholder {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            flex-direction: column; /* 텍스트와 이미지 세로 정렬 */
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            text-align: center;
+            font-size: 0.75em; /* 폰트 크기 조정 */
+            color: #999;
+            box-sizing: border-box; /* 패딩이 크기에 포함되도록 */
+            padding: 5px; /* 약간의 패딩 */
+        }
+        .no-image-placeholder img {
+            width: 50px; /* 기본 이미지 크기 조정 */
+            height: 50px;
+            object-fit: contain;
+            margin-bottom: 3px; /* 텍스트와의 간격 */
+        }
+
+
+        .total-summary {
+            text-align: right;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px dashed #eee;
+        }
+        .back-button {
+            display: block;
+            width: 150px;
+            margin: 30px auto 0;
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover {
+            background-color: #5a6268;
+        }
+        
+        /* 모달 스타일 */
+        .modal-overlay {
+	        display: none; /* 초기에는 숨김 */
+	        position: fixed; /* 뷰포트에 고정 */
+	        top: 0;
+	        left: 0;
+	        width: 100%;
+	        height: 100%;
+	        background: rgba(0, 0, 0, 0.5); /* 반투명 배경 */
+	        /* display: flex; <--- 이 줄을 삭제해야 합니다! */
+	        justify-content: center; /* 자식 요소(modal-content) 수평 중앙 정렬 */
+	        align-items: center;     /* 자식 요소(modal-content) 수직 중앙 정렬 */
+	        z-index: 1000;           /* 다른 요소 위에 표시되도록 높은 z-index 부여 */
+	    }
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 400px;
+            max-width: 90%;
+            text-align: center;
+        }
+        .modal-content h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        .modal-content p {
+            margin-bottom: 25px;
+            font-size: 1.1em;
+            color: #555;
+        }
+        .modal-content label {
+            display: block;
+            text-align: left;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #444;
+        }
+        .modal-content select, .modal-content textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+            resize: vertical; /* 세로 크기 조절 가능 */
+        }
+        .modal-content .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .modal-content .modal-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .modal-content .modal-buttons .confirm-btn {
+            background-color: #007bff;
+            color: #fff;
+        }
+        .modal-content .modal-buttons .confirm-btn:hover {
+            background-color: #0056b3;
+        }
+        .modal-content .modal-buttons .cancel-btn {
+            background-color: #6c757d;
+            color: #fff;
+        }
+        .modal-content .modal-buttons .cancel-btn:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body class="order-page-body">
+    <jsp:include page="/WEB-INF/views/modules/communityHeader.jsp" />
+
+    <div class="order-detail-container">
+        <h2>주문 상세</h2>
+
+        <h3 class="section-title">주문 정보</h3>
+        <table class="detail-table">
+            <tr>
+                <th>주문 번호</th>
+                <td>${order.orderNo}</td>
+            </tr>
+            <tr>
+                <th>주문일시</th>
+                <td><fmt:formatDate value="${order.orderDate}" pattern="yyyy년 MM월 dd일 HH:mm"/></td>
+            </tr>
+            <tr>
+                <th>주문 상태</th>
+                <td>${order.orderStatName}</td> <%-- Service에서 설정한 한글명 사용 --%>
+            </tr>
+            <tr>
+                <th>총 결제 금액</th>
+                <td><strong><fmt:formatNumber value="${order.orderTotalPrice}" type="number"/>원</strong></td>
+            </tr>
+            <tr>
+                <th>결제 수단</th>
+                <td>${order.orderPayMethodNm}</td>
+            </tr>
+        </table>
+
+        <h3 class="section-title">주문 상품</h3>
+        <table class="order-items-table">
+            <thead>
+                <tr>
+                    <th>상품 정보</th>
+                    <th>단가</th>
+                    <th>수량</th>
+                    <th>금액</th>
+                </tr>
+            </thead>
+            <tbody>
+                <c:forEach var="item" items="${order.orderDetailList}">
+                    <tr>
+                        <td class="text-left">
+                            <div class="product-info">
+                                <c:choose>
+                                    <c:when test="${not empty item.representativeImageUrl}">
+                                        <img src="${pageContext.request.contextPath}${item.representativeImageUrl}"
+                                             alt="${item.goodsNm}" onerror="this.src='${pageContext.request.contextPath}/resources/img/default_goods.png';">
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="no-image-placeholder">
+                                            <img src="${pageContext.request.contextPath}/resources/img/default_goods.png"
+                                                 alt="이미지 없음">
+                                            <span>이미지 없음</span>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
+                                <div>
+                                    <div>${item.goodsNm}</div>
+                                    <c:if test="${not empty item.goodsOptNo}">
+                                        <small>(옵션: ${item.goodsOptNm})</small>
+                                    </c:if>
+                                </div>
+                            </div>
+                        </td>
+                        <td><fmt:formatNumber value="${item.goodsPrice + item.goodsOptPrice}" type="number"/>원</td>
+                        <td>${item.orderDetQty}개</td>
+                        <td><fmt:formatNumber value="${(item.goodsPrice + item.goodsOptPrice) * item.orderDetQty}" type="number"/>원</td>
+                    </tr>
+                </c:forEach>
+            </tbody>
+        </table>
+
+        <h3 class="section-title">수령인 정보</h3>
+        <table class="detail-table">
+            <tr>
+                <th>수령인</th>
+                <td>${order.orderRecipientNm}</td>
+            </tr>
+            <tr>
+                <th>연락처</th>
+                <td>${order.orderRecipientPhone}</td>
+            </tr>
+            <tr>
+                <th>주소</th>
+                <td>(${order.orderZipCode}) ${order.orderAddress1} ${order.orderAddress2}</td>
+            </tr>
+            <tr>
+                <th>이메일</th>
+                <td>${order.orderEmail}</td>
+            </tr>
+            <c:if test="${not empty order.orderMemo}">
+                <tr>
+                    <th>배송 요청사항</th>
+                    <td>${order.orderMemo}</td>
+                </tr>
+            </c:if>
+        </table>
+
+        <h3 class="section-title">결제 정보</h3>
+        <table class="detail-table">
+            <tr>
+                <th>결제 번호 (TID)</th>
+                <td>${order.paymentVO.tid}</td>
+            </tr>
+            <tr>
+                <th>결제 승인 번호 (AID)</th>
+                <td>${order.paymentVO.aid}</td>
+            </tr>
+            <tr>
+                <th>실 결제 금액</th>
+                <td><fmt:formatNumber value="${order.paymentVO.totalAmount}" type="number"/>원</td>
+            </tr>
+            <tr>
+                <th>결제 상태</th>
+                <td>${order.paymentVO.paymentStatCodeNm}</td>
+            </tr>
+            <tr>
+                <th>결제 승인 일시</th>
+                <td><fmt:formatDate value="${order.paymentVO.completedAt}" pattern="yyyy년 MM월 dd일 HH:mm:ss"/></td>
+            </tr>
+        </table>
+
+        
+        <%-- 주문 취소 버튼 및 돌아가기 버튼 --%>
+        <div class="action-buttons">
+            <%-- 주문 상태가 '주문 완료' (OSC001) 또는 '결제 요청' (OSC002) 일 때만 취소 버튼 표시 --%>
+            <%-- 추후 비즈니스 로직에 따라 취소 가능한 상태 코드를 추가하거나 변경 가능 --%>
+            <c:if test="${order.orderStatCode eq 'OSC001' or order.orderStatCode eq 'OSC002' or order.orderStatCode eq 'PSC001'}">
+                 <button type="button" id="cancelOrderBtn" class="button cancel-button" data-order-no="${order.orderNo}">
+                    주문 취소
+                </button>
+            </c:if>
+            <a href="${pageContext.request.contextPath}/mypage/orders" class="button back-button">내 주문 목록으로 돌아가기</a>
+        </div>
+    </div>
+
+    <div id="footer-placeholder"></div>
+    
+    <%-- 결제 취소 확인 모달 --%>
+    <div id="cancelConfirmationModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>주문 취소 확인</h3>
+            <p><span id="modalOrderNoDisplay"></span>번 주문을 정말로 취소하시겠습니까?</p>
+            <label for="cancelReasonCode">취소 사유 선택:</label>
+            <select id="cancelReasonCode">
+                <option value="">-- 사유 선택 --</option>
+                <option value="CR001">단순 변심</option>
+                <option value="CR002">상품 변경/오류</option>
+                <option value="CR003">배송 지연</option>
+                <option value="CR004">기타 (상세 사유 입력)</option>
+            </select>
+            <label for="cancelReasonDetail">상세 사유 (선택 사항):</label>
+            <textarea id="cancelReasonDetail" rows="3" placeholder="자세한 취소 사유를 입력해주세요."></textarea>
+            <div class="modal-buttons">
+                <button type="button" id="confirmCancelBtn" class="confirm-btn">취소하기</button>
+                <button type="button" id="closeModalBtn" class="cancel-btn">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 푸터 로드 (이전과 동일)
+            fetch('${pageContext.request.contextPath}/resources/html/footer.html')
+                .then(response => response.ok ? response.text() : Promise.reject('Footer not found'))
+                .then(data => {
+                    const footerPlaceholder = document.getElementById('footer-placeholder');
+                    if (footerPlaceholder) {
+                        footerPlaceholder.innerHTML = data;
+                    }
+                })
+                .catch(error => console.error('Error loading footer:', error));
+
+            // 로그인 상태 관리 (이전과 동일)
+            const isLoggedIn = ${isLoggedIn != null && isLoggedIn};
+            const loggedOutNav = document.getElementById('loggedOutNav');
+            const loggedInNav = document.getElementById('loggedInNav');
+
+            if (isLoggedIn) {
+                if(loggedOutNav) loggedOutNav.style.display = 'none';
+                if(loggedInNav) loggedInNav.style.display = 'flex';
+            } else {
+                if(loggedOutNav) loggedOutNav.style.display = 'flex';
+                if(loggedInNav) loggedInNav.style.display = 'none';
+            }
+
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    alert("로그아웃되었습니다.");
+                    window.location.href = '${pageContext.request.contextPath}/logout';
+                });
+            }
+            
+         // --- 주문 취소 기능 관련 JavaScript 시작 ---
+
+            const cancelOrderBtn = document.getElementById('cancelOrderBtn');
+            const cancelConfirmationModal = document.getElementById('cancelConfirmationModal');
+            const modalOrderNoDisplay = document.getElementById('modalOrderNoDisplay');
+            const cancelReasonCodeSelect = document.getElementById('cancelReasonCode');
+            const cancelReasonDetailTextarea = document.getElementById('cancelReasonDetail');
+            const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+
+            let currentOrderNo = null; // 현재 취소하려는 주문 번호를 저장할 변수
+
+            if (cancelOrderBtn) { // 취소 버튼이 존재할 경우에만 이벤트 리스너 추가
+                cancelOrderBtn.addEventListener('click', function() {
+                    currentOrderNo = this.dataset.orderNo; // data-order-no 값 가져오기
+                    modalOrderNoDisplay.textContent = currentOrderNo; // 모달에 주문 번호 표시
+                    cancelConfirmationModal.style.display = 'flex'; // 모달 표시
+                    // 모달이 열릴 때 사유 선택 및 상세 사유 필드를 초기화
+                    cancelReasonCodeSelect.value = "";
+                    cancelReasonDetailTextarea.value = "";
+                });
+            }
+
+            // 모달 닫기 버튼 이벤트
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener('click', function() {
+                    cancelConfirmationModal.style.display = 'none'; // 모달 숨기기
+                });
+            }
+
+            // 모달 외부 클릭 시 닫기 (선택 사항)
+            if (cancelConfirmationModal) {
+                cancelConfirmationModal.addEventListener('click', function(event) {
+                    if (event.target === cancelConfirmationModal) {
+                        cancelConfirmationModal.style.display = 'none';
+                    }
+                });
+            }
+
+            // 취소하기 버튼 클릭 이벤트
+            if (confirmCancelBtn) {
+                confirmCancelBtn.addEventListener('click', function() {
+                    const cancelReasonCode = cancelReasonCodeSelect.value;
+                    const cancelReasonDetail = cancelReasonDetailTextarea.value;
+
+                    if (!cancelReasonCode) {
+                        alert('취소 사유를 선택해주세요.');
+                        return;
+                    }
+
+                    if (currentOrderNo) {
+                        // 백엔드 API 호출 (AJAX)
+                        fetch(`${pageContext.request.contextPath}/api/orders/cancel`, { // API 엔드포인트 수정
+                            method: 'POST', // 또는 'DELETE' 메서드 사용 가능
+                            headers: {
+                                'Content-Type': 'application/json',
+                                // 스프링 시큐리티 사용 시 CSRF 토큰 필요
+                                // 'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content,
+                                // 'X-CSRF-HEADER': document.querySelector('meta[name="_csrf_header"]').content
+                            },
+                            body: JSON.stringify({
+                                orderNo: currentOrderNo,
+                                cancelReasonCode: cancelReasonCode,
+                                cancelReasonDetail: cancelReasonDetail
+                            })
+                        })
+                        .then(response => {
+                            if (!response.ok) { // HTTP 상태 코드가 200번대가 아닐 경우
+                                return response.json().then(errorData => {
+                                    throw new Error(errorData.message || '취소 요청 실패');
+                                });
+                            }
+                            return response.json(); // 성공 시 JSON 파싱
+                        })
+                        .then(data => {
+                            if (data.success) { // 백엔드에서 success: true/false를 반환한다고 가정
+                                alert('주문이 성공적으로 취소되었습니다.');
+                                window.location.reload(); // 페이지 새로고침하여 최신 상태 반영
+                            } else {
+                                alert('주문 취소에 실패했습니다: ' + (data.message || '알 수 없는 오류'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Fetch Error:', error);
+                            alert('주문 취소 중 오류가 발생했습니다: ' + error.message);
+                        })
+                        .finally(() => {
+                            cancelConfirmationModal.style.display = 'none'; // 요청 완료 후 모달 숨김
+                        });
+                    } else {
+                        alert('취소할 주문 번호를 찾을 수 없습니다.');
+                        cancelConfirmationModal.style.display = 'none';
+                    }
+                });
+            }
+            // --- 주문 취소 기능 관련 JavaScript 끝 ---
+        });
+    </script>
+
+</body>
+</html>

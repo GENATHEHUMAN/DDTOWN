@@ -1,0 +1,43 @@
+package kr.or.ddit.ddtown.controller.emp.artist;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import kr.or.ddit.ddtown.service.emp.artist.IArtistService;
+import kr.or.ddit.vo.artist.ArtistVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/emp/artist")
+public class ArtistManagementController {
+	
+	@Autowired
+	private IArtistService artistService;
+	
+	@GetMapping("/artist-management")
+	public String retrieveArtist(Model model) {
+		log.info("아티스트 목록 페이지 요청");
+		
+		Map<String, String> searchParams = new HashMap<>();
+        List<ArtistVO> artistList = artistService.getArtistList(searchParams);
+
+        model.addAttribute("artistList", artistList);
+
+        if (artistList != null && !artistList.isEmpty()) {
+            log.info("조회된 아티스트 수: {}", artistList.size());
+        } else {
+            log.info("조회된 아티스트가 없습니다.");
+        }
+
+        return "emp/artist/artist-management";
+	}
+	
+}

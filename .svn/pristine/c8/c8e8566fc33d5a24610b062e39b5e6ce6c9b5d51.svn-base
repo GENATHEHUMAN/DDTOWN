@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.emp.edms.IEdmsMapper">
+ 
+ 	<sql id="searchTitle">
+ 		<if test="searchWord != null and searchWord != ''">
+ 			and edms_title like '%' || #{searchWord} || '%'
+ 		</if>
+ 		<if test="searchType != null and searchType != 'all'">
+ 			and edms_stat_code = #{searchType}
+ 		</if>
+ 	</sql>
+ 
+ 	<select id="getFormList" resultType="kr.or.ddit.vo.edms.EdmsFormVO">
+ 		select FORM_NO
+ 		, FORM_NM
+ 		, FORM_TYPE_CODE
+ 		, FORM_CONTENT
+ 		from form
+ 		order by form_no
+ 	</select>
+ 	
+ 	<select id="getForm" parameterType="int" resultType="kr.or.ddit.vo.edms.EdmsFormVO">
+ 		select FORM_NO
+ 		, FORM_NM
+ 		, FORM_TYPE_CODE
+ 		, FORM_CONTENT
+ 		from form
+ 		where form_no = #{formNo}
+ 	</select>
+ 	
+ 	<update id="updateForm" parameterType="kr.or.ddit.vo.edms.EdmsFormVO">
+ 		update form
+ 		set
+ 			form_content = #{formContent}
+ 		where
+ 			form_no = #{formNo}
+ 	</update>
+ 	
+ 	<select id="getDepartList" resultType="kr.or.ddit.vo.edms.EdmsCommVO">
+ 		SELECT
+		    comm_code_det_no
+		  , comm_code_grp_no
+		  , comm_code_det_nm
+		  , use_yn
+		  , description
+		FROM
+		    common_detail_code
+		WHERE
+			comm_code_grp_no = 'EMP_DEPART_CODE'
+		order by comm_code_det_no desc
+ 	</select>
+ 	
+ 	<select id="getEmpList" parameterType="string" resultType="kr.or.ddit.vo.user.EmployeeVO">
+ 		SELECT
+		    emp_username
+		  , emp_depart_code
+		  , emp_position_code
+		  , emp_reg_date
+		  , emp_end_date
+		  , (select description from common_detail_code where emp_depart_code = comm_code_det_no) as emp_depart_nm
+		  , (select description from common_detail_code where emp_position_code = comm_code_det_no) as emp_position_nm
+		  , peo_last_nm || peo_first_nm as peoName
+		FROM
+		    employee emp,
+		    people p
+		where
+			emp.emp_username = p.username
+		and
+			emp_depart_code = #{empDepartCode}
+		order by emp_position_code desc
+ 	</select>
+ 	
+ 	<select id="selectApprovalBoxList" parameterType="map" resultType="kr.or.ddit.vo.edms.EdmsVO">
+ 		select b.*
+		from (select a.*, row_number() over(order by a.edms_no desc) as rnum
+		  from
+		        (SELECT
+				    edms_no
+				  , form_no
+				  , emp_username
+				  , file_group_no
+				  , edms_stat_code
+				  , edms_title
+				  , edms_req_date
+				  , edms_urgen_yn
+				  , edms_content
+				  , peo_last_nm || peo_first_nm as emp_name
+				FROM
+				    edms e,
+		    		people p
+				where 
+					e.emp_username = p.username
+				and	
+					emp_username = #{empUsername}
+				<include refid="searchTitle" />
+				ORDER BY edms_no desc
+				) a
+			)b
+		<![CDATA[
+			where b.rnum >= #{startRow} and b.rnum <= #{endRow}
+		]]>
+ 	</select>
+ 	
+ 	<select id="selectTotalRecord" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+ 		select
+ 			count(*)
+ 		from
+ 			edms
+ 		where 1=1
+ 		<include refid="searchTitle"/>
+ 	</select>
+ </mapper>

@@ -1,0 +1,31 @@
+package kr.or.ddit.ddtown.service.community;
+
+import java.util.List;
+import java.util.Map;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.vo.artist.AlbumVO;
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+import kr.or.ddit.vo.community.CommunityPostVO;
+import kr.or.ddit.vo.community.CommunityProfileVO;
+import kr.or.ddit.vo.community.CommunityVO;
+
+public interface ICommunityMainPageService {
+
+	public List<ArtistGroupVO> getGroupLists();
+
+	public ArtistGroupVO getGroupInfo(int artGroupNo);
+
+	public List<AlbumVO> getGroupAlbum(int artGroupNo);
+
+	public ArtistGroupVO getCommunityInfo(int artGroupNo);
+
+	public List<CommunityPostVO> getArtistPostList(CommunityVO communityVO);
+
+	public List<CommunityPostVO> getFanPostList(CommunityVO communityVO);
+
+	public int getPostTotal(CommunityVO communityVO);
+
+	public CommunityProfileVO currentUserComufollowing(Map<String, Object> currentUser);
+
+}

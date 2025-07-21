@@ -1,0 +1,27 @@
+package kr.or.ddit.ddtown.service.emp.edms;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.ddtown.mapper.emp.edms.IEdmsMapper;
+import kr.or.ddit.vo.edms.EdmsFormVO;
+
+@Service
+public class EdmsServiceImpl implements IEdmsService {
+
+	@Autowired
+	private IEdmsMapper edmsMapper;
+	
+	@Override
+	public List<EdmsFormVO> getFormList() {
+		return edmsMapper.getFormList();
+	}
+	
+	@Override
+	public EdmsFormVO getForm(int formNo) {
+		return edmsMapper.getForm(formNo);
+	}
+
+}

@@ -1,0 +1,188 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>블랙리스트 관리 - DDTOWN 관리자</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .current-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+        .current-info strong {
+            color: #333;
+        }
+        .emp-form .form-group textarea#blacklistReasonText {
+            min-height: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section id="blacklistReasonFormSection" class="ea-section active-section">
+                    <div class="ea-section-header">
+                        <h2 id="blacklistFormTitle">블랙리스트 사유 수정</h2>
+                    </div>
+
+                    <div class="current-info">
+                        <p><strong>대상 회원 ID:</strong> <span id="targetUserId">troublemaker</span></p>
+                        <p><strong>현재 지정 사유:</strong> <span id="currentBlacklistReason">반복적인 욕설 및 비방 (신고 누적 15회)</span></p>
+                    </div>
+
+                    <form class="ea-form" id="blacklistReasonForm">
+                        <input type="hidden" id="blacklistRecordId" name="blacklistRecordId">
+                        <input type="hidden" id="targetMemberIdHidden" name="targetMemberId">
+
+                        <div class="form-group">
+                            <label for="blacklistReasonText">새로운 사유 또는 수정 사유</label>
+                            <textarea id="blacklistReasonText" name="reason" placeholder="수정할 사유를 입력하거나, 새로운 사유를 상세히 작성해주세요." required></textarea>
+                        </div>
+
+                        <div class="form-group-group" style="display: flex; gap: 16px; align-items: flex-end;">
+                            <div class="form-group" style="flex:1;">
+                                <label for="blacklistReleaseDate">해제 예정일 (선택)</label>
+                                <input type="date" id="blacklistReleaseDate" name="releaseDate">
+                            </div>
+                            <div class="form-group" style="flex:1;">
+                                <label for="blacklistScope">블랙리스트</label>
+                                <select id="blacklistScope" name="blacklistScope">
+                                    <option value="7">7일</option>
+                                    <option value="30">30일</option>
+                                    <option value="90">90일</option>
+                                    <option value="180">180일</option>
+                                    <option value="???">뭘 넣어야 할지 모르겠음</option>
+                                </select>
+                            </div>
+                        </div>
+                        <p class="help-text">특정 날짜에 자동으로 해제되도록 설정할 수 있습니다. 비워두면 수동 해제 전까지 유지됩니다.</p>
+
+                        <div class="ea-form-actions">
+                            <a href="/admin/community/blacklist/list" class="ea-btn outline">취소</a>
+                            <button type="button" class="ea-btn success" id="releaseNowBtn"><i class="fas fa-undo"></i> 즉시 해제</button>
+                            <button type="submit" class="ea-btn primary" id="saveBlacklistReasonBtn">사유 저장</button>
+                        </div>
+                    </form>
+                </section>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (관리자 전용)</p>
+        </footer>
+    </div>
+    <script>
+        // 로그아웃 기능
+        const logoutButton = document.querySelector('.emp-logout-btn');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('로그아웃 하시겠습니까?')) {
+                    alert('로그아웃 되었습니다.');
+                }
+            });
+        }
+
+        // 사이드바 메뉴 기능
+        document.addEventListener('DOMContentLoaded', function() {
+            const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+            navItemsWithSubmenu.forEach(item => {
+                const arrow = item.querySelector('.submenu-arrow');
+                item.addEventListener('click', function(event) {
+                    if (this.classList.contains('has-submenu')) {
+                        event.preventDefault();
+                        const currentlyOpen = this.classList.contains('open');
+                        document.querySelectorAll('.emp-sidebar > .emp-nav > ul > li > .has-submenu.open').forEach(openItem => {
+                            if (openItem !== this) {
+                                openItem.classList.remove('open');
+                                const submenu = openItem.nextElementSibling;
+                                if (submenu && submenu.classList.contains('emp-submenu')) {
+                                    submenu.style.display = 'none';
+                                }
+                                const openArrow = openItem.querySelector('.submenu-arrow');
+                                if(openArrow) openArrow.style.transform = 'rotate(0deg)';
+                            }
+                        });
+                        this.classList.toggle('open');
+                        const submenu = this.nextElementSibling;
+                        if (submenu && submenu.classList.contains('emp-submenu')) {
+                            submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                            if(arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+                        }
+                    }
+                });
+            });
+
+            // URL 파라미터에서 정보 가져오기
+            const urlParams = new URLSearchParams(window.location.search);
+            const blacklistIdParam = urlParams.get('id');
+            const userIdParam = urlParams.get('userId');
+
+            const formTitleEl = document.getElementById('blacklistFormTitle');
+            const blacklistRecordIdInputEl = document.getElementById('blacklistRecordId');
+            const targetMemberIdHiddenEl = document.getElementById('targetMemberIdHidden');
+            const targetUserIdEl = document.getElementById('targetUserId');
+            const currentBlacklistReasonEl = document.getElementById('currentBlacklistReason');
+            const blacklistReasonTextEl = document.getElementById('blacklistReasonText');
+            const blacklistReleaseDateEl = document.getElementById('blacklistReleaseDate');
+            const releaseNowBtnEl = document.getElementById('releaseNowBtn');
+
+            if (blacklistIdParam && userIdParam) {
+                if (blacklistRecordIdInputEl) blacklistRecordIdInputEl.value = blacklistIdParam;
+                if (targetMemberIdHiddenEl) targetMemberIdHiddenEl.value = userIdParam;
+                if (targetUserIdEl) targetUserIdEl.textContent = userIdParam;
+
+                // 실제로는 서버에서 blacklistIdParam으로 기존 사유 및 해제 예정일 등을 가져옵니다.
+                const sampleBlacklistData = {
+                    reason: "반복적인 욕설 및 비방 (신고 누적 15회)",
+                    releaseDate: ""
+                };
+                if (currentBlacklistReasonEl) currentBlacklistReasonEl.textContent = sampleBlacklistData.reason;
+                if (blacklistReasonTextEl) blacklistReasonTextEl.value = sampleBlacklistData.reason;
+                if (blacklistReleaseDateEl && sampleBlacklistData.releaseDate) blacklistReleaseDateEl.value = sampleBlacklistData.releaseDate;
+            } else {
+                if (formTitleEl) formTitleEl.textContent = '잘못된 접근';
+                document.getElementById('blacklistReasonForm').innerHTML = '<p>정보가 올바르지 않습니다. 목록에서 다시 시도해주세요.</p>';
+            }
+
+            // 즉시 해제 버튼
+            if(releaseNowBtnEl) {
+                releaseNowBtnEl.addEventListener('click', function() {
+                    if (confirm(`회원 [${userIdParam}]님을 블랙리스트에서 즉시 해제하시겠습니까?`)) {
+                        alert('블랙리스트가 해제되었습니다.');
+                        window.location.href = '/admin/community/blacklist/list';
+                    }
+                });
+            }
+
+            // 폼 제출 처리
+            const blacklistReasonForm = document.getElementById('blacklistReasonForm');
+            if (blacklistReasonForm) {
+                blacklistReasonForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    const newReason = blacklistReasonTextEl.value;
+                    const newReleaseDate = blacklistReleaseDateEl.value;
+
+                    if (!newReason.trim()) {
+                        alert('수정할 사유를 입력해주세요.');
+                        return;
+                    }
+
+                    alert('블랙리스트 사유가 수정되었습니다.');
+                    window.location.href = '/admin/community/blacklist/list';
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

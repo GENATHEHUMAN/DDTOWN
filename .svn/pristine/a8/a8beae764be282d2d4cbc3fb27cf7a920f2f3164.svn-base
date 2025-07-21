@@ -1,0 +1,32 @@
+package kr.or.ddit.ddtown.mapper.emp.artist;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import kr.or.ddit.vo.artist.AlbumVO;
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+
+@Mapper
+public interface ArtistGroupMapper {
+
+    // 목록 불러오기
+    public List<ArtistGroupVO> retrieveArtistGroupList(); 
+
+    public ArtistGroupVO retrieveArtistGroup(int artGroupNo); 
+    
+    public List<AlbumVO> getAllAlbums();
+
+    public List<AlbumVO> getGroupAlbum(@Param("artGroupNoParam") int artGroupNo);
+    
+    public int updateArtistGroup(ArtistGroupVO groupToUpdate);
+
+    
+    public int unassignArtistsFromGroup(int artGroupNo); 
+    public int assignArtistsToGroup(@Param("artGroupNo") int artGroupNo, @Param("artistIds") List<Integer> newMemberArtNoList); 
+
+    public int unassignAlbumsFromGroup(int artGroupNo); 
+    public int assignAlbumsToGroup(@Param("artGroupNo") int artGroupNo, @Param("albumIds") List<Integer> newAlbumIdList); 
+
+}

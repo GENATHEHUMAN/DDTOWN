@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.admin.faqInquiry.IAdminInquiryMapper">
+ 	
+ 	<sql id="inqSearch">
+<!--  		<if test="searchStatType != null and searchStatType != ''"> -->
+<!--  			and inq_stat_code like '%'||#{searchStatType}||'%' -->
+<!--  		</if> -->
+ 		<if test="searchWord != null and searchWord != ''">
+ 			and inq_title like '%'||#{searchWord}||'%'
+ 		</if>
+ 		<if test="searchType != null and searchType != ''">
+ 			and inq_type_code like '%'||#{searchType}||'%'
+ 		</if>
+ 	</sql>
+ 
+ 	<select id="getList" resultType="kr.or.ddit.vo.inquiry.InquiryVO" parameterType="kr.or.ddit.vo.PaginationInfoVO">
+ 		select *
+		from (
+		    select
+		            inq_no
+				  , emp_username
+				  , mem_username
+				  , inq_type_code
+				  , inq_type_code_des
+				  , inq_stat_code
+				  , inq_stat_code_des
+				  , inq_title
+				  , inq_content
+				  , inq_reg_date
+				  , inq_ans_content
+				  , inq_ans_reg_date
+		          , rownum inqRownum
+		    from(
+		        SELECT
+				    a.inq_no
+				  , a.emp_username
+				  , a.mem_username
+				  , a.inq_type_code
+				  , b.DESCRIPTION inq_type_code_des
+				  , a.inq_stat_code
+				  , c.DESCRIPTION inq_stat_code_des
+				  , a.inq_title
+				  , a.inq_content
+				  , a.inq_reg_date
+				  , a.inq_ans_content
+				  , a.inq_ans_reg_date
+
+				FROM
+				    inquiry a
+				    , common_detail_code b
+				    , common_detail_code c
+				where a.INQ_TYPE_CODE = b.comm_code_det_no(+)
+				and b.USE_YN (+)= 'Y'
+				and a.INQ_STAT_CODE = c.comm_code_det_no(+)
+				and c.USE_YN (+)= 'Y'
+		        and 1=1
+		        <include refid="inqSearch" />
+		    order by inq_no desc, inq_reg_date desc
+		   	 )
+		    )
+		    where inqRownum between #{startRow} and #{endRow}
+ 	</select>
+ 	
+ 	
+ 	<select id="getData" parameterType="int" resultType="kr.or.ddit.vo.inquiry.InquiryVO">
+ 		SELECT
+		    inq_no
+		  , emp_username
+		  , mem_username
+		  , inq_type_code as typeDetailCode
+		  , b.DESCRIPTION inq_type_code_des
+		  , inq_stat_code as statDetailCode
+		  , c.description inq_stat_code_des
+		  , inq_title
+		  , inq_content
+		  , inq_reg_date
+		  , inq_ans_content
+		  , inq_ans_reg_date
+		  , p.peo_email user_email
+		  , p.peo_phone phone
+		FROM
+		    inquiry i, common_detail_code b, common_detail_code c, people p
+		where inq_no = #{inqNo}
+		and i.inq_type_code = b.comm_code_det_no (+)
+		and i.inq_stat_code = c.comm_code_det_no (+)
+		and i.mem_username = p.username
+ 	</select>
+ 	
+ 	<update id="updateAnswer" parameterType="kr.or.ddit.vo.inquiry.InquiryVO">
+ 		update inquiry set
+ 			inq_ans_content = #{inqAnsContent},
+ 			inq_ans_reg_date = sysdate,
+ 			emp_username = #{empUsername},
+			inq_stat_code = #{statDetailCode}
+ 		where inq_no = #{inqNo}
+ 	</update>
+ 	
+ 	<select id="getTypeCodeList" resultType="kr.or.ddit.vo.inquiry.InquiryCodeVO">
+ 		select 
+			  COMM_CODE_DET_NO
+			, COMM_CODE_GRP_NO
+			, COMM_CODE_DET_NM
+			, USE_YN
+			, DESCRIPTION
+		from common_detail_code  
+		WHERE COMM_CODE_GRP_NO='INQ_TYPE_CODE'
+ 	</select>
+ 	<select id="getStatCodeList" resultType="kr.or.ddit.vo.inquiry.InquiryCodeVO">
+ 		select 
+			  COMM_CODE_DET_NO
+			, COMM_CODE_GRP_NO
+			, COMM_CODE_DET_NM
+			, USE_YN
+			, DESCRIPTION
+		from common_detail_code  
+		WHERE COMM_CODE_GRP_NO='INQ_STAT_CODE'
+ 	</select>
+ 	
+ 	<select id="getCnt" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="kr.or.ddit.vo.inquiry.InquiryCntGroupVO">
+ 		SELECT
+			   a.total_record
+			   , b.completedCnt
+			   , c.receiptCnt
+			  
+			FROM
+			    (select count(inq_no) as total_record
+			     from inquiry
+			     where 1=1
+			     <include refid="inqSearch" />
+			     )a
+			    , (select count(*) as completedCnt
+			        from inquiry i 
+			        where inq_stat_code = 'ISC002'
+			        <include refid="inqSearch" />
+			        ) b
+			    , (select count(*) as receiptCnt
+			        from inquiry i 
+			        where inq_stat_code = 'ISC001'
+			        <include refid="inqSearch" />
+			               ) c
+ 	</select>
+ </mapper>

@@ -1,0 +1,156 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DD TOWN - <c:out value="${noticeVO.entNotiTitle}" default="기업 공지 상세"/></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <%-- CSS 경로 수정 --%>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+
+        /* 공지 내용의 HTML 태그를 그대로 보여주기 위한 스타일 (필요한 경우) */
+        .notice-content-html p {
+            margin-bottom: 1em; /* 문단 간격 */
+            line-height: 1.6;   /* 줄 간격 */
+        }
+        .notice-content-html h4 {
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            font-size: 1.2em; /* 제목 크기 */
+            font-weight: bold;
+        }
+        .notice-content-html ul, .notice-content-html ol {
+            margin-left: 20px; /* 목록 들여쓰기 */
+            margin-bottom: 1em;
+        }
+        .notice-content-html li {
+            margin-bottom: 0.3em;
+        }
+    </style>
+</head>
+<body>
+	<%@ include file="../modules/header.jsp" %>
+	
+    <main>
+        <section class="notice-hero">
+            <div class="container">
+                <h2>기업 공지</h2>
+                <p>DD TOWN의 최신 소식과 공지사항을 확인하실 수 있습니다.</p>
+            </div>
+        </section>
+
+        <section class="notice-detail">
+            <div class="container">
+                <c:choose>
+                    <c:when test="${not empty noticeVO}">
+                        <div class="notice-header">
+                            <h3><c:out value="${noticeVO.entNotiTitle}"/></h3>
+                            <div class="notice-meta">
+                                <span class="date">작성일: <fmt:formatDate value="${noticeVO.entNotiRegDate}" pattern="yyyy-MM-dd HH:mm"/></span>
+                            </div>
+                        </div>
+
+                        <div class="notice-content notice-content-html">
+                            ${noticeVO.entNotiContent}
+                        </div>
+                        
+                        <c:if test="${not empty noticeVO.attachmentList}">
+                            <div class="notice-attachments-view">
+                                <h4><i class="fas fa-paperclip"></i> 첨부파일</h4>
+                                <ul>
+                                    <c:forEach var="file" items="${noticeVO.attachmentList}">
+                                        <li>
+                                            <a href="${pageContext.request.contextPath}/corporate/file/download/${file.attachDetailNo}"
+                                            download="<c:out value='${file.fileOriginalNm}'/>">
+                                                <i class="fas fa-file-download"></i> <c:out value="${file.fileOriginalNm}"/>
+                                                <c:out value="${file.fileFancysize}" />
+                                            </a>
+                                        </li>
+                                    </c:forEach>
+                                </ul>
+                            </div>
+                        </c:if>
+
+                        <div class="notice-actions">
+                            <%-- 목록으로 돌아가는 버튼: 공지사항 목록 페이지 URL로 설정 --%>
+                            <a href="${pageContext.request.contextPath}/corporate/notice/list" class="btn btn-secondary">
+                                <i class="fas fa-list"></i> 목록
+                            </a>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <p class="no-data">요청하신 공지사항을 찾을 수 없습니다.</p>
+                         <div class="notice-actions">
+                            <a href="${pageContext.request.contextPath}/corporate/notice/list" class="btn btn-secondary">
+                                <i class="fas fa-list"></i> 목록으로
+                            </a>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+        </section>
+    </main>
+
+    <%-- 푸터 부분 --%>
+    <%-- 실제 프로젝트에서는 <jsp:include page="/WEB-INF/views/common/footer.jsp" /> 와 같이 공통 푸터를 포함하는 것이 좋습니다. --%>
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-info">
+                    <div class="footer-logo">DD TOWN</div>
+                    <p class="footer-description">
+                        DD TOWN은 창의성과 열정을 바탕으로 아티스트와 팬 모두에게 최고의 경험을 선사합니다.
+                        우리는 혁신적인 콘텐츠와 글로벌 네트워크를 통해 K-Culture의 미래를 만들어갑니다.
+                    </p>
+                    <div class="footer-contact">
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>대전광역시 중구 계룡로 846</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <span>042-123-4567</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>contact@ddtown.com</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h3>바로가기</h3>
+                    <ul>
+                        <li class="has-submenu">
+                            <a href="#">기업 정보</a>
+                            <ul class="submenu">
+                                <li><a href="${pageContext.request.contextPath}/corporate/finance">재무정보</a></li>
+                                <li><a href="${pageContext.request.contextPath}/corporate/about">기업소개</a></li>
+                                <li><a href="${pageContext.request.contextPath}/corporate/notice/list">기업 공지</a></li>
+                                <li><a href="${pageContext.request.contextPath}/corporate/location">기업 위치</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="${pageContext.request.contextPath}/corporate/audition/schedule">오디션</a></li>
+                        <li><a href="${pageContext.request.contextPath}/corporate/artist/profile">아티스트 프로필</a></li>
+                        <li><a href="${pageContext.request.contextPath}/community/artist/main">아티스트 커뮤니티</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 DD TOWN Entertainment. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <%-- JS 경로 수정 --%>
+    <script src="${pageContext.request.contextPath}/resources/js/common/main.js"></script>
+</body>
+</html>

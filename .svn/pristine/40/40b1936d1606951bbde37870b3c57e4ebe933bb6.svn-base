@@ -1,0 +1,217 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공지사항 관리 - DDTOWN 직원 포털</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .notice-header-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+        /* .notice-header-bar .notice-title { font-size: 2em; font-weight: 700; color: #234aad; } */
+        .notice-header-bar .notice-add-btn { background: #1976d2; color: #fff; border: none; border-radius: 5px; padding: 8px 22px; font-size: 1em; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+        .notice-header-bar .notice-add-btn:hover { background: #1451a3; }
+        .notice-search-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+        .notice-search-bar select, .notice-search-bar input { padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        .notice-search-bar button { background: #1976d2; color: #fff; border: none; border-radius: 4px; padding: 7px 18px; font-size: 1em; cursor: pointer; }
+        .notice-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: #fff; }
+        .notice-table th, .notice-table td { border: 1px solid #e0e0e0; padding: 10px; text-align: left; }
+        .notice-table th { background: #f5f5f5; text-align: center; }
+        .notice-table td.title { color: #1976d2; cursor: pointer; text-decoration: underline; }
+        .notice-table td .edit-btn, .notice-table td .delete-btn { padding: 4px 12px; border: none; border-radius: 4px; font-size: 0.98em; cursor: pointer; margin-right: 4px; }
+        .notice-table td .edit-btn { background: #1976d2; color: #fff; }
+        .notice-table td .delete-btn { background: #e74c3c; color: #fff; }
+        .notice-desc-box { position: absolute; top: 80px; right: 40px; width: 350px; background: #fff; border: 1px solid #bdbdbd; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .notice-desc-box table { width: 100%; border-collapse: collapse; }
+        .notice-desc-box th { background: #b6e2b6; padding: 10px; font-size: 1.1em; }
+        .notice-desc-box td { padding: 12px; font-size: 0.98em; }
+        .notice-pagination { margin-top: 18px; text-align: center; }
+        .notice-pagination button { background: #fff; border: 1px solid #1976d2; color: #1976d2; border-radius: 4px; padding: 4px 12px; margin: 0 2px; cursor: pointer; }
+        .notice-pagination button.active, .notice-pagination button:hover { background: #1976d2; color: #fff; }
+        @media (max-width: 1100px) { .notice-desc-box { position: static; width: 100%; margin-top: 30px; } }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content" style="position:relative; min-height:600px;">
+                <h2 style="margin-bottom:18px;">공지사항 관리</h2>
+                <div class="notice-header-bar">
+                    <div class="notice-title">커뮤니티 공지사항 관리</div>
+                    <button class="notice-add-btn" id="addNoticeBtn"><i class="fas fa-plus"></i> 새 공지 등록</button>
+                </div>
+                <div class="notice-search-bar">
+                    <select id="noticeArtistSelect">
+                        <option value="">담당 아티스트/공지</option>
+                        <option value="NCT WISH">NCT WISH</option>
+                    </select>
+                    <input type="text" id="noticeTitleInput" placeholder="공지 제목 검색">
+                    <button id="noticeSearchBtn"><i class="fas fa-search"></i> 검색</button>
+                </div>
+                <table class="notice-table">
+                    <thead>
+                        <tr>
+                            <th style="width:60px;">번호</th>
+                            <th>제목</th>
+                            <th style="width:120px; text-align:center;">작성일</th>
+                            <th style="width:120px; text-align:center;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="noticeTableBody">
+                        <tr>
+                            <td>N001</td>
+                            <td class="title">NCT WISH 공식 팬클럽 'NCTzen WISH' 1기 모집 마감 임박!</td>
+                            <td style="text-align:center;">2025-05-10</td>
+                            <td style="text-align:center;">
+                                <button class="detail-btn" onclick="location.href='/emp/notice/detail'" style="padding: 6px 18px; border: 1.5px solid #1976d2; background: #fff; color: #1976d2; border-radius: 6px; font-size: 1em; cursor: pointer; transition: background 0.2s, color 0.2s;">상세보기</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>N002</td>
+                            <td class="title">미니앨범 [Armageddon] 발매 기념 온라인 Q&A 이벤트 안내</td>
+                            <td style="text-align:center;">2025-05-08</td>
+                            <td style="text-align:center;">
+                                <button class="detail-btn" onclick="location.href='/emp/notice/detail'" style="padding: 6px 18px; border: 1.5px solid #1976d2; background: #fff; color: #1976d2; border-radius: 6px; font-size: 1em; cursor: pointer; transition: background 0.2s, color 0.2s;">상세보기</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>N003</td>
+                            <td class="title">컴백 D-7! 'UNFORGIVEN' MV 티저 공개</td>
+                            <td style="text-align:center;">2025-05-12</td>
+                            <td style="text-align:center;">
+                                <button class="detail-btn" onclick="location.href='/emp/notice/detail'" style="padding: 6px 18px; border: 1.5px solid #1976d2; background: #fff; color: #1976d2; border-radius: 6px; font-size: 1em; cursor: pointer; transition: background 0.2s, color 0.2s;">상세보기</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>N004</td>
+                            <td class="title">DD TOWN 플랫폼 정기 점검 안내 (5/15 02:00~05:00)</td>
+                            <td style="text-align:center;">2025-05-13</td>
+                            <td style="text-align:center;">
+                                <button class="detail-btn" onclick="location.href='/emp/notice/detail'" style="padding: 6px 18px; border: 1.5px solid #1976d2; background: #fff; color: #1976d2; border-radius: 6px; font-size: 1em; cursor: pointer; transition: background 0.2s, color 0.2s;">상세보기</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="notice-pagination">
+                    <button class="active">1</button>
+                    <button>2</button>
+                </div>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (직원 전용)</p>
+        </footer>
+    </div>
+</body>
+<script>
+        // 로그아웃 기능
+        const logoutButton = document.querySelector('.emp-logout-btn');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('로그아웃 하시겠습니까?')) {
+                    alert('로그아웃 되었습니다.');
+                }
+            });
+        }
+    
+        // 직원 이름 등 동적 데이터 로드 (예시)
+        const employeeNameSpan = document.getElementById('employee-name');
+        if (employeeNameSpan) {
+            employeeNameSpan.textContent = "홍길동";
+        }
+    
+        // 새 공지 등록 버튼 클릭 시
+        document.getElementById('addNoticeBtn').onclick = function() {
+            location.href = '/emp/notice/register';
+        };
+    
+        // (기존) 수정/삭제 버튼 클릭 시 -> 상세 보기 버튼이 이미 존재하므로 이 부분은 상세 페이지에서 처리
+        // document.querySelectorAll('.edit-btn').forEach(btn => {
+        //     btn.onclick = function() { location.href = 'notice_edit.html'; };
+        // });
+        // document.querySelectorAll('.delete-btn').forEach(btn => {
+        //     btn.onclick = function() { if(confirm('정말 삭제하시겠습니까?')) alert('삭제되었습니다. (미구현)'); };
+        // });
+    
+        // 제목 클릭 시 상세 페이지로 이동
+        document.querySelectorAll('.notice-table td.title').forEach(titleCell => {
+            titleCell.addEventListener('click', function() {
+                // 실제로는 해당 공지사항의 ID를 가지고 상세 페이지로 이동해야 합니다.
+                // 예: location.href = 'notice_detail.html?id=' + noticeId;
+                location.href = '/emp/notice/detail'; // 임시로 notice_detail.html로 이동
+            });
+        });
+        
+        // DOMContentLoaded 이벤트 내에서 사이드바 관련 스크립트 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            // 사이드바 메뉴 토글 기능
+            const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+            navItemsWithSubmenu.forEach(item => {
+                const arrow = item.querySelector('.submenu-arrow');
+                item.addEventListener('click', function(event) {
+                    if (this.getAttribute('href') === '#') {
+                        event.preventDefault();
+                    }
+                    const parentLi = this.parentElement;
+                    const submenu = this.nextElementSibling;
+    
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        const parentUl = parentLi.parentElement;
+                        if (parentUl) {
+                            Array.from(parentUl.children).forEach(siblingLi => {
+                                if (siblingLi !== parentLi) {
+                                    const siblingSubmenuControl = siblingLi.querySelector('.emp-nav-item.has-submenu.open');
+                                    if (siblingSubmenuControl) {
+                                        const siblingSubmenuElement = siblingSubmenuControl.nextElementSibling;
+                                        siblingSubmenuControl.classList.remove('open');
+                                        if (siblingSubmenuElement && siblingSubmenuElement.classList.contains('emp-submenu')) {
+                                            siblingSubmenuElement.style.display = 'none';
+                                        }
+                                        const siblingArrow = siblingSubmenuControl.querySelector('.submenu-arrow');
+                                        if (siblingArrow) siblingArrow.style.transform = 'rotate(0deg)';
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    
+                    this.classList.toggle('open');
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                        if (arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+                    }
+                });
+            });
+    
+            // 현재 페이지 URL 기반으로 사이드바 메뉴 활성화 및 펼침
+            const currentFullHref = window.location.href;
+            document.querySelectorAll('.emp-sidebar .emp-nav-item[href]').forEach(link => {
+                const linkHrefAttribute = link.getAttribute('href');
+                if (linkHrefAttribute && linkHrefAttribute !== "#" && currentFullHref.endsWith(linkHrefAttribute)) {
+                    link.classList.add('active');
+                    let currentActiveElement = link;
+                    while (true) {
+                        const parentLi = currentActiveElement.parentElement;
+                        if (!parentLi) break;
+                        const parentSubmenuUl = parentLi.closest('ul.emp-submenu');
+                        if (parentSubmenuUl) {
+                            parentSubmenuUl.style.display = 'block';
+                            const controllingAnchor = parentSubmenuUl.previousElementSibling;
+                            if (controllingAnchor && controllingAnchor.tagName === 'A' && controllingAnchor.classList.contains('has-submenu')) {
+                                controllingAnchor.classList.add('active', 'open');
+                                const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                                if (arrow) arrow.style.transform = 'rotate(90deg)';
+                                currentActiveElement = controllingAnchor;
+                            } else { break; }
+                        } else { break; }
+                    }
+                }
+            });
+        });
+    </script>
+</html> 

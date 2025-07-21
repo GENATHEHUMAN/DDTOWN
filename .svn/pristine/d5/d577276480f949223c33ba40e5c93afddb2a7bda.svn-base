@@ -1,0 +1,9 @@
+package kr.or.ddit.ddtown.mapper;
+
+import kr.or.ddit.vo.AttachmentFileVO;
+
+public interface AttachmentFileMapper {
+
+	public int insertFileGroup(AttachmentFileVO groupVO);
+
+}

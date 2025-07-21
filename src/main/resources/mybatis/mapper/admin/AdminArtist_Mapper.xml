@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.admin.artist.IAdminArtistMapper">
+
+	<sql id="searchArtist">
+ 		<if test="pagingVO.searchWord != null and pagingVO.searchType == 'artist'">
+ 			and art_nm like '%'|| #{pagingVO.searchWord} || '%'
+ 		</if>
+
+ 		<if test="pagingVO.searchWord != null and pagingVO.searchType == 'group'">
+ 			and art_group_nm like '%'|| #{pagingVO.searchWord} || '%'
+ 		</if>
+
+ 		<if test="pagingVO.searchWord != null and pagingVO.searchType == 'emp'">
+ 			and peo_last_nm || peo_first_nm like '%'|| #{pagingVO.searchWord} || '%'
+ 		</if>
+
+ 		<if test="pagingVO.searchWord == null and artDelYn != null and artDelYn != 'all' ">
+ 			and art.art_del_yn = #{artDelYn}
+ 		</if>
+
+	</sql>
+
+
+ 	<resultMap type="kr.or.ddit.vo.artist.ArtistGroupVO" id="groupMap">
+ 		<id property="artGroupNo" column="AG_ART_GROUP_NO"/>
+		<result property="artGroupNo" column="AG_ART_GROUP_NO"/>
+		<result property="artGroupTypeCode" column="ART_GROUP_TYPE_CODE"/>
+		<result property="empUsername" column="EMP_USERNAME"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artGroupContent" column="ART_GROUP_CONTENT"/>
+		<result property="artGroupProfileImg" column="ART_GROUP_PROFILE_IMG"/>
+		<result property="artGroupDebutdate" column="ART_GROUP_DEBUTDATE"/>
+		<result property="artGroupDelYn" column="ART_GROUP_DEL_YN"/>
+	 	<result property="artGroupRegDate" column="ART_GROUP_REG_DATE"/>
+		<result property="artGroupModDate" column="ART_GROUP_MOD_DATE"/>
+		<result property="empName" column="empName"/>
+		<result property="delYn" column="del_yn"/>
+ 	</resultMap>
+
+ 	<resultMap type="kr.or.ddit.vo.artist.ArtistVO" id="artistMap">
+ 		<id property="artNo" column="ART_NO"/>
+ 		<result property="artNo" column="ART_NO"/>
+		<result property="artGroupNo" column="AG_ART_GROUP_NO"/>
+		<result property="memUsername" column="MEM_USERNAME"/>
+		<result property="artNm" column="ART_NM"/>
+		<result property="artContent" column="ART_CONTENT"/>
+		<result property="artRegDate" column="ART_REG_DATE"/>
+		<result property="artModDate" column="ART_MOD_DATE"/>
+		<result property="artProfileImg" column="ART_PROFILE_IMG"/>
+		<result property="empUsername" column="EMP_USERNAME"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artGroupDebutdate" column="ART_GROUP_DEBUTDATE"/>
+		<result property="empName" column="empName"/>
+		<result property="artDebutdate" column="ART_DEBUTDATE"/>
+		<result property="artDelYn" column="ARTIST_DEL_YN"/>
+
+
+		<association property="memberVO" javaType="kr.or.ddit.vo.user.MemberVO">
+			<id property="memUsername" column="member_mem_username"/>
+	 		<result property="memStatCode" column="mem_stat_code" />
+	 		<result property="memRegPath" column="mem_reg_path" />
+	 		<result property="memNicknm" column="mem_nicknm" />
+	 		<result property="memBirth" column="mem_birth" />
+	 		<result property="memZipCode" column="mem_zip_code" />
+	 		<result property="memAddress1" column="mem_address1" />
+	 		<result property="memAddress2" column="mem_address2" />
+	 		<result property="memModDate" column="mem_mod_date" />
+	 		<result property="memRegDate" column="mem_reg_date" />
+
+	 		<!-- 공통 VO(PeopleVO)  -->
+	 		<result property="username" column="username" />
+	 		<result property="password" column="password" />
+	 		<result property="userTypeCode" column="user_type_code" />
+	 		<result property="peoEnabled" column="peo_enabled" />
+	 		<result property="peoFirstNm" column="peo_first_nm" />
+	 		<result property="peoLastNm" column="peo_last_nm" />
+	 		<result property="peoEmail" column="peo_email" />
+	 		<result property="peoGender" column="peo_gender" />
+	 		<result property="peoPhone" column="peo_phone" />
+	 		<result property="peoName" column="peoName"/>
+	 		<collection property="authList" resultMap="authMap" />
+		</association>
+
+		<collection property="groupList" resultMap="groupMap"/>
+ 	</resultMap>
+
+	 <resultMap type="PeopleAuthVO" id="authMap">
+ 		<result property="username" column="username" />
+ 		<result property="auth" column="auth" />
+ 	</resultMap>
+
+ 	<!-- <select id="getArtistList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="kr.or.ddit.vo.artist.ArtistVO">
+ 		select b.*
+		from (select a.*, row_number() over(order by a.art_del_yn, a.art_no asc) as rnum
+		  from
+		        (SELECT
+				    art.art_no
+				  , mem_username
+				  , art_nm
+				  , art_content
+				  , art_reg_date
+				  , art_mod_date
+				  , art_profile_img
+				  , art_debutdate
+				  , art_del_yn
+				FROM
+				    artist art
+				WHERE 1=1
+				<include refid="searchArtist" />
+				ORDER BY art_del_yn, art.art_no asc
+				) a
+			)b
+		<![CDATA[
+			where b.rnum >= #{startRow} and b.rnum <= #{endRow}
+		]]>
+    </select> -->
+
+	<select id="getArtistList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultMap="artistMap">
+ 		select b.*
+		from (
+		  select
+		  	  a.*
+			, row_number() over(order by a.artist_del_yn, a.art_no asc) as rnum
+		  from
+		        (SELECT
+				    art.art_no
+				  , art.mem_username
+				  , art.art_nm
+				  , art.art_content
+				  , art.art_reg_date
+				  , art.art_mod_date
+				  , art.art_profile_img
+				  , art.art_debutdate
+				  , art.art_del_yn as artist_del_yn
+				  , agm.art_group_no as agm_art_group_no
+				  , agm.art_no as agm_art_no
+				  , agm.art_group_map_debutdate
+				  , agm.art_del_yn as del_yn
+				  , ag.art_group_no as ag_art_group_no
+				  , ag.art_group_type_code
+				  , ag.emp_username
+				  , ag.art_group_debutdate
+				  , ag.art_group_nm
+				  , ag.art_group_content
+				  , ag.art_group_reg_date
+				  , ag.art_group_del_yn
+				  , ag.art_group_profile_img
+				  , ag.art_group_mod_date
+				  , empp.peo_last_nm || empp.peo_first_nm as empName
+				  , row_number() over(
+				  		partition by art.art_no
+				  		order by agm.art_group_map_debutdate, agm.art_group_no
+				  	) as rn_one_group
+				FROM
+				    artist art
+				left join artist_group_map agm on (art.art_no = agm.art_no and agm.art_del_yn ='N')
+				left join artist_group ag on (agm.art_group_no = ag.art_group_no)
+				left join people empp on (ag.emp_username = empp.username)
+				WHERE 1=1
+				<include refid="searchArtist" />
+				ORDER BY art.art_del_yn, art.art_no asc
+				) a
+			where a.rn_one_group = 1
+		)b
+		<![CDATA[
+			where b.rnum >= #{pagingVO.startRow} and b.rnum <= #{pagingVO.endRow}
+		]]>
+    </select>
+
+ 	<!-- <select id="getTotalRecord" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+ 		select
+ 			count(*)
+ 		from
+ 			artist art
+ 		left join
+			artist_group_map agm on(art.art_no = agm.art_no and agm.art_del_yn = 'N')
+		left join
+			artist_group ag on(agm.art_group_no = ag.art_group_no)
+		left join
+			people empp on (ag.emp_username = empp.username)
+ 		where 1=1
+ 		<include refid="searchArtist" />
+ 	</select> -->
+
+	<select id="getTotalRecord" resultType="int">
+ 		select
+ 			count(*)
+ 		from(
+			select
+	 			art.art_no,
+	 			row_number() over(
+	 				partition by art.art_no
+	 				order by agm.art_group_map_debutdate, agm.art_group_no
+	 			) as rn
+	 		from
+	 			artist art
+	 		left join
+				artist_group_map agm on(art.art_no = agm.art_no and agm.art_del_yn = 'N')
+			left join
+				artist_group ag on(agm.art_group_no = ag.art_group_no)
+			left join
+				people empp on (ag.emp_username = empp.username)
+	 		where 1=1
+	 		<include refid="searchArtist" />
+ 		)a
+ 		where a.rn = 1
+ 	</select>
+
+	<select id="getArtistDetail" parameterType="int" resultMap="artistMap">
+		SELECT
+		    art.art_no
+		  , agm.art_group_no
+		  , art.mem_username
+		  , art_nm
+		  , art_content
+		  , art_reg_date
+		  , art_mod_date
+		  , art_profile_img
+		  , emp_username
+		  , art_group_nm
+		  , art_group_debutdate
+		  , art_debutdate
+		  , p.username
+		  , password
+		  , peo_enabled
+		  , user_type_code
+		  , peo_first_nm
+		  , peo_last_nm
+		  , peo_email
+		  , peo_gender
+		  , peo_phone
+		  , peo_last_nm || peo_first_nm as peoName
+		  , m.mem_username
+		  , mem_stat_code
+		  , mem_reg_path
+		  , mem_nicknm
+		  , mem_birth
+		  , mem_zip_code
+		  , mem_address1
+		  , mem_address2
+		  , mem_mod_date
+		  , mem_reg_date
+		  , (select peo_last_nm || peo_first_nm from people where username = emp_username) as empName
+		  , agm.art_del_yn as del_yn
+		FROM
+		    artist art
+		left outer join artist_group_map agm on (art.art_no = agm.art_no)
+		LEFT OUTER JOIN artist_group ag on (agm.art_group_no = ag.art_group_no)
+		left outer join member m on(art.mem_username = m.mem_username)
+		left outer join people p on(art.mem_username = p.username)
+		where art.art_no = #{artNo}
+	</select>
+
+	<select id="getArtistListByGroupNo" parameterType="int" resultMap="artistMap">
+		SELECT
+		    art.art_no
+		  , art.mem_username
+		  , art_nm
+		  , art_content
+		  , art_reg_date
+		  , art_mod_date
+		  , art_profile_img
+		  , art_group_nm
+		  , art_group_debutdate
+		  , art_debutdate
+		  , p.username
+		  , password
+		  , peo_enabled
+		  , user_type_code
+		  , peo_first_nm
+		  , peo_last_nm
+		  , peo_email
+		  , peo_gender
+		  , peo_phone
+		  , peo_last_nm || peo_first_nm as peoName
+		  , auth
+		  , m.mem_username
+		  , mem_stat_code
+		  , mem_reg_path
+		  , mem_nicknm
+		  , mem_birth
+		  , mem_zip_code
+		  , mem_address1
+		  , mem_address2
+		  , mem_mod_date
+		  , mem_reg_date
+		  , (select peo_last_nm || peo_first_nm from people where username = emp_username) as empName
+		FROM
+		    artist art
+		LEFT OUTER JOIN artist_group_map agm on (agm.art_no = art.art_no)
+		LEFT OUTER JOIN artist_group ag on (agm.art_group_no = ag.art_group_no)
+		left outer join member m on(art.mem_username = m.mem_username)
+		left outer join people p on(art.mem_username = p.username)
+		left outer join people_auth pa on(art.mem_username = pa.username)
+		where agm.art_group_no = #{artGroupNo}
+	</select>
+
+	<select id="getArtistGroupList" parameterType="map" resultMap="groupMap" >
+		SELECT
+		    ag.art_group_no
+		  , ag.art_group_type_code
+		  , ag.emp_username
+		  , ag.art_group_debutdate
+		  , ag.art_group_nm
+		  , ag.art_group_content
+		  , ag.art_group_reg_date
+		  , ag.art_group_del_yn
+		  , ag.art_group_profile_img
+		  , ag.art_group_mod_date
+		  , (select peo_last_nm || peo_first_nm from people where username = ag.emp_username) as empName
+		FROM
+		    artist_group ag
+		 left outer join artist_group_map agm on (ag.art_group_no = agm.art_group_no)
+		where 1=1
+		and agm.art_no = #{artNo}
+		and agm.art_del_yn = 'N'
+	</select>
+
+	<select id="getArtistListAll" resultType="kr.or.ddit.vo.artist.ArtistVO">
+		SELECT
+		    a.art_no
+		  , mem_username
+		  , art_nm
+		  , art_content
+		  , art_reg_date
+		  , art_mod_date
+		  , art_profile_img
+		  , art_debutdate
+		  , a.art_del_yn
+		FROM
+		    artist a, people p
+		where
+			a.mem_username = p.username
+		and
+			peo_enabled = 'Y'
+		order by a.art_no desc
+	</select>
+
+
+	<update id="updateArtist" parameterType="kr.or.ddit.vo.artist.ArtistVO">
+		update artist
+		set
+			art_nm = #{artNm}
+			, art_profile_img = #{artProfileImg}
+			, art_content = #{artContent}
+			, art_debutdate = #{artDebutdate}
+			, art_mod_date = sysdate
+		where
+			art_no = #{artNo}
+	</update>
+
+	<insert id="registArtist" parameterType="kr.or.ddit.vo.artist.ArtistVO" useGeneratedKeys="true">
+		<selectKey keyProperty="artNo" order="BEFORE" resultType="int">
+			select artist_seq.nextval from dual
+		</selectKey>
+		INSERT INTO artist (
+		    art_no
+		    , mem_username
+		    , art_nm
+		    , art_content
+		    , art_reg_date
+		    , art_mod_date
+		    , art_profile_img
+		) VALUES (
+		    #{artNo}
+		  , #{memUsername}
+		  , #{artNm}
+		  , #{artContent}
+		  , sysdate
+		  , sysdate
+		  , #{artProfileImg}
+		)
+	</insert>
+
+	<update id="deleteArtist" parameterType="kr.or.ddit.vo.artist.ArtistVO">
+		UPDATE artist
+		SET
+		    art_del_yn = 'Y'
+		    , art_mod_date = sysdate
+		WHERE
+	        art_no = #{artNo}
+	</update>
+	<!-- 아티스트 그룹 특정 아티스트 제거 -->
+	<update id="deleteArtGroup" parameterType="kr.or.ddit.vo.artist.ArtistVO">
+		update artist_group_map
+		set
+			art_del_yn = 'Y'
+		where
+			art_group_no = #{artGroupNo}
+		and art_no = #{artNo}
+	</update>
+	<!-- 아티스트 은퇴시 전체 그룹 은퇴 처리 -->
+	<update id="deleteArtistGroupMap" parameterType="kr.or.ddit.vo.artist.ArtistVO">
+		update artist_group_map
+		set
+			art_del_yn = 'Y'
+		where
+			art_no = #{artNo}
+	</update>
+
+	<update id="updateArtistGroupDelYn" parameterType="kr.or.ddit.vo.artist.ArtistVO">
+		update artist_group_map
+		set
+			art_del_yn = 'N'
+		where
+			art_group_no = #{artGroupNo}
+		and	art_no = #{artNo}
+	</update>
+
+	<select id="checkArtGroup" parameterType="kr.or.ddit.vo.artist.ArtistVO" resultType="int">
+		select
+			count(*)
+		from
+			artist_group_map
+		where
+			art_no = #{artNo}
+		and art_group_no = #{artGroupNo}
+	</select>
+
+	<insert id="insertArtistGroupMap" parameterType="kr.or.ddit.vo.artist.ArtistVO">
+		insert into artist_group_map(
+			  art_group_no
+			, art_no
+			, art_group_map_debutdate
+		) values (
+			  #{artGroupNo}
+			, #{artNo}
+			, to_char(sysdate,'YYYY/MM/DD')
+		)
+	</insert>
+
+	<select id="selectArtistUsername" parameterType="kr.or.ddit.vo.artist.ArtistVO" resultType="string">
+		select
+			mem_username
+		from
+			artist
+		where
+			art_no = #{artNo}
+	</select>
+
+	<update id="updateArtistDebut" parameterType="kr.or.ddit.vo.artist.ArtistVO">
+		update artist
+		set
+			art_debutdate = #{artDebutdate}
+		where
+			art_no = #{artNo}
+	</update>
+
+<!-- 고칠부분 -->
+	<select id="selecSummaryMap" resultType="map">
+		select
+			  total.cnt as totalcnt
+			, active.cnt as activecnt
+			, deactive.cnt as deactivecnt
+		from
+			(
+				select
+					count(*) as cnt
+				from
+					artist
+			) total,
+			(
+				select
+					count(*) as cnt
+				from
+					artist
+				where
+					art_del_yn = 'N'
+			) active,
+			(
+				select
+					count(*) as cnt
+				from
+					artist
+				where
+					art_del_yn = 'Y'
+			) deactive
+	</select>
+ </mapper>

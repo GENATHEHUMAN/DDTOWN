@@ -1,0 +1,368 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DD TOWN 오디션 상세보기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/audition.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .apply-hero { background-color: var(--background-color-dark); color: var(--text-color-light); padding: var(--spacing-xl) 0; text-align: center; margin-top: 80px; }
+        .apply-hero h2 { font-size: var(--font-size-xxlarge); margin-bottom: var(--spacing-md); }
+        .apply-hero p { color: var(--text-color-secondary); font-size: var(--font-size-large); }
+        .apply-form-section { padding: var(--spacing-xl) 0; background: var(--background-color); }
+        .apply-form-container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: var(--border-radius-md); box-shadow: var(--shadow-md); padding: var(--spacing-xxl) var(--spacing-xl); }
+        .apply-form label { font-weight: 500; margin-bottom: 0.5em; display: block; }
+        .apply-form input[type="text"], .apply-form input[type="email"], .apply-form input[type="tel"], .apply-form select, .apply-form textarea { width: 100%; padding: var(--spacing-sm) var(--spacing-md); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); margin-bottom: var(--spacing-md); font-size: 1rem; }
+        .apply-form textarea { min-height: 100px; resize: vertical; }
+        .apply-form .gender-group { display: flex; gap: 2em; margin-bottom: var(--spacing-md); }
+        .apply-form .gender-group label { font-weight: 400; margin-bottom: 0; }
+        .apply-form .birth-group { display: flex; gap: 1em; margin-bottom: var(--spacing-md); }
+        .apply-form .birth-group select { flex: 1; }
+        .apply-form .file-group { margin-bottom: var(--spacing-md); }
+        .apply-form .file-group input[type="file"] { border: none; }
+        .apply-form .file-desc { font-size: 0.95em; color: var(--text-color-secondary); margin-top: 0.2em; }
+        .apply-form .email-group { display: flex; gap: 0.5em; align-items: center; margin-bottom: var(--spacing-md); }
+        .apply-form .email-group input { flex: 1; }
+        .apply-form .email-group button { white-space: nowrap; }
+        .apply-form .privacy-box { background: var(--background-color-light); border-radius: var(--border-radius-sm); padding: var(--spacing-md); font-size: 0.97em; color: var(--text-color-secondary); margin-bottom: var(--spacing-md); max-height: 180px; overflow-y: auto; }
+        .apply-form .privacy-check { margin-bottom: var(--spacing-lg); }
+        .apply-form .btn-group { display: flex; gap: var(--spacing-md); justify-content: center; margin-top: var(--spacing-lg); }
+        @media (max-width: 768px) { .apply-form-container { padding: var(--spacing-lg) var(--spacing-md); } }
+    </style>
+<%@ include file="../modules/headerPart.jsp" %>
+</head>
+<body>
+<%@ include file="./../corporate/modules/header.jsp" %>
+	<main>
+	    <section class="apply-hero">
+	        <div class="container">
+	            <h2>온라인 지원</h2>
+	            <p>DD TOWN의 새로운 스타가 될 기회! 아래 지원서를 작성해주세요.</p>
+	        </div>
+	    </section>
+ 		
+        <section class="apply-form-section">
+            <div class="apply-form-container">
+                <form class="apply-form" action="/corporate/audition/signup.do" method="post" id="signupForm" enctype="multipart/form-data">
+					<sec:csrfInput/>
+                    <label>오디션 종류 / 모집분야</label>
+                    <input type="hidden" id="audiNo" name="audiNo" value="${audition.audiNo}">
+                    <input type="hidden" id="applicantBirth" name="applicantBirth" value="">
+                    <div style="display: flex; gap: 1em; margin-bottom: var(--spacing-md);">
+                    	<span></span>
+                        <span id="audition-type" style="font-size: 1.2em; flex:1;">${audition.audiTitle}</span>
+                        
+                    </div>
+                    <label>모집분야 :
+	                    <span id="audition-field-display" readonly style="font-size: 1.2em; flex:1;">
+						    <c:choose>
+						        <c:when test="${audition.audiTypeCode eq 'ADTC001'}">보컬</c:when>
+						        <c:when test="${audition.audiTypeCode eq 'ADTC002'}">댄스</c:when>
+						        <c:when test="${audition.audiTypeCode eq 'ADTC003'}">연기</c:when>
+						    </c:choose>
+						</span>
+					</label>
+                    <label for="name">이름</label>
+                    <input type="text" id="applicantNm" name="applicantNm" placeholder="이름을 입력하세요." required><br/>
+
+                    <label>성별</label>
+                    <div class="gender-group">
+                        <label><input type="radio" id="genderM" name="applicantGender" value="M" required> 남자</label>
+                        <label><input type="radio" id="genderF" name="applicantGender" value="F"> 여자</label>
+                    </div>
+
+                    <label>생년월일</label>
+                    <div class="birth-group">
+                        <select name="birthYear" id="birthYear" required>
+                            <option value="">년</option>
+                            <!-- 1980~2015 예시 -->
+                            <c:set var="currentYear" value="<%= java.time.Year.now().getValue() %>" />
+                             <c:forEach var="i" begin="0" end="100">
+                             <c:set var="year" value="${currentYear - i}" />
+				            <option value="${year}">${year}</option>
+				        </c:forEach>
+                        </select>
+                        <select name="birthMonth" id="birthMonth" required>
+                            <option value="">월</option>
+                            <c:forEach var="month" begin="1" end="12">
+            					<option value="${month}">${month}</option>
+        					</c:forEach>
+                        </select>
+                        <select name="birthDay" id="birthDay" required>
+                            <option value="">일</option>
+                            <c:forEach var="day" begin="1" end="31">
+           						<option value="${day}">${day}</option>
+        					</c:forEach>
+                        </select>
+                    </div>
+
+                    <label for="email">이메일</label>
+                    <div class="email-group">
+                        <input type="email" id="applicantEmail" name="applicantEmail" placeholder="이메일을 입력하세요." required>
+                       <!--  <button type="button" class="btn btn-secondary" id="emailCheckBtn">중복체크</button> -->
+                    </div>
+
+                    <label for="phone">휴대폰 번호</label>
+                    <input type="tel" id="applicantPhone" name="applicantPhone"  maxlength="11" placeholder="휴대폰 번호를 입력하세요. (예: 01012345678)" required>
+
+                    <label for="file">사진/동영상 첨부</label>
+                    <div class="file-group">
+                        <input type="file" id="audiMemFiles" name="audiMemFiles" accept=".jpg,.jpeg,.png,.gif,.mp4,.mov,.wmv,.avi" multiple required>
+                        <div class="file-desc">최대 용량 100MB. JPG, PNG, GIF, MP4, MOV, WMV, AVI 등 지원</div>
+                    </div>
+
+                    <label for="intro">자기소개서</label>
+                    <textarea id="appCoverLetter" name="appCoverLetter" placeholder="자기소개 및 지원 동기를 입력하세요." required></textarea>
+
+                    <label>개인정보 수집·이용 동의</label>
+                    <div class="privacy-box" readonly>
+                        <strong>㈜디디타운엔터테인먼트(이하 '회사')는 오디션 지원과 관련하여 아래와 같이 개인정보를 수집·이용합니다.</strong><br><br>
+                        1. 수집하는 개인정보 항목<br>
+                        - 필수항목: 성명, 생년월일(또는 성별), 성별, 연락처(이메일 주소, 휴대전화번호), 지원분야, 사진, 영상 등<br>
+                        2. 이용목적: 오디션 지원자 관리 및 심사, 합격자 안내 등<br>
+                        3. 보유 및 이용기간: 지원일로부터 1년간 보관 후 파기<br>
+                        4. 동의 거부 시 지원이 제한될 수 있습니다.<br>
+                    </div>
+                    <div class="privacy-check">
+                        <label><input type="checkbox" id="applicantAgree" name="applicantAgree" value="Y" required> 위 개인정보 수집 및 이용에 동의합니다.</label>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary" id="signupBtn" >지원하기</button>
+                        <button type="reset" class="btn btn-secondary"
+                        	onclick="javascript:location.href='/corporate/audition/detail.do?audiNo=${audition.audiNo }'">취소하기</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+    
+<!-- footer 부분 -->
+	<footer class="site-footer">
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-info">
+                    <div class="footer-logo">DD TOWN</div>
+                    <p class="footer-description">
+                        DD TOWN은 창의성과 열정을 바탕으로 아티스트와 팬 모두에게 최고의 경험을 선사합니다. 
+                        우리는 혁신적인 콘텐츠와 글로벌 네트워크를 통해 K-Culture의 미래를 만들어갑니다.
+                    </p>
+                    <div class="footer-contact">
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>대전광역시 중구 계룡로 846</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <span>042-123-4567</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>contact@ddtown.com</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h3>바로가기</h3>
+                    <ul>
+                        <li class="has-submenu">
+                            <a href="#">기업 정보</a>
+                            <ul class="submenu">
+                                <li><a href="${pageContext.request.contextPath}/corporate/finance">재무정보</a></li>
+                                <li><a href="${pageContext.request.contextPath}/corporate/about">기업소개</a></li>
+                                <li><a href="${pageContext.request.contextPath}/corporate/notice/list">기업 공지</a></li>
+                                <li><a href="${pageContext.request.contextPath}/corporate/location">기업 위치</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="${pageContext.request.contextPath}/corporate/audition/schedule">오디션</a></li>
+                        <li><a href="${pageContext.request.contextPath}/corporate/artist/profile">아티스트 프로필</a></li>
+                        <li><a href="${pageContext.request.contextPath}/community/artist/main">아티스트 커뮤니티</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 DD TOWN Entertainment. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+<script src="${pageContext.request.contextPath}/resources/js/common/main.js"></script>
+<script type="text/javascript">
+$(function(){
+//	let emailCheckBtn = $("#emailCheckBtn");	// 이메일중복확인 Element
+	let emailCheckFlag = false;	
+	let signupBtn = $("#signupBtn");			//등록하기 Element
+	let signupForm = $("#signupForm");		// 등록하기 Form Element
+/* 	
+	//이메일 중복확인버튼 이벤트
+	emailCheckBtn.on("click", function(){
+		let email = $("#applicantEmail").val();	//입력한 이메일 값
+		let audiNo = $("#audiNo").val();
+		
+		console.log("이메일:", email);
+		console.log("오디션 넘버:", audiNo);
+		
+		if(email == null || email == ""){
+			sweetAlert("error", "이메일을 입력해주세요!");
+			return false;
+		}
+		let data ={
+				audiNo : audiNo,
+				applicantEmail : email
+		};
+		
+		$.ajax({
+			url : "/corporate/audition/emailCheck.do",
+			type : "post",
+			data : JSON.stringify(data),
+			contentType : "application/json; charset=utf-8",
+			beforeSend : function(xhr) {
+		        xhr.setRequestHeader("${_csrf.headerName}", "${_csrf.token}");
+		    },
+			success: function(res){
+				let err = $(".errors")[0];
+				if(res == "NOTEXIST"){	//이메일 사용가능
+					sweetAlert("success", "사용 가능한 이메일입니다!");
+					$(err).html("사용 가능한 이메일 입니다!").css("color", "green");
+					emailCheckFlag =true;
+				}else{
+					sweetAlert("error", "이미 사용중인 이메일입니다!");
+					$(err).html("이미 사용중인 이메일 입니다!").css("color", "red");
+					emailCheckFlag = false;
+				}
+			}
+		})
+	});
+	//이메일 입력 부분 변동 감지(false로 바꿈)
+	$(document).ready(function() { // 문서 로딩 완료 후 실행될 코드 블록
+	    $('#email').on('input', function() {
+	        // 사용자가 이메일 주소를 변경하면 플래그를 false로 초기화
+	        emailCheckFlag = false;
+	        // 사용자에게 다시 중복 확인을 하라고 알려주는 메시지 표시
+	        $('#emailRecheckMessage').show(); // 이메일 변경 감지 시 메시지 표시
+	    });
+
+	    $('#emailRecheckMessage').hide();
+	}); */
+	
+	// 지원하기 버튼
+	signupBtn.on("click",function(){
+		let audiNo = $("#audiNo").val();		// 오디션 공고 번호
+		let applicantNm = $("#applicantNm").val();		//이름 
+		let applicantPhone = $("#applicantPhone").val();	//휴대폰 번호 
+		let appCoverLetter = $("#appCoverLetter").val();	//자기소개서
+		let applicantEmail = $("#applicantEmail").val();			//이메일
+		let agreeFlag = false;					//개인정보 동의 
+		let audiMemFiles = $("#audiMemFiles").val();		//파일--예시
+
+		let genderCheck = $("input[name='applicantGender']:checked").val();	//성별 값
+				
+		let birthYear = $("#birthYear");
+		let birthMonth = $("#birthMonth");
+		let birthDay = $("#birthDay");
+				
+				
+		let year = birthYear.val();		//년
+		let month = birthMonth.val();	//월
+		let day = birthDay.val();		//일
+		let memBirth = "";
+		
+		//성별 유효성 검사
+	    if (!genderCheck) {
+	        sweetAlert("error", "성별을 선택해주세요!");
+	        return false;
+	    }
+		//생년월일 유효성 검사
+	    if(year && month && day){
+	    	applicantBirth = "" + year + month + day;
+	    	$("#applicantBirth").val(applicantBirth);
+		}else{
+			sweetAlert("error","생년월일을 모두 선택해주세요!");
+			return false;
+		}
+	    
+	    
+
+	 	// 유효성 검사
+		if(applicantNm == null || applicantNm.trim() == ""){
+			sweetAlert("error","이름을 입력해주세요!");
+			return false;
+		}
+		if (applicantEmail == null || applicantEmail.trim() === "") {
+	        sweetAlert("error", "이메일을 입력해주세요!");
+	        return false;
+	    }
+		
+/* 		if (!emailCheckFlag) { // emailCheckFlag가 false라면 (즉, 중복 확인을 안 했거나 통과 못 했다면)
+	        sweetAlert("error", "이메일 중복 확인을 해주세요!");
+	        return false; 
+	    } */
+		if(applicantPhone == null || applicantPhone.trim() == ""){
+			sweetAlert("error","전화번호를 입력해주세요!");
+			return false;
+		}
+		//휴대폰 번호 제한
+		const phoneRegex = /^\d{1,11}$/;
+		
+		if (!phoneRegex.test(applicantPhone)) {
+		    sweetAlert("error", "전화번호 형식이 올바르지 않습니다. (예: 01012345678)");
+		    return false;
+		}
+		
+		if(appCoverLetter == null || appCoverLetter.trim() == ""){
+			sweetAlert("error","자기소개를 입력해주세요!");
+			return false;
+		}
+/* 		
+		if (!emailCheckFlag) { // emailCheckFlag가 false라면 (즉, 중복 확인을 안 했거나 통과 못 했다면)
+	        sweetAlert("error", "이메일 중복 확인을 해주세요!");
+	        $('#emailRecheckMessage').show(); // 메시지 다시 표시
+	        return false;
+	    } */
+		
+		let audiMemFilesInput = $("#audiMemFiles")[0];
+		if (audiMemFilesInput.files.length === 0) { // 선택된 파일이 없다면
+		    sweetAlert("error", "파일을 첨부해주세요!");
+		    return false; // 폼 제출 방지
+		}
+		
+		
+		let applicantAgree = $("#applicantAgree:checked").val();
+		if(applicantAgree == "Y"){	//개인정보 동의 체크 함
+			agreeFlag = true;
+			
+		}
+		
+		if(agreeFlag){
+				signupForm.submit();			
+		}else{
+			sweetAlert("error", "개인정보 동의를 체크해주세요!");
+		}
+		
+	    
+	    console.log("이름:", applicantNm);
+	    console.log("선택된 성별:", applicantGender);
+	    console.log("생년월일 (년):", year);
+	    console.log("생년월일 (월):", month);
+	    console.log("생년월일 (일):", day);
+	    console.log("생년월일 (전체):", applicantBirth);
+	    console.log("휴대폰 번호:", applicantPhone);
+	    console.log("개인정보 동의:", applicantAgree);
+	    console.log("자기소개서:", appCoverLetter);
+	    console.log("이메일:", applicantEmail);
+	    
+	})
+
+})
+</script>
+</html>

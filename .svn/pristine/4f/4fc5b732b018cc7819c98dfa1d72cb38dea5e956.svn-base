@@ -1,0 +1,89 @@
+package kr.or.ddit.ddtown.service.admin.member;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.mapper.admin.member.IMemberAdminMapper;
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.member.MemCodeListVO;
+import kr.or.ddit.vo.member.MemberAdminVO;
+
+@Service
+public class MemberAdminService implements IMemberAdminService {
+
+	@Autowired
+	private IMemberAdminMapper memberAdminMapper;
+
+	@Override
+	public List<MemberAdminVO> getMemberList() {
+		
+		List<MemberAdminVO> memberVO = memberAdminMapper.getMemberList();
+		
+		return memberVO;
+	}
+
+	@Override
+	public MemberAdminVO getMember(String memUsername) {
+		
+		MemberAdminVO memberVO = memberAdminMapper.getMember(memUsername);
+		
+		return memberVO;
+	}
+
+	@Override
+	public List<MemCodeListVO> getCodeList() {
+		
+		List<MemCodeListVO> codeList = memberAdminMapper.getCodeList();
+		
+		return codeList;
+	}
+
+	@Override
+	public ServiceResult updateMember(MemberAdminVO memberVO) {
+		ServiceResult result = null;
+		
+		int status = memberAdminMapper.updateMember(memberVO);
+		
+		memberVO.getPeopleVO().setUsername(memberVO.getMemUsername());
+		
+		int sta = memberAdminMapper.updatePeople(memberVO.getPeopleVO());
+		
+		if(status > 0 && sta > 0) {
+			result = ServiceResult.OK;
+		}else {
+			result = ServiceResult.FAILED;
+		}
+		return result;
+	}
+
+	@Override
+	public ServiceResult deleteMember(String memUsername) {
+		
+		ServiceResult result = null;
+		
+		int status = memberAdminMapper.deleteMember(memUsername);
+		
+		int stat = memberAdminMapper.deletePeople(memUsername);
+		
+		if(status > 0 && stat > 0) {
+			result = ServiceResult.OK;
+		}else {
+			result = ServiceResult.FAILED;
+		}
+		
+		return result;
+	}
+	
+	@Override
+	public int getTotalRecord(PaginationInfoVO<MemberAdminVO> pagingVO) {
+		return memberAdminMapper.getTotalRecord(pagingVO);
+	}
+	
+	@Override
+	public List<MemberAdminVO> getDataList(PaginationInfoVO<MemberAdminVO> pagingVO) {
+		return memberAdminMapper.getDataList(pagingVO);
+	}
+}

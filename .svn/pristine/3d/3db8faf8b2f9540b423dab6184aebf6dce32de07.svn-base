@@ -1,0 +1,11 @@
+package kr.or.ddit.ddtown.service.community;
+
+import java.util.List;
+
+import kr.or.ddit.vo.schedule.ScheduleVO;
+
+public interface ICommunityLSNService {
+
+	public List<ScheduleVO> scheduleList(int artGroupNo);
+
+}

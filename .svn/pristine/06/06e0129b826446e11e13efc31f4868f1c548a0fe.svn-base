@@ -1,0 +1,670 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/resources/ckeditorInquiry/ckeditor.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/js/adminlte.min.js"></script>
+
+<!-- 아코디언 시작 -->
+<link rel="stylesheet" href="/resources/dist/css/adminlte.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" >
+<script src="/resources/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- 아코디언 끝 -->
+
+<%@ include file="../../modules/headerPart.jsp" %>
+<style type="text/css">
+.modal-detail-title{
+ 	display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #ffffff;
+}
+.modal-detail-title .faq-info { display: flex; align-items: center; flex-grow: 1; }
+
+.modal-detail-title .faq-category {
+    font-size: 0.85em;
+    color: #fff;
+    background-color: #5dade2;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.modal-detail-title .faq-question-text {
+    font-weight: 500;
+    color: #2c3e50;
+    flex-grow: 1;
+}
+
+.mb-3 .form-control {
+	height : 300px;
+    resize: none;
+}
+
+.mb-3 .form-control:disabled {
+	background-color : #ffffff;
+}
+
+.faqTitleCss:disabled {
+	background-color : #ffffff;
+	width : 500px;
+	height : 70px;
+	border: 0px;
+	resize: none;
+}
+
+.faqTitleCss {
+	width : 500px;
+	height : 70px;
+	border: 1px solid #cccccc; /* 연한 회색 테두리 */
+  	border-radius: 4px;
+  	padding: 8px 12px;
+  	box-sizing: border-box;
+  	resize: none;
+}
+
+.selectBox {
+	position: relative; /* 가상 요소 위치 기준 */
+  display: inline-block; /* 혹은 block, 필요에 따라 */
+  width: 150px; /* 원하는 너비로 조절 */
+}
+
+.selectBox select{
+	/* 기본 브라우저 스타일 제거 */
+  appearance: none;
+  -webkit-appearance: none; /* Safari, Chrome */
+  -moz-appearance: none;    /* Firefox */
+
+  /* 기본 스타일링 */
+  width: 100%;
+  padding: 10px 30px 10px 12px; /* 오른쪽 패딩은 화살표 공간 확보 */
+  font-size: 16px;
+  font-family: 'Arial', sans-serif;
+  color: #333;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  outline: none; /* 포커스 시 기본 아웃라인 제거 */
+  box-sizing: border-box;
+}
+
+.selectBox::after {
+
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%) rotate(45deg); /* 화살표 모양 만들기 */
+  width: 6px;
+  height: 6px;
+  border-bottom: 2px solid #555; /* 화살표 색상 및 두께 */
+  border-right: 2px solid #555;
+  pointer-events: none; /* 화살표가 select 클릭 방해하지 않도록 */
+  transition: transform 0.2s ease; /* 부드러운 효과 (선택사항) */
+}
+
+#updateForm {
+    width: auto; /* 내용에 맞게 너비 자동 조절 */
+    min-width: max-content; /* 최소 너비를 내용만큼 확보 (예: "검색" 두 글자) */
+    white-space: nowrap; /* 글자가 두 줄로 나뉘는 것을 방지 */
+    writing-mode: horizontal-tb !important; /* 혹시라도 writing-mode가 세로로 설정된 경우 강제 변경 */
+    padding-left: 12px; /* 버튼 내부 여백 (기존 .ea-btn 스타일에 따라 조절) */
+    padding-right: 12px; /* 버튼 내부 여백 (기존 .ea-btn 스타일에 따라 조절) */
+}
+#searchBtn {
+    width: auto; /* 내용에 맞게 너비 자동 조절 */
+    min-width: max-content; /* 최소 너비를 내용만큼 확보 (예: "검색" 두 글자) */
+    white-space: nowrap; /* 글자가 두 줄로 나뉘는 것을 방지 */
+    writing-mode: horizontal-tb !important; /* 혹시라도 writing-mode가 세로로 설정된 경우 강제 변경 */
+    padding-left: 12px; /* 버튼 내부 여백 (기존 .ea-btn 스타일에 따라 조절) */
+    padding-right: 12px; /* 버튼 내부 여백 (기존 .ea-btn 스타일에 따라 조절) */
+}
+.input-group {
+    gap: 5px;
+    flex-wrap: nowrap;
+}
+</style>
+</head>
+
+<script type="text/javascript">
+//사이드바 메뉴 기능
+document.addEventListener('DOMContentLoaded', function() {
+    const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+    navItemsWithSubmenu.forEach(item => {
+        const arrow = item.querySelector('.submenu-arrow');
+        item.addEventListener('click', function(event) {
+            if (this.getAttribute('href') === '#') {
+                event.preventDefault();
+            }
+            const parentLi = this.parentElement;
+            const submenu = this.nextElementSibling;
+
+            if (submenu && submenu.classList.contains('emp-submenu')) {
+                const parentUl = parentLi.parentElement;
+                if (parentUl) {
+                    Array.from(parentUl.children).forEach(siblingLi => {
+                        if (siblingLi !== parentLi) {
+                            const siblingSubmenuControl = siblingLi.querySelector('.emp-nav-item.has-submenu.open');
+                            if (siblingSubmenuControl) {
+                                const siblingSubmenuElement = siblingSubmenuControl.nextElementSibling;
+                                siblingSubmenuControl.classList.remove('open');
+                                if (siblingSubmenuElement && siblingSubmenuElement.classList.contains('emp-submenu')) {
+                                    siblingSubmenuElement.style.display = 'none';
+                                }
+                                const siblingArrow = siblingSubmenuControl.querySelector('.submenu-arrow');
+                                if (siblingArrow) siblingArrow.style.transform = 'rotate(0deg)';
+                            }
+                        }
+                    });
+                }
+            }
+            
+            this.classList.toggle('open');
+            if (submenu && submenu.classList.contains('emp-submenu')) {
+                submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                if (arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+            }
+        });
+    });
+
+    // 현재 페이지 URL 기반으로 사이드바 메뉴 활성화
+    const currentFullHref = window.location.href;
+    document.querySelectorAll('.emp-sidebar .emp-nav-item[href]').forEach(link => {
+        if (link.href === currentFullHref) {
+            link.classList.add('active');
+            let currentActiveElement = link;
+            while (true) {
+                const parentLi = currentActiveElement.parentElement;
+                if (!parentLi) break;
+                const parentSubmenuUl = parentLi.closest('ul.emp-submenu');
+                if (parentSubmenuUl) {
+                    parentSubmenuUl.style.display = 'block';
+                    const controllingAnchor = parentSubmenuUl.previousElementSibling;
+                    if (controllingAnchor && controllingAnchor.classList.contains('has-submenu')) {
+                        controllingAnchor.classList.add('active', 'open');
+                        const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                        if (arrow) arrow.style.transform = 'rotate(90deg)';
+                        currentActiveElement = controllingAnchor;
+                    } else break;
+                } else break;
+            }
+        }
+    });
+});
+
+
+function dateFormat(jsonDate){
+	if (!jsonDate) return "";
+	let date = new Date(jsonDate);
+	let month = date.getMonth() + 1;
+    let day = date.getDate();
+    let hour = date.getHours();
+    let minute = date.getMinutes();
+    let second = date.getSeconds();
+
+    month = month >= 10 ? month : '0' + month;
+    day = day >= 10 ? day : '0' + day;
+    hour = hour >= 10 ? hour : '0' + hour;
+    minute = minute >= 10 ? minute : '0' + minute;
+    second = second >= 10 ? second : '0' + second;
+
+    return date.getFullYear() + '-' + month + '-' + day;
+}
+
+$(function(){
+	
+	list();
+	
+	$("#search").on("click",function(){
+		
+		let data = {
+			searchType : $("#searchType").val(),
+			searchWord : $("#searchWord").val()
+		}
+		
+		list(data);
+		console.log(data);
+	});
+	
+	$(document).on("click",".detailBtn",function(event){
+		console.log("detail 버튼 누름",this.dataset.faqno);
+		let faqNo = this.dataset.faqno;
+		$.ajax({
+			url : "/admin/faq/detailData/" + faqNo, 
+			type : "get",
+			success : function(res){
+				console.log(res);
+				$("#faqCategoryView").html(res.description);
+				$("#faqTitle").html(res.faqTitle);
+				$("#faqTitleUpdate").html(res.faqTitle);
+				$("#faqAnswer").html(res.faqAnswer);
+				$("#faqAnswerUpdate").html(res.faqAnswer);
+				$("#empUsername").html(res.empUsername);
+				$("#empUsernameUpdate").html(res.empUsername);
+				$("#faqModDate").html(dateFormat(res.faqModDate));
+				$("#faqModDateUpdate").html(dateFormat(res.faqModDate));
+				$("#updateData").attr("data-faqNo",res.faqNo);
+			},
+			error : function(error, status, thrown){
+				console.log(error.status);
+			}
+		});
+	});
+	
+	$("#update").on("click",function(){
+		let currentModal = $(this).closest('.modal');
+		console.log(currentModal);
+		currentModal.modal('hide');
+	});
+	
+	$("#updateData").on("click",function(){
+		let faqNo = (this).dataset.faqno;
+		console.log(faqNo);
+		console.log($("#faqAnswerUpdate").val());
+		let data = new FormData();
+		data.append("faqTitle",$("#faqTitleUpdate").val());
+		data.append("faqAnswer",$("#faqAnswerUpdate").val());
+		data.append("faqCategory",$("#faqCategory").val());
+		
+		Swal.fire({
+			title : "수정하시겠습니까?",
+			icon : "question",
+			showCancelButton: true,
+			confirmButtonText : "예",
+			cancelButtonText : "아니오"
+		}).then((result) => {
+			if(result.isConfirmed){
+				$.ajax({
+					url : "/admin/faq/updateData/" + faqNo,
+					type : "post",
+					data : data,
+					processData : false,
+					contentType : false,
+					success : function(res){
+						console.log(res);
+						if(res == "OK"){
+							Swal.fire({
+								title : "수정완료!",
+								text : "수정이 정상적으로 완료되었습니다.",
+								icon : "success",
+								showConfrimButton : true,
+							}).then((result) => {
+								location.href = "/admin/faq/main";
+							});
+						}
+					},
+					error : function(error, status, thrown){
+						console.log(error.status);
+					},
+					beforeSend : function(xhr) {
+				        xhr.setRequestHeader('${_csrf.headerName}', '${_csrf.token}');
+				    }
+				});
+			}else{
+				return false;
+			}
+		});
+		
+	});
+	
+	$("#insertData").on("click",function(){
+		let data = new FormData();
+		data.append("faqTitle",$("#faqTitleInsert").val());
+		data.append("faqAnswer",$("#faqAnswerInsert").val());
+		data.append("faqCategory",$("#faqCategoryInsert").val());
+		
+		Swal.fire({
+			title : "저장하시겠습니까?",
+			icon : "question",
+			showCancelButton: true,
+			confirmButtonText : "예",
+			cancelButtonText : "아니오"
+		}).then((result) => {
+			if(result.isConfirmed){
+				$.ajax({
+					url : "/admin/faq/insert",
+					type : "post",
+					data : data,
+					contentType : false,
+					processData : false,
+					success : function(res){
+						console.log(res);
+						if(res == "OK"){
+							Swal.fire({
+								title : "저장완료",
+								text : "성공적으로 저장이 완료되었습니다.",
+								icon : "success",
+								showConfrimButton : true,
+							}).then((result) => {
+								location.href="/admin/faq/main";
+							});
+						}
+					},
+					error : function(error, thrown, status){
+						
+					},
+					beforeSend : function(xhr) {
+				        xhr.setRequestHeader('${_csrf.headerName}', '${_csrf.token}');
+				    }
+				});
+			}else{
+				return false;
+			}
+		});
+		
+		
+	});
+	
+	const pagingArea = $('#pagingArea');
+    if(pagingArea.length > 0) {
+        pagingArea.on('click', 'a', function(event) { 
+            event.preventDefault();
+            const page = $(this).data('page');
+                        
+            console.log(page)
+            
+            let searchType = $("#searchType").val();
+            let searchWord = $("#searchWord").val();
+            
+            let data = {
+            	searchType : searchType,
+            	searchWord : searchWord,
+            	page : page
+            };
+            list(data);
+        });
+    }
+	
+});
+
+function list(data){
+	
+	console.log("list 요청 : ", data);
+	
+	$.ajax({
+		url : "/admin/faq/list",
+		type : "get",
+		data : data,
+		success : function(res){
+			console.log(res);
+			let html = ``;
+			if(res != null && res.faqVO.length > 0){
+				for(let i=0; i<res.faqVO.length; i++){
+					let vo = res.faqVO[i];
+					let date = dateFormat(vo.faqRegDate);
+					html += `
+					<tr data-inquiry-id="\${vo.faqNo}">
+	                    <td>\${vo.faqNo}</td>
+	                    <td><span>\${vo.description}</span></td>
+	                    <td class="faq-title">\${vo.faqTitle}</td>
+	                    <td>\${vo.empUsername}</td>
+	                    <td>\${date}</td>
+	                    <td class="notice-actions-faq">
+		                    <button class="ea-btn sm outline detailBtn" data-toggle="modal" data-target="#modal-lg" data-faqNo="\${vo.faqNo}"><i class="fas fa-edit"></i></button>
+	                        <button class="ea-btn sm danger" title="삭제" onclick="deleteFaqItem(\${vo.faqNo}, this)"><i class="fas fa-trash-alt"></i></button>
+	                    </td>
+	                </tr>
+					`;
+					
+				}
+				
+			}else{
+				html = `
+					<td colspan="6">조회하신 게시물은 없습니다.</td>
+				`;
+			}
+			
+			
+			let codeHtml = `<option value="">전체</option>`;
+			if(res.codeList != null && res.codeList.length > 0){
+				for(let i=0; i<res.codeList.length; i++){
+					let code = res.codeList[i];
+					let select = "";
+					if(code.commCodeDetNo == res.pagingVO.searchType){
+						select = "selected"
+					}
+					codeHtml += `
+						<option value="\${code.commCodeDetNo}" \${select}>\${code.description}</option>
+					`;
+				}
+				$("#faqCategory").html(codeHtml);
+				$("#searchType").html(codeHtml);
+				$("#faqCategoryInsert").html(codeHtml);
+			}
+			
+			$("#pagingArea").html(res.pagingVO.pagingHTML);
+					
+			
+			$("#faqTableBody").html(html);
+		},
+		error : function(error, status, thrown){
+			console.log(error.status);
+		}
+	});
+}
+
+
+function deleteFaqItem(faqNo, e){
+	Swal.fire({
+		title : "정말로 삭제하시겠습니까?",
+		text : "삭제가 완료되면 복구하실 수 없습니다.",
+		icon : "warning",
+		showCancelButton: true,
+		confirmButtonText : "예",
+		cancelButtonText : "아니오"
+	}).then((result) => {
+		if(result.isConfirmed){
+			$.ajax({
+				url : "/admin/faq/delete/" + faqNo,
+				type : "post",
+				success : function(res){
+					if(res == "OK"){
+						Swal.fire({
+							title : "삭제 완료!",
+							text : "정상적으로 삭제가 완료되었습니다.",
+							icon : "success",
+							showConfrimButton : true,
+						}).then((result) => {
+							location.href = "/admin/faq/main";
+						});
+					}
+				},
+				error : function(error, status, thrown){
+					console.log(error.status);
+				},
+				beforeSend : function(xhr) {
+			        xhr.setRequestHeader('${_csrf.headerName}', '${_csrf.token}');
+			    }
+			});
+		}
+	});
+}
+
+</script>
+<body>
+
+<div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            
+				<main class="emp-content">
+					<section class="ea-section active-section" id="csFaqListSection">
+						<div class="ea-section-header">
+							<h2>FAQ 관리</h2>
+							
+							<div class="ea-header-actions">
+							
+								<form class="input-group input-group-sm" method="get" id="searchForm">
+									
+									<input type="hidden" name="currentPage" value="1" id="page">
+									
+									<input type="text" class="ea-search-input" name="searchWord" id="searchWord" placeholder="질문, 답변 내용 검색...">
+									
+									<select id="searchType" class="ea-filter-select" name="searchType" >
+									
+									</select>
+									
+									<div class="input-group-append">
+										<button type="submit" class="ea-btn primary" id="searchBtn">
+											<i class="fas fa-search"></i>검색
+										</button>
+									</div>
+								</form>
+								<button class="ea-btn primary" id="updateForm" data-toggle="modal" data-target="#insertModal">
+				                    <i class="fas fa-plus"></i> 등록
+				                </button>
+							</div>
+						</div>
+						<table class="ea-table" id="faqTable">
+							<thead>
+				                <tr>
+				                    <th class="col-number">번호</th>
+				                    <th class="col-status">유형</th>
+				                    <th class="col-title">제목</th>
+				                    <th class="col-user">작성자</th>
+				                    <th class="col-date">등록일</th>
+				                    <th class="col-actions">관리</th>
+				                </tr>
+				            </thead>
+				            <tbody id="faqTableBody">
+				            
+				            </tbody>
+						</table>
+						
+						
+						<div class="pagination-container" id="pagingArea">
+						
+						</div>
+					</section>
+				</main>
+		</div>
+</div>
+<!-- 상세모달 -->
+<div class="modal fade" id="modal-lg" style="display: none;" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			 <div class="modal-header">
+			 	<div class="modal-title">
+			 		<div class="modal-detail-title" id="modalTitle">
+				 		<h4 class="card-title w-100 faq-info">
+					 		<span class="faq-category" id="faqCategoryView"></span>
+					 		<span class="faq-question-text" id="faqTitle"></span>
+				 		</h4>
+			 		</div>
+			 		<div class="answer-history">
+				 		<div class="answer-meta">
+	        				<span id="empUsername"></span> | <span id="faqModDate"></span>
+	        			</div>
+			 		</div>
+			 	</div>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				  <span aria-hidden="true">×</span>
+				</button>
+			 </div>
+			 <div class="modal-body">
+				<form>
+					<div class="mb-3">
+						<label for="faqAnswer" class="col-form-label">내용</label>
+						<textarea class="form-control" id="faqAnswer" disabled="disabled"></textarea>
+					</div>
+				</form>
+			 </div>
+			 <div class="modal-footer justify-content-between">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-warning" id="update" data-toggle="modal" data-target="#updateModal" data-faqNo="">수정</button>
+			 </div>
+		</div>
+	  <!-- /.modal-content -->
+	</div>
+	<!-- /.modal-dialog -->
+</div>
+
+<!-- 수정모달 -->
+<div class="modal fade" id="updateModal" style="display: none;" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			 <div class="modal-header">
+			 	<div class="modal-title">
+			 		<div class="modal-detail-title" id="modalTitle">
+				 		<h4 class="card-title w-100 faq-info">
+					 		<select id="faqCategory" class="selectBox"></select>
+							<textarea class="faqTitleCss" id="faqTitleUpdate"></textarea>
+				 		</h4>
+			 		</div>
+			 		<div class="answer-history">
+				 		<div class="answer-meta">
+	        				<span id="empUsernameUpdate"></span> | <span id="faqModDateUpdate"></span>
+	        			</div>
+			 		</div>
+			 	</div>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				  <span aria-hidden="true">×</span>
+				</button>
+			 </div>
+			 <div class="modal-body">
+				<form>
+					<div class="mb-3">
+						<label for="faqAnswer" class="col-form-label">내용</label>
+						<textarea class="form-control" id="faqAnswerUpdate"></textarea>
+					</div>
+				</form>
+			 </div>
+			 <div class="modal-footer justify-content-between">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary" id="updateData" data-faqNo="">저장</button>
+			 </div>
+		</div>
+	  <!-- /.modal-content -->
+	</div>
+	<!-- /.modal-dialog -->
+</div>
+
+<!-- 등록모달 -->
+<div class="modal fade" id="insertModal" style="display:none;" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			 <div class="modal-header">
+			 	<div class="modal-title">
+			 		<div class="modal-detail-title" id="modalTitle">
+				 		<h4 class="card-title w-100 faq-info">
+					 		<select id="faqCategoryInsert" class="selectBox"></select>
+							<textarea class="faqTitleCss" id="faqTitleInsert"></textarea>
+				 		</h4>
+			 		</div>
+			 	</div>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				  <span aria-hidden="true">×</span>
+				</button>
+			 </div>
+			 <div class="modal-body">
+				<form>
+					<div class="mb-3">
+						<label for="faqAnswer" class="col-form-label">내용</label>
+						<textarea class="form-control" id="faqAnswerInsert"></textarea>
+					</div>
+				</form>
+			 </div>
+			 <div class="modal-footer justify-content-between">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary" id="insertData">저장</button>
+			 </div>
+		</div>
+	  <!-- /.modal-content -->
+	</div>
+	<!-- /.modal-dialog -->
+</div>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.emp.schedule.IScheduleMapper">
+ 
+ 	<resultMap type="kr.or.ddit.vo.artist.ArtistGroupVO" id="artistVO">
+ 		<result property="artGroupRegDate" column="emp_art_group_reg_date"/>
+		<result property="artGroupDelYn" column="emp_art_group_del_yn"/>
+		<result property="artGroupProfileImg" column="emp_art_group_profile_img"/>
+		<result property="artGroupModDate" column="emp_art_group_mod_date"/>
+		<result property="artGroupNo" column="emp_art_group_no"/>
+		<result property="artGroupTypeCode" column="emp_art_group_type_code"/>
+		<result property="empUsername" column="emp_username"/>
+		<result property="artGroupDebutdate" column="emp_art_group_debutdate"/>
+		<result property="artGroupNm" column="emp_art_group_nm"/>
+		<result property="artGroupContent" column="emp_art_group_content"/>
+		
+		<collection property="schedule" resultMap="scheduleList" />
+ 	</resultMap>
+ 	
+ 	
+ 	<resultMap type="kr.or.ddit.vo.schedule.ScheduleVO" id="scheduleList">
+		<result property="id" column="id"/>
+		<result property="title" column="title"/>
+		<result property="start" column="start"/>
+		<result property="end" column="end"/>
+		<result property="textColor" column="text_color"/>
+		<result property="backgroundColor" column="background_color"/>
+		<result property="url" column="url"/>
+		<result property="allDayStatus" column="all_day_status"/>
+		<result property="place" column="place"/>
+ 		<result property="artGroupNo" column="schedule_art_group_no"/>
+ 		<result property="content" column="content"/>
+ 		<result property="comuNotiNo" column="comu_noti_no"/>
+ 	</resultMap>
+ 	
+ 
+ 	<select id="getList" parameterType="String" resultMap="artistVO" >
+ 		SELECT
+		    ag.art_group_no as emp_art_group_no,
+		    ag.art_group_type_code as emp_art_group_type_code,
+		    ag.emp_username as emp_username,
+		    ag.art_group_debutdate as emp_art_group_debutdate,
+		    ag.art_group_nm as emp_art_group_nm,
+		    ag.art_group_content as emp_art_group_content,
+		    ag.art_group_reg_date as emp_art_group_reg_date,
+		    ag.art_group_del_yn as emp_art_group_del_yn,
+		    ag.art_group_profile_img as emp_art_group_profile_img,
+		    ag.art_group_mod_date as emp_art_group_mod_date,
+		    
+		    sche.art_schedule_no as id,
+		    sche.art_group_no as schedule_art_group_no,
+		    sche.title as title,
+		    sche.start_date as "start",
+		    sche.end_date as "end",
+		    sche.place as place,
+		    sche.content as content,
+		    sche.text_color as text_color,
+		    sche.url as "url",
+		    sche.background_color as background_color,
+		    sche.all_day as all_day_status,
+		    cnm.comu_noti_no as comu_noti_no
+		    
+		FROM
+		    artist_group ag
+		left join artist_schedule sche on ag.art_group_no = sche.art_group_no
+		left join concert_notice_map cnm on sche.art_schedule_no = cnm.art_schedule_no
+		where ag.emp_username = #{empUsername}
+ 	</select>
+ 	
+ 	<select id="getDes" parameterType="int" resultType="kr.or.ddit.vo.schedule.ScheduleDetailVO">
+ 		select 
+	 		place,
+			content
+		from artist_schedule
+		where art_schedule_no = #{id}
+ 	</select>
+ 	
+ 	<update id="dateUpdate" parameterType="kr.or.ddit.vo.schedule.ScheduleVO">
+ 		update artist_schedule set
+ 			  title	= #{title}
+ 			, start_date = #{start}
+ 			, end_date = #{end}
+ 			, place = #{place}
+ 			, content = #{content}
+ 			, text_color = #{textColor}
+ 			, url = #{url}
+ 			, background_color = #{backgroundColor}
+ 			, all_day = #{allDayStatus}
+ 		where art_schedule_no = #{id}
+ 	</update>
+ 	
+ 	<update id="dateMove" parameterType="kr.or.ddit.vo.schedule.ScheduleVO">
+ 		update artist_schedule set
+ 			  start_date = #{start}
+ 			, end_date = #{end}
+ 		where art_schedule_no = #{id}
+ 	</update>
+ 
+ 	<insert id="dateInsert" parameterType="kr.or.ddit.vo.schedule.ScheduleVO">
+ 	<selectKey resultType="int" keyProperty="id" order="BEFORE" >
+ 		select artist_schedule_seq.nextval from dual
+ 	</selectKey>
+ 		insert into artist_schedule (art_schedule_no, art_group_no, title, start_date, end_date, place, content, text_color, url, background_color, all_day, art_sch_cat_code)
+ 		values (#{id}, #{artGroupNo}, #{title}, #{start}, #{end}, #{place}, #{content}, #{textColor}, #{url}, #{backgroundColor}, #{allDayStatus}, #{artSchCatCode})
+ 	</insert>
+ 	
+ 	<delete id="dateDelete" parameterType="int">
+ 		delete from artist_schedule where art_schedule_no = #{id}
+ 	</delete>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.concert.ConcertVO" id="concert">
+ 		<result property="concertNo" column="CONCERT_NO"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="concertHallNo" column="CONCERT_HALL_NO"/>
+		<result property="concertCatCode" column="CONCERT_CAT_CODE"/>
+		<result property="concertReservationStatCode" column="CONCERT_RESERVATION_STAT_CODE"/>
+		<result property="concertStatCode" column="CONCERT_STAT_CODE"/>
+		<result property="concertOnlineYn" column="CONCERT_ONLINE_YN"/>
+		<result property="concertNm" column="CONCERT_NM"/>
+		<result property="concertDate" column="CONCERT_DATE"/>
+		<result property="concertAddress" column="CONCERT_ADDRESS"/>
+		<result property="concertStartDate" column="CONCERT_START_DATE"/>
+		<result property="concertEndDate" column="CONCERT_END_DATE"/>
+		<result property="concertRunningTime" column="CONCERT_RUNNING_TIME"/>
+		<result property="concertGuide" column="CONCERT_GUIDE"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		
+		<collection property="commCodeDetVO" resultMap="concertCode" />
+		<collection property="concertHallVO" resultMap="concertHall" />
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.common.CommonCodeDetailVO" id="concertCode">
+ 		<result property="commCodeDetNo" column="COMM_CODE_DET_NO"/>
+		<result property="commCodeGrpNo" column="COMM_CODE_GRP_NO"/>
+		<result property="commCodeDetNm" column="COMM_CODE_DET_NM"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="description" column="DESCRIPTION"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.concert.ConcertHallVO" id="concertHall">
+ 		<result property="concertHallNo" column="CONCERT_HALL_NO"/>
+		<result property="concertAddress" column="CONCERT_ADDRESS"/>
+		<result property="concertHallNm" column="CONCERT_HALL_NM"/>
+		<result property="concertCapacity" column="CONCERT_CAPACITY"/>
+ 	</resultMap>
+ 	
+ 	<select id="concertNoticeList" parameterType="kr.or.ddit.vo.schedule.ScheduleVO" resultMap="concert">
+ 		select 
+		      c.concert_no
+		    , c.art_group_no
+		    , c.concert_hall_no
+		    , c.concert_cat_code
+		    , c.concert_reservation_stat_code
+		    , c.concert_stat_code
+		    , c.concert_online_yn
+		    , c.concert_nm
+		    , c.concert_date
+		    , c.concert_address
+		    , c.concert_start_date
+		    , c.concert_end_date
+		    , c.concert_running_time
+		    , c.concert_guide
+		    , c.file_group_no
+		    
+		    , ch.concert_hall_no
+		    , ch.concert_address
+		    , ch.concert_hall_nm
+		    , ch.concert_capacity
+		    
+		    , cdc.comm_code_det_no
+		    , cdc.comm_code_grp_no
+		    , cdc.comm_code_det_nm
+		    , cdc.use_yn
+		    , cdc.description
+		    
+		from concert c
+		left join concert_hall ch on c.concert_hall_no = ch.concert_hall_no
+		left join common_detail_code cdc on c.concert_cat_code = cdc.comm_code_det_no
+		where art_group_no = #{artGroupNo}
+		<![CDATA[
+		and (to_char(c.concert_start_date,'YYYY-MM-DD HH24:MI:SS') >= #{curMonthStart}
+		and to_char(c.concert_end_date,'YYYY-MM-DD HH24:MI:SS') <= #{curMonthEnd})
+		]]>
+ 	</select>
+ 	
+ 	<select id="selectConcertData" parameterType="kr.or.ddit.vo.concert.ConcertVO" resultMap="concert">
+ 		select 
+		      c.CONCERT_NO
+		    , c.ART_GROUP_NO
+		    , c.CONCERT_HALL_NO
+		    , c.CONCERT_CAT_CODE
+		    , c.CONCERT_RESERVATION_STAT_CODE
+		    , c.CONCERT_STAT_CODE
+		    , c.CONCERT_ONLINE_YN
+		    , c.CONCERT_NM
+		    , c.CONCERT_DATE
+		    , c.CONCERT_ADDRESS
+		    , c.CONCERT_START_DATE
+		    , c.CONCERT_END_DATE
+		    , c.CONCERT_RUNNING_TIME
+		    , c.CONCERT_GUIDE
+		    , c.FILE_GROUP_NO
+		    
+		    , ch.CONCERT_HALL_NO
+		    , ch.CONCERT_ADDRESS
+		    , ch.CONCERT_HALL_NM
+		    , ch.CONCERT_CAPACITY
+		    
+		    , cdc.COMM_CODE_DET_NO
+		    , cdc.COMM_CODE_GRP_NO
+		    , cdc.COMM_CODE_DET_NM
+		    , cdc.USE_YN
+		    , cdc.DESCRIPTION
+		    
+		from concert c
+		left join concert_hall ch on c.concert_hall_no = ch.concert_hall_no
+		left join common_detail_code cdc on c.CONCERT_CAT_CODE = cdc.comm_code_det_no
+		where art_group_no = #{artGroupNo}
+		and c.concert_no = #{concertNo}
+ 	</select>
+ 	
+ 	<select id="noticeList" parameterType="kr.or.ddit.vo.schedule.ScheduleVO" resultType="kr.or.ddit.vo.concert.ConcertNoticeVO">
+ 		select 
+		      comu_noti_no
+		    , art_group_no
+		    , comu_noti_cat_code
+		    , comu_noti_title
+		    , comu_noti_content
+		    , comu_noti_reg_date
+		    , comu_noti_mod_date
+		from community_notice
+		where art_group_no = #{artGroupNo}
+		order by comu_noti_reg_date desc
+ 	</select>
+ 	
+ 	<select id="selectNoticeData" parameterType="kr.or.ddit.vo.concert.ConcertNoticeVO" resultType="kr.or.ddit.vo.concert.ConcertNoticeVO">
+ 		select 
+		      comu_noti_no
+		    , art_group_no
+		    , comu_noti_cat_code
+		    , comu_noti_title
+		    , comu_noti_content
+		    , comu_noti_reg_date
+		    , comu_noti_mod_date
+		from community_notice
+		where comu_noti_no = #{comuNotiNo}
+ 	</select>
+ 	
+ 	<insert id="insertConcertNoticeMap">
+ 		INSERT INTO CONCERT_NOTICE_MAP(
+ 			ART_SCHEDULE_NO, COMU_NOTI_NO, COMU_NOTI_REG_DATE
+ 		) VALUES (
+ 			#{artScheduleNo}, #{comuNotiNo}, SYSDATE
+ 		)
+ 	</insert>
+ </mapper>

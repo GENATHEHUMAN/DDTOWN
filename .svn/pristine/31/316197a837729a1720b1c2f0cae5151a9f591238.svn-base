@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.faq.IFaqMapper">
+ 
+ 	<select id="getList" parameterType="String" resultType="kr.or.ddit.vo.faq.FaqVO">
+ 		select FAQ_NO, EMP_USERNAME, FAQ_CATEGORY, FAQ_TITLE, FAQ_ANSWER, FAQ_REG_DATE, FAQ_MOD_DATE, DESCRIPTION
+		from faq f left outer join common_detail_code cdc on f.faq_category = cdc.comm_code_det_no
+		where 1=1
+		<if test="decodedValue != null and decodedValue != 'null'">
+		and FAQ_CATEGORY = #{FAQ_CATEGORY}
+		</if>
+ 	</select>
+ 	
+ 	<select id="getCodeList" parameterType="int" resultType="kr.or.ddit.vo.faq.FaqCodeVO">
+ 		select COMM_CODE_DET_NO, COMM_CODE_GRP_NO, COMM_CODE_DET_NM, USE_YN, DESCRIPTION
+		from common_detail_code
+		where COMM_CODE_GRP_NO= (select COMM_CODE_GRP_NO
+		                        from common_detail_code
+		                        where COMM_CODE_DET_NO = (select FAQ_CATEGORY
+		                                                    from faq
+		                                                    where faq_no = #{faqNo}))
+ 	</select>
+ 
+ </mapper>

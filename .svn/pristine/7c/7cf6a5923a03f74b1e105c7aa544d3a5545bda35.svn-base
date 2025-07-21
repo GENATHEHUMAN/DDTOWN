@@ -1,0 +1,341 @@
+/* 기본 스타일 초기화 */
+body, h1, h2, p, ul, li, a {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #1c1e21;
+    line-height: 1.6;
+}
+
+/* 헤더 영역 */
+.site-header {
+    background-color: #ffffff;
+    padding: 10px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.site-header .logo a {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #8a2be2;
+}
+
+.site-header .utility-nav ul {
+    display: flex;
+}
+
+.site-header .utility-nav ul li {
+    margin-left: 20px;
+}
+
+.site-header .utility-nav ul li a {
+    color: #333;
+    font-weight: 500;
+    font-size: 0.9em;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.site-header .utility-nav ul li a:hover {
+    background-color: #f0f0f0;
+}
+
+.site-header .utility-nav ul li a.signup-link {
+    background-color: #8a2be2;
+    color: #ffffff;
+}
+
+.site-header .utility-nav ul li a.signup-link:hover {
+    background-color: #7b24c9;
+}
+
+/* 유틸리티 네비게이션 아이콘 버튼 */
+.site-header .utility-nav ul li a.icon-btn {
+    font-size: 1.5em;
+    padding: 8px 10px;
+    color: #555;
+    background-color: transparent;
+    border-radius: 50%;
+}
+
+.site-header .utility-nav ul li a.icon-btn:hover {
+    color: #8a2be2;
+    background-color: #f0f0f0;
+}
+
+.site-header .utility-nav ul li a.icon-btn.special-icon {
+    background-color: #ffc107;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 1.2em;
+    line-height: 1.2;
+}
+
+.site-header .utility-nav ul li a.icon-btn.special-icon:hover {
+    background-color: #e0a800;
+}
+
+/* 메인 네비게이션 */
+.main-navigation {
+    background-color: #ffffff;
+    padding: 10px 30px;
+    text-align: center;
+    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.main-navigation > ul {
+    display: inline-block;
+}
+
+.main-navigation > ul > li {
+    display: inline-block;
+    margin: 0 15px;
+    position: relative;
+}
+
+.main-navigation > ul > li > a {
+    color: #333;
+    font-weight: bold;
+    padding: 10px 5px;
+    display: block;
+    position: relative;
+}
+
+.main-navigation > ul > li > a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background-color: #8a2be2;
+    transition: width 0.3s ease;
+}
+
+.main-navigation > ul > li:hover > a::after,
+.main-navigation > ul > li.active > a::after {
+    width: 100%;
+}
+
+/* 서브메뉴 */
+.submenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    min-width: 180px;
+    z-index: 100;
+    border-radius: 0 0 8px 8px;
+    padding: 5px 0;
+}
+
+.main-navigation > ul > li:hover .submenu {
+    display: block;
+}
+
+.submenu li a {
+    display: block;
+    padding: 10px 20px;
+    color: #333;
+    font-size: 0.95em;
+    white-space: nowrap;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.submenu li a:hover {
+    background-color: #f0f2f5;
+    color: #8a2be2;
+}
+
+/* 팔로우/멤버십 아티스트 바 */
+.followed-artists-bar {
+    background-color: #ffffff;
+    padding: 10px 15px;
+    border-bottom: 1px solid #e0e0e0;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: thin;
+    scrollbar-color: #ccc #f0f0f0;
+}
+
+.followed-artists-bar::-webkit-scrollbar {
+    height: 6px;
+}
+
+.followed-artists-bar::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 3px;
+}
+
+.followed-artists-bar::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+}
+
+.followed-artists-bar::-webkit-scrollbar-thumb:hover {
+    background: #bbb;
+}
+
+.artist-icon-item {
+    display: inline-block;
+    position: relative;
+    margin-right: 15px;
+    text-decoration: none;
+    color: inherit;
+    vertical-align: top;
+}
+
+.artist-icon-item:last-child {
+    margin-right: 0;
+}
+
+.artist-icon-item .artist-avatar-placeholder {
+    width: 52px;
+    height: 52px;
+    background-color: #e9ecef;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #555;
+    border: 1px solid #ddd;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.artist-icon-item:hover .artist-avatar-placeholder {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.artist-icon-item .membership-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -5px;
+    background-color: #ffc107;
+    color: #fff;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.8em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.artist-icon-item.membership .artist-avatar-placeholder {
+    border: 2px solid #8a2be2;
+}
+
+.artist-icon-item .artist-tooltip-name {
+    visibility: hidden;
+    width: auto;
+    min-width: 80px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.2s, visibility 0s linear 0.2s;
+    white-space: nowrap;
+    font-size: 0.8em;
+}
+
+.artist-icon-item .artist-tooltip-name::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+}
+
+.artist-icon-item:hover .artist-tooltip-name {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.2s;
+}
+
+/* 푸터 */
+.site-footer {
+    text-align: center;
+    padding: 30px 20px;
+    margin-top: 40px;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    font-size: 0.85em;
+    border-top: 1px solid #dee2e6;
+}
+
+.footer-links {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.footer-links a {
+    color: #495057;
+    text-decoration: none;
+    margin: 0 10px;
+    padding: 5px 0;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+    color: #000;
+    text-decoration: underline;
+}
+
+.footer-links a:nth-child(2) {
+    font-weight: bold;
+    color: #343a40;
+}
+
+.footer-info {
+    margin-bottom: 20px;
+    line-height: 1.8;
+    color: #6c757d;
+}
+
+.footer-info p {
+    margin-bottom: 5px;
+}
+
+.copyright {
+    font-size: 0.9em;
+    color: #6c757d;
+} 

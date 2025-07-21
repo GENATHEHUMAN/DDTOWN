@@ -1,0 +1,418 @@
+package kr.or.ddit.ddtown.controller.admin.goods;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import jakarta.servlet.http.HttpServletRequest;
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.service.admin.goods.items.IAdminGoodsService;
+import kr.or.ddit.ddtown.service.goods.main.IGoodsService;
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+import kr.or.ddit.vo.goods.goodsOptionVO;
+import kr.or.ddit.vo.goods.goodsVO;
+import lombok.extern.slf4j.Slf4j;
+
+
+
+@Slf4j
+@Controller
+@RequestMapping("/admin/goods/items")
+public class AdminGoodsItemsController {
+	
+	@Autowired
+	private IGoodsService goodsservice;
+	
+	@Autowired
+	private IAdminGoodsService admingoodsservice;
+	
+	//상품 목록 페이지
+    @GetMapping("/list")
+    public String goodsItemList(Model model,
+            @RequestParam(name="currentPage", required = false, defaultValue = "1") int currentPage,
+            @RequestParam(required = false) String searchWord,
+            @RequestParam(name="searchType", required = false) String searchType,
+            @RequestParam(name="statusFilter", required = false) String statusFilter, // 판매 상태 필터 파라미터 추가
+            @RequestParam(name="artGroupNo", required = false) String artGroupNo // ⭐ artistGroupId 대신 artGroupNo로 변경 ⭐
+    		) {
+                
+            // 1. PaginationInfoVO 객체 생성 및 파라미터 설정
+            PaginationInfoVO<goodsVO> pagingVO = new PaginationInfoVO<>();
+            pagingVO.setCurrentPage(currentPage);
+            
+            Map<String, Object> searchMap = new HashMap<>();
+            if (searchWord != null && !searchWord.isEmpty()) {
+                searchMap.put("searchWord", searchWord);
+            }
+            if (searchType != null && !searchType.isEmpty()) {
+                searchMap.put("searchType", searchType);
+            }
+            if (statusFilter != null && !statusFilter.isEmpty()) { // ⭐ statusFilter 추가
+                searchMap.put("statusFilter", statusFilter);
+            }
+            
+            if (artGroupNo != null && !artGroupNo.isEmpty()) {
+                searchMap.put("artGroupNo", artGroupNo);
+            }
+            
+            pagingVO.setSearchMap(searchMap); // searchMap을 pagingVO에 설정
+
+            log.info("### AdminGoodsItemsController - goodsItemList 호출: currentPage={}, searchMap={}",
+                     pagingVO.getCurrentPage(), pagingVO.getSearchMap());
+
+            // 2. 서비스 호출: retrieveGoodsList가 모든 필터링/정렬/페이징 처리를 하고,
+            //    필요한 상태 및 재고 정보도 함께 채워서 pagingVO.dataList에 넣어줄 것임.
+            admingoodsservice.retrieveGoodsList(pagingVO);
+            
+            // ⭐⭐⭐ 3. 여기에 상품 상태별 카운트 데이터를 가져와서 모델에 추가합니다. ⭐⭐⭐
+            List<Map<String, Object>> goodsStatusCounts = admingoodsservice.getGoodsStatusCounts();
+            log.info("컨트롤러에서 모델에 추가할 goodsStatusCounts: {}", goodsStatusCounts); // 로그 추가
+            model.addAttribute("goodsStatusCounts", goodsStatusCounts);
+            
+            // ⭐⭐ 2. 필터가 적용되지 않은 순수한 전체 상품 개수를 가져옵니다. ⭐⭐
+            // 이 값은 어떤 필터 버튼을 누르든 변하지 않아야 합니다.
+            int totalAllGoodsCount = admingoodsservice.getTotalGoodsCount();
+            model.addAttribute("totalAllGoodsCount", totalAllGoodsCount); // JSP에서 사용할 이름
+            
+            // ⭐⭐⭐ 5. 상품 재고 구간별 카운트 데이터를 가져와서 모델에 추가합니다. ⭐⭐⭐
+            // goodsService에 getGoodsStockCounts() 메서드를 새로 만들어야 합니다.
+            // Map<String, Integer> goodsStockCounts = admingoodsservice.getGoodsStockCounts(); // <-- 이 줄을 변경합니다!
+            // ⭐⭐⭐ 변경된 코드: List<Map<String, Object>> 타입으로 받습니다 ⭐⭐⭐
+            List<Map<String, Object>> goodsStockCountsList = admingoodsservice.getGoodsStockCounts(); 
+            log.info("컨트롤러에서 모델에 추가할 goodsStockCounts (재고별): {}", goodsStockCountsList);
+            // ⭐⭐⭐ 모델에 "goodsStockCountsList"라는 이름으로 List를 추가합니다 ⭐⭐⭐
+            model.addAttribute("goodsStockCountsList", goodsStockCountsList); // JSP에서 List로 받을 이름
+            
+            // 4. 모델에 PagingVO 객체만 담으면 끝.
+            //    JSP에서는 ${pagingVO.dataList}를 사용합니다.
+            model.addAttribute("pagingVO", pagingVO);
+            
+            // 5. 아티스트 그룹 목록 조회 (이것은 상품 목록과는 별개이므로 그대로 둡니다)
+            List<ArtistGroupVO> artistGroups = admingoodsservice.getArtistGroupsForForm();
+            model.addAttribute("artistGroups", artistGroups);
+            
+            // 6. 기존의 goodsList, goodsStatus, stockList 관련 모든 로직 제거는 그대로 유지
+            
+            // 로깅은 pagingVO.getDataList()를 기반으로 하면 됩니다.
+            log.info("최종 상품 상태 값 로깅..");
+            List<goodsVO> currentGoodsList = pagingVO.getDataList();
+            if(currentGoodsList != null && !currentGoodsList.isEmpty()) {
+                for(goodsVO goods: currentGoodsList) {
+                    log.info("상품번호: {}, 상품명: {}, 상태(Eng): {}, 상태(Kor): {}, 현재고: {}",
+                            goods.getGoodsNo(),
+                            goods.getGoodsNm(),
+                            goods.getStatusEngKey(),
+                            goods.getStatusKorName(),
+                            goods.getStockRemainQty());
+                }
+            } else {
+                log.info("조회된 최종 상품 목록이 없습니다.");
+            }
+            log.info("--- 최종 상품 상태 값 로깅 끝 ---");
+            
+            return "admin/goods/items/itemsList";
+    }
+	
+	//상품 상세 페이지
+	@GetMapping("/detail")
+	public String goodsItemDetail(@RequestParam("id") int goodsNo, //링크의 파라미터와 "id" 일치
+			RedirectAttributes ra,
+			Model model
+			) throws Exception { 
+		log.info("상품 상세 페이지 요청! goodsNo: {}", goodsNo);
+		
+		//1. goodsNo를 사용하여 상품 상세 정보 조회 (서비스 호출)
+		goodsVO items = goodsservice.getGoodsDetail(goodsNo);
+		
+		if(items == null) {
+			log.warn("goodsNo {}에 해당하는 상품 정보를 찾을 수 없습니다!", goodsNo);
+			//에러 처리
+			ra.addFlashAttribute("errorMessage", "상품 정보를 찾을 수 없습니다!");
+			return "redirect:/admin/goods/items/list";
+		}
+		
+		model.addAttribute("items", items); //jsp에서 ${item.~}으로 사용
+		
+		//2. 해당 상품의 옵션 목록 조회
+		List<goodsOptionVO> optionList = goodsservice.optionList(goodsNo);
+		model.addAttribute("optionList", optionList);
+		
+		return "admin/goods/items/itemsDetail";
+	}
+	
+	//상품 등록 페이지 불러오기
+	@GetMapping("/form")
+	public String goodsItemFormPage(Model model) {
+		log.info("상품 등록 폼 요청");
+		
+		//1.AdminGoodsService를 통해 아티스트 그룹 목록 조회
+		List<ArtistGroupVO> artistList = admingoodsservice.getArtistGroupsForForm();
+		
+		log.info("컨트롤러 - artistList is null: {}", (artistList == null));
+		
+		if(artistList != null) {
+			log.info("컨트롤러 - artistList size: {}", artistList.size());
+			for (ArtistGroupVO artist : artistList) {
+				log.info("컨트롤러 - Artist: No={}, Name={}", artist.getArtGroupNo(), artist.getArtGroupNm());
+			}
+		}
+		
+		model.addAttribute("artistList", artistList);
+		
+		goodsVO currentItem = new goodsVO();
+		log.info("컨트롤러 - item.artGroupNo: {}", currentItem.getArtGroupNo());
+		
+		//2.새로운 빈 goodsVO 객체를 item이라는 이름으로 전달
+		model.addAttribute("item", currentItem);
+		
+		return "admin/goods/items/itemsForm";
+	}
+	
+	//상품 등록하기
+	@PostMapping("/form")
+	public String goodsItemForm(
+			@ModelAttribute goodsVO goods, 
+			RedirectAttributes ra,
+			Model model,
+			HttpServletRequest request
+			) {
+		 // ★★★ 이 로그가 핵심! ★★★
+	    log.warn("<<<<< CONTROLLER POST /items/register 진입! Thread: {}, SessionId: {} >>>>>", 
+	            Thread.currentThread().getName(), 
+	            request.getSession().getId()); // 현재 요청의 세션 ID 로깅
+		
+		log.info("goodsItemRegister() 실행!!! goodsVO: {}", goods);
+		log.info("옵션 개수: {}", goods.getOptions() != null ? goods.getOptions().size() : 0);
+		
+		String goPage = "";
+		
+		try { 
+			ServiceResult result = admingoodsservice.itemsRegister(goods); //서비스 결과 받기
+			
+			if (ServiceResult.OK.equals(result)) { //명시적으로 성공 결과 확인
+				ra.addAttribute("successMessage", "상품 등록이 성공했습니다!!");
+				goPage = "redirect:/admin/goods/items/list";
+			} else {
+				log.warn("상품 등록 실패: {}", goods.getGoodsNo());
+				
+				model.addAttribute("errorMessage", "상품 등록에 실패했습니다!! 입력 내용을 확인하세요!!");
+				model.addAttribute("item", goods);
+
+				List<ArtistGroupVO> artistList = admingoodsservice.getArtistGroupsForForm();
+				model.addAttribute("artistList", artistList);
+				
+				goPage = "admin/goods/items/itemsForm";
+			}
+			
+		} catch (Exception e) { //서비스 실행 중 예외 발생
+			log.error("상품 등록 중 시스템 오류 발생", e);
+			
+			model.addAttribute("errorMessage", "시스템 오류로 인해 상품 등록에 실패했습니다. (" + e.getMessage() +")");
+			
+			List<ArtistGroupVO> artistList = admingoodsservice.getArtistGroupsForForm();
+			model.addAttribute("artistList", artistList);
+			
+			goPage = "admin/goods/items/itemsForm";
+		} 
+		
+		return goPage;
+	}
+	
+	//상품 수정 페이지 불러오기
+	@GetMapping("/update")
+	public String goodsItemUpdateFormPage(
+			@RequestParam("id") int goodsNo, 
+			Model model,
+			RedirectAttributes ra
+			) {
+		log.info("상품 수정 폼 요청! goodsNo: {}", goodsNo);
+		
+		try {
+			//1.goodsNo를 통해서 수정할 상품의 상세 정보 조회
+			goodsVO modItems = goodsservice.getGoodsDetail(goodsNo);
+			
+			if(modItems == null) {
+				log.warn("goodsNo {}에 해당하는 상품 정보를 찾을 수 없어 수정 폼을 표시할 수 없습니다!!", goodsNo);
+				ra.addAttribute("errorMessage", "수정할 상품 정보를 찾을 수 없습니다!!");
+				return "redirect:/admin/goods/items/list"; //목록으로 리다이렉트
+			}
+			
+			model.addAttribute("item", modItems); //JSP에서 ${item.~}으로 사용
+			
+			//2.아티스트 그룹 목록(드롭다운 채우기 용)
+			List<ArtistGroupVO> artistList = admingoodsservice.getArtistGroupsForForm();
+			model.addAttribute("artistList", artistList);
+			
+			//3.해당 상품의 옵션 목록
+			/*
+			 * List<goodsOptionVO> optionList = goodsservice.optionList(goodsNo);
+			 * model.addAttribute("optionList", optionList);
+			 */
+			
+			return "admin/goods/items/itemsUpdate";
+			
+		} catch (Exception e) {
+			log.error("상품 수정 폼 로딩 중 오류 발생! goodNo: {}", goodsNo, e);
+			ra.addFlashAttribute("errorMessage", "상품 정보를 불러오는 중 오류가 발생했습니다!");
+			return "redirect:/admin/goods/items/list";
+		}
+	}
+	
+	//상품 업데이트
+	@PostMapping("/update")
+	public String goodsItemUpdateForm (
+			@ModelAttribute("item") goodsVO goods,
+			BindingResult bindingResult,
+			@RequestParam(name="deleteAttachDetailNos", required=false) String deleteAttachDetailNosCsv, //삭제할 이미지 ID
+			@RequestParam(name="deleteOptionNos", required=false) String deleteOptionNosCsv, //삭제할 옵션 ID
+			RedirectAttributes ra,
+			Model model,
+			HttpServletRequest request
+			) {
+		
+		log.warn("<<<<<< Controller POST /items/update 진입! Thread: {}, SessionId: {}",
+				Thread.currentThread().getName(),
+				request.getSession().getId());
+		
+		log.info("goodsItemUpdateFrom 실행..!!! goodsVO: {}", goods);
+		log.info("넘어온 옵션 개수: {}", goods.getOptions() != null ? goods.getOptions().size()	 :0);
+		log.info("삭제할 이미지 ID 문자열: {}", deleteAttachDetailNosCsv);
+		log.info("삭제할 옵션 ID 문자열: {}", deleteOptionNosCsv);
+		
+		String goPage = "";
+		
+		//1. 삭제할 이미지 ID 리스트를 goodVO에 설정
+		List<Integer> imageIdsToDelete = new ArrayList<>();
+		
+		if(deleteAttachDetailNosCsv != null && !deleteAttachDetailNosCsv.isEmpty()) {
+			String[] idsArray = deleteAttachDetailNosCsv.split(",");
+			
+			for(String idStr : idsArray) {
+				if(!idStr.trim().isEmpty()) {
+					try {
+						imageIdsToDelete.add(Integer.parseInt(idStr.trim()));
+					} catch (NumberFormatException e) {
+						log.warn("유효하지 않은 삭제 파일 ID: {}", idStr);
+					}
+				}
+			}
+		}
+		
+		goods.setDeleteAttachDetailNos(imageIdsToDelete);
+		
+		//2. 삭제할 옵션 ID 리스트를 goodsVO에 설정
+		List<Integer> optionIdsToDelete = new ArrayList<>();
+		
+		if(deleteOptionNosCsv != null && !deleteOptionNosCsv.isEmpty()) {
+			String[] idsArray = deleteOptionNosCsv.split(",");
+			
+			for(String idStr : idsArray) {
+				if (!idStr.trim().isEmpty()) {
+					try {
+						optionIdsToDelete.add(Integer.parseInt(idStr.trim()));
+					} catch (NumberFormatException e) {
+						log.warn("유효하지 않은 삭제 옵션 ID: {}", idStr);
+					}
+				}
+			}
+		}
+		
+		goods.setDeleteOptionNos(optionIdsToDelete);
+		
+		//3. 기본 유효성 검사 (예: 상품명 필수!)
+		if(bindingResult.hasErrors()) {
+			log.warn("상품 수정 유효성 검사 오류 발생! 오류 개수: {}", bindingResult.getErrorCount());
+			
+			//폼을 다시 보여주기 위해 필요한 데이터 모델에 추가!!
+			model.addAttribute("errorMessage", "입력값에 오류가 있습니다!!");
+			
+			List<ArtistGroupVO> artistList = admingoodsservice.getArtistGroupsForForm();
+			model.addAttribute("artistList", artistList);
+			
+			return "admin/goods/items/itemsUpdate";
+		}
+		
+		//4. 서비스 호출하여 상품 업데이트
+		try {
+			ServiceResult result = admingoodsservice.updateGoodsItem(goods);
+			
+			if (ServiceResult.OK.equals(result)) {
+				ra.addFlashAttribute("successMessage", "상품 정보가 성공적으로 수정됐습니다!!");
+				goPage = "redirect:/admin/goods/items/detail?id=" + goods.getGoodsNo(); //수정된 상품의 상세 페이지로 이동!!
+			} else {
+				log.warn("상품 수정 실패!! goodsNo: {}", goods.getGoodsNo());
+				
+				model.addAttribute("errorMessage", "상품 수정에 실패했습니다!! 다시 시도해주세요!");
+				model.addAttribute("item", goods);
+				
+				List<ArtistGroupVO> artistList = admingoodsservice.getArtistGroupsForForm();
+				model.addAttribute("artistList", artistList);
+				goPage = "admin/goods/items/itemsUpdate";
+			}
+		} catch (IllegalArgumentException iae) { //서비스에서 발생시킨 유효성 예외 처리
+			log.warn("상품 수정 중 유효하지 않은 인자 예외 발생: {}", iae.getMessage());
+			model.addAttribute("errorMessage", iae.getMessage()); //서비스 예외 메시지를 바로 사용!
+			
+			model.addAttribute("item", goods);
+			List<ArtistGroupVO> artistList = admingoodsservice.getArtistGroupsForForm();
+			model.addAttribute("artistList",artistList);
+			
+			goPage = "admin/goods/items/itemsUpdate";
+		} catch (Exception e) {
+			log.error("상품 수정 중 시스템 오류 발생", e);
+			model.addAttribute("errorMessage", "시스템 오류로 인해 상품 수정에 실패했습니다!!");
+			
+			model.addAttribute("item", goods);
+			List<ArtistGroupVO> artistList = admingoodsservice.getArtistGroupsForForm();
+			model.addAttribute("artistList",artistList);
+			
+			goPage = "admin/goods/items/itemsUpdate";
+		}
+		
+		return goPage;
+	}
+	
+	//상품 삭제
+	@PostMapping("/delete")
+    public String deleteGoodsItems(
+    		@RequestParam("goodsNo") int goodsNo, 
+    		RedirectAttributes ra
+    		) {
+        log.info(">>>>>> 컨트롤러 deleteGoodsItems 진입! goodsNo: {} <<<<<<", goodsNo);
+        try {
+            // 서비스 계층의 deleteGoodsItems 메서드 호출
+            ServiceResult result = admingoodsservice.deleteGoodsItems(goodsNo);
+
+            if (result == ServiceResult.OK) {
+                ra.addFlashAttribute("message", "상품이 성공적으로 삭제되었습니다.");
+                log.info("상품(goodsNo:{}) 삭제 성공!! 목록으로 리다이렉트!", goodsNo);
+                return "redirect:/admin/goods/items/list"; // 삭제 성공 시 목록 페이지로 리다이렉트
+            } else {
+                ra.addFlashAttribute("errorMessage", "상품 삭제에 실패했습니다!!!");
+                log.warn("상품(goodsNo:{}) 삭제 실패!! 서비스 결과: {}", goodsNo, result);
+
+                return "redirect:/admin/goods/items/detail?id=" + goodsNo; 
+            }
+        } catch (Exception e) {
+            
+            log.error("상품(goodsNo:{}) 삭제 중 예상치 못한 오류 발생: {}", goodsNo, e.getMessage(), e);
+            ra.addFlashAttribute("errorMessage", "상품 삭제 중 예상치 못한 오류가 발생했습니다: " + e.getMessage());
+
+            return "redirect:/admin/goods/items/detail?id=" + goodsNo; 
+        }
+    }
+}
+    

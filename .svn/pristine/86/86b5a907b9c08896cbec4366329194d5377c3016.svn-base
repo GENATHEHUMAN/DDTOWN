@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.admin.blacklist.IBlacklistMapper">
+
+	<select id="blackList" resultType="kr.or.ddit.vo.blacklist.BlacklistVO">
+		select BAN_NO
+			 , MEM_USERNAME
+			 , EMP_USERNAME
+			 , BAN_REASON_CODE
+			 , BAN_REASON_DETAIL
+			 , BAN_START_DATE
+			 , BAN_END_DATE
+			 , BAN_REG_DATE
+			 , BAN_ACT_YN
+		from BLACKLIST
+		order by BAN_NO desc
+	</select>
+
+</mapper>

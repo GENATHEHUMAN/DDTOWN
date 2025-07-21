@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.community.ICommunityLSNMapper">
+ 	
+ 	<select id="scheduleList" parameterType="int" resultType="kr.or.ddit.vo.schedule.ScheduleVO">
+ 		SELECT 
+ 		  s.ART_SCHEDULE_NO as "id"
+ 		, s.ART_GROUP_NO
+ 		, s.TITLE
+ 		, s.START_DATE as "start"
+ 		, s.END_DATE as "end"
+ 		, s.PLACE
+ 		, s.CONTENT
+ 		, s.TEXT_COLOR
+ 		, s.URL
+ 		, s.BACKGROUND_COLOR
+ 		, s.ALL_DAY as all_day_status
+ 		, m.COMU_NOTI_NO as comuNotiNo
+ 		FROM ARTIST_SCHEDULE s
+ 		LEFT JOIN concert_notice_map m ON s.ART_SCHEDULE_NO = m.ART_SCHEDULE_NO
+ 		WHERE s.ART_GROUP_NO = #{artGroupNo}
+ 	</select>
+ 	
+ 	<select id="getCodeList" resultType="kr.or.ddit.vo.common.CommonCodeDetailVO">
+ 		SELECT
+		    comm_code_det_no
+		  , comm_code_grp_no
+		  , comm_code_det_nm
+		  , use_yn
+		  , description
+		FROM
+		    common_detail_code
+		where comm_code_grp_no = 'COMU_NOTI_CAT_CODE'
+ 	</select>
+ 	
+ </mapper>

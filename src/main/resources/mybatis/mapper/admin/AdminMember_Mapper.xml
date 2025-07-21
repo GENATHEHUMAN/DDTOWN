@@ -1,0 +1,800 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.admin.member.IMemberAdminMapper">
+ 	<resultMap type="kr.or.ddit.vo.member.MemberAdminVO" id="memberList">
+ 		<result property="rowNum" column="ROW_NUM"/>
+ 		<result property="memUsername" column="MEM_USERNAME"/>
+		<result property="memStatCode" column="MEM_STAT_CODE"/>
+		<result property="memRegPath" column="MEM_REG_PATH"/>
+		<result property="memNicknm" column="MEM_NICKNM"/>
+		<result property="memBirth" column="MEM_BIRTH"/>
+		<result property="memZipCode" column="MEM_ZIP_CODE"/>
+		<result property="memAddress1" column="MEM_ADDRESS1"/>
+		<result property="memAddress2" column="MEM_ADDRESS2"/>
+		<result property="memModDate" column="MEM_MOD_DATE"/>
+		<result property="memRegDate" column="MEM_REG_DATE"/>
+		<result property="memStatDetCode" column="MEM_STAT_DET_CODE"/>
+		<result property="memRegDetCode" column="MEM_REG_DET_CODE"/>
+
+		<result property="totalMemCnt" column="total"/>
+		<result property="generalMemCnt" column="general_mem"/>
+		<result property="outMemCnt" column="out_mem"/>
+		<result property="blackMemCnt" column="black_mem"/>
+
+		<result property="currentMemCnt" column="current_total"/>
+
+		<collection property="peopleVO" resultMap="peopelInfo" />
+ 	</resultMap>
+
+ 	<resultMap type="kr.or.ddit.vo.member.PeopleAdminVO" id="peopelInfo">
+ 		<result property="username" column="USERNAME"/>
+		<result property="password" column="PASSWORD"/>
+		<result property="peoEnabled" column="PEO_ENABLED"/>
+		<result property="userTypeCode" column="USER_TYPE_CODE"/>
+		<result property="peoFirstNm" column="PEO_FIRST_NM"/>
+		<result property="peoLastNm" column="PEO_LAST_NM"/>
+		<result property="peoEmail" column="PEO_EMAIL"/>
+		<result property="peoGender" column="PEO_GENDER"/>
+		<result property="peoPhone" column="PEO_PHONE"/>
+ 	</resultMap>
+
+ 	<sql id="searchMember">
+ 		<if test="searchCode != null and searchCode != ''">
+ 			and m.mem_stat_code like '%'|| #{searchCode}||'%'
+ 		</if>
+ 		<if test='paging.searchType == "name" and paging.searchWord !=null'>
+ 			and (p.peo_last_nm || p.peo_first_nm like '%'||#{paging.searchWord}||'%')
+ 		</if>
+ 		<if test='paging.searchType == "nick" and paging.searchWord != null'>
+ 			and (m.mem_nicknm like '%'||#{paging.searchWord}||'%')
+ 		</if>
+ 		<if test="paging.searchType == 'email' and paging.searchWord != null" >
+ 			and (p.peo_email like '%'||#{paging.searchWord}||'%')
+ 		</if>
+ 		<if test="paging.searchType == 'memId' and paging.searchWord != null">
+ 			and (p.username like '%'||#{paging.searchWord}||'%')
+ 		</if>
+ 	</sql>
+
+ 	<select id="getMemberList" resultMap="memberList">
+ 		select ROWNUM row_num, mp.*
+		from (
+			select m.MEM_USERNAME
+			, m.MEM_STAT_CODE
+			, m.MEM_REG_PATH
+			, m.MEM_NICKNM
+			, m.MEM_BIRTH
+			, m.MEM_ZIP_CODE
+			, m.MEM_ADDRESS1
+			, m.MEM_ADDRESS2
+			, m.MEM_MOD_DATE
+			, m.MEM_REG_DATE
+
+			, p.username
+			, p.password
+			, p.peo_enabled
+			, p.user_type_code
+			, p.peo_first_nm
+			, p.peo_last_nm
+			, p.peo_email
+			, p.peo_gender
+			, p.peo_phone
+			, cdc.DESCRIPTION mem_stat_det_code
+			from member m, people p, common_detail_code cdc
+			where m.mem_username = p.username (+)
+			and m.MEM_STAT_CODE = cdc.comm_code_det_no (+)
+			order by m.MEM_REG_DATE DESC ) mp
+ 	</select>
+
+ 	<select id="getMember" parameterType="String" resultMap="memberList">
+ 		select m.mem_username
+			, m.mem_stat_code
+			, m.mem_reg_path
+			, m.mem_nicknm
+			, m.mem_birth
+			, m.mem_zip_code
+			, m.mem_address1
+			, m.mem_address2
+			, m.mem_mod_date
+			, m.mem_reg_date
+			, p.username
+			, p.password
+			, p.peo_enabled
+			, p.user_type_code
+			, p.peo_first_nm
+			, p.peo_last_nm
+			, p.peo_email
+			, p.peo_gender
+			, p.peo_phone
+			, cdc.description mem_stat_det_code
+            , cd.description mem_reg_det_code
+			from member m, people p, common_detail_code cdc, common_detail_code cd
+			where m.mem_username = p.username (+)
+			and m.mem_stat_code = cdc.comm_code_det_no (+)
+            and m.mem_reg_path = cd.comm_code_det_no (+)
+			and m.mem_username = #{memusername}
+ 	</select>
+
+ 	<select id="getCodeList" resultType="kr.or.ddit.vo.member.MemCodeListVO">
+		select comm_code_det_no, comm_code_grp_no, comm_code_det_nm, use_yn, description
+		from common_detail_code
+		where comm_code_grp_no = 'MEM_STATE_CODE'
+ 	</select>
+
+ 	<update id="updateMember" parameterType="kr.or.ddit.vo.member.MemberAdminVO" >
+ 		update member set
+ 			mem_stat_code = #{memStatCode},
+ 			mem_nicknm = #{memNicknm}
+ 		where mem_username = #{memUsername}
+ 	</update>
+
+ 	<update id="updatePeople" parameterType="kr.or.ddit.vo.member.PeopleAdminVO">
+ 		update people set
+ 			peo_first_nm = #{peoFirstNm},
+ 			peo_last_nm = #{peoLastNm},
+ 			peo_email = #{peoEmail}
+ 		where username = #{username}
+ 	</update>
+
+ 	<update id="deleteMember" parameterType="String">
+ 		update member set
+ 			mem_stat_code = 'MSC002'
+ 		where mem_username = #{memUsername}
+ 	</update>
+
+ 	<update id="deletePeople" parameterType="String">
+ 		update people set
+ 			peo_enabled = 'N'
+ 		where username = #{memUsername}
+ 	</update>
+
+ 	<select id="getTotalRecord" resultType="int">
+ 		select count(*)
+ 		from people p
+ 		left join member m on (p.username = m.mem_username)
+ 		where 1=1
+ 		and (p.user_type_code in ('UTC001','UTC005'))
+ 		<include refid="searchMember"/>
+ 	</select>
+
+ 	<select id="getDataList"  resultMap="memberList">
+ 		select b.*
+		from (select a.*, ROWNUM as row_num
+		  from
+		        (SELECT
+				    m.MEM_USERNAME
+				    , m.MEM_STAT_CODE
+				    , m.MEM_REG_PATH
+				    , m.MEM_NICKNM
+				    , m.MEM_BIRTH
+				    , m.MEM_ZIP_CODE
+				    , m.MEM_ADDRESS1
+				    , m.MEM_ADDRESS2
+				    , m.MEM_MOD_DATE
+				    , m.MEM_REG_DATE
+
+				    , p.username
+				    , p.password
+				    , p.peo_enabled
+				    , p.user_type_code
+				    , p.peo_first_nm
+				    , p.peo_last_nm
+				    , p.peo_email
+				    , p.peo_gender
+				    , p.peo_phone
+
+				    , cdc.description mem_stat_det_code
+				    , cd.description mem_reg_det_code
+				FROM
+				    people p
+				left join member m on (p.username = m.mem_username)
+				left join common_detail_code cdc on m.mem_stat_code = cdc.comm_code_det_no
+				left join common_detail_code cd on m.mem_reg_path = cd.comm_code_det_no
+				WHERE 1=1
+				and (p.user_type_code in ('UTC001','UTC005'))
+				<include refid="searchMember" />
+				order by m.mem_reg_date desc) a
+			)b
+		<![CDATA[
+			where b.row_num >= #{paging.startRow} and b.row_num <= #{paging.endRow}
+		]]>
+ 	</select>
+
+
+ 	<sql id="searchQuery">
+ 		<if test='searchType != null and searchType !=" " and searchType.trim() != ""'>
+ 			and mem_stat_code = #{searchType}
+ 		</if>
+ 		<if test='searchWord != null and searchWord != " " and searchWord.trim() != ""'>
+ 			and (username like '%'||#{searchWord}||'%')
+ 		</if>
+ 	</sql>
+
+ 	<select id="getTodayRegisterUser" resultType="int">
+ 		select
+ 			count(*)
+ 		from
+ 			member
+ 		where
+ 			MEM_STAT_CODE = 'MSC001'
+ 		and
+ 			MEM_REG_DATE between trunc(sysdate) and trunc(sysdate) + 1
+ 	</select>
+ 	
+ 	<select id="getTotalMemCnt" resultType="int">
+ 		SELECT COUNT(*) totalMember
+	    FROM people p_sub
+	    LEFT JOIN member m_sub ON (p_sub.username = m_sub.mem_username)
+	    WHERE p_sub.user_type_code IN ('UTC001','UTC005')
+ 	</select>
+ 	
+ 	<select id="getGeneralMemCnt" resultType="int">
+ 		select count(*)
+	    from people p_sub
+	    LEFT JOIN member m_sub ON (p_sub.username = m_sub.mem_username)
+	    WHERE p_sub.user_type_code IN ('UTC001','UTC005')
+	    and m_sub.mem_stat_code = 'MSC001'
+ 	</select>
+ 	
+ 	<select id="getOutMemCnt" resultType="int">
+ 		select count(*)
+	    from people p_sub
+	    LEFT JOIN member m_sub ON (p_sub.username = m_sub.mem_username)
+	    WHERE p_sub.user_type_code IN ('UTC001','UTC005')
+	    and m_sub.mem_stat_code = 'MSC002'
+ 	</select>
+ 	
+ 	<select id="getBlackMemCnt" resultType="int">
+ 		select count(*)
+	    from people p_sub
+	    LEFT JOIN member m_sub ON (p_sub.username = m_sub.mem_username)
+	    WHERE p_sub.user_type_code IN ('UTC001','UTC005')
+	    and m_sub.mem_stat_code = 'MSC003'
+ 	</select>
+ 	
+ 	<select id="joinComuList" parameterType="String" resultType="kr.or.ddit.vo.member.MemberAdminVO">
+ 		SELECT 
+		      B.COMU_PROFILE_NO
+		    , B.POSTCNT
+		    , B.REPLYCNT
+		    , B.ART_GROUP_NO
+		    , B.COMU_PROFILE_IMG
+		    , B.COMU_REG_DATE
+		    , B.COMU_DEL_YN
+		    , B.COMU_NICKNM
+		    , C.COMU_NM
+		FROM(
+		    SELECT 
+		      A.COMU_PROFILE_NO
+		    , A.POSTCNT
+		    , A.ART_GROUP_NO
+		    , A.COMU_PROFILE_IMG
+		    , A.COMU_REG_DATE
+		    , A.COMU_DEL_YN
+		    , A.COMU_NICKNM
+		    , COUNT(CR.COMU_REPLY_NO) AS REPLYCNT
+		    FROM (
+		            SELECT    CP.COMU_PROFILE_NO
+		                    , CP.ART_GROUP_NO
+		                    , CP.COMU_PROFILE_IMG
+		                    , CP.COMU_REG_DATE
+		                    , CP.COMU_DEL_YN
+		                    , CP.COMU_NICKNM
+		                    ,COUNT(CPOST.COMU_POST_NO) AS POSTCNT
+		            FROM MEMBER M 
+		            LEFT JOIN COMMUNITY_PROFILE CP ON M.MEM_USERNAME = CP.MEM_USERNAME
+		            LEFT JOIN community_post cpost on cp.comu_profile_no = cpost.comu_profile_no
+		            WHERE M.MEM_USERNAME = #{memUsername}
+		            GROUP BY  CP.COMU_PROFILE_NO
+		                    , CP.ART_GROUP_NO
+		                    , CP.COMU_PROFILE_IMG
+		                    , CP.COMU_REG_DATE
+		                    , CP.COMU_DEL_YN
+		                    , CP.COMU_NICKNM
+		            ORDER BY CP.COMU_REG_DATE DESC)A
+		    LEFT JOIN community_reply cr on A.comu_profile_no = cr.comu_profile_no and cr.comu_reply_del_yn ='N'
+		    GROUP BY  
+		              A.COMU_PROFILE_NO
+		            , A.POSTCNT
+		            , A.ART_GROUP_NO
+		            , A.COMU_PROFILE_NO
+		            , A.ART_GROUP_NO
+		            , A.COMU_PROFILE_IMG
+		            , A.COMU_REG_DATE
+		            , A.COMU_DEL_YN
+		            , A.COMU_NICKNM)B
+		INNER JOIN COMMUNITY C ON B.ART_GROUP_NO = C.ART_GROUP_NO
+ 	</select>
+ 	
+ 	<select id="replyCntList" resultType="java.lang.Integer">
+ 		select 
+		    nvl(a.replyCnt,0)
+		from 
+		(
+		    SELECT #{vo.comuProfileNo} COMU_PROFILE_NO, TO_CHAR(ADD_MONTHS(TRUNC(SYSDATE, 'YEAR'), LEVEL-1), 'YYYY-MM') AS YEAR_MONTH
+		    FROM DUAL
+		    <![CDATA[
+		    CONNECT BY LEVEL <= 12
+		    ]]>
+		) t left join
+		(
+			select cp.comu_profile_no, to_char(COMU_REPLY_REG_DATE, 'YYYY-MM') as year_month, count(cr.COMU_REPLY_NO) as replyCnt
+			from community_profile cp
+			left join community_reply cr on cp.comu_profile_no = cr.comu_profile_no
+			where cp.comu_profile_no = #{vo.comuProfileNo}
+			group by cp.comu_profile_no, to_char(COMU_REPLY_REG_DATE, 'YYYY-MM')
+			order by to_char(COMU_REPLY_REG_DATE, 'YYYY-MM') asc
+			)a on t.year_month = a.year_month
+		<![CDATA[
+		where t.year_month <= to_char(sysdate, 'YYYY-MM')
+		]]>
+		order by t.year_month
+ 	</select>
+ 	
+ 	<select id="postCntList" resultType="java.lang.Integer">
+ 		select nvl(a.postCnt,0)
+		from 
+		(
+		    SELECT #{vo.comuProfileNo} COMU_PROFILE_NO, TO_CHAR(ADD_MONTHS(TRUNC(SYSDATE, 'YEAR'), LEVEL-1), 'YYYY-MM') AS YEAR_MONTH
+		    FROM DUAL
+		    <![CDATA[
+		    CONNECT BY LEVEL <= 12
+		    ]]>
+		) t left join
+		(
+		    select cp.comu_profile_no,to_char(COMU_POST_REG_DATE, 'YYYY-MM') as year_month, count(cpost.COMU_POST_NO) as postCnt
+		    from community_profile cp 
+		    left join community_post cpost on cp.comu_profile_no = cpost.comu_profile_no
+		    where cp.comu_profile_no = #{vo.comuProfileNo}
+		    group by cp.comu_profile_no,to_char(COMU_POST_REG_DATE, 'YYYY-MM')
+		    order by to_char(COMU_POST_REG_DATE, 'YYYY-MM') asc
+		)a on t.year_month = a.year_month
+		<![CDATA[
+		where t.year_month <= to_char(sysdate,'YYYY-MM')
+		]]>
+		order by t.year_month
+ 	</select>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.member.membership.MembershipSubscriptionsVO" id="membership">
+ 		<result property="mbspSubModDate" column="MBSP_SUB_MOD_DATE"/>
+		<result property="mbspSid" column="MBSP_SID"/>
+		<result property="mbspCid" column="MBSP_CID"/>
+		<result property="mbspSubNo" column="MBSP_SUB_NO"/>
+		<result property="mbspNo" column="membership_no"/>
+		<result property="memUsername" column="membership_username"/>
+		<result property="orderDetNo" column="ORDER_DET_NO"/>
+		<result property="mbspSubStatCode" column="MBSP_SUB_STAT_CODE"/>
+		<result property="mbspSubStartDate" column="MBSP_SUB_START_DATE"/>
+		<result property="mbspSubEndDate" column="MBSP_SUB_END_DATE"/>
+		
+		<collection property="membershipDesc" resultMap="membershipDesc" />
+		<collection property="codeDetailVO" resultMap="codeDetail" />
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.member.membership.MembershipDescriptionVO" id="membershipDesc">
+ 		<result property="mbspNo" column="membership_des_no"/>
+		<result property="artGroupNo" column="membership_des_art_group_no"/>
+		<result property="mbspNm" column="MBSP_NM"/>
+		<result property="mbspPrice" column="MBSP_PRICE"/>
+		<result property="mbspDuration" column="MBSP_DURATION"/>
+		<result property="mbspRegDate" column="MBSP_REG_DATE"/>
+		<result property="mbspModDate" column="MBSP_MOD_DATE"/>
+		
+		<collection property="artistGroupVO" resultMap="artistGroup" />
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.artist.ArtistGroupVO" id="artistGroup">
+ 		<result property="artGroupRegDate" column="ART_GROUP_REG_DATE"/>
+		<result property="artGroupDelYn" column="ART_GROUP_DEL_YN"/>
+		<result property="artGroupProfileImg" column="ART_GROUP_PROFILE_IMG"/>
+		<result property="artGroupModDate" column="ART_GROUP_MOD_DATE"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="artGroupTypeCode" column="ART_GROUP_TYPE_CODE"/>
+		<result property="empUsername" column="EMP_USERNAME"/>
+		<result property="artGroupDebutdate" column="ART_GROUP_DEBUTDATE"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artGroupContent" column="ART_GROUP_CONTENT"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.common.CommonCodeDetailVO" id="codeDetail">
+ 		<result property="commCodeDetNo" column="COMM_CODE_DET_NO"/>
+		<result property="commCodeGrpNo" column="COMM_CODE_GRP_NO"/>
+		<result property="commCodeDetNm" column="COMM_CODE_DET_NM"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="description" column="DESCRIPTION"/>
+ 	</resultMap>
+ 	
+ 	<select id="membershipList" parameterType="String" resultMap="membership">
+ 		select 
+		      ms.MBSP_SUB_NO
+		    , ms.MBSP_NO as membership_no
+		    , ms.MEM_USERNAME as membership_username
+		    , ms.ORDER_DET_NO
+		    , ms.MBSP_SUB_STAT_CODE
+		    , ms.MBSP_SUB_START_DATE
+		    , ms.MBSP_SUB_END_DATE
+		    , ms.MBSP_SUB_MOD_DATE
+		    , ms.MBSP_SID
+		    , ms.MBSP_CID
+		    
+		    , cdc.COMM_CODE_DET_NO
+		    , cdc.COMM_CODE_GRP_NO
+		    , cdc.COMM_CODE_DET_NM
+		    , cdc.USE_YN
+		    , cdc.DESCRIPTION
+		    
+		    , md.MBSP_NO as membership_des_no
+		    , md.ART_GROUP_NO as membership_des_art_group_no
+		    , md.MBSP_NM
+		    , md.MBSP_PRICE
+		    , md.MBSP_DURATION
+		    , md.MBSP_REG_DATE
+		    , md.MBSP_MOD_DATE
+		    
+		    , ag.ART_GROUP_NO
+		    , ag.ART_GROUP_TYPE_CODE
+		    , ag.EMP_USERNAME
+		    , ag.ART_GROUP_DEBUTDATE
+		    , ag.ART_GROUP_NM
+		    , ag.ART_GROUP_CONTENT
+		    , ag.ART_GROUP_REG_DATE
+		    , ag.ART_GROUP_DEL_YN
+		    , ag.ART_GROUP_PROFILE_IMG
+		    , ag.ART_GROUP_MOD_DATE
+		    
+		from  membership_subscriptions ms 
+		left join common_detail_code cdc on ms.mbsp_sub_stat_code = cdc.comm_code_det_no
+		left join membership_description md on ms.mbsp_no = md.mbsp_no
+		left join artist_group ag on md.art_group_no = ag.art_group_no
+		where ms.mem_username = #{memUsername}
+		and ms.mbsp_sub_stat_code IN ('MSSC001')
+ 	</select>
+ 	
+ 	<select id="subMembershipList" resultType="kr.or.ddit.vo.member.membership.MembershipSubscriptionsVO">
+ 		select
+		    MBSP_SUB_NO
+		    , MBSP_NO
+		    , MEM_USERNAME
+		    , ORDER_DET_NO
+		    , MBSP_SUB_STAT_CODE
+		    , MBSP_SUB_START_DATE
+		    , MBSP_SUB_END_DATE
+		    , MBSP_SUB_MOD_DATE
+		    , MBSP_SID
+		    , MBSP_CID
+		from membership_subscriptions
+		where mbsp_no = #{mbspNo}
+		and mem_username = #{memUsername}
+		and mbsp_sub_stat_code = 'MSSC002'
+		order by MBSP_SUB_END_DATE desc
+ 	</select>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.order.OrdersVO" id="order">
+ 		<result property="orderFromCart" column="ORDER_FROM_CART"/>
+		<result property="orderNo" column="ORDER_NO"/>
+		<result property="memUsername" column="MEM_USERNAME"/>
+		<result property="orderPayMethodNm" column="ORDER_PAY_METHOD_NM"/>
+		<result property="orderDate" column="ORDER_DATE"/>
+		<result property="orderTotalPrice" column="ORDER_TOTAL_PRICE"/>
+		<result property="orderStatName" column="orderStatName"/>
+		<result property="orderTypeName" column="orderTypeName"/>
+		
+		<result property="orderRownum" column="rnum"/>
+		
+		<collection property="orderDetailList" resultMap="orderDetail" />
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.order.OrderDetailVO" id="orderDetail">
+ 		<result property="orderDetNo" column="ORDER_DET_NO"/>
+		<result property="orderNo" column="ORDER_NO"/>
+		<result property="goodsNo" column="GOODS_NO"/>
+		<result property="orderDetQty" column="ORDER_DET_QTY"/>
+		
+		<collection property="orderCancelList" resultMap="cancel" />
+		<collection property="goodsVO" resultMap="goods" />
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.order.OrderCancelVO" id="cancel">
+ 		<result property="goodsNo" column="GOODS_NO"/>
+		<result property="cancelReasonCode" column="CANCEL_REASON_CODE"/>
+		<result property="cancelReasonDetail" column="CANCEL_REASON_DETAIL"/>
+		<result property="cancelReqPrice" column="CANCEL_REQ_PRICE"/>
+		<result property="cancelReqDate" column="CANCEL_REQ_DATE"/>
+		
+		<result property="cancelTypeName" column="description"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.goods.goodsVO" id="goods">
+ 		<result property="goodsDivCode" column="GOODS_DIV_CODE"/>
+		<result property="artGroupNo" column="ART_GROUP_NO"/>
+		<result property="goodsStatCode" column="GOODS_STAT_CODE"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="goodsNm" column="GOODS_NM"/>
+		<result property="goodsPrice" column="GOODS_PRICE"/>
+		<result property="goodsCode" column="GOODS_CODE"/>
+		<result property="goodsMultiOptYn" column="GOODS_MULTI_OPT_YN"/>
+		<result property="artGroupName" column="art_group_nm"/>
+		
+		<collection property="options" resultMap="goodsOption" />
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.goods.goodsOptionVO" id="goodsOption">
+ 		<result property="goodsOptNo" column="GOODS_OPT_NO"/>
+		<result property="goodsOptNm" column="GOODS_OPT_NM"/>
+		<result property="goodsOptFixYn" column="GOODS_OPT_FIX_YN"/>
+		<result property="goodsOptPrice" column="GOODS_OPT_PRICE"/>
+ 	</resultMap>
+ 	
+ 	<select id="ordersVOList" parameterType="String" resultMap="order">
+ 		select 
+		      o.ORDER_NO
+		    , o.MEM_USERNAME
+		    , o.ORDER_PAY_METHOD_NM
+		    , o.ORDER_DATE
+		    , o.ORDER_TOTAL_PRICe
+		    , o.ORDER_FROM_CART
+		    
+		    , cdc.description as orderTypeName
+		    , statcdc.description AS orderStatName
+		    
+		    , od.ORDER_DET_NO
+		    , od.ORDER_NO
+		    , od.GOODS_NO
+		    , od.ORDER_DET_QTY
+		    
+		    , g.ART_GROUP_NO
+		    , g.GOODS_STAT_CODE
+		    , g.FILE_GROUP_NO
+		    , g.GOODS_NM
+		    , g.GOODS_PRICE
+		    , g.GOODS_CODE
+		    , g.GOODS_MULTI_OPT_YN
+		    , g.GOODS_DIV_CODE
+		    
+		    , go.GOODS_OPT_NO
+		    , go.GOODS_OPT_NM
+		    , go.GOODS_OPT_FIX_YN
+		    , go.GOODS_OPT_PRICE
+		    
+		    , ag.art_group_nm
+		    
+		from orders o 
+		left join common_detail_code cdc on o.order_type_code = cdc.comm_code_det_no
+		left join common_detail_code statcdc on o.order_stat_code = statcdc.comm_code_det_no
+		left join order_detail od on o.order_no = od.order_no
+		inner join goods g on od.goods_no = g.goods_no and g.goods_div_code = 'GDC003'
+		left join goods_option go on od.goods_opt_no = go.goods_opt_no
+		left join artist_group ag on g.art_group_no = ag.art_group_no
+		where mem_username = #{memUsername}
+		and o.order_type_code = 'OTC002'
+		order by o.order_date desc
+ 	</select>
+ 	
+ 	<select id="cancelCnt" parameterType="String" resultType="java.lang.Integer">
+ 		SELECT
+		     NVL(S.MONTHTOTALPRICE,0)
+		FROM 
+		(
+		    SELECT #{memUsername} MEM_USERNAME, TO_CHAR(ADD_MONTHS(TRUNC(SYSDATE, 'YEAR'), LEVEL-1), 'YYYY-MM') AS YEAR_MONTH
+		    FROM DUAL
+		<![CDATA[
+		    CONNECT BY LEVEL <= 12
+		]]>
+		) T LEFT OUTER JOIN 
+		(
+		    SELECT 
+	    		A.MEM_USERNAME
+	         , TO_CHAR(A.CANCEL_REQ_DATE,'YYYY-MM') YEAR_MONTH
+	         , SUM(A.CANCEL_REQ_PRICE) AS MONTHTOTALPRICE
+		         
+		    FROM   order_cancel A 
+		    WHERE  A.MEM_USERNAME = #{memUsername}
+		    GROUP BY A.MEM_USERNAME, TO_CHAR(A.CANCEL_REQ_DATE,'YYYY-MM')
+		) S
+		ON(T.YEAR_MONTH = S.YEAR_MONTH)
+		<![CDATA[
+		WHERE T.YEAR_MONTH <= TO_CHAR(SYSDATE,'YYYY-MM')
+		]]>
+		GROUP BY T.YEAR_MONTH
+		     , T.MEM_USERNAME
+		     , S.MONTHTOTALPRICE
+		order by t.year_month asc
+ 	</select>
+ 	
+ 	<select id="sellCnt" parameterType="String" resultType="java.lang.Integer">
+ 		SELECT 
+ 			NVL(S.TOTALPRICE ,0) 
+		FROM 
+		(
+		    SELECT #{memUsername} MEM_USERNAME, TO_CHAR(ADD_MONTHS(TRUNC(SYSDATE, 'YEAR'), LEVEL-1), 'YYYY-MM') AS YEAR_MONTH
+		    FROM DUAL
+		<![CDATA[
+		    CONNECT BY LEVEL <= 12
+		]]>
+		) T LEFT OUTER JOIN 
+		(
+		    SELECT A.MEM_USERNAME
+		         , TO_CHAR(A.order_date,'YYYY-MM') YEAR_MONTH
+		         , SUM(ORDER_TOTAL_PRICE) AS TOTALPRICE
+		    FROM   ORDERS A 
+		    WHERE  A.MEM_USERNAME = #{memUsername}
+		    AND ORDER_TYPE_CODE = 'OTC002'
+		    AND ORDER_STAT_CODE = 'OSC001'
+		    GROUP BY A.MEM_USERNAME, TO_CHAR(A.order_date,'YYYY-MM')
+		) S
+		ON(T.YEAR_MONTH = S.YEAR_MONTH)
+		<![CDATA[
+		where T.YEAR_MONTH <= to_char(sysdate, 'YYYY-MM')
+		]]>
+		GROUP BY T.YEAR_MONTH
+		     , T.MEM_USERNAME
+		     , S.TOTALPRICE
+		order by t.year_month asc
+ 	</select>
+ 	
+ 	
+ 	<select id="totalSellCnt" parameterType="String" resultType="java.lang.Integer">
+ 		SELECT 
+ 			 NVL(SUM(S.TOTALPRICE) OVER(ORDER BY T.YEAR_MONTH),0) 
+		FROM 
+			(
+			    SELECT #{memUsername} MEM_USERNAME, TO_CHAR(ADD_MONTHS(TRUNC(SYSDATE, 'YEAR'), LEVEL-1), 'YYYY-MM') AS YEAR_MONTH
+			    FROM DUAL
+			    <![CDATA[
+			    CONNECT BY LEVEL <= 12
+			    ]]>
+			) T LEFT OUTER JOIN 
+			(
+			    SELECT A.MEM_USERNAME
+			         , TO_CHAR(A.order_date,'YYYY-MM') YEAR_MONTH
+			         , SUM(ORDER_TOTAL_PRICE) AS TOTALPRICE
+			    FROM   ORDERS A 
+			    WHERE  A.MEM_USERNAME = #{memUsername}
+			    AND ORDER_TYPE_CODE = 'OTC002'
+			    AND ORDER_STAT_CODE = 'OSC001'
+			    GROUP BY A.MEM_USERNAME, TO_CHAR(A.order_date,'YYYY-MM')
+			) S
+			ON(T.YEAR_MONTH = S.YEAR_MONTH)
+			<![CDATA[
+			where T.YEAR_MONTH <= to_char(sysdate, 'YYYY-MM')
+			]]>
+			GROUP BY T.YEAR_MONTH
+			     , T.MEM_USERNAME
+			     , S.TOTALPRICE
+			ORDER BY 1
+ 	</select>
+ 	
+ 	<select id="sellOrderList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultMap="order">
+ 		select 
+		      userOrder.order_no
+		    , userOrder.order_date
+		    , userOrder.order_pay_method_nm
+		    , userOrder.order_total_price
+		    , userOrder.rnum
+		    
+		    , od.goods_no
+		    , od.order_det_qty
+		    
+		    , g.goods_nm
+		    , g.goods_multi_opt_yn
+		    
+		    , go.goods_opt_nm
+		    , go.goods_opt_price 
+		from 
+		    (select a.order_no
+		        , a.order_date
+		        , a.order_pay_method_nm
+		        , a.order_total_price
+		        , rownum rnum
+		    from(
+		        select order_no
+		        , order_date
+		        , order_pay_method_nm
+		        , order_total_price
+		        from orders
+		        where mem_username = #{memUsername}
+		        and order_date between #{startDate} and #{endDate}
+		        and order_stat_code = 'OSC001'
+		        and order_type_code = 'OTC002'
+		        order by order_date asc
+		        ) a
+		    ) userOrder
+		left join order_detail od on userOrder.order_no = od.order_no
+		left join goods g on od.goods_no = g.goods_no
+		left join goods_option go on od.goods_opt_no = go.goods_opt_no
+		where rnum between #{startRow} and #{endRow}
+		order by rnum desc
+ 	</select>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.order.OrderCancelVO" id="cancelList">
+ 		<result property="cancelRum" column="rnum"/>
+ 		<result property="cancelReasonCode" column="cancel_reason_code"/>
+ 		<result property="cancelReasonDetail" column="cancel_reason_detail"/>
+ 		<result property="cancelReqPrice" column="cancel_req_price"/>
+ 		<result property="cancelReqDate" column="cancel_req_date"/>
+ 		
+ 		<result property="cancelReasonName" column="description"/>
+ 		
+ 		<collection property="cancelOrderDetailVO" resultMap="cancelOrderDetail" />
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.order.OrderDetailVO" id="cancelOrderDetail">
+ 		<result property="orderDetQty" column="ORDER_DET_QTY"/>
+ 		
+ 		<collection property="goodsVO" resultMap="cancelGoods" />
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.goods.goodsVO" id="cancelGoods">
+ 		<result property="goodsNm" column="GOODS_NM"/>
+ 		<result property="goodsPrice" column="goods_price"/>
+ 		
+ 		<collection property="options" resultMap="cancelGoodsOption"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.goods.goodsOptionVO" id="cancelGoodsOption">
+ 		<result property="goodsOptNm" column="GOODS_OPT_NM"/>
+ 		<result property="goodsOptPrice" column="GOODS_OPT_PRICE"/>
+ 	</resultMap>
+ 	
+ 	<select id="cancelOrderList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultMap="cancelList">
+ 		select 
+		      b.rnum
+		    , b.cancel_reason_code
+		    , b.cancel_reason_detail
+		    , b.cancel_req_price
+		    , b.cancel_req_date
+		    , b.order_no
+		    
+		    , od.ORDER_DET_QTY
+		    
+		    , g.GOODS_NM
+		    , g.goods_price
+		    
+		    , go.GOODS_OPT_NM
+		    , go.GOODS_OPT_PRICE
+		    
+		    , cdc.description
+		from (
+		    select 
+		        rownum rnum
+		        , a.cancel_reason_code
+		        , a.cancel_reason_detail
+		        , a.cancel_req_price
+		        , a.cancel_req_date
+		        , a.order_no
+		    from (
+		        select 
+		            order_no
+		            , cancel_reason_code
+		            , cancel_reason_detail
+		            , cancel_req_price
+		            , cancel_req_date
+		        from order_cancel
+		        where mem_username = #{memUsername}
+		        and CANCEL_REQ_DATE between #{startDate} and #{endDate}
+		        order by cancel_req_date desc)a
+		    ) b 
+		left join order_detail od on b.order_no = od.order_no
+		left join goods g on od.goods_no = g.goods_no
+		left join goods_option go on od.goods_opt_no = go.goods_opt_no
+		left join common_detail_code cdc on b.cancel_reason_code = cdc.comm_code_det_no
+		where b.rnum between #{startRow} and #{endRow}
+		order by b.rnum asc
+ 	</select>
+ 	
+ 	<select id="sellOrderTotal" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+ 		select count(order_no)
+        from orders
+        where mem_username = #{memUsername}
+        and order_date between #{startDate} and #{endDate}
+        and order_stat_code = 'OSC001'
+        and order_type_code = 'OTC002'
+ 	</select>
+ 	
+ 	<select id="cancelListTotalRecord" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+ 		select count(CANCEL_NO)
+        from order_cancel
+        where mem_username = #{memUsername}
+        and CANCEL_REQ_DATE between #{startDate} and #{endDate}
+ 	</select>
+ </mapper>

@@ -1,0 +1,370 @@
+package kr.or.ddit.ddtown.controller.order;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import kr.or.ddit.ddtown.service.goods.cart.ICartService;
+import kr.or.ddit.ddtown.service.goods.order.IOrderService;
+import kr.or.ddit.ddtown.service.kakaopay.IKakaoPayService;
+import kr.or.ddit.dto.kakaopay.KakaoPayApproveResponseDTO;
+import kr.or.ddit.vo.order.OrderDetailVO;
+import kr.or.ddit.vo.order.OrdersVO;
+import kr.or.ddit.vo.order.PaymentVO;
+import kr.or.ddit.vo.security.CustomOAuth2User;
+import kr.or.ddit.vo.security.CustomUser;
+import kr.or.ddit.vo.user.MemberVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RestController
+@RequestMapping("/goods/order")
+public class OrderRestController {
+	
+	@Autowired
+	private IKakaoPayService kakaoPayService;
+	
+	@Autowired
+	private IOrderService orderService;
+	
+	@Autowired
+	private ICartService cartService;
+	
+	
+	 /**
+     * 카카오페이 결제 준비 요청을 처리합니다.
+     * 클라이언트(JSP의 JS)에서 Ajax POST 요청으로 호출됩니다.
+     */
+    @PostMapping("/pay/ready")
+    public ResponseEntity<Map<String, Object>> kakaoPayReady(
+            @RequestBody Map<String, Object> payload, // 클라이언트로부터 받는 데이터
+            @AuthenticationPrincipal Object principal) {
+
+        Map<String, Object> response = new HashMap<>();
+        MemberVO authMember = null;
+        String username = null;
+        int createdOrderNo = 0; // 예외 발생 시 롤백을 위해 생성된 주문 번호 저장
+
+        // --- 1. 로그인 여부 확인 및 사용자 정보 추출 ---
+        if (principal instanceof CustomUser) {
+            authMember = ((CustomUser) principal).getMemberVO();
+        } else if (principal instanceof CustomOAuth2User) {
+            authMember = ((CustomOAuth2User) principal).getMemberVO();
+        }
+
+        if (authMember != null) {
+            username = authMember.getMemUsername();
+        }
+
+        if (username == null || username.isEmpty()) {
+            response.put("status", "error");
+            response.put("message", "로그인이 필요합니다.");
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+
+        // --- 2. 클라이언트에서 받은 결제 정보 추출 및 서버 유효성 검사 (중요!) ---
+        List<Map<String, Object>> clientOrderItems = (List<Map<String, Object>>) payload.get("orderItems");
+        Integer totalAmount = (Integer) payload.get("totalAmount"); // 클라이언트에서 받은 총 금액
+        String singleGoodsName = (String) payload.get("singleGoodsName"); // 단품 주문 시 상품명
+        
+        String goodsName = "굿즈 상품";
+        int totalQuantity = 0;
+
+        if (clientOrderItems == null || clientOrderItems.isEmpty()) {
+            response.put("status", "error");
+            response.put("message", "주문할 상품 정보가 없습니다.");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+        // 임시 상품명 및 수량 계산 (서버 검증 로직으로 대체 예정)
+        for (Map<String, Object> item : clientOrderItems) {
+            totalQuantity += (Integer) item.getOrDefault("qty", 1);
+        }
+        if (clientOrderItems.size() > 1) {
+            goodsName = ((String) clientOrderItems.get(0).get("goodsNm")) + " 외 " + (clientOrderItems.size() - 1) + "건";
+        } else if (singleGoodsName != null && !singleGoodsName.isEmpty()) {
+            goodsName = singleGoodsName;
+        } else {
+            goodsName = (String) clientOrderItems.get(0).get("goodsNm");
+        }
+        
+        if (totalAmount == null || totalAmount <= 0 || totalQuantity <= 0) {
+            response.put("status", "error");
+            response.put("message", "결제 금액 또는 수량이 유효하지 않습니다.");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        // --- 3. 카카오페이 결제 준비 요청 및 주문/결제 정보 저장 ---
+        try {
+            OrdersVO order = new OrdersVO();
+
+            order.setMemUsername(username);
+            order.setOrderTotalPrice(totalAmount);
+            // 수정 부분 1: 주문 초기 상태를 OSC009 (결제 요청)으로 설정
+            order.setOrderStatCode("OSC009"); 
+
+            order.setOrderRecipientNm((String) payload.get("orderRecipientNm"));
+            order.setOrderRecipientPhone((String) payload.get("orderRecipientPhone"));
+            order.setOrderZipCode((String) payload.get("orderZipCode"));
+            order.setOrderAddress1((String) payload.get("orderAddress1"));
+            order.setOrderAddress2((String) payload.get("orderAddress2"));
+            order.setOrderEmail((String) payload.get("orderEmail"));
+            order.setOrderMemo((String) payload.get("orderMemo"));
+
+            order.setOrderTypeCode((String) payload.getOrDefault("orderTypeCode", "UNKNOWN"));
+            order.setOrderPayMethodNm("카카오페이"); 
+
+            List<OrderDetailVO> orderDetails = new ArrayList<>();
+            for (Map<String, Object> itemMap : clientOrderItems) {
+                OrderDetailVO detail = new OrderDetailVO();
+                detail.setGoodsNo((Integer) itemMap.get("goodsNo"));
+                detail.setGoodsOptNo((Integer) itemMap.get("goodsOptNo"));
+                detail.setOrderDetQty((Integer) itemMap.get("qty"));
+                orderDetails.add(detail);
+                
+                order.setOrderTypeCode("GOODS");
+                order.setOrderPayMethodNm("카카오페이");
+            }
+
+            orderService.createOrder(order, orderDetails); 
+            createdOrderNo = order.getOrderNo();
+
+            Map<String, String> kakaoReadyResult = kakaoPayService.kakaoPayReady(
+                    goodsName,
+                    totalAmount,
+                    totalQuantity,
+                    username,
+                    String.valueOf(createdOrderNo)
+            );
+
+            if (kakaoReadyResult != null && kakaoReadyResult.containsKey("next_redirect_pc_url")) {
+                String tid = kakaoReadyResult.get("tid");
+                String nextRedirectPcUrl = kakaoReadyResult.get("next_redirect_pc_url");
+
+                PaymentVO payment = new PaymentVO();
+                payment.setTid(tid);
+                payment.setOrderNo(createdOrderNo);
+                payment.setCid(kakaoPayService.getCid());
+                payment.setTotalAmount(totalAmount);
+                // 수정 부분 2: 결제 초기 상태를 PSC004 (결제 요청)으로 설정
+                payment.setPaymentStatCode("PSC004"); 
+
+                orderService.savePaymentReadyInfo(payment);
+
+                response.put("status", "success");
+                response.put("message", "카카오페이 결제 준비가 완료되었습니다.");
+                response.put("next_redirect_pc_url", nextRedirectPcUrl);
+                return new ResponseEntity<>(response, HttpStatus.OK);
+
+            } else {
+                log.error("카카오페이 결제 준비 응답에 필수 정보 누락: {}", kakaoReadyResult);
+                orderService.updateOrderStatus(createdOrderNo, "OSC002"); // ORDERS.ORDER_STAT_CODE: PAYMENT_FAILED
+                response.put("status", "error");
+                response.put("message", "카카오페이 결제 준비 중 오류가 발생했습니다.");
+                return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (Exception e) {
+            log.error("카카오페이 결제 준비 중 서버 오류 발생: {}", e.getMessage(), e);
+            if (createdOrderNo > 0) {
+                try {
+                    orderService.updateOrderStatus(createdOrderNo, "OSC002"); // ORDERS.ORDER_STAT_CODE: PAYMENT_FAILED
+                } catch (Exception rollbackE) {
+                    log.error("주문 {} 상태 업데이트 중 롤백 오류 발생: {}", createdOrderNo, rollbackE.getMessage());
+                }
+            }
+            response.put("status", "error");
+            response.put("message", "결제 시스템 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * 카카오페이 결제 성공 후 호출되는 콜백 URL을 처리합니다.
+     * (카카오페이에서 GET 요청으로 리다이렉트)
+     */
+    @GetMapping("/kakaoPaySuccess")
+    public String kakaoPaySuccess(
+            @RequestParam("pg_token") String pgToken,
+            @RequestParam("orderNo") int orderNo, // 카카오페이 ready 요청 시 추가한 orderNo 파라미터
+            @AuthenticationPrincipal Object principal
+            ) {
+        log.info("kakaoPaySuccess() 호출! pg_token: {}, orderNo: {}", pgToken, orderNo);
+
+        MemberVO authMember = null;
+        String username = null;
+        if (principal instanceof CustomUser) {
+            authMember = ((CustomUser) principal).getMemberVO();
+        } else if (principal instanceof CustomOAuth2User) {
+            authMember = ((CustomOAuth2User) principal).getMemberVO();
+        }
+
+        if (authMember == null || authMember.getMemUsername() == null || authMember.getMemUsername().isEmpty()) {
+            return "redirect:/login?error=auth_required"; 
+        }
+        username = authMember.getMemUsername();
+
+        // ====== 수정된 부분: paymentReadyInfo와 order 변수를 try 블록 밖에서 선언 ======
+        OrdersVO order = null; 
+        PaymentVO paymentReadyInfo = null; 
+        // =========================================================================
+
+        try {
+            // 1. orderNo로 DB에서 PaymentVO 및 OrdersVO 정보 조회
+            order = orderService.getOrderByOrderNo(orderNo); // 선언된 변수에 값 할당
+            paymentReadyInfo = orderService.getPaymentReadyInfoByOrderNo(orderNo); // 선언된 변수에 값 할당
+
+            if (order == null || paymentReadyInfo == null || paymentReadyInfo.getTid() == null) {
+                log.error("유효하지 않은 주문 또는 결제 준비 정보. orderNo: {}", orderNo);
+                return "redirect:/goods/paymentFail?reason=invalid_order_info";
+            }
+
+            // 현재 로그인된 사용자와 주문을 생성한 사용자가 일치하는지 확인 (보안 강화)
+            if (!username.equals(order.getMemUsername())) {
+                log.warn("결제 승인 시도 유저 불일치. Current: {}, Order: {}", username, order.getMemUsername());
+                return "redirect:/goods/paymentFail?reason=user_mismatch";
+            }
+
+            String tid = paymentReadyInfo.getTid();
+            String partnerOrderId = String.valueOf(order.getOrderNo()); // DB에서 조회한 orderNo 사용
+            String partnerUserId = order.getMemUsername(); // DB에서 조회한 사용자 ID 사용
+
+            // 2. 카카오페이 Approve API 호출
+            KakaoPayApproveResponseDTO approveResponse = kakaoPayService.kakaoPayApprove(
+                tid,
+                partnerOrderId,
+                partnerUserId,
+                pgToken
+            );
+
+	         // 3. 결제 완료 처리 및 DB 업데이트
+	        order.setOrderStatCode("OSC001"); // ORDERS.ORDER_STAT_CODE: PAYMENT_COMPLETED
+	            // =======================================================================
+	            // 여기서 String 값을 Date 또는 Timestamp로 변환하는 로직이 필요합니다.
+	            String approvedAtString = approveResponse.getApproved_at();
+	            if (approvedAtString != null && !approvedAtString.isEmpty()) {
+	                try {
+	                    // 카카오페이 응답 포맷에 맞춰 DateTimeFormatter 설정
+	                    DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME; // 실제 카카오페이 포맷 확인!
+	                    LocalDateTime localDateTime = LocalDateTime.parse(approvedAtString, formatter);
+	
+	                    // OrdersVO의 orderPayDt가 java.util.Date 타입이라면:
+	                    order.setOrderPayDt(java.util.Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant()));
+	                    
+	                    // PaymentVO의 completedAt이 java.sql.Timestamp 타입이라면:
+	                    paymentReadyInfo.setCompletedAt(java.sql.Timestamp.valueOf(localDateTime)); 
+	
+	                } catch (DateTimeParseException e) {
+	                    log.error("approved_at 날짜 파싱 오류: {} - {}", approvedAtString, e.getMessage());
+	                    throw new RuntimeException("결제 승인 시각 파싱 오류", e);
+	                }
+	            }
+	            // =======================================================================
+	            orderService.updateOrder(order); // OrdersVO DB 업데이트
+	            
+            // PaymentVO 상태 업데이트
+            paymentReadyInfo.setPaymentStatCode("PSC001"); // PAYMENT_API.PAYMENT_STAT_CODE: SUCCESS
+            
+            // --- approveResponse.getAmount()가 null이 아닌지 먼저 확인 ---
+            if (approveResponse.getAmount() != null) {
+                paymentReadyInfo.setTotalAmount(approveResponse.getAmount().getTotal()); 
+            } else {
+                log.warn("카카오페이 Approve 응답에 Amount 정보가 없습니다. orderNo: {}", orderNo);
+                paymentReadyInfo.setTotalAmount(0);
+            }
+
+            paymentReadyInfo.setAid(approveResponse.getAid()); 
+            orderService.updatePaymentInfo(paymentReadyInfo); // PaymentVO DB 업데이트
+
+            // 4. 장바구니 비우기
+            cartService.clearCart(username); 
+
+            return "redirect:/goods/paymentSuccess?orderNo=" + orderNo + "&amount=" + approveResponse.getAmount().getTotal();
+
+        } catch (Exception e) {
+            log.error("카카오페이 결제 승인 중 오류 발생: {}", e.getMessage(), e);
+            // createdOrderNo는 이미 상위 스코프에 있으므로 접근 가능.
+            // 하지만 paymentReadyInfo는 여기서 다시 초기화되거나,
+            // null 체크 후 조회하는 로직이 필요할 수 있습니다.
+            // 현재는 null 체크를 하고 있으니, 그 부분만 수정하면 됩니다.
+            try {
+                orderService.updateOrderStatus(orderNo, "OSC002"); // ORDERS.ORDER_STAT_CODE: PAYMENT_FAILED
+
+                // paymentReadyInfo가 null일 수 있으므로 null 체크 후 사용 또는 새로 조회
+                // 만약 paymentReadyInfo가 null이 아니라면, 이미 이전에 조회된 객체에 값을 설정
+                // null이라면 새로 조회해서 사용해야 합니다.
+                if (paymentReadyInfo != null) { 
+                    paymentReadyInfo.setPaymentStatCode("PSC002"); // PAYMENT_API.PAYMENT_STAT_CODE: FAILED
+                    orderService.updatePaymentStatus(orderNo, paymentReadyInfo.getPaymentStatCode()); 
+                } else {
+                    // 결제 준비 정보가 null일 경우, 새로 조회하여 상태 업데이트 시도
+                    // 이 경우 createdOrderNo와 orderNo가 같다고 가정 (보통 같음)
+                    PaymentVO failedPaymentInfo = orderService.getPaymentReadyInfoByOrderNo(orderNo);
+                    if(failedPaymentInfo != null) {
+                        failedPaymentInfo.setPaymentStatCode("PSC002");
+                        orderService.updatePaymentStatus(orderNo, failedPaymentInfo.getPaymentStatCode());
+                    } else {
+                        log.warn("결제 실패 시 paymentReadyInfo 조회 실패. orderNo: {}", orderNo);
+                    }
+                }
+            } catch (Exception rollbackE) {
+                log.error("결제 실패 후 주문/결제 상태 업데이트 중 롤백 오류 발생: {}", orderNo, rollbackE.getMessage());
+            }
+            return "redirect:/goods/paymentFail?reason=payment_error";
+        }
+    }
+
+    /**
+     * 카카오페이 결제 취소 후 호출되는 콜백 URL을 처리합니다.
+     * (카카오페이에서 GET 요청으로 리다이렉트)
+     */
+    @GetMapping("/kakaoPayCancel")
+    public String kakaoPayCancel(
+            @RequestParam("orderNo") int orderNo, // orderNo 파라미터
+            @AuthenticationPrincipal Object principal // 사용자 정보 필요시
+            ) {
+        log.info("kakaoPayCancel() 호출! 사용자가 결제를 취소했습니다. orderNo: {}", orderNo);
+
+        try {
+            orderService.updateOrderStatus(orderNo, "OSC008"); // ORDERS.ORDER_STAT_CODE: CANCELLED
+            orderService.updatePaymentStatus(orderNo, "PSC003"); // PAYMENT_API.PAYMENT_STAT_CODE: CANCELED
+        } catch (Exception e) {
+            log.error("주문 {} 상태 업데이트 중 롤백 오류 발생: {}", orderNo, e.getMessage());
+        }
+        return "redirect:/goods/paymentCancel?orderNo=" + orderNo;
+    }
+
+    /**
+     * 카카오페이 결제 실패 후 호출되는 콜백 URL을 처리합니다.
+     * (카카오페이에서 GET 요청으로 리다이렉트)
+     */
+    @GetMapping("/kakaoPayFail")
+    public String kakaoPayFail(
+            @RequestParam("orderNo") int orderNo, // orderNo 파라미터
+            @AuthenticationPrincipal Object principal // 사용자 정보 필요시
+            ) {
+        log.info("kakaoPayFail() 호출! 결제에 실패했습니다. orderNo: {}", orderNo);
+
+        try {
+            orderService.updateOrderStatus(orderNo, "OSC002"); // ORDERS.ORDER_STAT_CODE: PAYMENT_FAILED
+            orderService.updatePaymentStatus(orderNo, "PSC002"); // PAYMENT_API.PAYMENT_STAT_CODE: FAILED
+        } catch (Exception e) {
+            log.error("주문 {} 상태 업데이트 중 롤백 오류 발생: {}", orderNo, e.getMessage());
+        }
+        return "redirect:/goods/paymentFail?orderNo=" + orderNo;
+    }
+}

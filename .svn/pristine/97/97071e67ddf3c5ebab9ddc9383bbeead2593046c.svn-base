@@ -1,0 +1,182 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt"%>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn"%>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDTOWN 전자결재 - 기안서 상세</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/approval_draft_style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+</head>
+<body>
+<sec:authentication property="principal" var="user"/>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="approval-content">
+                <div class="approval-detail-wrap" style="max-width:800px;margin:0 auto;">
+                    <div class="approval-detail-card" style="background:#fff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08); padding:32px 28px 24px 28px;">
+                        <div class="approval-detail-title" style="font-size:1.4em;font-weight:700;color:#2c3e50;margin-bottom:18px;">${edmsVO.edmsTitle}</div>
+                        	<div id="approval-line-box">
+                        		<table >
+	                        		<tr>
+	                        			<td style="border-color: white;">
+					                        <div class="approval-detail-row" style="display:flex;gap:18px;margin-bottom:12px;">
+					                            <div style="flex:1;"><strong>문서번호</strong> <br> ${edmsVO.edmsManageNo}</div>
+					                            <div style="flex:1;"><strong>긴급도</strong> <br>
+					                            	<c:if test="${edmsVO.edmsUrgenYn eq 'Y'}">
+					                            		<span style="color:#e53935;">긴급</span>
+					                            	</c:if>
+					                            	<c:if test="${edmsVO.edmsUrgenYn eq 'N'}">
+					                            		<span style="color:#000; ">일반</span>
+					                            	</c:if>
+					                             </div>
+					                        </div>
+	                        			</td>
+	                        		</tr>
+	                        		<tr>
+	                        			<td style="border-color: white;">
+					                        <div class="approval-detail-row" style="display:flex;gap:18px;margin-bottom:12px;">
+					                            <div style="flex:1;"><strong>기안자</strong> <br> ${edmsVO.empName}</div>
+					                            <div style="flex:1;"><strong>기안일</strong> <br> <fmt:formatDate value="${edmsVO.edmsReqDate}" type="date" pattern="yyyy/MM/dd"/></div>
+					                        </div>
+	                        			</td>
+	                        		</tr>
+		                        </table>
+	                        	<c:set value="${edmsVO.approverList}" var="approverList"/>
+	                        	<table class="table">
+                        		<tr>
+                        			<c:forEach items="${approverList}" var="approver">
+	                        			<th style="text-align: center; font-weight: bold;">${approver.empPositionNm }</th>
+                        			</c:forEach>
+                        		</tr>
+                        		<tr>
+                        			<c:forEach items="${approverList}" var="approver">
+	                        			<td>
+	                        				<c:choose>
+		                        				<c:when test="${approver.apvStatCode eq 'ASC003'}">
+		                        					<div class="d-flex justify-content-center align-items-center">
+				                        				<img alt="승인" src="${pageContext.request.contextPath}/resources/img/approved.png" width="50px" height="50px">                        				
+		                        					</div>
+		                        				</c:when>
+		                        				<c:when test="${approver.apvStatCode eq 'ASC004'}">
+		                        					<div class="d-flex justify-content-center align-items-center">
+				                        				<img alt="반려" src="${pageContext.request.contextPath}/resources/img/rejected.png" width="50px" height="50px">                        				
+		                        					</div>
+		                        				</c:when>
+	                        					<c:otherwise>
+	                        						<div style="width:50px; height:50px;">
+	                        							&nbsp;
+	                        						</div>
+	                        					</c:otherwise>
+	                        				</c:choose>
+	                        			</td>                        			
+                        			</c:forEach>
+                        		</tr>
+                        	</table>
+                        </div>
+                        <div class="approval-detail-row" style="margin-bottom:12px;"><strong>내용</strong>
+                            <div class="approval-detail-content-box" style="border-radius:6px;padding:16px 14px;margin-top:6px;">
+								${edmsVO.edmsContent}
+                            </div>
+                        </div>
+                        <div class="approval-detail-row" style="margin-bottom:12px;"><strong>참조자:</strong>
+                        	<c:forEach items="${edmsVO.referenceList}" var="reference">
+                        		${reference.empName} ${reference.empPositionNm}
+                        	</c:forEach>
+                        </div>
+                        <div class="approval-detail-row" style="margin-bottom:20px;"><strong>결재상태:</strong> 
+                        	<span class="approval-status-badge" id="doc-status">
+	                        	<c:choose>
+	                        		<c:when test="${edmsVO.edmsStatCode eq 'ESC001'}">결재 대기</c:when>
+	                        		<c:when test="${edmsVO.edmsStatCode eq 'ESC002'}">결재 진행</c:when>
+	                        		<c:when test="${edmsVO.edmsStatCode eq 'ESC003'}">승인</c:when>
+	                        		<c:when test="${edmsVO.edmsStatCode eq 'ESC004'}">반려</c:when>
+	                        		<c:when test="${edmsVO.edmsStatCode eq 'ESC005'}">회수</c:when>
+	                        	</c:choose>
+                        	</span>
+                        </div>
+                        
+                        <c:if test="${edmsVO.edmsStatCode eq 'ESC004'}">
+	                        <h6>문서 반려 사유</h4>
+						    <hr>
+							
+						    <c:forEach items="${approverList}" var="approver">
+						        <c:if test="${approver.apvStatCode eq 'ASC004'}">
+						            <div class="card mb-3 shadow-sm">
+						                <div class="card-body">
+						                    <strong class="mb-0">
+						                        <i class="bi bi-x-circle-fill me-2"></i>
+						                        ${approver.empName} (${approver.empPositionNm})
+						                    </strong>
+						                    <small>
+						                        <c:if test="${not empty approver.apvResDate}">
+						                            <span class="float-end"><fmt:formatDate value="${approver.apvResDate}" pattern="yyyy/MM/dd"/></span>
+						                        </c:if>
+						                    </small>
+						                    <p class="card-text">${approver.apvRejectReason}</p>
+						                </div>
+						            </div>
+						        </c:if>
+						    </c:forEach>
+                        </c:if>
+					
+                        <div class="approval-detail-actions" style="display:flex;justify-content:flex-end;gap:12px;margin-top:24px;">
+    	                    <c:if test="${edmsVO.empUsername ne user.username}">
+	                            <button class="approval-btn submit" id="approveBtn"><i class="fas fa-check"></i> 승인</button>
+	                            <button class="approval-btn" id="rejectBtn" style="background:#e53935;color:#fff;"><i class="fas fa-times"></i> 반려</button>
+	                        </c:if>
+	                        <c:if test="${edmsVO.edmsStatCode eq 'ESC001' and edmsVO.empUsername eq user.username}">
+		                    	<button class="approval-btn" id="cancelBtn">회수</button>	                        
+	                        </c:if>
+	                    	<button class="approval-btn" id="listBtn">목록</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- 반려 사유 입력 모달 -->
+                <div id="reject-modal" class="approval-modal" style="display:none;">
+                    <div class="approval-modal-content" style="min-width:400px;max-width:90vw;">
+                        <div class="approval-modal-header">
+                            <span class="approval-modal-title">반려 사유 입력</span>
+                            <button class="approval-modal-close" id="reject-modal-close">&times;</button>
+                        </div>
+                        <div class="approval-modal-body" style="flex-direction:column;gap:0;">
+                            <textarea id="reject-reason" style="width:100%;min-height:80px;resize:vertical;padding:10px 12px;border-radius:6px;border:1.5px solid #ced4da;font-size:1em;" placeholder="반려 사유를 입력하세요 (필수)"></textarea>
+                        </div>
+                        <div class="approval-modal-footer">
+                            <button class="approval-modal-confirm" id="reject-modal-confirm">확인</button>
+                            <button class="approval-modal-cancel" id="reject-modal-cancel">취소</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+<%@ include file="../../modules/footerPart.jsp" %>
+
+<%@ include file="../../modules/sidebar.jsp" %>
+<script>
+$(function(){
+	const listBtn = $("#listBtn"); // 목록가기 버튼
+	listBtn.on("click",function(){
+		let searchWord = sessionStorage.getItem("searchWord");
+		let searchType = sessionStorage.getItem("searchType");
+		let currentPage = sessionStorage.getItem("currentPage");
+		
+		sessionStorage.removeItem("currentPage");
+		sessionStorage.removeItem("searchWord");
+		sessionStorage.removeItem("searchType");
+		
+		location.href="${pageContext.request.contextPath}/emp/edms/approvalBox?currentPage="+currentPage+"&searchType="+searchType+"&searchWord="+searchWord;
+	})
+});
+</script>
+</html> 

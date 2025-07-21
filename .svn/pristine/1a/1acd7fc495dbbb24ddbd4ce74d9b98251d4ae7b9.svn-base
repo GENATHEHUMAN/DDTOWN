@@ -1,0 +1,585 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c"%>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt"%>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="_csrf" content="${_csrf.token}"/>
+<meta name="_csrf_header" content="${_csrf.headerName}"/>
+<title>DDTOWN SQUARE</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath}/resources/css/pages/mainservice_home.css" />
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath}/resources/css/pages/mainservice_common.css" />
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath}/resources/css/pages/artist_community.css" />
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath}/resources/css/pages/artist_community_main.css" />
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  
+<style type="text/css">
+.main-header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    height: 150px;
+    border-radius: 0 0 20px 20px;
+}
+
+/* 전체 배경 및 기본 스타일 */
+body {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #8a2be2 100%);
+    min-height: 100vh;
+    margin: 0;
+    font-family: "Noto Sans KR", 돋움, Dotum, 굴림, Gulim, Tahoma, Verdana, sans-serif;
+    color: #ffffff;
+}
+
+/* 컨테이너 스타일 */
+.container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 아티스트 그리드 */
+.artist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+    padding: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.artist-item {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s ease;
+    height: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+}
+
+.artist-item:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(138, 43, 226, 0.4);
+    border-color: rgba(138, 43, 226, 0.5);
+}
+
+.artist-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    padding: 25px;
+    height: 100%;
+}
+
+.artist-image-placeholder {
+    width: 100%;
+    height: 300px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(138, 43, 226, 0.2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    position: relative;
+}
+
+.artist-image-placeholder::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+}
+
+.artist-item:hover .artist-image-placeholder::before {
+    transform: translateX(100%);
+}
+
+.artist-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 15px;
+    transition: transform 0.4s ease;
+}
+
+.artist-item:hover .artist-image {
+    transform: scale(1.1);
+}
+
+.artist-name {
+    text-align: center;
+    font-weight: bold;
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.3em;
+    padding: 15px 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* 팔로우한 아티스트 섹션 */
+.followed-artists-section {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    margin-top: 30px;
+    margin-bottom: 30px;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 30px;
+}
+
+.followed-artists-section .section-title {
+    text-align: center;
+    margin: 0 0 25px 0;
+    color: #ffffff;
+    font-size: 1.8em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.followed-artists-section .followed-list {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.followed-artists-section .followed-artist-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #ffffff;
+    transition: all 0.3s ease;
+    font-size: 1.1em;
+    white-space: nowrap;
+    padding: 15px;
+    border-radius: 15px;
+}
+
+.followed-artists-section .followed-artist-link:hover {
+    color: #e6b3ff;
+    transform: translateY(-5px);
+    background: rgba(138, 43, 226, 0.2);
+    box-shadow: 0 10px 25px rgba(138, 43, 226, 0.3);
+}
+
+.followed-artist-profile-wrapper {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.followed-artists-section .followed-artist-profile {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 12px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.followed-artists-section .followed-artist-link:hover .followed-artist-profile {
+    border-color: #e6b3ff;
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
+}
+
+/* 멤버십 배지 */
+.membership-badge {
+    position: absolute;
+    bottom: 50px;
+    right: 0px;
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    color: #8a2be2;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    padding: 8px;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    z-index: 10;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* 굿즈샵 섹션 */
+.goods-shop-items-section {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.goods-shop-items-section .section-title {
+    text-align: center;
+    margin: 0 0 30px 0;
+    color: #ffffff;
+    font-size: 1.8em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.goods-shop-items-section .more-button {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    padding: 12px 20px;
+    color: #e6b3ff;
+    text-decoration: none;
+    font-size: 16px;
+    background: rgba(138, 43, 226, 0.2);
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(138, 43, 226, 0.3);
+}
+
+.goods-shop-items-section .more-button:hover {
+    background: rgba(138, 43, 226, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(138, 43, 226, 0.3);
+}
+
+.goods-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 25px;
+    justify-content: center;
+    padding: 0 25px;
+}
+
+.goods-item {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    text-align: center;
+    transition: all 0.4s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    position: relative;
+}
+
+.goods-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+    z-index: 1;
+}
+
+.goods-item:hover::before {
+    transform: translateX(100%);
+}
+
+.goods-item:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(138, 43, 226, 0.4);
+    border-color: rgba(138, 43, 226, 0.5);
+}
+
+.goods-image-placeholder {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(138, 43, 226, 0.2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    position: relative;
+    z-index: 2;
+}
+
+.goods-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 15px;
+    transition: transform 0.4s ease;
+}
+
+.goods-item:hover .goods-image {
+    transform: scale(1.1);
+}
+
+.goods-group-name {
+    color: #e6b3ff;
+    font-size: 0.9em;
+    margin: 0 0 8px 0;
+    font-weight: 500;
+    z-index: 2;
+    position: relative;
+}
+
+.goods-name {
+    font-weight: bold;
+    margin: 0 0 10px 0;
+    color: #ffffff;
+    font-size: 1.1em;
+    z-index: 2;
+    position: relative;
+}
+
+.goods-price {
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 1.2em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+    position: relative;
+}
+
+.goods-link {
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* 스와이퍼 스타일 */
+.swiper {
+    height: 400px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* 제목 스타일 */
+h2, h3 {
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: bold;
+}
+
+/* 푸터 스타일 */
+body .footer-container {
+    display: block;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .container {
+        margin: 15px;
+        padding: 15px;
+    }
+    
+    .artist-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        padding: 20px;
+    }
+    
+    .goods-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+    }
+    
+    .followed-artists-section .followed-list {
+        gap: 25px;
+    }
+}
+</style>
+</head>
+
+<body>
+    <jsp:include page="/WEB-INF/views/modules/communityHeader.jsp" />
+
+	<section class="slider-section">
+		<div class="slider-container swiper">
+			<div class="slider-wrapper swiper-wrapper">
+				<div class="slide-item swiper-slide" style="background-color: #ffb6c1">
+					<img alt="ColdplayConcert" src="${pageContext.request.contextPath}/resources/img/COLDPLAY_MUSIC_OF_SPHERE.png">
+				</div>
+				<div class="slide-item swiper-slide" style="background-color: #add8e6">
+					<img alt="IndieMusic" src="${pageContext.request.contextPath}/resources/img/Indie_Music_Festival.png">
+				</div>
+				<div class="slide-item swiper-slide" style="background-color: #90ee90">
+					<img alt="SummerStarLight" src="${pageContext.request.contextPath}/resources/img/SUMMER_STARTLIGHT.png">
+				</div>
+<!-- 				<div class="slide-item swiper-slide" style="background-color: #ffd700"> -->
+<!-- 				</div> -->
+<!-- 				<div class="slide-item swiper-slide" style="background-color: #f08080"> -->
+<!-- 				</div> -->
+			</div>
+			<button class="slide-button prev" aria-label="이전 슬라이드">
+				&#10094;</button>
+			<button class="slide-button next" aria-label="다음 슬라이드">
+				&#10095;</button>
+		</div>
+		<div class="slide-dots"></div>
+	</section>
+
+    <div class="followed-artists-section container mb-4">
+        <ul class="followed-list">
+        	<c:forEach items="${following }" var="following">
+				<div style="position: relative;">
+					<a href="/community/gate/${following.artGroupNo}/apt" class="followed-artist-link">
+						<c:if test="${not empty following.artGroupProfileImg }">
+							<img alt="${following.artGroupNm }" src="${following.artGroupProfileImg }" class="followed-artist-profile">
+							<span style="font-size: large;">${following.artGroupNm }</span>
+						</c:if>
+						<c:if test="${empty following.artGroupProfileImg }">
+							<span>이미지</span>
+						</c:if>
+						<c:if test="${following.isMembership == 1 }">
+							<i class="fas fa-crown membership-badge" title="멤버십 회원"></i>
+						</c:if>
+					</a>
+				</div>
+			</c:forEach>
+			<c:if test="${empty following }">
+				<span style="color: gray">아직 팔로우한 아티스트가 없습니다! 아티스트를 팔로우하세요!</span>
+			</c:if>
+        </ul>
+    </div>
+
+	<div class="container">
+		<h2>DDTOWN ARTIST</h2>
+		<div class="artist-grid">
+			<c:forEach items="${groups }" var="group">
+				<div class="artist-item">
+					<a href="/community/gate/${group.artGroupNo}" class="artist-link">
+						<div class="artist-image-placeholder">
+							<c:if test="${not empty group.artGroupProfileImg }">
+								<img alt="${group.artGroupNm }" src="${group.artGroupProfileImg }" class="artist-image">
+							</c:if>
+							<c:if test="${empty group.artGroupProfileImg }">
+								<span>이미지</span>
+							</c:if>
+						</div>
+						<p class="artist-name">${group.artGroupNm }</p>
+					</a>
+				</div>
+			</c:forEach>
+		</div>
+	</div>
+	
+	<%-- 굿즈샵 상품 5개 공간 추가 --%>
+	<div class="goods-shop-items-section container mt-4" style="padding-bottom: 30px; ">
+		<h3 class="section-title" style="padding: 20px;">BEST ITEMS</h3>
+		<a href="${pageContext.request.contextPath }/goods/main" class="more-button" style="position: ">상품 더보기</a>
+		<div class="goods-grid">
+			<c:choose>
+				<c:when test="${not empty bestItems }">
+					<c:forEach items="${bestItems}" var="goods">
+						<div class="goods-item">
+							<a href="${pageContext.request.contextPath }/goods/detail?goodsNo=${goods.goodsNo}" class="goods-link">
+								<div class="goods-image-placeholder">
+									<img src="${goods.representativeImageUrl}" 
+									     alt="${goods.goodsNm}" class="goods-image"
+									     onerror="this.onerror=null; this.src='https://via.placeholder.com/180x180?text=No+Image';">
+								</div>
+								<p class="goods-group-name">${goods.artGroupName}</p> 
+								<p class="goods-name">${goods.goodsNm}</p>
+                            	<p class="goods-price"> ₩<fmt:formatNumber value="${goods.goodsPrice}" pattern="#,###"></fmt:formatNumber></p> 
+                            </a>
+						</div>
+					</c:forEach>
+				</c:when>
+				<c:otherwise>
+					<p>표시할 베스트 아이템이 없습니다.</p>
+				</c:otherwise>
+			</c:choose>
+		</div>
+	</div>
+	
+	<div>
+		<!-- FOOTER -->
+		<jsp:include page="/WEB-INF/views/modules/communityFooter.jsp" />    
+	    <script src="${pageContext.request.contextPath}/resources/js/pages/communityFooter.js"></script>
+		<!-- FOOTER END -->
+	</div>
+	
+	<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script type="text/javascript">
+    	const swiper = new Swiper('.swiper', {
+	    	  loop: true,
+	    	  autoplay : {
+	    		  delay : 3000,
+	    	  },
+
+	    	  // Navigation arrows
+	    	  navigation: {
+	    	    nextEl: '.slide-button.next',
+	    	    prevEl: '.slide-button.prev',
+	    	  },
+	    	  
+	    	  parallax: true, 	//패럴랙스 효과 활성화
+
+    	});
+    </script>
+</body>
+</html>

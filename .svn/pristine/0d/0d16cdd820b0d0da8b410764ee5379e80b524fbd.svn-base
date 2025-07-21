@@ -1,0 +1,258 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시물 상세보기 - DDTOWN 직원 포털</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .post-detail-container { max-width: 700px; margin: 0 auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); padding: 36px 36px 28px 36px; margin-top: 40px; }
+        .post-detail-container h2 { font-size: 1.7em; color: #234aad; margin-bottom: 28px; }
+        .post-detail-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+        .post-detail-table th, .post-detail-table td { padding: 10px 8px; text-align: left; font-size: 1em; }
+        .post-detail-table th { width: 140px; color: #234aad; background: #f5f5f5; font-weight: 600; }
+        .post-detail-table td { background: #fafbfc; }
+        .post-detail-content { min-height: 120px; border: 1px solid #e0e0e0; border-radius: 6px; padding: 18px 14px; background: #fcfcfc; margin-bottom: 18px; font-size: 1.08em; line-height: 1.7; }
+        .post-detail-btns { text-align: center; margin-top: 30px; }
+        .post-detail-btns button { padding: 10px 32px; font-size: 1.1em; border: none; border-radius: 5px; margin: 0 8px; cursor: pointer; }
+        .post-detail-btns .list-btn { background: #bdbdbd; color: #fff; }
+        .post-detail-btns .edit-btn { background: #1976d2; color: #fff; }
+        .post-detail-btns .delete-btn { background: #e74c3c; color: #fff; }
+        .file-link { color: #1976d2; text-decoration: underline; margin-left: 8px; }
+        .comment-section { margin-top: 40px; }
+        .comment-section h3 { font-size: 1.15em; color: #234aad; margin-bottom: 12px; }
+        .comment-table { width: 100%; border-collapse: collapse; }
+        .comment-table th, .comment-table td { border: 1px solid #e0e0e0; padding: 8px 8px; text-align: center; font-size: 0.98em; }
+        .comment-table th { background: #f5f5f5; }
+        .comment-table td.content { text-align: left; }
+        .comment-table td .comment-delete-btn { padding: 4px 12px; background: #e74c3c; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.97em; }
+        .modal { position: fixed; z-index: 9999; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: #fff; border-radius: 10px; padding: 32px 32px 24px 32px; min-width: 340px; max-width: 95vw; box-shadow: 0 2px 16px rgba(0,0,0,0.13); position: relative; }
+        .modal-content h2 { margin-top: 0; color: #234aad; font-size: 1.3em; }
+        .modal-content label { display:block; margin-top:12px; font-weight:600; color:#234aad; }
+        .modal-content input, .modal-content textarea { width:100%; margin-top:4px; margin-bottom:6px; padding:7px 8px; border:1px solid #d0d0d0; border-radius:4px; font-size:1em; }
+        .modal-content textarea { resize:vertical; }
+        .modal-content .close { position:absolute; right:18px; top:14px; font-size:1.5em; color:#888; cursor:pointer; }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content" style="position:relative; min-height:600px;">
+                <div class="post-detail-container">
+                    <h2>게시물 상세보기</h2>
+                    <table class="post-detail-table">
+                        <tr>
+                            <th>ID</th>
+                            <td>P001</td>
+                        </tr>
+                        <tr>
+                            <th>아티스트</th>
+                            <td>윈터</td>
+                        </tr>
+                        <tr>
+                            <th>작성일</th>
+                            <td>2025-05-13 11:20</td>
+                        </tr>
+                        <tr>
+                            <th>좋아요 수</th>
+                            <td>12456</td>
+                        </tr>
+                        <tr>
+                            <th>첨부파일</th>
+                            <td><a href="#" class="file-link" download>concert_photo.jpg</a></td>
+                        </tr>
+                    </table>
+                    <div class="post-detail-content">
+                        팬분들 덕에 오늘 콘서트 넘 즐거웠어요<br>
+                        <img src="https://via.placeholder.com/300x180?text=콘서트+사진" alt="첨부 이미지" style="margin-top:12px; max-width:100%; border-radius:8px;">
+                    </div>
+                    <div class="post-detail-btns">
+                        <button type="button" class="list-btn" onclick="window.location.href='/emp/post/list'">목록</button>
+                        <button type="button" class="edit-btn" onclick="openEditModal()">수정</button>
+                        <button type="button" class="delete-btn" onclick="if(confirm('정말 삭제하시겠습니까?')){alert('삭제되었습니다. (미구현)');window.location.href='/emp/post/list';}">삭제</button>
+                    </div>
+                    <div class="comment-section">
+                        <h3>댓글</h3>
+                        <table class="comment-table">
+                            <thead>
+                                <tr>
+                                    <th>작성자</th>
+                                    <th>내용</th>
+                                    <th>작성일</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>팬1</td>
+                                    <td class="content">정말 멋진 무대였어요!</td>
+                                    <td>2025-05-13 12:00</td>
+                                   
+                                </tr>
+                                <tr>
+                                    <td>팬2</td>
+                                    <td class="content">다음 공연도 기대할게요~</td>
+                                    <td>2025-05-13 12:10</td>
+                                    
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (직원 전용)</p>
+        </footer>
+    </div>
+    <div id="editModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2>게시물 수정</h2>
+            <form id="editPostForm" onsubmit="return submitEditForm(event)">
+                <label>ID</label>
+                <input type="text" value="P001" readonly style="background:#f5f5f5"><br>
+                <label>아티스트</label>
+                <input type="text" id="edit-artist" value="윈터"><br>
+                <label>작성일</label>
+                <input type="text" value="2025-05-13 11:20" readonly style="background:#f5f5f5"><br>
+                <label>좋아요 수</label>
+                <input type="number" id="edit-like" value="12456"><br>
+                <label>첨부파일</label>
+                <input type="text" id="edit-file" value="concert_photo.jpg"><br>
+                <label>내용</label>
+                <textarea id="edit-content" rows="4">팬분들 덕에 오늘 콘서트 넘 즐거웠어요</textarea><br>
+                <label>이미지 URL</label>
+                <input type="text" id="edit-img" value="https://via.placeholder.com/300x180?text=콘서트+사진"><br>
+                <div style="text-align:right; margin-top:18px;">
+                    <button type="button" onclick="closeEditModal()" style="background:#bdbdbd;color:#fff;padding:8px 24px;border:none;border-radius:4px;">취소</button>
+                    <button type="submit" style="background:#1976d2;color:#fff;padding:8px 24px;border:none;border-radius:4px;">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+<script>
+        // 로그아웃 기능
+        const logoutButton = document.querySelector('.emp-logout-btn');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('로그아웃 하시겠습니까?')) {
+                    alert('로그아웃 되었습니다.');
+                }
+            });
+        }
+    
+        // 직원 이름 등 동적 데이터 로드 (예시)
+        const employeeNameSpan = document.getElementById('employee-name');
+        if (employeeNameSpan) {
+            employeeNameSpan.textContent = "홍길동";
+        }
+    
+        // 게시물 수정 모달 관련
+        function openEditModal() {
+            document.getElementById('editModal').style.display = 'flex';
+        }
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+        function submitEditForm(e) {
+            e.preventDefault();
+            alert('수정이 완료되었습니다. (실제 저장 미구현)');
+            closeEditModal();
+            return false;
+        }
+    
+        // DOMContentLoaded 이벤트 내에서 사이드바 관련 스크립트 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            // 사이드바 메뉴 토글 기능
+            const navItemsWithSubmenu = document.querySelectorAll('.emp-sidebar .emp-nav-item.has-submenu');
+            navItemsWithSubmenu.forEach(item => {
+                const arrow = item.querySelector('.submenu-arrow');
+                item.addEventListener('click', function(event) {
+                    if (this.getAttribute('href') === '#') {
+                        event.preventDefault();
+                    }
+                    const parentLi = this.parentElement;
+                    const submenu = this.nextElementSibling;
+    
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        const parentUl = parentLi.parentElement;
+                        if (parentUl) {
+                            Array.from(parentUl.children).forEach(siblingLi => {
+                                if (siblingLi !== parentLi) {
+                                    const siblingSubmenuControl = siblingLi.querySelector('.emp-nav-item.has-submenu.open');
+                                    if (siblingSubmenuControl) {
+                                        const siblingSubmenuElement = siblingSubmenuControl.nextElementSibling;
+                                        siblingSubmenuControl.classList.remove('open');
+                                        if (siblingSubmenuElement && siblingSubmenuElement.classList.contains('emp-submenu')) {
+                                            siblingSubmenuElement.style.display = 'none';
+                                        }
+                                        const siblingArrow = siblingSubmenuControl.querySelector('.submenu-arrow');
+                                        if (siblingArrow) siblingArrow.style.transform = 'rotate(0deg)';
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    
+                    this.classList.toggle('open');
+                    if (submenu && submenu.classList.contains('emp-submenu')) {
+                        submenu.style.display = this.classList.contains('open') ? 'block' : 'none';
+                        if (arrow) arrow.style.transform = this.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)';
+                    }
+                });
+            });
+    
+            // 현재 페이지 URL 기반으로 사이드바 메뉴 활성화 및 펼침
+            // post_detail.html 페이지에서는 'post_management.html' 메뉴를 활성화하는 것이 자연스러움
+            const currentFullHref = window.location.href;
+            document.querySelectorAll('.emp-sidebar .emp-nav-item[href]').forEach(link => {
+                const linkHrefAttribute = link.getAttribute('href');
+                if (linkHrefAttribute && linkHrefAttribute !== "#" && (currentFullHref.includes("post_detail.html") && linkHrefAttribute.endsWith("post_management.html"))) {
+                     link.classList.add('active');
+                     let currentActiveElement = link;
+                     while (true) {
+                        const parentLi = currentActiveElement.parentElement;
+                        if (!parentLi) break;
+                        const parentSubmenuUl = parentLi.closest('ul.emp-submenu');
+                        if (parentSubmenuUl) {
+                            parentSubmenuUl.style.display = 'block';
+                            const controllingAnchor = parentSubmenuUl.previousElementSibling;
+                            if (controllingAnchor && controllingAnchor.tagName === 'A' && controllingAnchor.classList.contains('has-submenu')) {
+                                controllingAnchor.classList.add('active', 'open');
+                                const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                                if (arrow) arrow.style.transform = 'rotate(90deg)';
+                                currentActiveElement = controllingAnchor;
+                            } else { break; }
+                        } else { break; }
+                     }
+                } else if (linkHrefAttribute && linkHrefAttribute !== "#" && currentFullHref.endsWith(linkHrefAttribute)) {
+                    link.classList.add('active');
+                    let currentActiveElement = link;
+                     while (true) {
+                        const parentLi = currentActiveElement.parentElement;
+                        if (!parentLi) break;
+                        const parentSubmenuUl = parentLi.closest('ul.emp-submenu');
+                        if (parentSubmenuUl) {
+                            parentSubmenuUl.style.display = 'block';
+                            const controllingAnchor = parentSubmenuUl.previousElementSibling;
+                            if (controllingAnchor && controllingAnchor.tagName === 'A' && controllingAnchor.classList.contains('has-submenu')) {
+                                controllingAnchor.classList.add('active', 'open');
+                                const arrow = controllingAnchor.querySelector('.submenu-arrow');
+                                if (arrow) arrow.style.transform = 'rotate(90deg)';
+                                currentActiveElement = controllingAnchor;
+                            } else { break; }
+                        } else { break; }
+                     }
+                }
+            });
+        });
+    </script>
+</html> 

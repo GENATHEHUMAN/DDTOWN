@@ -1,0 +1,250 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDTOWN 굿즈샵 - 찜목록</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/mainservice_common.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/mainservice_home.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/goods.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta name="_csrf" content="${_csrf.token}"/>
+	<meta name="_csrf_header" content="${_csrf.headerName}"/>
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/mainservice_common.css" />
+	
+</head>
+<body class="wishlist-page-body">
+    <jsp:include page="/WEB-INF/views/modules/communityHeader.jsp" />
+
+    <div class="wishlist-container">
+        <div class="wishlist-header">
+            <h1>찜목록</h1>
+        </div>
+
+        <div class="wishlist-items" id="wishlistItems">
+            <c:choose>
+                <c:when test="${not empty wishedGoodsList}"> <%-- wishedGoodsList는 컨트롤러에서 전달받는 찜 목록 상품 데이터 --%>
+                    <c:forEach var="goods" items="${wishedGoodsList}">
+                        <div class="wishlist-item" data-goods-no="${goods.goodsNo}"> <%-- 상품 고유 번호 사용 --%>
+                            <div class="item-image">
+                                <a href="${pageContext.request.contextPath}/goods/detail?goodsNo=${goods.goodsNo}">
+                                    <img src="${not empty goods.representativeImageUrl ? goods.representativeImageUrl : 'https://via.placeholder.com/80x80/E6E6FA/000000?text=No+Image'}" 
+                                         alt="${goods.goodsNm}">
+                                </a>
+                            </div>
+                            <div class="item-info">
+                                <a href="${pageContext.request.contextPath}/goods/detail?goodsNo=${goods.goodsNo}" class="item-name">${goods.goodsNm}</a>
+                                <div class="item-price"><fmt:formatNumber value="${goods.goodsPrice}" type="number"/>원</div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-action btn-cart" data-goods-no="${goods.goodsNo}">장바구니 담기</button>
+                                <button class="btn-action btn-heart" data-goods-no="${goods.goodsNo}">
+                                    <i class="fas fa-heart"></i> <%-- 찜목록이므로 항상 채워진 하트 --%>
+                                </button>
+                            </div>
+                        </div>
+                    </c:forEach>
+                </c:when>
+                <c:otherwise>
+                    <div class="empty-wishlist-message" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px;">
+                        <p>찜한 상품이 없습니다.</p>
+                        <a href="${pageContext.request.contextPath}/goods/main" class="btn-shop">쇼핑하러 가기</a>
+                    </div>
+                </c:otherwise>
+            </c:choose>
+        </div>
+        
+        <div class="empty-wishlist" style="display: none;"></div> 
+    </div>
+
+    <div id="footer-placeholder"></div>
+
+<script>
+        let csrfToken;
+        let csrfHeader;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // CSRF 토큰 초기화
+            const csrfMeta = document.querySelector('meta[name="_csrf"]');
+            const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+            if (csrfMeta && csrfHeaderMeta) {
+                csrfToken = csrfMeta.content;
+                csrfHeader = csrfHeaderMeta.content;
+            } else {
+                console.error("CSRF meta tags not found.");
+            }
+
+            // 로그인 상태 관리 (컨트롤러에서 isLoggedIn 모델 속성을 받아와 사용)
+            const isLoggedIn = ${isLoggedIn}; 
+
+            const loggedOutNav = document.getElementById('loggedOutNav');
+            const loggedInNav = document.getElementById('loggedInNav');
+            if (isLoggedIn) {
+                if(loggedOutNav) loggedOutNav.style.display = 'none';
+                if(loggedInNav) loggedInNav.style.display = 'flex';
+            } else {
+                if(loggedOutNav) loggedOutNav.style.display = 'flex';
+                if(loggedInNav) loggedInNav.style.display = 'none';
+            }
+
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(event) {
+                    alert("로그아웃되었습니다."); 
+                    // 실제 로그아웃은 서버 측 URL로 이동하여 처리
+                });
+            }
+
+            // 외부 푸터 파일 로드 (경로 수정)
+            fetch('${pageContext.request.contextPath}/resources/html/footer.html')
+                .then(response => response.ok ? response.text() : Promise.reject('Footer not found'))
+                .then(data => {
+                    const footerPlaceholder = document.getElementById('footer-placeholder');
+                    if (footerPlaceholder) {
+                        footerPlaceholder.innerHTML = data;
+                    }
+                })
+                .catch(error => console.error('Error loading footer:', error));
+
+            // 찜목록 아이템 표시/숨김 관리 (JSP C태그로 초기 렌더링되므로 JS에서는 동적 변경만 관리)
+            const wishlistItemsContainer = document.getElementById('wishlistItems');
+            const emptyWishlistMessage = document.querySelector('.empty-wishlist-message'); 
+
+            function updateWishlistDisplay() {
+                const items = wishlistItemsContainer.querySelectorAll('.wishlist-item');
+                if (items.length === 0) {
+                    wishlistItemsContainer.style.display = 'none';
+                    if(emptyWishlistMessage) emptyWishlistMessage.style.display = 'flex';
+                } else {
+                    wishlistItemsContainer.style.display = 'flex';
+                    if(emptyWishlistMessage) emptyWishlistMessage.style.display = 'none';
+                }
+            }
+
+            // 찜 해제 및 장바구니 담기 기능 (이벤트 위임)
+            wishlistItemsContainer.addEventListener('click', function(event) {
+                const target = event.target;
+                const item = target.closest('.wishlist-item');
+                if (!item) return;
+
+                const goodsNo = item.dataset.goodsNo; // 상품 번호는 여기서 한 번만 가져옴
+
+                // 1. 찜 해제 버튼 클릭 시
+                if (target.classList.contains('btn-heart') || target.closest('.btn-heart')) { 
+                    if (!isLoggedIn) {
+                        alert('로그인이 필요한 기능입니다.');
+                        window.location.href = '${pageContext.request.contextPath}/login';
+                        return;
+                    }
+
+                    if (confirm('선택한 상품을 찜목록에서 삭제하시겠습니까?')) {
+                        fetch('${pageContext.request.contextPath}/goods/wishlist', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                [csrfHeader]: csrfToken
+                            },
+                            body: JSON.stringify({ goodsNo: parseInt(goodsNo) })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                if (response.status === 401) {
+                                    alert('로그인 세션이 만료되었거나 로그인이 필요합니다.');
+                                    window.location.href = '${pageContext.request.contextPath}/login';
+                                }
+                                return response.json().then(errorData => {
+                                    throw new Error(errorData.message || `서버 오류 발생 (HTTP ${response.status})`);
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            alert(data.message);
+                            if (data.status === 'success' && data.action === 'removed') {
+                                item.remove();
+                                updateWishlistDisplay();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('찜 해제 중 오류:', error);
+                            alert('찜 해제 중 오류가 발생했습니다: ' + error.message);
+                        });
+                    }
+                } 
+                // 2. 장바구니 담기 버튼 클릭 시 (독립적인 else if 블록)
+                else if (target.classList.contains('btn-cart')) { 
+                    const defaultQty = 1;
+
+                    if (!isLoggedIn) {
+                        alert('로그인이 필요한 기능입니다.');
+                        window.location.href = '${pageContext.request.contextPath}/login';
+                        return;
+                    }
+
+                    const cartItemToAdd = {
+                        goodsNo: parseInt(goodsNo),
+                        cartQty: defaultQty,
+                        goodsOptNo: item.dataset.goodsOptNo ? parseInt(item.dataset.goodsOptNo) : null
+                    };
+
+                    fetch('${pageContext.request.contextPath}/goods/cart/addMultiple', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            [csrfHeader]: csrfToken
+                        },
+                        body: JSON.stringify([cartItemToAdd])
+                    })
+                    .then(response => {
+                        return response.text().then(text => {
+                            if (!response.ok) {
+                                if (response.status === 401) {
+                                    alert('로그인 세션이 만료되었거나 로그인이 필요합니다.');
+                                    window.location.href = '${pageContext.request.contextPath}/login';
+                                }
+                                throw new Error(text || `서버 오류 발생 (HTTP ${response.status})`);
+                            }
+                            try {
+                                return JSON.parse(text);
+                            } catch (e) {
+                                console.error("JSON 파싱 오류:", e, "응답 텍스트:", text);
+                                throw new Error("서버 응답 파싱 실패");
+                            }
+                        });
+                    })
+                    .then(data => {
+                        alert(data.message);
+                        if (data.success) {
+                            // 장바구니 추가 성공 시 UI 업데이트 (예: 플로팅 장바구니 뱃지 카운트)
+                        }
+                    })
+                    .catch(error => {
+                        console.error('장바구니 추가 중 오류:', error);
+                        let errorMessage = '장바구니 추가 중 알 수 없는 오류가 발생했습니다.';
+                        try {
+                            const errorObj = JSON.parse(error.message);
+                            if (errorObj && errorObj.message) {
+                                errorMessage = errorObj.message;
+                            }
+                        } catch (e) { /* 파싱 실패 시 기본 메시지 유지 */ }
+                        alert(errorMessage);
+                    });
+                }
+                // 3. 상품 클릭 시 상세페이지로 이동 (독립적인 else if 블록)
+                else if (target.classList.contains('item-name') || target.closest('.item-image a')) {
+                    const item = target.closest('.wishlist-item');
+                    if (item) {
+                        const goodsNo = item.dataset.goodsNo;
+                        window.location.href = `${pageContext.request.contextPath}/goods/detail?goodsNo=${goodsNo}`;
+                    }
+                }
+            });
+            // DOMContentLoaded 종료
+        });
+    </script>
+</body>
+</html>

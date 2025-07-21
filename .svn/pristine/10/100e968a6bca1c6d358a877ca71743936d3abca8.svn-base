@@ -1,0 +1,28 @@
+package kr.or.ddit.ddtown.controller.admin.goods;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/admin/goods/notice")
+public class AdminGoodsNoticeController {
+
+	@GetMapping("/list")
+	public String goodsNotice() {
+		return "admin/goods/notice/goods_notice_list";
+	}
+	
+	@GetMapping("/detail")
+	public String goodsNoticeDetail() {
+		return "admin/goods/notice/goods_notice_detail";
+	}
+	
+	@GetMapping("/form")
+	public String goodsNoticeForm() {
+		return "admin/goods/notice/goods_notice_form";
+	}
+}

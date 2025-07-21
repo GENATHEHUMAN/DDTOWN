@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.emp.artist.ArtistGroupMapper">
+ 
+ 	<resultMap type="kr.or.ddit.vo.artist.ArtistGroupVO" id="artistGroup">
+		<id property="artGroupNo" column="ART_GROUP_NO"/>
+ 		<result property="artGroupRegDate" column="ART_GROUP_REG_DATE"/>
+		<result property="artGroupDelYn" column="ART_GROUP_DEL_YN"/>
+		<result property="artGroupProfileImg" column="ART_GROUP_PROFILE_IMG"/>
+		<result property="artGroupModDate" column="ART_GROUP_MOD_DATE"/>
+		<result property="artGroupTypeCode" column="ART_GROUP_TYPE_CODE"/>
+		<result property="empUsername" column="EMP_USERNAME"/>
+		<result property="artGroupDebutdate" column="ART_GROUP_DEBUTDATE"/>
+		<result property="artGroupNm" column="ART_GROUP_NM"/>
+		<result property="artGroupContent" column="ART_GROUP_CONTENT"/>
+		<collection property="artistList" resultMap="artist"></collection>	
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.artist.ArtistVO" id="artist">
+ 		<id property="artNo" column="ART_NO"/>
+		<result property="artGroupNo" column="ARTIST_MEMBER_OF_GROUP_NO"/>
+		<result property="memUsername" column="MEM_USERNAME"/>
+		<result property="artNm" column="ART_NM"/>
+		<result property="artContent" column="ART_CONTENT"/>
+		<result property="artRegDate" column="ART_REG_DATE"/>
+		<result property="artModDate" column="ART_MOD_DATE"/>
+		<result property="artProfileImg" column="ART_PROFILE_IMG"/>
+ 	</resultMap>
+ 
+ 	<resultMap type="kr.or.ddit.vo.artist.AlbumVO" id="album">
+	    <id property="albumNo" column="ALBUM_NO"/> 
+	    <result property="artGroupNo" column="ART_GROUP_NO"/>
+	    <result property="albumImg" column="ALBUM_IMG"/>
+	    <result property="albumNm" column="ALBUM_NM"/>
+	    <result property="albumDetail" column="ALBUM_DETAIL"/>
+	    <result property="albumRegDate" column="ALBUM_REG_DATE"/>
+	    <collection property="albumSongs" resultMap="songs"></collection>
+	</resultMap>
+	
+	<resultMap type="kr.or.ddit.vo.artist.AlbumSongVO" id="songs">
+	    <id property="songNo" column="SONG_NO"/>
+	    <result property="albumNo" column="ALBUM_NO"/>
+	    <result property="songNm" column="SONG_NM"/>
+	    <result property="songTitleYn" column="SONG_TITLE_YN"/>
+	</resultMap>
+ 	
+ 	<select id="retrieveArtistGroupList" resultMap="artistGroup">
+ 		SELECT
+		    A.ART_GROUP_NO,
+		    A.ART_GROUP_TYPE_CODE,
+		    A.EMP_USERNAME,
+		    A.ART_GROUP_DEBUTDATE,
+		    A.ART_GROUP_NM,
+		    A.ART_GROUP_CONTENT,
+		    A.ART_GROUP_REG_DATE,
+		    A.ART_GROUP_DEL_YN,
+		    A.ART_GROUP_PROFILE_IMG,
+		    A.ART_GROUP_MOD_DATE,
+		  
+		    B.ART_NO,
+		    B.MEM_USERNAME,
+		    B.ART_NM,
+		    B.ART_CONTENT,
+		    B.ART_REG_DATE,
+		    B.ART_MOD_DATE,
+		    B.ART_PROFILE_IMG,
+		    
+		    A.ART_GROUP_NO AS ARTIST_MEMBER_OF_GROUP_NO
+		FROM
+		    ARTIST_GROUP A
+		INNER JOIN 
+		    ARTIST_GROUP_MAP AGM ON A.ART_GROUP_NO = AGM.ART_GROUP_NO
+		INNER JOIN 
+		    ARTIST B ON AGM.ART_NO = B.ART_NO
+		WHERE
+		    A.ART_GROUP_DEL_YN = 'N'
+		AND 
+			AGM.ART_DEL_YN = 'N'
+		ORDER BY
+		    A.ART_GROUP_NO DESC, B.ART_NM ASC
+ 	</select>
+ 	
+ 	<select id="getAllAlbums" resultMap="album">
+		SELECT
+			A.ALBUM_NO,
+			A.ART_GROUP_NO,
+			A.ALBUM_IMG,
+			A.ALBUM_NM,
+			A.ALBUM_DETAIL, 
+			A.ALBUM_REG_DATE,
+			
+			B.ART_GROUP_NO AS GROUP_ART_GROUP_NO_FOR_ALBUM, 
+		 	B.ART_GROUP_TYPE_CODE,
+		  	B.EMP_USERNAME,
+		  	B.ART_GROUP_DEBUTDATE,
+		  	B.ART_GROUP_NM AS GROUP_NM_FOR_ALBUM,
+		  	B.ART_GROUP_CONTENT,
+		  	B.ART_GROUP_REG_DATE AS GROUP_REG_DATE_FOR_ALBUM,
+		  	B.ART_GROUP_DEL_YN,
+		  	B.ART_GROUP_PROFILE_IMG AS GROUP_PROFILE_IMG_FOR_ALBUM,
+		  	B.ART_GROUP_MOD_DATE AS GROUP_MOD_DATE_FOR_ALBUM
+		FROM
+			ARTIST_ALBUM A 
+		LEFT JOIN 
+		    ARTIST_GROUP B ON A.ART_GROUP_NO = B.ART_GROUP_NO
+		ORDER BY
+			A.ALBUM_REG_DATE DESC
+	</select>
+ 	
+ 	<update id="updateArtistGroup" parameterType="kr.or.ddit.vo.artist.ArtistGroupVO">
+ 		UPDATE ARTIST_GROUP
+		SET
+		    ART_GROUP_NM = #{artGroupNm},
+		    ART_GROUP_TYPE_CODE = #{artGroupTypeCode},
+		    ART_GROUP_DEBUTDATE = #{artGroupDebutdate},
+		    ART_GROUP_CONTENT = #{artGroupContent},
+		    ART_GROUP_PROFILE_IMG = #{artGroupProfileImg},
+		    ART_GROUP_MOD_DATE = SYSDATE
+		WHERE
+		    ART_GROUP_NO = #{artGroupNo}
+ 	</update>
+ 	
+ 	<update id="unassignArtistsFromGroup" parameterType="int">
+	    UPDATE ARTIST_GROUP_MAP
+	    SET
+	    	ART_DEL_YN = 'Y'
+	    WHERE ART_GROUP_NO = #{artGroupNoValue}
+	</update>
+ 	
+ 	<insert id="assignArtistsToGroup" parameterType="map">
+	    MERGE INTO ARTIST_GROUP_MAP agm
+	    USING (
+		        <foreach collection="artistIds" item="artId" open="" close="" separator="UNION ALL">
+		            SELECT
+		                #{artGroupNo} AS CHECK_ART_GROUP_NO,
+		                #{artId} AS CHECK_ART_NO,
+		                SYSDATE AS NEW_DEBUTDATE,
+		                'N' AS NEW_DEL_YN
+		            FROM DUAL
+		        </foreach>
+		    	) source_data	
+	    ON (agm.ART_GROUP_NO = source_data.CHECK_ART_GROUP_NO 
+	    	AND agm.ART_NO = source_data.CHECK_ART_NO)
+	    WHEN MATCHED THEN
+	        UPDATE SET
+	            agm.ART_DEL_YN = source_data.NEW_DEL_YN
+	            ,agm.ART_GROUP_MAP_DEBUTDATE = source_data.NEW_DEBUTDATE
+	    WHEN NOT MATCHED THEN
+	        INSERT (
+	        		agm.ART_GROUP_NO
+	        	    , agm.ART_NO
+	        	    , agm.ART_GROUP_MAP_DEBUTDATE
+	        	    , agm.ART_DEL_YN
+	        	    )
+	        VALUES (
+	        		source_data.CHECK_ART_GROUP_NO
+	        		, source_data.CHECK_ART_NO
+	        		, source_data.NEW_DEBUTDATE
+	        		, source_data.NEW_DEL_YN
+	        		)
+	</insert>
+	
+ 	<update id="unassignAlbumsFromGroup" parameterType="int">
+ 		UPDATE ARTIST_ALBUM
+ 		SET
+ 			ART_GROUP_NO = NULL
+ 		WHERE 
+ 			ART_GROUP_NO = #{artGroupNoValue}
+ 	</update>
+ 	
+ 	<update id="assignAlbumsToGroup" parameterType="map"> 
+ 		UPDATE ARTIST_ALBUM
+	    SET
+	        ART_GROUP_NO = #{artGroupNo} 
+	    WHERE
+	        ALBUM_NO IN
+	        <foreach collection="albumIds" item="albumId" open="(" separator="," close=")"> 
+	        	#{albumId}
+	        </foreach>
+	</update>
+	
+	<select id="getGroupAlbum" parameterType="int" resultMap="album">
+	    SELECT
+	        A.ALBUM_NO,               
+	        A.ART_GROUP_NO,
+	        A.ALBUM_IMG,
+	        A.ALBUM_NM,
+	        A.ALBUM_DETAIL,
+	        A.ALBUM_REG_DATE,
+	        
+	        B.SONG_NO,
+	        B.SONG_NM,
+	        B.SONG_TITLE_YN
+	    FROM
+	        ARTIST_ALBUM A
+	    LEFT JOIN 
+	        ALBUM_SONG B ON A.ALBUM_NO = B.ALBUM_NO
+	    WHERE
+	        A.ART_GROUP_NO = #{artGroupNoParam}
+	    ORDER BY
+	        A.ALBUM_REG_DATE DESC, B.SONG_NO ASC
+	</select>
+	
+ </mapper>
+ 
+ 
+ 
+ 
+ 

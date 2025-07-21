@@ -1,0 +1,165 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DD TOWN 오디션 일정</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+ 	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/common/reset.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/common/variables.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/common/base.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/common/layout.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/components/navigation.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/components/buttons.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/components/footer.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/audition.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+오디션 목록 페이지
+	<header class="site-header">
+        <div class="header-container container">
+            <div class="logo">
+                <h1><a href="${pageContext.request.contextPath}/corporate/main">DD TOWN</a></h1>
+            </div>
+            <nav class="main-nav">
+                <button class="nav-toggle" aria-label="메뉴 열기/닫기">
+                    <span class="hamburger"></span>
+                </button>
+                <ul>
+                    <li class="has-submenu">
+                        <a href="#">기업 정보</a>
+                        <ul class="submenu">
+                           <li><a href="${pageContext.request.contextPath}/corporate/finance">재무정보</a></li>
+                            <li><a href="${pageContext.request.contextPath}/corporate/about">기업소개</a></li>
+                            <li><a href="${pageContext.request.contextPath}/corporate/notice/list">기업 공지</a></li>
+                            <li><a href="${pageContext.request.contextPath}/corporate/location">기업 위치</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="${pageContext.request.contextPath}/corporate/audition/schedule">오디션</a></li>
+                    <li><a href="${pageContext.request.contextPath}/corporate/artist/profile">아티스트 프로필</a></li>
+                    <li><a href="${pageContext.request.contextPath}/community/artist/main">아티스트 커뮤니티</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+<!-- main 부분 -->
+<main>
+	<section class="audition-hero">
+        <div class="container">
+            <h2>DD TOWN 오디션</h2>
+            <p>DD TOWN과 함께 꿈을 펼칠 예비 스타를 찾습니다. 지금 바로 도전하세요!<br>
+            자세한 오디션 정보 및 일정은 '오디션 일정' 메뉴에서 확인하실 수 있습니다.</p>
+        </div>
+    </section>
+    <section class="audition-list-section">
+       <div class="container">
+           <div class="audition-list">
+               <!-- 오디션 목록 -->
+              	<tbody>
+					<c:choose>
+						<c:when test="${empty auditionList }">
+							<tr>
+								<td colspan="5">조회하신 게시글이 존재하지 않습니다.</td>
+							</tr>
+						</c:when>
+						<c:otherwise>
+							<c:forEach items="${auditionList }" var="audition">
+							<c:if test="${audition.audiStatCode eq 'ADSC001'}">
+							<div class="audition-card">
+		                   <div class="audition-status recruiting">진행중 </div>
+		                   <div class="audition-title">${audition.audiTitle }</div>
+		                   		<div class="audition-info">
+		                       		<strong>모집 기간:</strong> <!--split:스플릿트 -->
+		                       		<c:set value="${fn:split(audition.audiStartDate, ' ')}" var="auditionStartDate"/>
+		                       		<c:set value="${fn:split(audition.audiEndDate, ' ')}" var="auditionEndDate"/>
+		                       		${auditionStartDate[0]} ~ ${auditionEndDate[0]}<br>
+		                       		<strong>모집 분야:</strong>
+		                       		<c:choose>
+		                       			<c:when test="${audition.audiTypeCode eq 'ADTC001'}">보컬</c:when>
+		                       			<c:when test="${audition.audiTypeCode eq 'ADTC002'}">댄스</c:when>
+		                       			<c:when test="${audition.audiTypeCode eq 'ADTC003'}">연기</c:when>
+		                       		</c:choose>
+		                   		</div>
+		                   		<a href="/corporate/audition/detail.do?audiNo=${audition.audiNo }">상세보기</a>
+		                   		</div>
+		                   		</c:if>
+		                   </c:forEach>
+						</c:otherwise>
+					</c:choose>
+				</tbody>
+           </div>
+       </div>
+   	</section>
+</main>
+
+<footer class="site-footer">
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-info">
+                    <div class="footer-logo">DD TOWN</div>
+                    <p class="footer-description">
+                        DD TOWN은 창의성과 열정을 바탕으로 아티스트와 팬 모두에게 최고의 경험을 선사합니다. 
+                        우리는 혁신적인 콘텐츠와 글로벌 네트워크를 통해 K-Culture의 미래를 만들어갑니다.
+                    </p>
+                    <div class="footer-contact">
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>대전광역시 중구 계룡로 846</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <span>042-123-4567</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>contact@ddtown.com</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h3>바로가기</h3>
+                    <ul>
+                        <li class="has-submenu">
+                            <a href="#">기업 정보</a>
+                            <ul class="submenu">
+                                <li><a href="${pageContext.request.contextPath}/corporate/finance">재무정보</a></li>
+                                <li><a href="${pageContext.request.contextPath}/corporate/about">기업소개</a></li>
+                                <li><a href="${pageContext.request.contextPath}/corporate/notice/list">기업 공지</a></li>
+                                <li><a href="${pageContext.request.contextPath}/corporate/location">기업 위치</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="${pageContext.request.contextPath}/corporate/audition/schedule">오디션</a></li>
+                        <li><a href="${pageContext.request.contextPath}/corporate/artist/profile">아티스트 프로필</a></li>
+                        <li><a href="${pageContext.request.contextPath}/community/artist/main">아티스트 커뮤니티</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 DD TOWN Entertainment. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <%-- JS 파일 경로를 ${pageContext.request.contextPath}/resources 로 시작하도록 수정 --%>
+    <script src="${pageContext.request.contextPath}/resources/js/common/main.js"></script>
+</body>
+</body>
+<script type="text/javascript">
+$(function(){
+	let detailBtn = $("#detailBtn");  //상세보기 버튼 Element
+	
+	detailBtn.on("click", function(){
+		location.href = "/corporate/audition/detail.do";	//상세 페이지 이동
+	});
+})
+</script>
+</html>

@@ -1,0 +1,140 @@
+package kr.or.ddit.ddtown.service.community;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.mapper.community.ICommunityMainPageMapper;
+import kr.or.ddit.ddtown.service.file.FileServiceImpl;
+import kr.or.ddit.vo.artist.AlbumVO;
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+import kr.or.ddit.vo.community.CommunityPostVO;
+import kr.or.ddit.vo.community.CommunityProfileVO;
+import kr.or.ddit.vo.community.CommunityVO;
+import kr.or.ddit.vo.file.AttachmentFileDetailVO;
+
+@Service
+public class CommunityMainPageServiceImpl implements ICommunityMainPageService{
+	
+	@Autowired
+	private ICommunityMainPageMapper communityMainPageMapper;
+	
+	@Autowired
+	private FileServiceImpl fileService;
+		
+	@Override
+	public List<ArtistGroupVO> getGroupLists() {
+		return communityMainPageMapper.getGroupLists();
+	}
+
+	@Override
+	public ArtistGroupVO getGroupInfo(int artGroupNo) {
+		return communityMainPageMapper.getGroupInfo(artGroupNo);
+	}
+
+	@Override
+	public List<AlbumVO> getGroupAlbum(int artGroupNo) {
+		return communityMainPageMapper.getGroupAlbum(artGroupNo);
+	}
+
+	// 아티스트 탭 게시물 가져오기
+	@Override
+	public List<CommunityPostVO> getArtistPostList(CommunityVO communityVO) {
+		
+		List<CommunityPostVO> postList = communityMainPageMapper.getArtistPostList(communityVO);
+		
+		for(CommunityPostVO post : postList) {
+
+			// 멤버십 전용 게시물 체크
+			String mbsYn = post.getComuPostMbspYn();	
+			if(mbsYn.equals("Y")) {			// 멤버십 전용 게시물 이라면
+				post.setMemberShipYn(true);	// 멤버십 여부에 true 셋팅
+			}else {		// 멤버십 전용 게시물이 아니라면
+				post.setMemberShipYn(false); // 멤버십 여부에 false 셋팅
+			}
+			
+			// 댓글 사용 여부 체크
+			String boardReplyYn = post.getBoardReplyYn();
+			if(boardReplyYn.equals("Y")) {
+				post.setBoardReplyTf(true);
+			}else {
+				post.setBoardReplyTf(false);
+			}
+			
+			// 게시글 파일 가져오기
+			if(post.getFileGroupNo() > 0) {	// 파일이 존재
+				int fileGroupNo = post.getFileGroupNo();
+				try {
+					List<AttachmentFileDetailVO> files = fileService.getFileDetailsByGroupNo(fileGroupNo);
+					post.setFiles(files);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		return postList;
+	}
+	
+	// 팬탭 게시물 가져오기
+	@Override
+	public List<CommunityPostVO> getFanPostList(CommunityVO communityVO) {
+		
+		List<CommunityPostVO> postList = communityMainPageMapper.getFanPostList(communityVO);
+		
+		for(CommunityPostVO post : postList) {
+			
+			if(post.getFileGroupNo() > 0) {
+				int fileGroupNo = post.getFileGroupNo();
+				List<AttachmentFileDetailVO> files;
+				try {
+					files = fileService.getFileDetailsByGroupNo(fileGroupNo);
+					post.setFiles(files);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		
+		return postList;
+	}
+
+	@Override
+	public ArtistGroupVO getCommunityInfo(int artGroupNo) {
+		
+		ArtistGroupVO artistGroupVO = communityMainPageMapper.getCommunityInfo(artGroupNo);
+		
+		return artistGroupVO;
+	}
+
+	@Override
+	public int getPostTotal(CommunityVO communityVO) {
+		
+		int totalRecord = 0;
+		
+		if(communityVO.isArtistTabYn()) {
+			totalRecord = communityMainPageMapper.getArtistPostTotal(communityVO);
+		}else {
+			totalRecord = communityMainPageMapper.getFanPostTotal(communityVO);
+		}
+		
+		return totalRecord;
+	}
+
+	@Override
+	public CommunityProfileVO currentUserComufollowing(Map<String, Object> currentUser) {
+		
+		CommunityProfileVO currentUserComu = communityMainPageMapper.currentUserComufollowing(currentUser);
+		
+		return currentUserComu;
+	}
+
+
+	
+
+		
+}

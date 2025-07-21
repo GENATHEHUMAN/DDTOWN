@@ -1,0 +1,12 @@
+package kr.or.ddit.ddtown.service.admin.blacklist;
+
+import java.util.List;
+
+import kr.or.ddit.vo.blacklist.BlacklistVO;
+
+public interface IBlacklistService {
+
+	//블랙리스트 목록페이지
+	public List<BlacklistVO> blackList();
+
+}

@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.emp.audition.IEmpAuditionMapper">
+ 
+ 	<sql id="auditionSearch">
+   		<if test="searchType != null and searchType != '' and searchType != 'all'">
+        AND AUDI_STAT_CODE = #{searchType}
+	    </if>
+	    <if test="searchWord != null and searchWord != ''">
+	        AND AUDI_TITLE LIKE '%' || #{searchWord} || '%'
+	    </if>
+  	</sql>
+ 
+ 	<resultMap type="kr.or.ddit.vo.corporate.audition.AuditionVO" id="auditionMap">
+ 		<id property="audiNo" column="audi_no"/>
+ 		<result property="audiNo" column="audi_no"/>
+ 		<result property="empUsername" column="emp_username"/>
+ 		<result property="audiTypeCode" column="audi_type_code"/>
+ 		<result property="audiStatCode" column="audi_stat_code"/>
+ 		<result property="fileGroupNo" column="file_group_no"/>
+ 		<result property="audiTitle" column="audi_title"/>
+ 		<result property="audiContent" column="audi_content"/>
+ 		<result property="audiStartDate" column="audi_start_date"/>
+ 		<result property="audiEndDate" column="audi_end_date"/>
+ 		<result property="audiRegDate" column="audi_reg_date"/>
+ 		<result property="audiModDate" column="audi_mod_date"/>
+ 		<collection property="fileList" ofType="kr.or.ddit.vo.file.AttachmentFileDetailVO" resultMap="fileDetailMap"/>
+ 	</resultMap>
+ 	
+ 	<resultMap type="kr.or.ddit.vo.file.AttachmentFileDetailVO" id="fileDetailMap">
+		<result property="attachDetailNo" column="attach_detail_no"/>
+		<result property="fileGroupNo" column="file_group_no"/>
+		<result property="fileOriginalNm" column="file_original_nm"/>
+		<result property="fileSaveNm" column="file_save_nm"/>
+		<result property="fileSavepath" column="file_savepath"/>
+		<result property="fileUseYn" column="file_use_yn"/>
+		<result property="fileExt" column="file_ext"/>
+		<result property="fileMimeType" column="file_mime_type"/>
+		<result property="fileFancysize" column="file_fancysize"/>
+		<result property="fileSaveDate" column="file_save_date"/>
+	</resultMap>
+	
+ 	<resultMap type="kr.or.ddit.vo.corporate.audition.AuditionUserVO" id="auditionUserMap">
+ 		<id property="appNo" column="APP_NO"/>
+		<result property="appNo" column="app_no"/>
+		<result property="audiNo" column="audi_no"/>
+		<result property="appStatCode" column="app_stat_code"/>
+		<result property="fileGroupNo" column="file_group_no"/>
+		<result property="applicantNo" column="applicant_no"/>
+		<result property="applicantNm" column="applicant_nm"/>
+		<result property="applicantBirth" column="applicant_birth"/>
+		<result property="applicantGender" column="applicant_gender"/>
+		<result property="applicantPhone" column="applicant_phone"/>
+		<result property="applicantEmail" column="applicant_email"/>
+		<result property="appCoverLetter" column="app_cover_letter"/>
+		<result property="appRegDate" column="app_reg_date"/>
+		<result property="applicantAgree" column="applicant_agree"/>
+		<association property="audition" resultMap="auditionMap" />
+		<collection property="fileList" ofType="kr.or.ddit.vo.file.AttachmentFileDetailVO" resultMap="fileDetailMap"/>
+	</resultMap> 
+
+ <!-- 오디션 일정 목록 -->
+	<select id="auditionList" parameterType="PaginationInfoVO" resultType="kr.or.ddit.vo.corporate.audition.AuditionVO">
+ 		SELECT B.*
+    FROM (
+        SELECT
+            ROW_NUMBER() OVER (ORDER BY AUDI_NO DESC) AS RNUM,
+            A.AUDI_NO, A.EMP_USERNAME, A.AUDI_TYPE_CODE, A.AUDI_STAT_CODE, A.FILE_GROUP_NO,
+            A.AUDI_TITLE, A.AUDI_CONTENT, A.AUDI_START_DATE, A.AUDI_END_DATE,
+            A.AUDI_REG_DATE, A.AUDI_MOD_DATE
+        FROM
+            AUDITION A
+        WHERE 1=1
+        <include refid="auditionSearch"/>
+    ) B
+    WHERE B.RNUM BETWEEN #{startRow} AND #{endRow}
+    ORDER BY B.RNUM
+ 	</select>
+<!-- 오디션 일정 상세보기 -->
+ 	<select id="detailAudition" parameterType="int" resultMap="auditionMap">
+ 		select A.AUDI_NO
+ 			 , A.EMP_USERNAME
+ 			 , A.AUDI_TYPE_CODE
+ 			 , A.AUDI_STAT_CODE
+ 			 , A.FILE_GROUP_NO
+ 			 , A.AUDI_TITLE
+ 			 , A.AUDI_CONTENT
+ 			 , A.AUDI_START_DATE
+ 			 , A.AUDI_END_DATE
+ 			 , A.AUDI_REG_DATE
+ 			 , A.AUDI_MOD_DATE
+ 			 , F.FILE_ORIGINAL_NM
+ 			 , F.ATTACH_DETAIL_NO
+			 , F.FILE_GROUP_NO
+			 , F.FILE_ORIGINAL_NM
+			 , F.FILE_SAVE_NM
+			 , F.FILE_SAVEPATH
+			 , F.FILE_EXT
+			 , F.FILE_MIME_TYPE
+			 , F.FILE_FANCYSIZE
+			 , F.FILE_SAVE_DATE
+ 		from AUDITION A
+ 		left join
+        	   ATTACHMENT_FILE_DETAIL F ON A.FILE_GROUP_NO = F.FILE_GROUP_NO
+ 		where AUDI_NO = #{audiNo}
+ 		ORDER BY
+        	A.AUDI_NO, F.FILE_SAVE_DATE ASC
+ 	</select>
+<!-- 오디션 일정 등록 -->
+ 	<insert id="insertAudition" parameterType="kr.or.ddit.vo.corporate.audition.AuditionVO" useGeneratedKeys="true">
+ 		<selectKey keyProperty="audiNo" resultType="int" order="BEFORE">
+  			select seq_audition.nextval from dual
+  		</selectKey>
+ 		insert into audition(
+ 			AUDI_NO, EMP_USERNAME, AUDI_TYPE_CODE, AUDI_STAT_CODE, FILE_GROUP_NO, AUDI_TITLE, AUDI_CONTENT, AUDI_START_DATE,
+			AUDI_END_DATE, AUDI_REG_DATE, AUDI_MOD_DATE
+ 		)values(
+ 			#{audiNo}, #{empUsername}, #{audiTypeCode}, #{audiStatCode}, #{fileGroupNo}, #{audiTitle}, #{audiContent},
+ 			#{audiStartDate}, #{audiEndDate}, SYSDATE, SYSDATE
+ 		)
+ 	</insert>
+ 	
+ 	<update id="updateAudition" parameterType="kr.or.ddit.vo.corporate.audition.AuditionVO">
+ 		update audition
+ 		set
+ 		    EMP_USERNAME = #{empUsername}
+ 		  , AUDI_TYPE_CODE = #{audiTypeCode}
+ 		  , AUDI_STAT_CODE = #{audiStatCode}
+ 		  , FILE_GROUP_NO = #{fileGroupNo, jdbcType=INTEGER}
+ 		  , AUDI_TITLE = #{audiTitle}
+ 		  , AUDI_CONTENT = #{audiContent}
+ 		  , AUDI_START_DATE = #{audiStartDate}
+ 		  , AUDI_END_DATE = #{audiEndDate}
+ 		  , AUDI_MOD_DATE = SYSDATE
+ 		where AUDI_NO = #{audiNo}
+ 	</update>
+ 	
+ 	<delete id="deleteAudition" parameterType="int">
+ 		delete from audition
+ 		where audi_no = #{audiNo}
+ 	</delete>
+ 	
+ 	<!-- 
+ 	기존 파일그룹번호를 가진 ATTACHMENT_FILE_DETAIL 테이블의 FILE_GROUP_NO를 새로운 번호로 업데이트
+	public int updateAttachmentFileDetailFileGroupNo(Map<String, Object> map)
+	map{oldFileGroupNo=158,newFileGroupNo=159}
+ 	 -->
+ 	<update id="updateAttachmentFileDetailFileGroupNo" parameterType="hashMap">
+ 		UPDATE ATTACHMENT_FILE_DETAIL
+ 		SET    FILE_GROUP_NO = #{newFileGroupNo}
+ 		WHERE  FILE_GROUP_NO = #{oldFileGroupNo}
+ 	</update>
+ 	<!-- 페이징 -->
+ 	<select id="selectAuditionCount" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+ 		select count(audi_no)
+ 		from audition
+ 		where 1=1
+ 		<include refid="auditionSearch"/>
+ 	</select>
+ 	<!-- 다운로드 -->
+ 	<select id="auditionDownload" parameterType="int" resultType="kr.or.ddit.vo.file.AttachmentFileDetailVO">
+ 		select
+  			ATTACH_DETAIL_NO, FILE_GROUP_NO, FILE_ORIGINAL_NM, FILE_SAVE_NM, FILE_SAVEPATH, FILE_EXT, FILE_MIME_TYPE, FILE_FANCYSIZE, FILE_SAVE_DATE
+  		from ATTACHMENT_FILE_DETAIL
+  		where ATTACH_DETAIL_NO = #{attachDetailNo}
+ 	</select>
+ 	<delete id="deleteApplicantsByAuditionNo" parameterType="int">
+ 		delete from AUDITION_APPLICATION
+ 		where AUDI_NO = #{audiNo}
+ 	</delete>
+ 	
+ 	<select id="auditionUserList" resultMap="auditionUserMap">
+ 		select A.AUDI_NO
+		     , A.EMP_USERNAME
+		     , A.AUDI_TYPE_CODE
+		     , A.AUDI_STAT_CODE
+		     , A.FILE_GROUP_NO
+		     , A.AUDI_TITLE
+		     , A.AUDI_CONTENT
+		     , A.AUDI_START_DATE
+		     , A.AUDI_END_DATE
+		     , A.AUDI_REG_DATE
+		     , A.AUDI_MOD_DATE
+		     , F.ATTACH_DETAIL_NO
+		     , F.FILE_ORIGINAL_NM
+		     , F.FILE_SAVE_NM
+		     , F.FILE_SAVEPATH
+		     , F.FILE_EXT
+		     , F.FILE_MIME_TYPE
+		     , F.FILE_FANCYSIZE
+		     , F.FILE_SAVE_DATE
+		     , APP.APP_NO
+		     , APP.AUDI_NO
+		     , APP.APP_STAT_CODE
+		     , APP.FILE_GROUP_NO
+		     , APP.APPLICANT_NO
+		     , APP.APPLICANT_NM
+		     , APP.APPLICANT_BIRTH
+		     , APP.APPLICANT_GENDER
+		     , APP.APPLICANT_PHONE
+		     , APP.APPLICANT_EMAIL
+		     , APP.APP_COVER_LETTER
+		     , APP.APP_REG_DATE
+		     , APP.APPLICANT_AGREE
+		from
+		    AUDITION A
+		left join
+		    ATTACHMENT_FILE_DETAIL F ON A.FILE_GROUP_NO = F.FILE_GROUP_NO
+		left join
+		    AUDITION_APPLICATION APP ON A.AUDI_NO = APP.AUDI_NO
+		order by
+		    A.AUDI_NO, F.FILE_SAVE_DATE ASC, APP.APP_NO ASC 
+ 	</select>
+ 	
+ 	<select id="auditionDropdownList" resultType="kr.or.ddit.vo.corporate.audition.AuditionVO">
+ 		select AUDI_NO, AUDI_TITLE
+ 		from AUDITION
+ 		order by audi_no asc
+ 		
+ 	</select>
+ 	
+ 	<select id="auditionUserLists" resultMap="auditionUserMap">
+ 		select A.AUDI_NO
+		     , A.EMP_USERNAME
+		     , A.AUDI_TYPE_CODE 
+		     , A.AUDI_STAT_CODE
+		     , A.FILE_GROUP_NO
+		     , A.AUDI_TITLE
+		     , A.AUDI_CONTENT
+		     , A.AUDI_START_DATE
+		     , A.AUDI_END_DATE
+		     , A.AUDI_REG_DATE
+		     , A.AUDI_MOD_DATE
+		     , APP.APP_NO
+		     , APP.AUDI_NO
+		     , APP.APP_STAT_CODE
+		     , APP.FILE_GROUP_NO
+		     , APP.APPLICANT_NO
+		     , APP.APPLICANT_NM
+		     , APP.APPLICANT_BIRTH
+		     , APP.APPLICANT_GENDER
+		     , APP.APPLICANT_PHONE
+		     , APP.APPLICANT_EMAIL
+		     , APP.APP_COVER_LETTER
+		     , APP.APP_REG_DATE
+		     , APP.APPLICANT_AGREE
+		from
+		    AUDITION A
+		left join
+		    AUDITION_APPLICATION APP ON A.AUDI_NO = APP.AUDI_NO
+		where A.AUDI_NO = #{audiNo}
+		order by
+		    A.AUDI_NO, APP.APP_NO ASC 
+ 		<!-- select APP_NO, AUDI_NO, APP_STAT_CODE, FILE_GROUP_NO, APPLICANT_NO, APPLICANT_NM, APPLICANT_BIRTH, APPLICANT_GENDER, APPLICANT_PHONE, 
+ 			   APPLICANT_EMAIL, APP_COVER_LETTER, APP_REG_DATE, APPLICANT_AGREE
+ 		  from AUDITION_APPLICATION
+ 		 where AUDI_NO = #{audiNo}
+ 		 order by audi_no asc -->
+ 	</select>
+ 	
+ 	<select id="auditionUserDetail" parameterType="int" resultMap="auditionUserMap">
+ 		select APP.APP_NO
+		     , APP.AUDI_NO
+		     , APP.APP_STAT_CODE
+		     , APP.FILE_GROUP_NO
+		     , APP.APPLICANT_NO
+		     , APP.APPLICANT_NM
+		     , APP.APPLICANT_BIRTH
+		     , APP.APPLICANT_GENDER
+		     , APP.APPLICANT_PHONE
+		     , APP.APPLICANT_EMAIL
+		     , APP.APP_COVER_LETTER
+		     , APP.APPLICANT_AGREE
+ 			 , A.AUDI_NO
+		     , A.EMP_USERNAME
+		     , A.AUDI_TYPE_CODE
+		     , A.AUDI_STAT_CODE
+		     , A.FILE_GROUP_NO
+		     , A.AUDI_TITLE
+		     , A.AUDI_CONTENT
+		     , A.AUDI_START_DATE
+		     , A.AUDI_END_DATE
+		     , A.AUDI_REG_DATE
+		     , A.AUDI_MOD_DATE
+		     , F.ATTACH_DETAIL_NO
+		     , F.FILE_ORIGINAL_NM
+		     , F.FILE_SAVE_NM
+		     , F.FILE_SAVEPATH
+		     , F.FILE_EXT
+		     , F.FILE_MIME_TYPE
+		     , F.FILE_FANCYSIZE
+		     , F.FILE_SAVE_DATE
+
+		from
+		    AUDITION_APPLICATION APP
+		left join
+		    ATTACHMENT_FILE_DETAIL F ON APP.FILE_GROUP_NO = F.FILE_GROUP_NO
+		left join
+		    AUDITION A ON A.AUDI_NO = APP.AUDI_NO
+		where APP_NO = #{appNo}
+ 	</select>
+ 	
+ 	<update id="stauesUpdate" parameterType="kr.or.ddit.vo.corporate.audition.AuditionUserVO">
+ 		update AUDITION_APPLICATION
+ 		set
+ 		    APP_STAT_CODE = #{appStatCode}
+ 		where APP_NO = #{appNo}
+ 	</update>
+ </mapper>

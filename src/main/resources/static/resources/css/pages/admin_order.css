@@ -1,0 +1,195 @@
+/* your_styles.css 또는 <style> 태그 안에 추가 */
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* 주 그룹들 사이의 간격 */
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    
+    margin-bottom: 20px;
+}
+
+.filter-sub-group {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* 서브 그룹 내 요소들 사이의 간격 */
+    white-space: nowrap; /* 서브 그룹 내 요소들이 줄바꿈되지 않도록 */
+}
+
+.filter-sub-group.search-group #orderSearchInput {
+    flex-grow: 1; /* 검색창이 이 서브 그룹 내에서 늘어나도록 */
+    min-width: 200px;
+    max-width: 350px; /* 필요에 따라 조정 */
+}
+
+/* 필요에 따라 각 요소의 너비 조정 */
+.filter-group label {
+    white-space: nowrap; /* 라벨 텍스트가 줄바꿈되지 않도록 */
+}
+
+.filter-group input[type="date"],
+.filter-group select {
+    /* 너비를 조정하여 공간을 더 효율적으로 사용 */
+    width: 150px; /* 예시 값, 필요에 따라 조정 */
+}
+
+.filter-group #orderSearchInput {
+    flex-grow: 1; /* 남은 공간을 채우도록 함 (검색창이 길어지도록) */
+    min-width: 200px; /* 최소 너비 유지 */
+    max-width: 300px; /* 최대 너비 제한 (선택 사항) */
+}
+
+/* 검색 버튼 정렬을 위해 */
+.filter-group #orderSearchBtn {
+    margin-left: auto; /* 버튼을 오른쪽 끝으로 밀어냄 (선택 사항) */
+    /* 또는 margin-left: 10px; 등 원하는 간격으로 */
+}
+/*
+* admin_order.css
+* 굿즈샵 주문내역 관리 페이지 스타일
+*/
+
+/* --- 필터 그룹 정렬 (핵심!) --- */
+.filter-group {
+    display: flex; /* 자식 요소들을 가로로 정렬 */
+    align-items: center; /* 자식 요소들을 세로 중앙에 정렬 */
+    gap: 15px; /* 주요 필터 그룹들(sub-group) 사이의 간격 */
+    flex-wrap: wrap; /* 공간이 부족하면 다음 줄로 자동 줄바꿈 */
+    /* justify-content: flex-start;  기본값이라 명시적으로 적지 않아도 됨. 왼쪽 정렬 유지. */
+    margin-bottom: 20px; /* 필터 그룹 아래 여백 */
+    padding: 15px; /* 필터 그룹 내부 여백 */
+    border: 1px solid #e0e0e0; /* 필터 그룹 테두리 (선택 사항) */
+    border-radius: 8px; /* 필터 그룹 모서리 둥글게 (선택 사항) */
+    background-color: #f9f9f9; /* 필터 그룹 배경색 (선택 사항) */
+    flex-direction: row-reverse;
+}
+
+.filter-sub-group {
+    display: flex; /* 이 서브 그룹 내의 요소들을 가로로 정렬 */
+    align-items: center; /* 세로 중앙 정렬 */
+    gap: 10px; /* 서브 그룹 내 요소들 사이의 간격 */
+    white-space: nowrap; /* 서브 그룹 내 요소들이 줄바꿈되지 않도록 강제 */
+}
+
+/* 필터 그룹 내 라벨 스타일 */
+.filter-group label {
+    white-space: nowrap; /* 라벨 텍스트가 줄바꿈되지 않도록 */
+    font-weight: 600; /* 라벨을 더 굵게 (선택 사항) */
+    color: #555;
+}
+
+/* 날짜 입력 필드와 셀렉트 박스 너비 조정 */
+.filter-group input[type="date"],
+.filter-group select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.95em;
+    height: 38px; /* 버튼 높이와 맞추기 (선택 사항) */
+    /* 너비는 필요에 따라 조절 */
+    width: 140px; /* 예시 값, 필요에 따라 조정 */
+}
+
+/* 검색 입력 필드 스타일 */
+#orderSearchInput {
+    flex-grow: 1; /* 서브 그룹 내에서 검색창이 가능한 공간을 채우도록 늘어남 */
+    min-width: 180px; /* 검색창의 최소 너비 */
+    max-width: 300px; /* 검색창의 최대 너비 (너무 길어지지 않도록) */
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.95em;
+    height: 38px; /* 버튼 높이와 맞추기 (선택 사항) */
+}
+
+/* 검색 버튼을 필터 그룹의 오른쪽 끝으로 정렬 (가장 중요!) */
+.filter-group #orderSearchBtn {
+    margin-left: auto; /* 이 속성이 핵심! 자동으로 왼쪽 여백을 채워 버튼을 오른쪽 끝으로 밀어냅니다. */
+    /* 기존 .ea-btn 스타일이 적용될 것이므로 추가적인 스타일은 최소화 */
+    height: 38px; /* input 필드와 높이 맞추기 (선택 사항) */
+    padding: 8px 15px; /* 버튼 내부 여백 */
+    font-size: 0.95em;
+}
+
+/* --- 테이블 및 기타 요소 스타일 (기존 코드에서 필요한 부분 유지) --- */
+
+/* 주문 상태 뱃지 스타일 (JSP 코드에서 `order.orderPayMethodNm`과 `order.orderStatCode` 사용 중) */
+/* 따라서 payMethodNm과 StatCode에 맞는 클래스가 필요할 수 있음 */
+.order-status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    color: #ffffff;
+    display: inline-block;
+    min-width: 60px;
+    text-align: center;
+}
+
+.status-카카오페이 { background-color: #FEE500; color: #3C1E1E; } /* 카카오페이 공식 색상, 글자색도 맞춰줍니다. */
+
+/* --- 주문 상태 코드별 색상 정의 (이 부분은 이미 정확하게 정의되어 있었습니다.) --- */
+.status-OSC001 { background-color: #2ecc71; } /* 결제 완료 - 초록 */
+.status-OSC002 { background-color: #e74c3c; } /* 결제 실패 - 빨강 */
+.status-OSC003 { background-color: #f39c12; } /* 상품 준비중 - 주황 */
+.status-OSC004 { background-color: #3498db; } /* 배송 중 - 파랑 */
+.status-OSC005 { background-color: #1abc9c; } /* 배송완료 - 청록 */
+.status-OSC006 { background-color: #e67e22; } /* 취소 요청 - 어두운 주황 */
+.status-OSC007 { background-color: #95a5a6; } /* 취소 처리중 - 회색 */
+.status-OSC008 { background-color: #7f8c8d; } /* 취소 완료 - 진한 회색 */
+.status-OSC009 { background-color: #8080ff; } /* 취소 완료 - 민트색 */
+
+/* 기타 테이블, 링크 등 기존 스타일 유지 */
+.ea-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.ea-table th, .ea-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.ea-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.doc-link {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.doc-link:hover {
+    text-decoration: underline;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.ea-pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* .ea-btn은 일반적으로 사용되는 버튼 스타일이므로 유지 */
+.ea-btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+}
+
+.ea-btn.primary {
+    background-color: #3498db;
+    color: white;
+}
+
+.ea-btn.primary:hover {
+    background-color: #2980b9;
+}

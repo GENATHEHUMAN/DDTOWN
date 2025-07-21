@@ -1,0 +1,40 @@
+package kr.or.ddit.security;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.security.mapper.ISecMemberMapper;
+import kr.or.ddit.vo.security.CustomUser;
+import kr.or.ddit.vo.user.EmployeeVO;
+import kr.or.ddit.vo.user.MemberVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class CustomUserDetailsService implements UserDetailsService{
+	
+	@Autowired
+	private ISecMemberMapper memberMapper;
+	
+	@Override
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+		log.info("유저디테일서비스파트 유저정보 가져오기 실행");
+		log.info("유저 아이디 : {}",username);
+		
+		MemberVO member = memberMapper.readByUserInfoMember(username);
+		EmployeeVO employee = null;
+		
+		if(member == null) {
+			employee = memberMapper.readByUserInfoEmployee(username);
+		}
+		
+		log.info("member : {} ", member);
+		return member == null? new CustomUser(employee) : new CustomUser(member);
+		
+		
+	}
+
+}

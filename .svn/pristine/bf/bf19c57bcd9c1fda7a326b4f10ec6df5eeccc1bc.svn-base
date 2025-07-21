@@ -1,0 +1,40 @@
+package kr.or.ddit.ddtown.controller.admin.blacklist;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import kr.or.ddit.ddtown.service.admin.blacklist.IBlacklistService;
+import kr.or.ddit.vo.blacklist.BlacklistVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/admin/community/blacklist")
+
+public class AdminBlacklistController {
+	
+	@Autowired
+	private IBlacklistService blacklistService;
+//목록페이지 이동
+	@GetMapping("/list")
+	public String blackListMain(Model model) {
+		log.info("report() 실행...!");
+		List<BlacklistVO> blackList = blacklistService.blackList();
+		
+		log.info("가져온 신고 리스트: {}", blackList);
+		model.addAttribute("blackList", blackList);
+		return "admin/blacklist/blacklistList";
+	}
+	
+	@GetMapping("/detail")
+	public String blackListDetail() {
+		return "admin/blacklist/blacklistDetail";
+	}
+	
+	
+}

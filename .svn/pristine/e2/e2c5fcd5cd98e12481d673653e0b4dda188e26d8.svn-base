@@ -1,0 +1,216 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDTOWN - 오디션 일정 관리</title>
+    
+    <%-- 기존 포털 공통 CSS --%>
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/resources/css/pages/emp_common.css">
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/resources/css/pages/emp_portal_style.css">
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/resources/css/pages/audition_management_style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+</head>
+<body>
+오디션 목록
+
+     <div class="emp-container">
+        <header class="emp-header">
+            <div class="emp-logo">
+                <a href="<%=request.getContextPath()%>/emp_portal.jsp">DDTOWN 직원 포털</a>
+            </div>
+ <!-- 로그인정보 불러오기 -->            
+            <div class="emp-user-info">
+             	<sec:authentication property="principal.username" var="currentLoggedInUsername"/>
+                <span><i class="fas fa-user-circle"></i> 안녕하세요, <strong id="employee-name">${currentLoggedInUsername}</strong>님</span>
+                <a href="#logout" class="emp-logout-btn"><i class="fas fa-sign-out-alt"></i> 로그아웃</a>
+            </div>
+        </header>
+        <div class="emp-body-wrapper">
+            <aside class="emp-sidebar">
+                <nav class="emp-nav">
+                    <ul>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="approval">
+                                <i class="fas fa-file-signature"></i> 전자결재 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-approval">
+                                <li><a href="<%=request.getContextPath()%>/1.approval/approval_draft.jsp" class="emp-nav-item">기안서 작성</a></li>
+                                <li><a href="<%=request.getContextPath()%>/1.approval/approval_request_list.jsp" class="emp-nav-item">결재 요청 리스트</a></li>
+                                <li><a href="<%=request.getContextPath()%>/1.approval/approval_box.jsp" class="emp-nav-item">결재 문서함</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="audition">
+                                <i class="fas fa-microphone-alt"></i> 오디션 관리 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-audition">
+                                <li><a href="<%=request.getContextPath()%>/2.audition/schedule_management.jsp" class="emp-nav-item">일정 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/2.audition/applicant_info.jsp" class="emp-nav-item">지원자 정보</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="community">
+                                <i class="fas fa-users"></i> 아티스트 커뮤니티 관리 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-community">
+                                <li>
+                                    <a href="#" class="emp-nav-item has-submenu" data-menu="artist-mgmt">아티스트 관리 <span class="submenu-arrow">&gt;</span></a>
+                                    <ul class="emp-submenu" id="submenu-artist-mgmt">
+                                        <li><a href="<%=request.getContextPath()%>/emp/group/group-management" class="emp-nav-item">그룹 관리</a></li>
+                                        <li><a href="<%=request.getContextPath()%>/emp/artist/individual-management" class="emp-nav-item">아티스트 관리</a></li>
+                                    </ul>
+                                </li>
+                                다른 커뮤니티 관련 링크들도 실제 경로에 맞게 수정
+                                <li><a href="<%=request.getContextPath()%>/community/notice_management.jsp" class="emp-nav-item">공지사항 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/community/post_management.jsp" class="emp-nav-item">게시물 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/community/live_management.jsp" class="emp-nav-item">라이브 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/community/schedule_management.jsp" class="emp-nav-item">일정 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/community/membership_management.jsp" class="emp-nav-item">멤버십 관리</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="concert">
+                                <i class="fas fa-ticket-alt"></i> 콘서트 관리 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-concert">
+                                <li><a href="<%=request.getContextPath()%>/4.concert/schedule_management.jsp" class="emp-nav-item">콘서트 일정 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/4.concert/notice_management.jsp" class="emp-nav-item">콘서트 공지사항 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/4.concert/seat_management.jsp" class="emp-nav-item">콘서트 좌석 관리</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="<%=request.getContextPath()%>/email_tool.jsp" class="emp-nav-item" data-menu="email">
+                                <i class="fas fa-envelope-open-text"></i> 이메일 전송
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+            
+<!-- main 페이지 -->
+            <main class="emp-content">
+                <section id="schedule-management-section" class="am-section active-section">
+                    <div class="am-section-header">
+                        <h2>오디션 일정 관리</h2>
+                        <button type="button" id="formBtn" name="formBtn"class="am-btn primary"><i class="fas fa-plus-circle"></i> 새 오디션 등록</button>
+                    </div>
+                    <div class="am-section-content">
+                        <div class="am-filter-area">
+                        	<form class="input-group input-group-sm" method="post" id="searchForm">
+                        		<input type="hidden" name="page" id="page"/>
+	                            <input type="text" name="searchWord" id="search-schedule-input" placeholder="오디션명 검색" class="am-search-input"  value="${searchWord }">
+	                            <select id="filter-schedule-status" name="searchType" class="am-filter-select">
+				                    <option value="audiTitle" ${searchType == 'audiTitle' ? 'selected' : ''}>오디션명</option>
+				                    <option value="audiContent" ${searchType == 'audiContent' ? 'selected' : ''}>내용</option>
+							     <%--    <option value="all" ${searchType == 'all' ? 'selected' : ''}>전체 상태</option>
+							        <option value="ADSC003" ${searchType == 'ADSC003' ? 'selected' : ''}>예정</option>
+							        <option value="ADSC001" ${searchType == 'ADSC001' ? 'selected' : ''}>진행중</option>
+							        <option value="ADSC002" ${searchType == 'ADSC002' ? 'selected' : ''}>마감/종료</option> --%>
+	                            </select>
+	                            <button type="submit" id="btn-search-schedule" class="am-btn">
+	                            	<i class="fas fa-search"></i> 검색
+	                            </button>
+                            </form>
+                        </div>
+                        <table class="am-table" id="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th>오디션 ID</th>
+                                    <th>오디션명</th>
+                                    <th>모집 기간</th>
+                                    <th>진행 상태</th>
+                                    <th>담당자</th>
+                                    <th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schedule-table-body">
+                                <c:forEach var="audition" items="${auditionList}">
+					                <tr>
+					                    <td>${audition.audiNo}</td>
+					                    <td>
+						                    <a href="/emp/audition/detail.do?audiNo=${audition.audiNo }" class="detail-link aDetail">
+						                    	${audition.audiTitle}
+						                    </a>
+					                    </td>
+					                    <td>
+					                    	<c:set value="${fn:split(audition.audiStartDate, ' ')}" var="auditionStartDate"/>
+		                       				<c:set value="${fn:split(audition.audiEndDate, ' ')}" var="auditionEndDate"/>
+		                       				${auditionStartDate[0]} ~ ${auditionEndDate[0]}
+		                       			</td>
+					                    <td>
+					                    	<c:choose>
+				                       			<c:when test="${audition.audiStatCode eq 'ADSC001'}">진행중</c:when>
+				                       			<c:when test="${audition.audiStatCode eq 'ADSC002'}">마감</c:when>
+				                       			<c:when test="${audition.audiStatCode eq 'ADSC003'}">예정됨</c:when>
+				                       		</c:choose>
+					                    </td>
+					                    <td>${audition.empUsername}</td>
+					                    <td>
+							                <button class="am-btn sm outline btn-edit-schedule" id="modBtn" data-id="${audition.audiNo }" title="수정"><i class="fas fa-edit"></i></button>
+<%-- 							                <button class="am-btn sm danger btn-delete-schedule" data-id="${audition.audiNo }" title="삭제"><i class="fas fa-trash-alt"></i></button> --%>
+							                <button class="am-btn sm info btn-view-applicants" data-id="${audition.audiNo }" title="지원자 보기"><i class="fas fa-users"></i></button>
+							            </td>
+					                    </tr>
+					            </c:forEach>
+					            <c:if test="${empty auditionList}">
+					                <tr>
+					                    <td colspan="9">등록된 오디션이 없습니다.</td>
+					                </tr>
+					            </c:if>
+                            </tbody>
+                        </table>
+                        <div class="am-pagination" id="pagingArea">
+                            ${pagingVO.pagingHTML }
+                            <sec:csrfInput/>
+                        </div>
+                    </div>
+                </section>
+            </main>
+<!--  main 끝 -->
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (직원 전용)</p>
+        </footer>
+    </div> 
+     
+</body>
+<script type="text/javascript">
+$(function(){
+	let formBtn = $("#formBtn");	// 등록버튼
+	let modBtn = $("#modBtn");	// 수정페이지 이동버튼
+	
+	let pagingArea = $("#pagingArea");	//페이징 영역
+	let searchForm = $("#searchForm");	//검색 Form 태그 Element
+	
+	//등록페이지 이동
+	formBtn.on("click", function(){
+		location.href = "/emp/audition/form.do";
+	})
+	//수정페이지 이동
+	$(".btn-edit-schedule").on("click", function(){
+		let audiNo = $(this).data("id");
+		location.href = "/emp/audition/updateForm.do?audiNo=" + audiNo;
+	})
+	
+	pagingArea.on("click", "a", function(event){
+		event.preventDefault();
+		let pageNo = $(this).data("page");
+		searchForm.find("#page").val(pageNo);
+		searchForm.submit();
+		
+	})
+	
+})
+</script>
+
+
+</html>

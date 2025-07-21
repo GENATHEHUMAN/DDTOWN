@@ -1,0 +1,24 @@
+package kr.or.ddit.vo.member.membership;
+
+import java.util.Date;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class MembershipDescriptionVO {
+	
+	private int mbspNo;			// 멤버십 번호
+	private int artGroupNo;		// 아티스트 그룹 번호
+	private String mbspNm;		// 멤버십 플랜 명
+	private int mbspPrice;		// 가격
+	private int mbspDuration;	// 멤버십 기간
+	private Date mbspRegDate;	// 멤버십 플랜 생성일자
+	private Date mbspModDate;	// 멤버십 플랜 수정일자
+
+}

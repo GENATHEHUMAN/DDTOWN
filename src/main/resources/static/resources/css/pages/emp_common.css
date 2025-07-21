@@ -1,0 +1,93 @@
+/* 직원 포털 공통 스타일 */
+body {
+    font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    margin: 0;
+    background-color: #eef1f5;
+    color: #333;
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+/* --- Header --- */
+.emp-header {
+    background-color: #343a40;
+    color: #ffffff;
+    padding: 0 30px;
+    height: 65px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.emp-logo a {
+    font-size: 1.6em;
+    font-weight: 700;
+    color: #ffffff;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+}
+
+.emp-user-info {
+    display: flex;
+    align-items: center;
+    font-size: 0.9em;
+}
+
+.emp-user-info span {
+    margin-right: 20px;
+}
+
+.emp-user-info strong {
+    font-weight: 600;
+}
+
+.emp-user-info .emp-logout-btn {
+    color: #ced4da;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.emp-user-info .emp-logout-btn:hover {
+    background-color: #495057;
+    color: #fff;
+}
+
+.emp-user-info i {
+    margin-right: 7px;
+}
+
+/* --- Footer --- */
+.emp-footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #dde2e7;
+    color: #555;
+    font-size: 0.85em;
+    border-top: 1px solid #ced4da;
+}
+
+.emp-footer p {
+    margin: 0;
+}
+
+/* 공통 컨테이너 */
+.emp-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* 메인 콘텐츠 영역 */
+.emp-main-content {
+    flex-grow: 1;
+    padding: 30px;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+} 
+

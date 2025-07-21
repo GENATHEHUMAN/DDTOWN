@@ -1,0 +1,15 @@
+package kr.or.ddit.ddtown.service.stat;
+
+import java.util.List;
+import java.util.Map;
+
+public interface IStatService {
+
+	/**
+	 * 일간 주간 월별 가입자 수 가져오기
+	 * @param searchType
+	 * @return
+	 */
+	public List<Map<String, Object>> getUserSignupData(String searchType);
+
+}

@@ -1,0 +1,516 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDTOWN 굿즈샵 - 장바구니</title>
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/goods.css">
+	<meta name="_csrf" content="${_csrf.token}"/>
+	<meta name="_csrf_header" content="${_csrf.headerName}"/>
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/goods_cart.css">
+	<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/mainservice_common.css" />
+	
+</head>
+<body class="cart-page-body">
+    <jsp:include page="/WEB-INF/views/modules/communityHeader.jsp" />
+
+    <div class="cart-container">
+        <div class="cart-header"><h1>장바구니</h1></div>
+
+        <div class="cart-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div><label><input type="checkbox" id="selectAllItems"> 전체선택</label></div>
+            <button id="deleteSelectedItems" style="padding: 5px 10px; font-size:0.9em; border:1px solid #ddd; background-color:#fff; border-radius:4px; cursor:pointer;">선택삭제</button>
+        </div>
+
+        <div class="cart-item-list" id="cartItemList">
+		    <c:set var="totalProductPriceInitial" value="0"/>
+		    <c:forEach var="cartItem" items="${cartItems}">
+		        <div class="cart-item 
+		        	${cartItem.goodsStatCode eq 'SOLD_OUT' || cartItem.goodsStatCode eq 'UNAVAILABLE' ? 'disabled' : ''}"
+		             data-product-id="${cartItem.goodsNo}" data-cart-no="${cartItem.cartNo }">  <%-- goodsNo 사용 --%>
+		            <input type="checkbox" class="item-checkbox" 
+		            	${cartItem.goodsStatCode eq 'SOLD_OUT' || cartItem.goodsStatCode eq 'UNAVAILABLE' ? 'disabled' : ''} checked>
+		            <div class="item-image">
+		                <img src="${not empty cartItem.representativeImageUrl ? cartItem.representativeImageUrl : 'https://via.placeholder.com/550x550/E6E6FA/000000?text=No+Image'}" <%-- null/empty 체크 추가 --%>
+		                     alt="${cartItem.goodsNm}">
+		            </div>
+		            <div class="item-info">
+		                <a href="detail?id=${cartItem.goodsNo}" class="item-name">${cartItem.goodsNm}</a> <%-- goodsNo, goodsNm 사용 --%>
+		                <span class="item-option">옵션: ${cartItem.goodsOptNm}</span> <%-- goodsOptNm 사용 --%>
+		                <c:if test="${cartItem.goodsStatCode eq 'SOLD_OUT'}">
+		                    <span class="item-status">(품절)</span>
+		                </c:if>
+		                <c:if test="${cartItem.goodsStatCode eq 'UNAVAILABLE'}">
+		                    <span class="item-status">(상품 정보 없음)</span>
+		                </c:if>
+		            </div>
+		            <div class="item-quantity">
+					    <button class="quantity-decrease" ${cartItem.goodsStatCode eq 'SOLD_OUT' || cartItem.goodsStatCode eq 'UNAVAILABLE' ? 'disabled' : ''}>-</button>
+					    <input type="number" 
+						       value="${cartItem.cartQty}" 
+						       min="1" 
+						       max="10" 
+						       readonly 
+						       ${cartItem.goodsStatCode eq 'SOLD_OUT' || cartItem.goodsStatCode eq 'UNAVAILABLE' ? 'disabled' : ''}
+						       data-unit-price="${cartItem.goodsPrice}"
+						>
+					    <button class="quantity-increase" ${cartItem.goodsStatCode eq 'SOLD_OUT' || cartItem.goodsStatCode eq 'UNAVAILABLE' ? 'disabled' : ''}>+</button>
+					</div>
+		            <div class="item-price"> <%-- goodsPrice 사용 --%>
+		                <fmt:formatNumber value="${cartItem.goodsPrice * cartItem.cartQty}" type="number"/>원 <%-- goodsPrice, cartQty 사용 --%>
+		            </div>
+		            <div class="item-delete"><button title="삭제">🗑️</button></div>
+		        </div>
+		        <c:if test="${cartItem.goodsStatCode ne 'SOLD_OUT' && cartItem.goodsStatCode ne 'UNAVAILABLE'}">
+		            <c:set var="totalProductPriceInitial" value="${totalProductPriceInitial + (cartItem.goodsPrice * cartItem.cartQty)}"/> <%-- goodsPrice, cartQty 사용 --%>
+		        </c:if>
+		    </c:forEach>
+		</div>
+
+        <div class="cart-summary">
+            <h3>주문 요약</h3>
+            <div class="summary-row">
+                <span class="label">총 상품 금액</span>
+                <span class="value" id="totalProductPrice"><fmt:formatNumber value="${totalProductPriceInitial}" type="number"/>원</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">배송비</span>
+                <span class="value" id="shippingFee"><fmt:formatNumber value="${totalProductPriceInitial > 0 ? 3000 : 0}" type="number"/>원</span>
+            </div>
+            <hr style="border:none; border-top:1px dashed #ddd; margin: 15px 0;">
+            <div class="summary-row total">
+                <span class="label">총 결제 금액</span>
+                <span class="value" id="finalTotalPrice"><fmt:formatNumber value="${totalProductPriceInitial + (totalProductPriceInitial > 0 ? 3000 : 0)}" type="number"/>원</span>
+            </div>
+        </div>
+
+        <div class="cart-actions">
+            <a href="${pageContext.request.contextPath}/goods/main" class="btn-keep-shopping">쇼핑 계속하기</a>
+            <button class="btn-order" id="orderButton">주문하기</button>
+        </div>
+    </div>
+
+    <div id="footer-placeholder"></div>
+
+    <script>
+    let csrfToken;
+    let csrfHeader;
+    
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('ko-KR').format(amount) + '원';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+    	 	csrfToken = document.querySelector('meta[name="_csrf"]').content;
+    	    csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+    	    console.log("DOMContentLoaded - CSRF Header:", csrfHeader, "CSRF Token:", csrfToken);
+  
+    	    const logoutBtn = document.getElementById('logoutBtn');       // 로그아웃 버튼
+
+        // 로그아웃 버튼이 있으면 클릭 이벤트 리스너 추가
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function(event) {
+                event.preventDefault(); // 기본 동작(페이지 이동) 방지
+                isUserLoggedIn = false; // 로그인 상태를 false로 변경
+                // 변경된 로그인 상태를 로컬 스토리지에 저장
+                localStorage.setItem('isUserLoggedIn', JSON.stringify(isUserLoggedIn));
+                updateNav(); // 네비게이션 바 업데이트
+            });
+        }
+
+        // --- 장바구니 기능 관련 요소 참조 ---
+        const cartItemList = document.getElementById('cartItemList');       // 장바구니 상품 목록을 담는 부모 요소
+        const selectAllCheckbox = document.getElementById('selectAllItems'); // '전체선택' 체크박스
+        const deleteSelectedButton = document.getElementById('deleteSelectedItems'); // '선택삭제' 버튼
+        const orderButton = document.getElementById('orderButton');         // '주문하기' 버튼
+		
+     // --- 장바구니 요약 정보(총 상품 금액, 배송비, 최종 결제 금액) 업데이트 함수 ---
+        function updateSummary() {
+            let totalProductPrice = 0; // 초기 총 상품 금액
+            
+            // '.disabled' 클래스가 없고 체크된 '.item-checkbox'를 가진 모든 상품 선택
+            const selectedCheckboxes = document.querySelectorAll('.cart-item:not(.disabled) .item-checkbox:checked');
+            
+            selectedCheckboxes.forEach(checkbox => {
+                const item = checkbox.closest('.cart-item'); // 체크박스의 가장 가까운 '.cart-item' 부모 요소
+                
+                const quantityInput = item.querySelector('input[type="number"]');
+                if (quantityInput) {
+                    const price = parseFloat(quantityInput.dataset.unitPrice) || 0; // 'data-unit-price' 속성에서 단가 가져오기
+                    const quantity = Number(quantityInput.value) || 0; // 수량 입력 필드에서 수량 가져오기
+                    totalProductPrice += price * quantity; // 총 상품 금액에 합산
+                } else {
+                    console.warn("경고: 'input[type=\"number\"]' 요소를 찾을 수 없습니다. 해당 장바구니 항목: ", item);
+                }
+            });
+
+            // 배송비 계산: 30,000원 이상이면 무료
+            const freeShippingThreshold = 30000;
+            let shippingFee = 0;
+            if (totalProductPrice >= freeShippingThreshold) {
+                shippingFee = 0; 
+            } else if (totalProductPrice > 0) {
+                shippingFee = 3000;
+            } else {
+                shippingFee = 0;
+            }
+            
+            // 최종 결제 금액 = 총 상품 금액 + 배송비
+            const finalTotalPrice = totalProductPrice + shippingFee;
+            
+            // 계산된 금액들을 해당 HTML 요소에 업데이트 (formatCurrency 함수 사용)
+            document.getElementById('totalProductPrice').textContent = formatCurrency(totalProductPrice);
+            document.getElementById('shippingFee').textContent = formatCurrency(shippingFee);
+            document.getElementById('finalTotalPrice').textContent = formatCurrency(finalTotalPrice);
+            
+            console.log('총 상품 금액:', totalProductPrice);
+            console.log('계산된 배송비:', shippingFee);
+            console.log('최종 결제 금액:', finalTotalPrice);
+            
+            // 모든 체크박스 상태를 확인하여 '전체선택' 체크박스 상태 업데이트
+            const selectAllCheckbox = document.getElementById('selectAllItems');
+            const allItemCheckboxes = document.querySelectorAll('.cart-item:not(.disabled) .item-checkbox');
+            const checkedItemCheckboxes = document.querySelectorAll('.cart-item:not(.disabled) .item-checkbox:checked');
+            
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = allItemCheckboxes.length > 0 && allItemCheckboxes.length === checkedItemCheckboxes.length;
+            }
+        }
+        
+        //새로 DB에 추가할 수량 업뎃 함수
+        // --- 새로 추가할 DB 수량 업데이트 함수 ---
+	    async function updateCartItemQuantityInDb(cartNo, newQuantity) {
+	        console.log(`[DB 업데이트 요청 시작] cartNo: ${cartNo}, newQuantity: ${newQuantity}`);
+	        console.log(`사용될 CSRF Header: ${csrfHeader}, Token: ${csrfToken}`); // 디버깅용
+			
+	        try {
+	            const response = await fetch('/goods/cart/updateQuantity', { // 이 URL은 컨트롤러의 매핑과 일치해야 합니다.
+	                method: 'POST',
+	                headers: {
+	                    'Content-Type': 'application/json', // JSON 형식으로 데이터 전송
+	                    'Accept': 'application/json',       // JSON 응답을 기대
+	                    [csrfHeader]: csrfToken             // CSRF 토큰 헤더 포함
+	                },
+	                body: JSON.stringify({ cartNo: cartNo, cartQty: newQuantity }) // JSON 형태로 데이터 전송
+	            });
+	
+	            const responseText = await response.text(); // 일단 응답 텍스트를 통째로 받아서 파싱 에러 방지
+	            console.log("서버 응답 원본 텍스트:", responseText);
+	
+	            let data;
+	            try {
+	                // 응답 텍스트가 비어있지 않고 JSON 형식일 때만 파싱 시도
+	                if (responseText && responseText.trim().startsWith('{') && responseText.trim().endsWith('}')) {
+	                    data = JSON.parse(responseText);
+	                } else {
+	                    // JSON 형식이 아닌 응답이 왔을 경우 에러 처리
+	                    throw new Error(`서버가 JSON이 아닌 응답을 보냈습니다: ${responseText}`);
+	                }
+	            } catch (jsonParseError) {
+	                console.error("JSON 파싱 오류:", jsonParseError);
+	                throw new Error(`서버 응답 JSON 파싱 실패. 응답 내용: ${responseText.substring(0, 100)}...`);
+	            }
+	
+	            if (!response.ok) { // HTTP 상태 코드가 200번대가 아니면 (예: 4xx, 5xx)
+	                // 서버에서 보낸 에러 메시지가 있다면 사용, 없다면 기본 에러 메시지
+	                throw new Error(data.message || `서버 오류 발생 (HTTP ${response.status})`);
+	            }
+	
+	            if (data.status === 'success') {
+	                console.log('DB 수량 업데이트 성공:', data.message);
+	                // DB 업데이트 성공 후, UI 요약 정보 다시 업데이트
+	                updateSummary(); 
+	            } else {
+	                console.warn('DB 수량 업데이트 실패:', data.message);
+	                alert('수량 업데이트에 실패했습니다: ' + data.message);
+	                // 실패 시 사용자에게 알림 (필요시 UI 이전 상태로 되돌리기 로직 추가)
+	            }
+	        } catch (error) {
+	            console.error('DB 수량 업데이트 중 통신 오류:', error);
+	            alert('장바구니 수량 업데이트 중 오류가 발생했습니다: ' + error.message);
+	            // 통신 오류 발생 시에도 UI 요약 정보 업데이트 (현재 UI 상태를 반영)
+	            updateSummary();
+	        }
+	    }
+	
+        // --- 개별 상품 삭제를 처리하는 공통 함수 ---
+        // 이 함수는 단일 상품 삭제 로직의 중복을 피하기 위해 분리
+        function handleDeleteItem(itemElement) {
+            const cartNo = itemElement.dataset.cartNo; // 'data-cart-no' 속성에서 장바구니 번호 가져오기
+            if (!cartNo) {
+                console.error('장바구니 번호(cartNo)를 찾을 수 없습니다.');
+                alert('장바구니 항목 정보를 가져올 수 없습니다.');
+                return;
+            }
+
+            if (confirm('선택한 상품을 장바구니에서 삭제하시겠습니까?')) {
+            	const token = document.querySelector('meta[name="_csrf"]').content;
+                const header = document.querySelector('meta[name="_csrf_header"]').content;
+                
+                // 서버에 삭제 요청 (POST 방식, JSON 데이터 전송)
+                fetch('/goods/cart/delete', { // /cart/delete 컨트롤러 엔드포인트 호출
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json', // JSON 형식으로 데이터 보냄
+                        'Accept': 'application/json',
+                        [header]: token
+                    },
+                    body: JSON.stringify({ cartNo: cartNo }) // { "cartNo": 123 } 형태의 JSON 전송
+                })
+                .then(response => {
+                    // HTTP 응답 상태가 200번대가 아니면 오류 처리
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.message || '서버 오류가 발생했습니다.');
+                        });
+                    }
+                    return response.json(); // JSON 응답 파싱
+                })
+                .then(data => {
+                    alert(data.message); // 서버에서 받은 메시지(성공/실패) 표시
+                    if (data.message.includes('삭제되었습니다')) {
+                        itemElement.remove(); // DB 삭제 성공 시, 해당 장바구니 항목을 DOM에서 제거
+                        updateSummary();      // 장바구니 요약 정보 업데이트
+                    }
+                })
+                .catch(error => {
+                    console.error('장바구니 삭제 중 오류:', error);
+                    alert('장바구니 삭제 중 오류가 발생했습니다: ' + error.message);
+                });
+            }
+        }
+	     // --- 장바구니 목록 내 클릭 이벤트 위임 (수량 조절 및 단일 삭제) ---
+	     // ***async 키워드를 추가하여 await를 사용할 수 있도록 합니다.***
+	     cartItemList.addEventListener('click', async function(event) { 
+	         const target = event.target;      // 클릭된 요소
+	         const item = target.closest('.cart-item'); // 클릭된 요소의 가장 가까운 '.cart-item' 부모 요소
+	         if (!item) return; // '.cart-item' 내에서 클릭된 것이 아니면 함수 종료
+	
+	         // cartNo는 item이 정의된 후에 가져와야 합니다.
+	         const cartNo = parseInt(item.dataset.cartNo); // cartNo를 여기서 가져옵니다.
+	         console.log("파싱된 cartNo (JS):", cartNo);
+	         
+	      // *** 이 부분이 수정됩니다. (중복 선언 제거) ***
+	         const input = item.querySelector('input[type="number"]');
+	         if (!input) { 
+	             console.error("오류: 'input[type=\"number\"]' 요소를 찾을 수 없습니다. 해당 장바구니 항목:", item);
+	             return;
+	         }
+	         console.log("찾은 input 요소:", input);
+	         console.log("input.value:", input.value);
+	         console.log("Number(input.value):", Number(input.value));
+	         
+	         
+	         const unitPriceString = input.getAttribute('data-unit-price'); // <<--- 이렇게 변경
+	         console.log("input.getAttribute('data-unit-price'):", unitPriceString); // <<--- 이 값을 확인하세요!
+	         
+	         const unitPrice = parseFloat(unitPriceString) || 0; // <<--- 이렇게 변경
+	         console.log("parseFloat(unitPriceString):", unitPrice); // <<--- 이 값을 확인하세요!
+	         
+	         let currentQuantity = Number(input.value) || 0; // 현재 수량
+	         
+	         if (isNaN(cartNo) || cartNo <= 0 || isNaN(unitPrice) || unitPrice <= 0 || isNaN(currentQuantity) || currentQuantity <= 0) {
+	              console.error("유효하지 않은 장바구니 정보 또는 수량입니다. DB 업데이트 요청을 건너뜜.", 
+	                              "cartNo:", cartNo, "unitPrice:", unitPrice, "currentQuantity:", currentQuantity);
+	              alert("장바구니 정보를 가져올 수 없거나 유효하지 않은 수량입니다. 페이지를 새로고침해주세요.");
+	              return; 
+	         }
+	         
+	         // 1. 삭제 버튼 클릭 처리 (상품이 활성화 상태이든 비활성화 상태이든 상관없이)
+	         if (target.closest('.item-delete button')) {
+	             handleDeleteItem(item); // 공통 삭제 처리 함수 호출
+	             return; // 삭제 처리 후에는 다른 이벤트는 처리하지 않고 함수 종료
+	         }
+	
+	         // 2. 비활성화된 상품(.disabled)은 수량 조절이나 체크박스 클릭을 막음
+	         if (item.classList.contains('disabled')) {
+	             return; // 비활성화된 상품이면 여기서 함수 종료
+	         }
+	
+	         // 3. 활성화된 상품에 대한 수량 조절 및 체크박스 클릭 처리
+	         if (target.classList.contains('quantity-increase')) { // 수량 증가 버튼 클릭 시
+	             const input = item.querySelector('input[type="number"]'); // 수량 입력 필드
+	             const maxQuantity = parseInt(input.max); // 최대 수량
+	             let newQuantity = Number(input.value); // 현재 수량을 새 변수에 저장
+	
+	             if (newQuantity < maxQuantity) { // 현재 수량이 최대 수량보다 작으면
+	                 newQuantity += 1;
+	                 input.value = newQuantity; // UI 먼저 업데이트하여 사용자에게 즉각적인 피드백 제공
+	
+	                 // 단가와 수량을 이용하여 상품 금액 업데이트 (UI)
+	                 const unitPrice = parseFloat(input.dataset.unitPrice) || 0; // input의 dataset에서 가져오는게 정확
+	                 item.querySelector('.item-price').textContent = formatCurrency(unitPrice * newQuantity);
+	
+	                 // ***수정: DB에 수량 업데이트 요청을 보냅니다.***
+	                 await updateCartItemQuantityInDb(cartNo, newQuantity); 
+	                 // updateCartItemQuantityInDb 함수 내부에서 updateSummary()를 호출하므로 여기서 따로 호출할 필요 없습니다.
+	             }
+	         } else if (target.classList.contains('quantity-decrease')) { // 수량 감소 버튼 클릭 시
+	             const input = item.querySelector('input[type="number"]'); // 수량 입력 필드
+	             const minQuantity = parseInt(input.min); // 최소 수량
+	             let newQuantity = Number(input.value); // 현재 수량을 새 변수에 저장
+	
+	             if (newQuantity > minQuantity) { // 현재 수량이 최소 수량보다 크면
+	                 newQuantity -= 1;
+	                 input.value = newQuantity; // UI 먼저 업데이트
+	
+	                 // 단가와 수량을 이용하여 상품 금액 업데이트 (UI)
+	                 const unitPrice = parseFloat(input.dataset.unitPrice) || 0; // input의 dataset에서 가져오는게 정확
+	                 item.querySelector('.item-price').textContent = formatCurrency(unitPrice * newQuantity);
+	
+	                 // ***수정: DB에 수량 업데이트 요청을 보냅니다.***
+	                 await updateCartItemQuantityInDb(cartNo, newQuantity);
+	                 // updateCartItemQuantityInDb 함수 내부에서 updateSummary()를 호출하므로 여기서 따로 호출할 필요 없습니다.
+	             }
+	         } else if (target.classList.contains('item-checkbox')) { // 개별 상품 체크박스 클릭 시
+	             updateSummary(); // 체크박스 상태 변경 시에는 DB 업데이트 없이 요약 정보만 업데이트합니다.
+	         }
+	     });
+        
+		// --- '전체선택' 체크박스 이벤트 ---
+        if (selectAllCheckbox) { // '전체선택' 체크박스가 존재하는 경우에만 이벤트 리스너 추가
+            selectAllCheckbox.addEventListener('change', function() {
+                // '전체선택' 체크박스 상태에 따라 모든 활성화된 상품 체크박스 상태 변경
+                cartItemList.querySelectorAll('.cart-item:not(.disabled) .item-checkbox').forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateSummary(); // 요약 정보 업데이트
+            });
+        }
+	
+		// --- '선택삭제' 버튼 클릭 이벤트 ---
+        if (deleteSelectedButton) { // '선택삭제' 버튼이 존재하는 경우에만 이벤트 리스너 추가
+            deleteSelectedButton.addEventListener('click', function() {
+                // 체크된 모든 활성화된 상품 체크박스 가져오기
+                const selectedCheckboxes = cartItemList.querySelectorAll('.cart-item:not(.disabled) .item-checkbox:checked');
+                if (selectedCheckboxes.length === 0) {
+                    alert('삭제할 상품을 선택해주세요.');
+                    return;
+                }
+
+                const cartNoList = []; // 삭제할 장바구니 번호를 담을 리스트
+                selectedCheckboxes.forEach(checkbox => {
+                    const cartItemDiv = checkbox.closest('.cart-item');
+                    const cartNo = cartItemDiv.dataset.cartNo; // 'data-cart-no' 속성에서 cartNo 가져오기
+                    if (cartNo) {
+                        cartNoList.push(parseInt(cartNo)); // 정수로 변환하여 리스트에 추가
+                    }
+                });
+
+                if (cartNoList.length === 0) {
+                    alert('삭제할 장바구니 정보를 찾을 수 없습니다. (데이터 오류)');
+                    return;
+                }
+
+                if (confirm('선택한 ' + cartNoList.length + '개 상품을 장바구니에서 삭제하시겠습니까?')) {
+                		const token = document.querySelector('meta[name="_csrf"]').content;
+                    const header = document.querySelector('meta[name="_csrf_header"]').content;
+                    
+                    const requestBody = {
+                            cartNoList: selectedCartNoList,
+                            isFromCart: true // 장바구니에서 시작된 주문이므로 true로 설정
+                        };    
+                	
+                    // 서버에 선택 삭제 요청 (POST 방식, JSON 데이터 전송)
+                    fetch('/goods/cart/deleteSelected', { // /cart/deleteSelected 컨트롤러 엔드포인트 호출
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            [header]: token
+                        },
+                        body: JSON.stringify({ cartNoList: cartNoList }) // { "cartNoList": [1, 2, 3] } 형태의 JSON 전송
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(errorData => {
+                                throw new Error(errorData.message || '서버 오류가 발생했습니다.');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        alert(data.message);
+                        // 서버 응답 상태가 성공이거나 부분 성공이면 페이지 새로고침
+                        if (data.status === 'success' || data.status === 'partial_success') {
+                            location.reload(); // 페이지 전체를 새로고침하여 목록 및 요약 정보 완전히 업데이트
+                        }
+                    })
+                    .catch(error => {
+                        console.error('장바구니 선택 삭제 중 오류:', error);
+                        alert('장바구니 선택 삭제 중 오류가 발생했습니다: ' + error.message);
+                    });
+                }
+            });
+        }
+		
+     // --- '주문하기' 버튼 클릭 이벤트 (새롭게 핵심적으로 수정된 부분) ---
+        if (orderButton) { 
+            orderButton.addEventListener('click', function() {
+                const selectedCartItems = document.querySelectorAll('.cart-item:not(.disabled) .item-checkbox:checked');
+                
+                if (selectedCartItems.length === 0) {
+                    alert('주문할 상품을 선택해주세요.');
+                    return;
+                }
+
+                const selectedCartNoList = []; 
+                selectedCartItems.forEach(checkbox => {
+                    const cartItemDiv = checkbox.closest('.cart-item');
+                    const cartNo = cartItemDiv.dataset.cartNo; 
+                    if (cartNo) {
+                        selectedCartNoList.push(parseInt(cartNo)); 
+                    }
+                });
+
+                if (selectedCartNoList.length === 0) {
+                    alert('주문할 장바구니 정보를 찾을 수 없습니다. (데이터 오류)');
+                    return;
+                }
+
+                // 서버에 선택된 상품의 cartNo 리스트를 POST 요청으로 보냄
+                const token = document.querySelector('meta[name="_csrf"]').content;
+                const header = document.querySelector('meta[name="_csrf_header"]').content;
+
+                fetch('/goods/order/prepare', { // **핵심**: /goods/order/prepare 로 POST 요청
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json', 
+                        'Accept': 'application/json', 
+                        [header]: token 
+                    },
+                    body: JSON.stringify({ cartNoList: selectedCartNoList }) 
+                })
+                .then(response => {
+                    if (!response.ok) { 
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.message || '주문 준비 중 서버 오류가 발생했습니다.');
+                        });
+                    }
+                    return response.json(); 
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        // 서버에서 성공 응답을 받으면 주문 페이지로 리다이렉트 (GET 요청)
+                        window.location.href = '/goods/order'; // **핵심**: /goods/order 로 GET 리다이렉트
+                    } else {
+                        alert('주문 준비에 실패했습니다: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('주문 준비 중 오류:', error);
+                    alert('주문 처리 중 오류가 발생했습니다: ' + error.message);
+                });
+            });
+        }
+     
+        // --- 페이지 로드 시 초기 요약 정보 업데이트 ---
+        updateSummary();
+    });
+
+</script>
+</body>
+</html>

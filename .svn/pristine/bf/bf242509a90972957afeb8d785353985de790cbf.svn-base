@@ -1,0 +1,84 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <%-- CSS 파일 경로 수정: ${pageContext.request.contextPath}/resources 를 기준으로 설정 --%>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/admin_portal.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath}/resources/ckeditorInquiry/ckeditor.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.js"></script>
+
+</head>
+<script type="text/javascript">
+
+$(function(){
+	
+	$.ajax({
+		url : "/admin/faq/list",
+		type : "get",
+		success : function(res){
+			console.log(res);
+			let html = ``;
+			if(res != null && res.length > 0){
+				for(let i=0; i<res.length; i++){
+					let vo = res[i];
+					html += `
+						<div class="faq-item" data-faq-id="\${vo.faqNo}">
+							<div class="faq-question-header">
+								<div class="faq-info">
+									<span class="faq-category" id="faqCategory" name="faqCategory">\${vo.description}</span>
+									<span class="faq-question-text" id="faqTitle" name="faqTitle">Q. \${vo.faqTitle}</span>
+								</div>
+							</div>
+							<div class="faq-actions">
+								<a href="admin_cs_faq_form.html?id=101&mode=edit" class="ea-btn sm outline" title="수정"><i class="fas fa-edit"></i></a>
+								<button class="ea-btn sm danger" title="삭제" onclick="deleteFaqItem(101, this)"><i class="fas fa-trash-alt"></i></button>
+								<span class="toggle-arrow">&gt;</span>
+							</div>
+						</div>
+						<div class="faq-answer-content">
+							<p>A.\${vo.faqAnswer}</p>
+						</div>
+					`;
+				}
+			}
+			
+			$("#faqListContainer").html(html);
+		},
+		error : function(error, status, thrown){
+			console.log(error.status);
+		}
+	});
+	
+});
+
+
+</script>
+<body>
+faqMain
+<main class="emp-content">
+	<section id="csFaqListSection" class="ea-section active-section">
+		<div class="ea-section-header">
+			<h2>FAQ 관리</h2>
+			<div class="ea-header-actions">
+				<input type="text" class="ea-search-input" id="faqSearchInput" placeholder="질문, 답변 내용 검색...">
+				<select id="faqCategoryFilter" class="ea-filter-select">
+				</select>
+				<button class="ea-btn primary" onclick="location.href='admin_cs_faq_form.html'">
+                    <i class="fas fa-plus"></i> 새 FAQ 등록
+                </button>
+			</div>
+		</div>
+		
+		<div class="faq-list-container" id="faqListContainer">
+			
+		</div>
+	</section>
+</main>
+</body>
+</html>

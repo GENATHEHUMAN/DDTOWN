@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.admin.goods.order.IAdminOrdersMapper">
+	<resultMap id="ordersDetailMap" type="kr.or.ddit.vo.order.OrdersVO">
+	    <id property="orderNo" column="ORDER_NO" />
+	    <result property="memUsername" column="MEM_USERNAME" />
+	    <result property="orderTypeCode" column="ORDER_TYPE_CODE" />
+	    <result property="orderStatCode" column="ORDER_STAT_CODE" />
+	    <result property="orderPayMethodNm" column="ORDER_PAY_METHOD_NM" />
+	    <result property="orderDate" column="ORDER_DATE" />
+	    <result property="orderTotalPrice" column="ORDER_TOTAL_PRICE" />
+	    <result property="orderRecipientNm" column="ORDER_RECIPIENT_NM" />
+	    <result property="orderRecipientPhone" column="ORDER_RECIPIENT_PHONE" />
+	    <result property="orderZipCode" column="ORDER_ZIP_CODE" />
+	    <result property="orderAddress1" column="ORDER_ADDRESS1" />
+	    <result property="orderAddress2" column="ORDER_ADDRESS2" />
+	    <result property="orderEmail" column="ORDER_EMAIL" />
+	    <result property="orderMemo" column="ORDER_MEMO" />
+	
+	    <result property="customerId" column="MEMBER_USERNAME" />
+	    <result property="customerName" column="MEMBER_NICKNM" />
+	    <result property="customerBirth" column="MEMBER_BIRTH" />
+	
+	    <result property="orderStatName" column="ORDER_STAT_NAME" />
+	
+	    <result property="refundedAmount" column="REFUNDED_AMOUNT" />
+	    <result property="totalGoodsPrice" column="TOTAL_GOODS_PRICE" />
+	    <result property="actualShippingFee" column="ACTUAL_SHIPPING_FEE" />
+	
+	    <association property="paymentVO" javaType="kr.or.ddit.vo.order.PaymentVO">
+	        <result property="tid" column="PAY_TID" />
+	        <result property="orderNo" column="PAY_ORDER_NO" />
+	        <result property="cid" column="PAY_CID" />
+	        <result property="aid" column="PAY_AID" />
+	        <result property="paymentStatCode" column="PAY_PAYMENT_STAT_CODE" />
+	        <result property="paymentStatCodeName" column="PAY_PAYMENT_STAT_NAME" />
+	        <result property="totalAmount" column="PAY_TOTAL_AMOUNT" />
+	        <result property="subSid" column="PAY_SUB_SID" />
+	        <result property="requestedAt" column="PAY_REQUESTED_AT" />
+	        <result property="completedAt" column="PAY_COMPLETED_AT" />
+	    </association>
+	
+	    <collection property="orderDetailList" ofType="kr.or.ddit.vo.order.OrderDetailVO">
+	        <id property="orderDetNo" column="ORDER_DET_NO" />
+	        <result property="orderNo" column="OD_ORDER_NO" />
+	        <result property="goodsNo" column="GOODS_NO" />
+	        <result property="goodsOptNo" column="GOODS_OPT_NO" />
+	        <result property="orderDetQty" column="ORDER_DET_QTY" />
+	
+	        <result property="goodsNm" column="GOODS_NM" />
+	        <result property="goodsPrice" column="GOODS_PRICE" />
+	        <result property="goodsFileGroupNo" column="GOODS_FILE_GROUP_NO" />
+	        <result property="goodsOptNm" column="GOODS_OPT_NM" />
+	        <result property="goodsOptPrice" column="GOODS_OPT_PRICE" />
+	
+	        <result property="goodsStatusCode" column="GOODS_STATUS_CODE" />
+	        <result property="goodsStatusKorName" column="GOODS_STATUS_KOR_NAME" />
+	        <result property="goodsStatusEngKey" column="GOODS_STATUS_ENG_KEY" />
+	    </collection>
+	</resultMap>
+
+	<sql id="searchCondition">
+	    <if test="searchMap != null">
+	        <if test="searchMap.orderDateStart != null and searchMap.orderDateStart != ''">
+	            AND O.ORDER_DATE <![CDATA[>=]]> TO_DATE(#{searchMap.orderDateStart}, 'YYYY-MM-DD')
+	        </if>
+	        <if test="searchMap.orderDateEnd != null and searchMap.orderDateEnd != ''">
+	            AND O.ORDER_DATE <![CDATA[<]]> TO_DATE(#{searchMap.orderDateEnd}, 'YYYY-MM-DD') + 1
+	        </if>
+	        
+	        <if test="searchMap.orderSearchInput != null and searchMap.orderSearchInput != ''">
+	            AND (O.ORDER_NO LIKE '%' || #{searchMap.orderSearchInput} || '%'
+	                 OR M.MEM_USERNAME LIKE '%' || #{searchMap.orderSearchInput} || '%'
+	                 OR M.MEM_NICKNM LIKE '%' || #{searchMap.orderSearchInput} || '%')
+	        </if>
+	    </if>
+	</sql>
+
+    <select id="getTotalOrdersCount" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+        SELECT
+            COUNT(DISTINCT O.ORDER_NO) FROM ORDERS O
+        INNER JOIN MEMBER M ON O.MEM_USERNAME = M.MEM_USERNAME
+        INNER JOIN ORDER_DETAIL OD ON O.ORDER_NO = OD.ORDER_NO INNER JOIN GOODS G ON OD.GOODS_NO = G.GOODS_NO       WHERE 1=1
+        AND G.GOODS_DIV_CODE = 'GDC003'                      <include refid="searchCondition"/>
+        <if test="searchMap != null and searchMap.orderStatusFilter != null and searchMap.orderStatusFilter != '' and searchMap.orderStatusFilter != 'ALL'">
+            AND O.ORDER_STAT_CODE = #{searchMap.orderStatusFilter}
+        </if>
+    </select>
+
+	<select id="getAllOrders" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="kr.or.ddit.vo.order.OrdersVO">
+	    SELECT
+	        A.*
+	    FROM (
+	        SELECT
+	            ROWNUM AS RNUM,
+	            orderNo, orderDate, customerId, customerName, orderTotalPrice,
+	            orderPayMethodNm, orderStatus, ORDER_STAT_NAME
+	        FROM (
+	            SELECT
+	                O.ORDER_NO AS orderNo,
+	                O.ORDER_DATE AS orderDate,
+	                M.MEM_USERNAME AS customerId,
+	                M.MEM_NICKNM AS customerName,
+	                O.ORDER_TOTAL_PRICE AS orderTotalPrice,
+	                O.ORDER_PAY_METHOD_NM AS orderPayMethodNm,
+	                O.ORDER_STAT_CODE AS orderStatus,
+	                CDC.DESCRIPTION AS ORDER_STAT_NAME
+	            FROM ORDERS O
+	            INNER JOIN MEMBER M ON O.MEM_USERNAME = M.MEM_USERNAME
+	            LEFT OUTER JOIN COMMON_DETAIL_CODE CDC ON O.ORDER_STAT_CODE = CDC.COMM_CODE_DET_NO
+	                                                     AND CDC.COMM_CODE_GRP_NO = 'ORDER_STAT_CODE'
+                INNER JOIN ORDER_DETAIL OD ON O.ORDER_NO = OD.ORDER_NO INNER JOIN GOODS G ON OD.GOODS_NO = G.GOODS_NO       WHERE 1=1
+	            AND G.GOODS_DIV_CODE = 'GDC003'                      <include refid="searchCondition"/>
+	            <if test="searchMap != null and searchMap.orderStatusFilter != null and searchMap.orderStatusFilter != '' and searchMap.orderStatusFilter != 'ALL'">
+	                AND O.ORDER_STAT_CODE = #{searchMap.orderStatusFilter}
+	            </if>
+	            GROUP BY O.ORDER_NO, O.ORDER_DATE, M.MEM_USERNAME, M.MEM_NICKNM, O.ORDER_TOTAL_PRICE,
+	                     O.ORDER_PAY_METHOD_NM, O.ORDER_STAT_CODE, CDC.DESCRIPTION ORDER BY O.ORDER_DATE DESC, O.ORDER_NO DESC
+	        ) A_INNER
+	    ) A
+	    <![CDATA[
+	    WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	    ]]>
+	</select>
+
+	<select id="getOrderDetail" parameterType="int" resultMap="ordersDetailMap">
+	    SELECT
+	        O.ORDER_NO, O.MEM_USERNAME, O.ORDER_TYPE_CODE, O.ORDER_STAT_CODE,
+	        O.ORDER_PAY_METHOD_NM, O.ORDER_DATE, O.ORDER_TOTAL_PRICE,
+	        O.ORDER_RECIPIENT_NM, O.ORDER_RECIPIENT_PHONE, O.ORDER_ZIP_CODE,
+	        O.ORDER_ADDRESS1, O.ORDER_ADDRESS2, O.ORDER_EMAIL, O.ORDER_MEMO,
+	        M.MEM_USERNAME AS MEMBER_USERNAME,
+	        M.MEM_NICKNM AS MEMBER_NICKNM,
+	        M.MEM_BIRTH AS MEMBER_BIRTH,
+	        CDC_STAT.DESCRIPTION AS ORDER_STAT_NAME,
+
+	        KP.TID AS PAY_TID,
+	        KP.ORDER_NO AS PAY_ORDER_NO,
+	        KP.CID AS PAY_CID,
+	        KP.AID AS PAY_AID,
+	        KP.PAYMENT_STAT_CODE AS PAY_PAYMENT_STAT_CODE,
+	        CDC_PAY_STAT.DESCRIPTION AS PAY_PAYMENT_STAT_NAME,
+	        KP.TOTAL_AMOUNT AS PAY_TOTAL_AMOUNT,
+	        KP.SUB_SID AS PAY_SUB_SID,
+	        KP.REQUESTED_AT AS PAY_REQUESTED_AT,
+	        KP.COMPLETED_AT AS PAY_COMPLETED_AT,
+
+	        (SELECT SUM((G2.GOODS_PRICE + NVL(GO2.GOODS_OPT_PRICE, 0)) * OD2.ORDER_DET_QTY)
+	         FROM ORDER_DETAIL OD2
+	         JOIN GOODS G2 ON OD2.GOODS_NO = G2.GOODS_NO
+	         LEFT JOIN GOODS_OPTION GO2 ON OD2.GOODS_OPT_NO = GO2.GOODS_OPT_NO AND OD2.GOODS_NO = GO2.GOODS_NO
+	         WHERE OD2.ORDER_NO = O.ORDER_NO
+	         AND G2.GOODS_DIV_CODE = 'GDC003' ) AS TOTAL_GOODS_PRICE,
+
+	        CASE
+	            WHEN (SELECT SUM((G3.GOODS_PRICE + NVL(GO3.GOODS_OPT_PRICE, 0)) * OD3.ORDER_DET_QTY)
+	                  FROM ORDER_DETAIL OD3
+	                  JOIN GOODS G3 ON OD3.GOODS_NO = G3.GOODS_NO
+	                  LEFT JOIN GOODS_OPTION GO3 ON OD3.GOODS_OPT_NO = GO3.GOODS_OPT_NO AND OD3.GOODS_NO = GO3.GOODS_NO
+	                  WHERE OD3.ORDER_NO = O.ORDER_NO
+	                  AND G3.GOODS_DIV_CODE = 'GDC003' ) >= 30000 THEN 0
+	            ELSE 3000
+	        END AS ACTUAL_SHIPPING_FEE,
+
+	        (SELECT NVL(SUM(OC.CANCEL_RES_PRICE), 0) FROM ORDER_CANCEL OC WHERE OC.ORDER_NO = O.ORDER_NO) AS REFUNDED_AMOUNT,
+
+	        OD.ORDER_DET_NO, OD.ORDER_NO AS OD_ORDER_NO, OD.GOODS_NO, OD.GOODS_OPT_NO, OD.ORDER_DET_QTY,
+	        G.GOODS_NM, G.GOODS_PRICE,
+	        G.FILE_GROUP_NO AS GOODS_FILE_GROUP_NO,
+	        G.GOODS_STAT_CODE AS GOODS_STATUS_CODE, 
+	        CDC_GOODS_STAT.DESCRIPTION AS GOODS_STATUS_KOR_NAME, 
+	        CDC_GOODS_STAT.COMM_CODE_DET_NM AS GOODS_STATUS_ENG_KEY, 
+	        GO.GOODS_OPT_NM, GO.GOODS_OPT_PRICE
+	    FROM ORDERS O
+	    INNER JOIN MEMBER M ON O.MEM_USERNAME = M.MEM_USERNAME
+	    LEFT OUTER JOIN COMMON_DETAIL_CODE CDC_STAT ON O.ORDER_STAT_CODE = CDC_STAT.COMM_CODE_DET_NO
+	                                                 AND CDC_STAT.COMM_CODE_GRP_NO = 'ORDER_STAT_CODE'
+	    LEFT OUTER JOIN PAYMENT_API KP ON O.ORDER_NO = KP.ORDER_NO
+	    LEFT OUTER JOIN COMMON_DETAIL_CODE CDC_PAY_STAT ON KP.PAYMENT_STAT_CODE = CDC_PAY_STAT.COMM_CODE_DET_NO
+                                                   AND CDC_PAY_STAT.COMM_CODE_GRP_NO = 'PAYMENT_STAT_CODE'
+	    LEFT OUTER JOIN ORDER_DETAIL OD ON O.ORDER_NO = OD.ORDER_NO
+	    LEFT OUTER JOIN GOODS G ON OD.GOODS_NO = G.GOODS_NO
+	    LEFT OUTER JOIN GOODS_OPTION GO ON OD.GOODS_OPT_NO = GO.GOODS_OPT_NO AND OD.GOODS_NO = GO.GOODS_NO
+        LEFT OUTER JOIN COMMON_DETAIL_CODE CDC_GOODS_STAT ON G.GOODS_STAT_CODE = CDC_GOODS_STAT.COMM_CODE_DET_NO 
+                                                             AND CDC_GOODS_STAT.COMM_CODE_GRP_NO = 'GOODS_STAT_CODE'
+	    WHERE O.ORDER_NO = #{orderNo}
+	    AND G.GOODS_DIV_CODE = 'GDC003' </select>
+
+	<update id="updateOrder" parameterType="kr.or.ddit.vo.order.OrdersVO">
+	    UPDATE ORDERS
+	    <set>
+	        <if test="orderStatCode != null and orderStatCode != ''">
+	            ORDER_STAT_CODE = #{orderStatCode},
+	        </if>
+	        <if test="orderMemo != null"> ORDER_MEMO = #{orderMemo}, </if>
+	    </set>
+	    WHERE
+	        ORDER_NO = #{orderNo}
+	</update>
+	
+	<select id="getOrdersWithDetailsForList" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultMap="ordersDetailMap">
+        SELECT
+            O.ORDER_NO, O.MEM_USERNAME, O.ORDER_TYPE_CODE, O.ORDER_STAT_CODE,
+            O.ORDER_PAY_METHOD_NM, O.ORDER_DATE, O.ORDER_TOTAL_PRICE,
+            O.ORDER_RECIPIENT_NM, O.ORDER_RECIPIENT_PHONE, O.ORDER_ZIP_CODE,
+            O.ORDER_ADDRESS1, O.ORDER_ADDRESS2, O.ORDER_EMAIL, O.ORDER_MEMO,
+            M.MEM_USERNAME AS MEMBER_USERNAME,
+            M.MEM_NICKNM AS MEMBER_NICKNM,
+            M.MEM_BIRTH AS MEMBER_BIRTH,
+            CDC_STAT.DESCRIPTION AS ORDER_STAT_NAME,
+
+            KP.TID AS PAY_TID,
+            KP.ORDER_NO AS PAY_ORDER_NO,
+            KP.CID AS PAY_CID,
+            KP.AID AS PAY_AID,
+            KP.PAYMENT_STAT_CODE AS PAY_PAYMENT_STAT_CODE,
+            KP.TOTAL_AMOUNT AS PAY_TOTAL_AMOUNT,
+            KP.SUB_SID AS PAY_SUB_SID,
+            KP.REQUESTED_AT AS PAY_REQUESTED_AT,
+            KP.COMPLETED_AT AS PAY_COMPLETED_AT,
+
+            (SELECT SUM((G2.GOODS_PRICE + NVL(GO2.GOODS_OPT_PRICE, 0)) * OD2.ORDER_DET_QTY)
+             FROM ORDER_DETAIL OD2
+             JOIN GOODS G2 ON OD2.GOODS_NO = G2.GOODS_NO
+             LEFT JOIN GOODS_OPTION GO2 ON OD2.GOODS_OPT_NO = GO2.GOODS_OPT_NO AND OD2.GOODS_NO = GO2.GOODS_NO
+             WHERE OD2.ORDER_NO = O.ORDER_NO
+             AND G2.GOODS_DIV_CODE = 'GDC003' ) AS TOTAL_GOODS_PRICE,
+
+            CASE
+                WHEN (SELECT SUM((G3.GOODS_PRICE + NVL(GO3.GOODS_OPT_PRICE, 0)) * OD3.ORDER_DET_QTY)
+                          FROM ORDER_DETAIL OD3
+                          JOIN GOODS G3 ON OD3.GOODS_NO = G3.GOODS_NO
+                          LEFT JOIN GOODS_OPTION GO3 ON OD3.GOODS_OPT_NO = GO3.GOODS_OPT_NO AND OD3.GOODS_NO = GO3.GOODS_NO
+                          WHERE OD3.ORDER_NO = O.ORDER_NO
+                          AND G3.GOODS_DIV_CODE = 'GDC003' ) >= 30000 THEN 0
+                ELSE 3000
+            END AS ACTUAL_SHIPPING_FEE,
+
+            (SELECT NVL(SUM(OC.CANCEL_RES_PRICE), 0) FROM ORDER_CANCEL OC WHERE OC.ORDER_NO = O.ORDER_NO) AS REFUNDED_AMOUNT,
+
+            OD.ORDER_DET_NO, OD.ORDER_NO AS OD_ORDER_NO, OD.GOODS_NO, OD.GOODS_OPT_NO, OD.ORDER_DET_QTY,
+            G.GOODS_NM, G.GOODS_PRICE,
+            G.FILE_GROUP_NO AS GOODS_FILE_GROUP_NO,
+            G.GOODS_STAT_CODE AS GOODS_STATUS_CODE,
+            CDC_GOODS_STAT.DESCRIPTION AS GOODS_STATUS_KOR_NAME,
+            CDC_GOODS_STAT.COMM_CODE_DET_NM AS GOODS_STATUS_ENG_KEY,
+            GO.GOODS_OPT_NM, GO.GOODS_OPT_PRICE
+        FROM ORDERS O
+        INNER JOIN MEMBER M ON O.MEM_USERNAME = M.MEM_USERNAME
+        LEFT OUTER JOIN COMMON_DETAIL_CODE CDC_STAT ON O.ORDER_STAT_CODE = CDC_STAT.COMM_CODE_DET_NO
+                                                     AND CDC_STAT.COMM_CODE_GRP_NO = 'ORDER_STAT_CODE'
+        LEFT OUTER JOIN PAYMENT_API KP ON O.ORDER_NO = KP.ORDER_NO
+        LEFT OUTER JOIN ORDER_DETAIL OD ON O.ORDER_NO = OD.ORDER_NO
+        LEFT OUTER JOIN GOODS G ON OD.GOODS_NO = G.GOODS_NO
+        LEFT OUTER JOIN GOODS_OPTION GO ON OD.GOODS_OPT_NO = GO.GOODS_OPT_NO AND OD.GOODS_NO = GO.GOODS_NO
+        LEFT OUTER JOIN COMMON_DETAIL_CODE CDC_GOODS_STAT ON G.GOODS_STAT_CODE = CDC_GOODS_STAT.COMM_CODE_DET_NO
+                                                                 AND CDC_GOODS_STAT.COMM_CODE_GRP_NO = 'GOODS_STAT_CODE'
+        WHERE O.ORDER_NO IN (
+            SELECT ORDER_NO FROM (
+                SELECT
+                    ROW_NUMBER() OVER (ORDER BY O2.ORDER_DATE DESC, O2.ORDER_NO DESC) AS RNUM,
+                    O2.ORDER_NO
+                FROM ORDERS O2
+                INNER JOIN MEMBER M2 ON O2.MEM_USERNAME = M2.MEM_USERNAME
+                INNER JOIN ORDER_DETAIL OD2_INNER ON O2.ORDER_NO = OD2_INNER.ORDER_NO INNER JOIN GOODS G2_INNER ON OD2_INNER.GOODS_NO = G2_INNER.GOODS_NO WHERE 1=1
+                AND G2_INNER.GOODS_DIV_CODE = 'GDC003' <include refid="searchCondition"/>
+                <if test="searchMap != null and searchMap.orderStatusFilter != null and searchMap.orderStatusFilter != '' and searchMap.orderStatusFilter != 'ALL'">
+                    AND O2.ORDER_STAT_CODE = #{searchMap.orderStatusFilter}
+                </if>
+                GROUP BY O2.ORDER_NO, O2.ORDER_DATE ) A2
+            <![CDATA[
+            WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+            ]]>
+        )
+        AND G.GOODS_DIV_CODE = 'GDC003' ORDER BY O.ORDER_DATE DESC, O.ORDER_NO DESC, OD.ORDER_DET_NO ASC
+    </select>
+    
+	<select id="selectOrderStatusCounts" parameterType="map" resultType="map">
+	    SELECT
+	        NVL(SUM(CASE WHEN SubQ.ORDER_STAT_CODE = 'OSC001' THEN 1 ELSE 0 END), 0) AS OSC001,
+	        NVL(SUM(CASE WHEN SubQ.ORDER_STAT_CODE = 'OSC002' THEN 1 ELSE 0 END), 0) AS OSC002,
+	        NVL(SUM(CASE WHEN SubQ.ORDER_STAT_CODE = 'OSC003' THEN 1 ELSE 0 END), 0) AS OSC003,
+	        NVL(SUM(CASE WHEN SubQ.ORDER_STAT_CODE = 'OSC004' THEN 1 ELSE 0 END), 0) AS OSC004,
+	        NVL(SUM(CASE WHEN SubQ.ORDER_STAT_CODE = 'OSC005' THEN 1 ELSE 0 END), 0) AS OSC005,
+	        NVL(SUM(CASE WHEN SubQ.ORDER_STAT_CODE = 'OSC006' THEN 1 ELSE 0 END), 0) AS OSC006,
+	        NVL(SUM(CASE WHEN SubQ.ORDER_STAT_CODE = 'OSC007' THEN 1 ELSE 0 END), 0) AS OSC007,
+	        NVL(SUM(CASE WHEN SubQ.ORDER_STAT_CODE = 'OSC008' THEN 1 ELSE 0 END), 0) AS OSC008,
+	        NVL(SUM(CASE WHEN SubQ.ORDER_STAT_CODE = 'OSC009' THEN 1 ELSE 0 END), 0) AS OSC009,
+	        COUNT(SubQ.ORDER_NO) AS ALL_COUNT
+	    FROM (
+	        SELECT DISTINCT O.ORDER_NO, O.ORDER_STAT_CODE
+	        FROM ORDERS O
+	        INNER JOIN MEMBER M ON O.MEM_USERNAME = M.MEM_USERNAME
+            INNER JOIN ORDER_DETAIL OD ON O.ORDER_NO = OD.ORDER_NO INNER JOIN GOODS G ON OD.GOODS_NO = G.GOODS_NO       WHERE 1=1
+	        AND G.GOODS_DIV_CODE = 'GDC003'                      <include refid="searchCondition"/>
+	    ) SubQ
+    </select>
+    
+    <select id="selectDailySales" resultType="map" parameterType="map">
+        SELECT
+            TO_CHAR(O.ORDER_DATE, 'YYYY-MM-DD') AS ORDERDATE, NVL(SUM(OD.ORDER_DET_QTY * (G.GOODS_PRICE + NVL(GO.GOODS_OPT_PRICE, 0))), 0) AS TOTALSALES FROM ORDERS O
+        INNER JOIN ORDER_DETAIL OD ON O.ORDER_NO = OD.ORDER_NO
+        INNER JOIN GOODS G ON OD.GOODS_NO = G.GOODS_NO
+        LEFT JOIN GOODS_OPTION GO ON OD.GOODS_OPT_NO = GO.GOODS_OPT_NO AND OD.GOODS_NO = GO.GOODS_NO
+        WHERE O.ORDER_STAT_CODE = 'OSC001'  
+        AND O.ORDER_DATE IS NOT NULL
+        AND G.GOODS_DIV_CODE = 'GDC003' <if test="searchMap != null and searchMap.orderDateStart != null and searchMap.orderDateStart != ''">
+            AND O.ORDER_DATE <![CDATA[>=]]> TO_DATE(#{searchMap.orderDateStart}, 'YYYY-MM-DD')
+        </if>
+        <if test="searchMap != null and searchMap.orderDateEnd != null and searchMap.orderDateEnd != ''">
+            AND O.ORDER_DATE <![CDATA[<]]> TO_DATE(#{searchMap.orderDateEnd}, 'YYYY-MM-DD') + 1
+        </if>
+        <if test="searchMap == null or searchMap.orderDateStart == null or searchMap.orderDateStart == ''">
+            AND O.ORDER_DATE <![CDATA[>=]]> TRUNC(SYSDATE) - 6  AND O.ORDER_DATE <![CDATA[<]]> TRUNC(SYSDATE) + 1 
+        </if>
+        GROUP BY TO_CHAR(O.ORDER_DATE, 'YYYY-MM-DD')
+        ORDER BY ORDERDATE ASC
+    </select>
+
+    <select id="selectTopSellingGoods" resultType="map" parameterType="map">
+        SELECT
+            G.GOODS_NM AS GOODS_NM, NVL(SUM(OD.ORDER_DET_QTY), 0) AS TOTAL_SOLD_QTY FROM ORDER_DETAIL OD
+        INNER JOIN ORDERS O ON OD.ORDER_NO = O.ORDER_NO
+        INNER JOIN GOODS G ON OD.GOODS_NO = G.GOODS_NO
+        WHERE O.ORDER_STAT_CODE IN ('OSC001', 'OSC003', 'OSC004', 'OSC005') 
+        AND G.GOODS_DIV_CODE = 'GDC003' <if test="searchMap != null">
+            <if test="searchMap.orderDateStart != null and searchMap.orderDateStart != ''">
+                AND O.ORDER_DATE <![CDATA[>=]]> TO_DATE(#{searchMap.orderDateStart}, 'YYYY-MM-DD')
+            </if>
+            <if test="searchMap.orderDateEnd != null and searchMap.orderDateEnd != ''">
+                AND O.ORDER_DATE <![CDATA[<]]> TO_DATE(#{searchMap.orderDateEnd}, 'YYYY-MM-DD') + 1
+            </if>
+        </if>
+        GROUP BY G.GOODS_NO, G.GOODS_NM
+        ORDER BY TOTAL_SOLD_QTY DESC
+        <if test="limit != null"> FETCH FIRST #{limit} ROWS ONLY 
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,278 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.ckeditor.com/4.16.2/standard/ckeditor.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDTOWN - 오디션 일정 수정페이지</title>
+    
+    <%-- 기존 포털 공통 CSS --%>
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/resources/css/pages/emp_common.css">
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/resources/css/pages/emp_portal_style.css">
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/resources/css/pages/audition_management_style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+</head>
+<body>
+     <div class="emp-container">
+        <header class="emp-header">
+            <div class="emp-logo">
+                <a href="<%=request.getContextPath()%>/emp_portal.jsp">DDTOWN 직원 포털</a>
+            </div>
+            <div class="emp-user-info">
+                <span><i class="fas fa-user-circle"></i> 안녕하세요, <strong id="employee-name">홍길동</strong>님</span>
+                <a href="#logout" class="emp-logout-btn"><i class="fas fa-sign-out-alt"></i> 로그아웃</a>
+            </div>
+        </header>
+        <div class="emp-body-wrapper">
+            <aside class="emp-sidebar">
+                <nav class="emp-nav">
+                    <ul>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="approval">
+                                <i class="fas fa-file-signature"></i> 전자결재 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-approval">
+                                <li><a href="<%=request.getContextPath()%>/1.approval/approval_draft.jsp" class="emp-nav-item">기안서 작성</a></li>
+                                <li><a href="<%=request.getContextPath()%>/1.approval/approval_request_list.jsp" class="emp-nav-item">결재 요청 리스트</a></li>
+                                <li><a href="<%=request.getContextPath()%>/1.approval/approval_box.jsp" class="emp-nav-item">결재 문서함</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="audition">
+                                <i class="fas fa-microphone-alt"></i> 오디션 관리 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-audition">
+                                <li><a href="<%=request.getContextPath()%>/2.audition/schedule_management.jsp" class="emp-nav-item">일정 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/2.audition/applicant_info.jsp" class="emp-nav-item">지원자 정보</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="community">
+                                <i class="fas fa-users"></i> 아티스트 커뮤니티 관리 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-community">
+                                <li>
+                                    <a href="#" class="emp-nav-item has-submenu" data-menu="artist-mgmt">아티스트 관리 <span class="submenu-arrow">&gt;</span></a>
+                                    <ul class="emp-submenu" id="submenu-artist-mgmt">
+                                        <li><a href="<%=request.getContextPath()%>/emp/group/group-management" class="emp-nav-item">그룹 관리</a></li>
+                                        <li><a href="<%=request.getContextPath()%>/emp/artist/individual-management" class="emp-nav-item">아티스트 관리</a></li>
+                                    </ul>
+                                </li>
+                                다른 커뮤니티 관련 링크들도 실제 경로에 맞게 수정
+                                <li><a href="<%=request.getContextPath()%>/community/notice_management.jsp" class="emp-nav-item">공지사항 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/community/post_management.jsp" class="emp-nav-item">게시물 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/community/live_management.jsp" class="emp-nav-item">라이브 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/community/schedule_management.jsp" class="emp-nav-item">일정 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/community/membership_management.jsp" class="emp-nav-item">멤버십 관리</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#" class="emp-nav-item has-submenu" data-menu="concert">
+                                <i class="fas fa-ticket-alt"></i> 콘서트 관리 <span class="submenu-arrow">&gt;</span>
+                            </a>
+                            <ul class="emp-submenu" id="submenu-concert">
+                                <li><a href="<%=request.getContextPath()%>/4.concert/schedule_management.jsp" class="emp-nav-item">콘서트 일정 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/4.concert/notice_management.jsp" class="emp-nav-item">콘서트 공지사항 관리</a></li>
+                                <li><a href="<%=request.getContextPath()%>/4.concert/seat_management.jsp" class="emp-nav-item">콘서트 좌석 관리</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="<%=request.getContextPath()%>/email_tool.jsp" class="emp-nav-item" data-menu="email">
+                                <i class="fas fa-envelope-open-text"></i> 이메일 전송
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+<!--  main  -->        
+			<main>
+				<section class="audition-detail-hero">
+		            <div class="container">
+		                <h2>오디션 수정페이지</h2>
+		            </div>
+		        </section>
+				
+				<section class="audition-detail-section">
+		            <div class="container">
+		            	<form class="apply-form" action="/emp/audition/update.do" method="post" id="modForm" enctype="multipart/form-data">
+							<input type="hidden" name="audiNo" value="${audition.audiNo}" />
+							<input type="text" id="fileGroupNo" name="fileGroupNo" value="${audition.fileGroupNo}" />
+							<input type="hidden" name="audiRegDate" value="${audition.audiRegDate}" />
+							<input type="hidden" name="audiModDate" value="${audition.audiModDate}" />
+							<input type="hidden" name="audiModDate" value="${audition.audiModDate}" />
+			                <div class="audition-detail-header">
+			                    <span class="audition-status recruiting">
+			                    	<li><strong>현재 상태:</strong>
+				                   <select id="audiStatCode" name="audiStatCode" class="am-filter-select">
+									    <option value="ADSC003" ${audition.audiStatCode eq 'ADSC003' ? 'selected' : ''}>예정</option>
+									    <option value="ADSC001" ${audition.audiStatCode eq 'ADSC001' ? 'selected' : ''}>진행중</option>
+									    <option value="ADSC002" ${audition.audiStatCode eq 'ADSC002' ? 'selected' : ''}>마감</option>
+									</select>
+			                    </span>
+			                    <li><strong>제목</strong>
+			                     <h3 class="audition-detail-title"><input type="text" id="audiTitle" name="audiTitle" value="${audition.audiTitle }" class="form-control" style="width: 250%;" placeholder="제목을 입력해주세요"></h3>
+			                </div>
+			                <ul class="audition-detail-meta">
+			                    <li><strong>모집 분야:</strong>
+			                    	<select id="audiTypeCode" name="audiTypeCode" class="am-filter-select">
+									    <option value="ADTC001" ${audition.audiTypeCode eq 'ADTC001' ? 'selected' : ''}>보컬</option>
+									    <option value="ADTC002" ${audition.audiTypeCode eq 'ADTC002' ? 'selected' : ''}>댄스</option>
+									    <option value="ADTC003" ${audition.audiTypeCode eq 'ADTC003' ? 'selected' : ''}>연기</option>
+									</select>
+			                    <li><strong>지원 접수 시작일:</strong>
+			                    	<input type="date" id="audiStartDate" name="audiStartDate" value="${fn:split(audition.audiStartDate, ' ')[0]}" >
+			                    </li>
+			                    <li><strong>지원 접수 마감일:</strong>
+			                    	<input type="date" id="audiEndDate" name="audiEndDate" value="${fn:split(audition.audiEndDate, ' ')[0]}" >
+			                    </li>
+<%-- 				            <li><strong>공고 등록일시:</strong>
+				                	<input type="date" id="audiRegDate" name="audiRegDate" value="${fn:split(audition.audiRegDate, ' ')[0]}" >
+				                </li>
+				                <li><strong>공고 수정일시:</strong>
+				                	<input type="date" id="audiModDate" name="audiModDate" value="${fn:split(audition.audiModDate, ' ')[0]}" >
+				                </li> --%>
+			                </ul>
+			                <div class="audition-detail-content">
+			                    <h4>오디션 내용</h4>
+			                   <p>
+			       				 <textarea id="audiContent" name="audiContent" class="form-control" style="width: 250%; height: 300px;">${audition.audiContent }</textarea>
+			    				</p>
+			                </div>
+			                
+			                <div class="audition-detail-attachments">
+			                
+							    <h4>첨부파일</h4>
+							    <ul class="list-unstyled">
+							    	<c:if test="${not empty audition.fileList}">
+							    		<c:forEach var="file" items="${audition.fileList}">
+								    		<li>
+									            <a href="#" class="attachment-link"> <!-- 나중에 파일 다운로드 경로 설정해야됨 -->
+									                <i class="fas fa-file-pdf"></i>
+									                 ${file.fileOriginalNm}
+									            </a>
+									            <span class="btn btn-default btn-sm float-right attachmentFileDel" id="span_${file.attachDetailNo }">
+													<i class="fas fa-times"></i>
+												</span>
+								        	</li>
+							    		</c:forEach>						
+							    	</c:if>
+							        <c:if test="${empty audition.fileList}">
+								        <li>첨부된 파일이 없습니다.</li>
+								    </c:if>
+							    </ul>
+							    <input type="file" id="audiMemFiles" name="audiMemFiles" class="form-control-file mt-2" multiple="multiple"/>
+	
+			                </div>
+			                <div class="audition-detail-actions">
+			                	  
+			                	  <button  type="button" class="btn btn-primary" id="modBtn" name="modBtn">저장</button>
+			                    <button type="reset" class="btn btn-secondary"
+                        			onclick="javascript:location.href='/emp/audition/detail.do?audiNo=${audition.audiNo }'">취소</button>
+                        			
+			                    <%-- <a href="/emp/audition/update.do?audiNo=${audition.audiNo }" class="btn btn-primary">
+			                        <i class="fas fa-pen"></i> 저장
+			                    </a>
+			                    <a href="/emp/audition/detail.do?audiNo=${audition.audiNo }" class="btn btn-primary">
+			                        <i class="fas fa-pen"></i> 취소 --%>
+			                    </a>
+			                </div>
+			                <sec:csrfInput/>
+		                </form>
+		            </div>
+		        </section>
+			</main>  
+		    </div>
+		<footer class="emp-footer">
+			<p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (직원 전용)</p>
+		</footer>
+	</div>
+</body>
+<script type="text/javascript">
+//CKEDITOR 적용
+CKEDITOR.replace("audiContent", {
+	filebrowserUploadUrl: "/imageUpload.do"
+});
+CKEDITOR.config.height = "600px";
+
+
+$(function(){
+	let modBtn = $("#modBtn");		//수정 Element
+	let modForm = $("#modForm");	//수정하기 Form Element
+	
+	//수정버튼 실행
+	modBtn.on("click",function(){
+		let audiTitle = $("#audiTitle").val();		// 오디션 제목
+		let audiTypeCode = $("#audiTypeCode").val();		// 모집 분야 코드
+		let audiStatCode = $("#audiStatCode").val();		// 진행 상태 코드
+		let audiContent = CKEDITOR.instances.audiContent.getData();		// 오디션 내용
+		let audiStartDate = $("#audiStartDate").val();		// 지원 접수 시작일
+		let audiEndDate = $("#audiEndDate").val();		// 지원 접수 마감일
+		let audiMemFiles = $("#audiMemFiles").val();	
+		let audiMemFilesInput = $("#audiMemFiles")[0];	// 업로드 파일들
+		let delFileNoList = $("#delFileNoList")[0];	// 삭제할 파일
+		let fileGroupNo = $("#fileGroupNo").val();	// 파일그룹번호
+		
+		// 유효성 검사
+		if (audiStatCode == null || audiStatCode === "") {
+	        sweetAlert("error", "오디션 상태를 선택해주세요!");
+	        $("#audiStatCode").focus();
+	        return false;
+	    }
+		if(audiTitle == null || audiTitle.trim() == ""){
+			sweetAlert("error","제목을 입력해주세요!");
+			return false;
+		}
+		if (audiTypeCode == null || audiTypeCode === "") {
+	        sweetAlert("error", "모집 분야를 선택해주세요!");
+	        $("#audiTypeCode").focus();
+	        return false;
+	    }
+		
+		if (audiStartDate == null || audiStartDate === "") {
+	        sweetAlert("error", "지원 접수 시작일을 입력해주세요!");
+	        $("#audiStartDate").focus();
+	        return false;
+	    }
+		if (audiEndDate == null || audiEndDate === "") {
+	        sweetAlert("error", "지원 접수 마감일을 입력해주세요!");
+	        $("#audiEndDate").focus();
+	        return false;
+	    }
+		if(audiContent == null || audiContent.trim() == ""){
+			sweetAlert("error","내용을 입력해주세요!");
+			return false;
+		}
+		console.log("--- 오디션 등록/수정 값 확인 (console.log) ---");
+	    console.log("제목 (audiTitle):", audiTitle);
+	    console.log("모집 분야 코드 (audiTypeCode):", audiTypeCode);
+	    console.log("진행 상태 코드 (audiStatCode):", audiStatCode);
+	    console.log("오디션 내용 (audiContent):", audiContent);
+	    console.log("지원 접수 시작일 (audiStartDate):", audiStartDate);
+	    console.log("지원 접수 마감일 (audiEndDate):", audiEndDate);
+	    console.log("파일그룹번호 (fileGroupNo):", fileGroupNo);
+	    
+		modForm.submit();
+	})
+	//파일 x 부분 클릭시 실행
+	$(".attachmentFileDel").on("click", function(){
+		// 클릭된 span 요소를 jQuery 객체로 저장
+		let clickedSpan = $(this);
+		let id = clickedSpan.prop("id");
+        let idx = id.indexOf("_");
+        let attachDetailNo = id.substring(idx + 1);
+        clickedSpan.parents("li:first").hide();
+        let hiddenInputHtml = `<input type="hidden" name="delFileNoList" value="\${attachDetailNo}"/>`;
+        modForm.append(hiddenInputHtml);
+        console.log(`파일 ${attachDetailNo} 이(가) 삭제 목록에 추가되었습니다.`);
+	});
+});
+</script>

@@ -1,0 +1,484 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec"%>
+<%@ taglib uri="jakarta.tags.core" prefix="c"%>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${artistComuNicknm} - 공식 팬클럽 방</title>
+    <meta name="_csrf" content="${_csrf.token }">
+    <meta name="_csrf_header" content="${_csrf.headerName }">
+    <style>
+        body { font-family: sans-serif; margin: 20px; display: flex; flex-direction: column; height: 90vh; }
+        #chatDisplay {
+            border: 1px solid #ccc;
+            height: 70%;
+            overflow-y: auto;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+        }
+        #messageInput {
+            width: calc(100% - 160px);
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; 
+        }
+        #attachFileBtn {
+        	width: 70px;
+            padding: 8px;
+            border: none;
+            background-color: #6c757d;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        #attachFileBtn:hover {
+            background-color: #5a6268;
+        }
+        #sendMessageBtn {
+            width: 70px;
+            padding: 8px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        #sendMessageBtn:hover {
+            background-color: #0056b3;
+        }
+        .chat-message {
+        margin-bottom: 5px;
+        border-radius: 3px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+	    }
+	    .my-message {
+	        text-align: right;
+	        align-items: flex-end;
+	    }
+	    .other-message {
+	        text-align: left;
+	        align-items: flex-start;
+	    }
+	    .chat-sender {
+	        font-weight: bold;
+	        margin-bottom: 2px;
+	        display: block;
+	        font-size: 0.9em;
+	        color: #333;
+	    }
+	    .chat-content-wrapper {
+	        display: flex;
+	        align-items: flex-end;
+	        gap: 8px;
+	    }
+	    .my-message .chat-content-wrapper {
+	        flex-direction: row-reverse;
+	    }
+	    .other-message .chat-content-wrapper {
+	        flex-direction: row;
+	    }
+	    .chat-content {
+	        white-space: pre-wrap;
+	        word-break: break-all;
+	        padding: 8px 12px;
+	        border-radius: 15px;
+	        max-width: 70%;
+	        box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+	        line-height: 1.4;
+	    }
+	    .my-message .chat-content {
+	        background-color: #dcf8c6;
+	        color: #333;
+	    }
+	    .other-message .chat-content {
+	        background-color: #ffffff;
+	        color: #333;
+	    }
+	    .chat-time {
+	        font-size: 0.75em;
+	        color: #888;
+	        white-space: nowrap;
+	        align-self: flex-end;
+	    }
+	    .chat-date-header {
+	        text-align: center;
+	        margin: 15px 0;
+	        color: #666;
+	        font-size: 0.85em;
+	        font-weight: bold;
+	        padding: 5px 10px;
+	        background-color: #e0e0e0;
+	        border-radius: 10px;
+	        align-self: center;
+	        max-width: fit-content;
+	        margin-left: auto;
+	        margin-right: auto;
+	    }
+	    .chat-sender-info {
+	    	display: flex;
+	    	align-items: center;
+	    	margin-bottom: 5px;
+	    	gap: 8px;
+	    }
+	    .chat-profile-img {
+	    	width: 30px;
+	    	height: 30px;
+	    	border-radius: 50%;
+	    	object-fit: cover;
+	    	border: 1px solid #eee;
+	    	flex-shrink: 0;
+	    }
+	    .chat-profile-initial {
+	    	width: 30px;
+	    	height: 30px;
+	    	border-radius: 50%;
+	    	background-color: #007bff;
+	    	color: white;
+	    	display: flex;
+	    	justify-content: center;
+	    	align-items: center;
+	    	font-weight: bold;
+	    	font-size: 0.9em;
+	    	border: 1px solid #0056b3;
+	    	flex-shrink: 0;
+	    }
+	    .my-message .chat-sender-info {
+	    	flex-direction: row;
+	    }
+	    .other-message .chat-sender-info {
+	    	flex-direction: row-reverse;
+	    }
+	    .chat-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+        .chat-content.image-only {
+        	padding: 0;
+        	background-color: transparent;
+        	box-shadow: none;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+    <h1>${artistComuNicknm} - 공식 팬클럽 방</h1>
+    <div>현재 로그인 사용자 : ${myComuNicknm }</div>
+    <div>아티스트 : ${artistComuNicknm }</div>
+    
+    <div id="chatDisplay"></div>
+    <div>
+	    <input type="text" id="messageInput" placeholder="메시지를 입력해주세요.">
+	    <input type="file" id="fileInput" style="display: none;" accept="image/*, application/pdf">
+	    <button id="attachFileBtn">📎</button>
+	    <button id="sendMessageBtn">전송</button>
+    </div>
+    <script>
+    	
+        document.addEventListener('DOMContentLoaded', function() {
+        	
+        	// CSRF 토큰 정보 가져오기
+        	const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        	const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        	
+        	// 사용자 정보 가져오기
+            const chatChannelNo = ${chatChannelNo};
+            const username = "<sec:authentication property='name'/>";
+            const artistComuNicknm = "${artistComuNicknm}";
+			const myComuNicknm = "${myComuNicknm}";
+            
+			// 요소 정보 가져오기
+            const chatDisplay = document.getElementById('chatDisplay');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendMessageBtn');
+            
+            // 파일 정보 가져오기
+            const fileInput = document.getElementById('fileInput');
+            const attachFileBtn = document.getElementById('attachFileBtn');
+            
+            // 로컬 스토리지에 저장
+            localStorage.setItem('wschat.username', username);
+            localStorage.setItem('wschat.chatChannelNo', chatChannelNo);
+            localStorage.setItem('wschat.nickname', myComuNicknm);
+
+            // STOMP 클라이언트 변수
+            let stompClient = null;
+            
+         	// 최근 메세지 날짜 추적하기 위한 변수
+            let lastDisplayedDate = null;
+            
+         	// 메시지를 채팅창에 표시하는 함수
+           function displayMessage(message) {
+         		// 1. 메세지
+               const messageElement = document.createElement('div');
+               messageElement.classList.add('chat-message');
+               
+               // 2. 수신자 정보
+               const senderInfoContainer = document.createElement('div');
+               senderInfoContainer.classList.add('chat-sender-info');
+               
+               // 3. 프로필 이미지
+               let profileDisplayElement;
+               
+               if(message.userProfileImgPath && message.userProfileImgPath !== 'null' && message.userProfileImgPath.trim() !== '') {
+            	   profileDisplayElement = document.createElement('img');
+            	   profileDisplayElement.classList.add('chat-profile-img');
+            	   profileDisplayElement.src = message.userProfileImgPath;
+            	   profileDisplayElement.alt = message.comuNicknm + " 프로필";
+               } else {
+            	   // 디폴트 이미지
+            	   profileDisplayElement = document.createElement('div');
+            	   profileDisplayElement.classList.add('chat-profile-initial');
+            	   const initial = (message.comuNicknm && message.comuNicknm.length > 0) ? 
+            			   message.comuNicknm.charAt(0).toUpperCase() : '?';
+            	   profileDisplayElement.textContent = initial;
+               }
+               
+               // 4. 닉네임
+               const senderElement = document.createElement('span');
+               senderElement.classList.add('chat-sender');
+               senderElement.textContent = message.comuNicknm || message.username || '';
+               
+               // 5. 헤더 날짜 표시
+               if(lastDisplayedDate !== message.chatSendDateFormattedDate) {
+            	   const dateHeaderElement = document.createElement('div');
+            	   dateHeaderElement.classList.add('chat-date-header');
+            	   dateHeaderElement.textContent = message.chatSendDateFormattedDate;
+            	   chatDisplay.appendChild(dateHeaderElement);
+            	   lastDisplayedDate = message.chatSendDateFormattedDate;
+               }
+
+               if (message.username === username) {
+                   messageElement.classList.add('my-message');
+                   senderElement.textContent = myComuNicknm;
+                   senderInfoContainer.appendChild(senderElement);
+                   senderInfoContainer.appendChild(profileDisplayElement);
+               } else {
+                   messageElement.classList.add('other-message');
+                   senderElement.textContent = message.comuNicknm;
+                   senderInfoContainer.appendChild(senderElement);
+                   senderInfoContainer.appendChild(profileDisplayElement);
+               }
+               
+               const contentWrapper = document.createElement('div');
+               contentWrapper.classList.add('chat-content-wrapper');
+               
+               const contentElement = document.createElement('span');
+               contentElement.classList.add('chat-content');
+               
+               // 6. 파일
+               if(message.type === 'CTC002' && message.attachDetailNo) {
+            	   const fileUrl = message.fileUrl;
+            	   
+            	   if(fileUrl) {
+            		   const imgElement = document.createElement('img');
+	            	   imgElement.classList.add('chat-image');
+	            	   imgElement.src = fileUrl;
+	            	   imgElement.alt = message.chatContent || '이미지';
+	            	   imgElement.onclick = () => window.open(fileUrl, '_blank');
+	            	   contentElement.appendChild(imgElement);
+	            	   contentElement.classList.add('image-only');
+            	   } else {	// fileUrl 없는 경우
+            		   contentElement.textContent = "이미지 불러오는 중...";
+            	   }
+               } else {
+            	   contentElement.textContent = message.chatContent;
+               }
+               
+               // 7. 채팅 시간
+               const timeElement = document.createElement('span');
+               timeElement.classList.add('chat-time');
+               timeElement.textContent = message.chatSendDateFormattedTime;
+               
+               contentWrapper.appendChild(contentElement);
+               contentWrapper.appendChild(timeElement);
+
+               messageElement.appendChild(senderInfoContainer);
+               messageElement.appendChild(contentWrapper);
+               chatDisplay.appendChild(messageElement);
+               
+               // 스크롤을 항상 아래로 내림
+               chatDisplay.scrollTop = chatDisplay.scrollHeight;
+           }
+            
+            // 초기 메세지 로드
+            const rawInitialMessages = [
+            	<c:forEach var="message" items="${initialMessages}" varStatus="loop">
+            		{
+            			username: "<c:out value='${message.username}'/>",
+            			comuNicknm: "<c:out value='${message.comuNicknm}' escapeXml='true'/>",
+            			chatContent: "<c:out value='${message.chatContent}' escapeXml='true'/>",
+            			chatSendDateFormattedDate: "<fmt:formatDate value='${message.chatSendDate}' pattern='yyyy년 M월 d일 E요일'/>",
+            			chatSendDateFormattedTime: "<fmt:formatDate value='${message.chatSendDate}' pattern='a h:mm'/>",
+            			userProfileImgPath: "<c:out value='${message.userProfileImgPath}'/>",
+            			type: "<c:out value='${message.chatMsgTypeCode}'/>",
+            			attachDetailNo: "<c:out value='${message.attachDetailNo}'/>",
+            			fileUrl: "<c:out value='${message.fileUrl}'/>"
+            		}<c:if test='${!loop.last}'>,</c:if>
+            	</c:forEach>
+            ];
+            
+            rawInitialMessages.forEach(msg => displayMessage(msg));
+            
+            // 웹소켓 연결 함수
+            function connect() {
+                // /ws-stomp 엔드포인트로 SockJS 연결
+                const socket = new SockJS('/ws-stomp');
+                stompClient = Stomp.over(socket);
+                
+                stompClient.connect({
+                	[csrfHeader]: csrfToken
+                }, function(frame) {
+                	console.log('Connected: ' + frame);
+            
+                    // 본인의 메세지를 받을 큐 구독
+                    stompClient.subscribe(`/user/queue/messages`, function(messageOutput) {
+                    	console.log("private message received : ", messageOutput.body);
+                    	const message = JSON.parse(messageOutput.body);
+                        displayMessage(message);
+                    });
+                }, function(error) { // 연결 실패 시 콜백
+                    console.error('STOMP 연결 오류:', error);
+                    appendSystemMessage('채팅방 연결에 실패했습니다. 페이지를 새로고침 해주세요.');
+                });
+            }
+            
+            // 시스템 메시지 (연결/입장/퇴장 등)
+            function appendSystemMessage(systemMessage) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('chat-message');
+                messageElement.style.fontStyle = 'italic';
+                messageElement.style.color = '#555';
+                
+                messageElement.textContent = `시스템 : \${systemMessage}`;
+                chatDisplay.appendChild(messageElement);
+                chatDisplay.scrollTop = chatDisplay.scrollHeight;
+            }
+            
+         	// 텍스트 메시지 전송 함수
+            function sendMessage() {
+                const messageContent = messageInput.value.trim();
+                if (messageContent && stompClient) {
+                    const chatMessage = {
+                        username: username,
+                        chatChannelNo: chatChannelNo,
+                        chatContent: messageContent,
+                        comuNicknm: myComuNicknm,
+                        type: 'TALK'
+                    };
+                    stompClient.send(`/pub/chat/dm/message`, {
+                		[csrfHeader]: csrfToken
+                	}, JSON.stringify(chatMessage));
+                	messageInput.value = '';
+                }
+            }
+                    
+            // 파일 전송 함수
+            async function sendFileMessage(file) {
+            	if(!file) return;
+            	
+            	const MAX_FILE_SIZE = 10 * 1024 * 1024;	// 10MB
+            	const ALLOWED_TYPES = ['image.jpeg', 'image/png', 'image/gif'];	// 허용할 MIME 타입
+            	
+            	if(file.size > MAX_FILE_SIZE) {
+            		alert('파일 크기가 너무 큽니다. 10MB 이하의 파일만 업로드 할 수 있습니다.');
+            		fileInput.value = '';
+            		return;
+            	}
+            	
+            	if(!ALLOWED_TYPES.includes(file.type)) {
+            		alert("허용되지 않는 파일 형식입니다. 이미지(JPG, PNG, GIF)만 업로드 할 수 있습니다.");
+            		fileInput.value = '';
+            		return;
+            	}
+            	
+            	const formData = new FormData();
+            	formData.append('file', file);
+            	formData.append('chatChannelNo', chatChannelNo);
+            	
+            	try {
+            		const response = await fetch('/chat/dm/uploadImage', {
+            			method: 'POST',
+            			headers: {
+            				[csrfHeader]: csrfToken
+            			},
+            			body: formData
+            		});
+            		
+            		if(response.ok) {
+            			const data = await response.json();
+            			console.log("파일 업로드 성공: " , data);
+            			
+            			// 파일 URL 웹소켓 전송
+            			const chatMessage = {
+            				username: username,
+            				chatChannelNo: chatChannelNo,
+            				comuNicknm: myComuNicknm,
+            				type: 'FILE',
+            				chatContent: file.name,
+            				attachDetailNo: data.attachDetailNo,
+            				fileUrl: data.fileUrl
+            			};
+            			
+            			stompClient.send(`/pub/chat/dm/message`, {
+                    		[csrfHeader]: csrfToken
+                    	}, JSON.stringify(chatMessage));
+            			
+            			// 파일 입력 필드 초기화
+            			fileInput.value = '';
+            		} else {
+            			const errorText = await response.text();
+            			console.error("파일 업로드 실패 : ", response.status, errorText);
+            			alert("파일 업로드에 실패했습니다. 관리자에게 문의하세요.");
+            		}
+            	} catch(e) {
+            		console.error("파일 업로드 중 오류 발생 : " , e);
+            		alert("파일 업로드 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            	}
+            }
+
+            // 이벤트 리스너 설정
+            sendButton.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+         	// 파일 버튼 클릭 이벤트
+            attachFileBtn.addEventListener('click', function() {
+            	fileInput.click();
+            });
+         	
+            fileInput.addEventListener('change', function() {
+            	if(this.files && this.files.length > 0) {
+            		const fileToUpload = this.files.item(0);
+            		if(fileToUpload) {
+            			sendFileMessage(fileToUpload);
+            		}
+            	}
+            });
+
+            // 페이지 로드 시 웹소켓 연결
+            connect();
+
+        });
+    </script>
+</body>
+</html>

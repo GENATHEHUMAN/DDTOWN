@@ -1,0 +1,229 @@
+package kr.or.ddit.ddtown.controller.admin.blacklist;
+
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.service.admin.blacklist.IBlacklistService;
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.blacklist.BlacklistVO;
+import kr.or.ddit.vo.report.ReportVO;
+import kr.or.ddit.vo.security.CustomUser;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/admin/community/blacklist")
+
+public class AdminBlacklistController {
+	
+	@Autowired
+	private IBlacklistService blacklistService;
+	
+	private String getCurrentEmpUsername() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication != null && authentication.getPrincipal() instanceof CustomUser) {
+			CustomUser customUser = (CustomUser) authentication.getPrincipal();
+			if (customUser.getEmployeeVO() != null) {
+				return customUser.getEmployeeVO().getEmpUsername();
+			}
+		}
+		return null;
+	}
+	
+//목록페이지 이동
+	@GetMapping("/list")
+	public String blackListMain(
+			@RequestParam(name="page", required = false, defaultValue = "1") int currentPage,
+			@RequestParam(name = "searchType", required = false, defaultValue = "all") String searchType,
+			@RequestParam(name = "searchCode", required = false, defaultValue = "all") String searchCode,
+	        @RequestParam(name = "searchWord", required = false, defaultValue = "") String searchWord,
+			Model model) {
+		log.info("currentPage: {}, searchType: {}, searchCode: {}, searchWord: {}", currentPage, searchType, searchCode, searchWord);
+		
+		PaginationInfoVO<BlacklistVO> pagingVO = new PaginationInfoVO<>();
+		
+		pagingVO.setSearchType(searchType);
+		pagingVO.setSearchCode(searchCode);
+		pagingVO.setSearchWord(searchWord);
+		
+		pagingVO.setCurrentPage(currentPage);
+		int totalRecord = blacklistService.selectBlacklistCount(pagingVO);	// 블랙리스트 목록 수
+		pagingVO.setTotalRecord(totalRecord); //총 게시글 수 전달 후, 총 페이지 수 설정 
+		
+		int fixedScreenSize = 10;
+		
+		int startRow = (currentPage - 1) * fixedScreenSize + 1;
+	    int endRow = currentPage * fixedScreenSize;
+		pagingVO.setStartRow(startRow); // 계산된 startRow 설정
+	    pagingVO.setEndRow(endRow);     // 계산된 endRow 설정	 
+
+		//현재 블랙리스트 수 
+		int blacklistCnt = blacklistService.blacklistCnt();
+		//블랙리스트 사유별 수
+		 Map<String, Integer> blackReasonCnts = blacklistService.blackReasonCnts();
+		 
+		
+		log.info("blacklist() 실행...!");
+		List<BlacklistVO> blackList = blacklistService.blackList(pagingVO);
+		log.info("컨트롤러에서 Model에 추가할 blacklistReasonCounts: {}", blackReasonCnts);
+		pagingVO.setDataList(blackList);
+		
+		log.info("가져온 신고 리스트: {}", blackList);
+		model.addAttribute("blackList", blackList);
+		model.addAttribute("pagingVO", pagingVO);
+		model.addAttribute("searchType", searchType);
+        model.addAttribute("searchCode", searchCode);
+        model.addAttribute("searchWord", searchWord);
+		model.addAttribute("blacklistCnt", blacklistCnt);
+		model.addAttribute("blackReasonCnts", blackReasonCnts);
+
+		return "admin/blacklist/blacklistList";
+	}
+	//상세페이지
+	@GetMapping("/detail")
+	public String blackListDetail(int banNo, Model model) {
+		BlacklistVO blacklistVO = blacklistService.blackDetail(banNo);
+		log.info("가져온 신고자-----------------------: {}", blacklistVO);
+		model.addAttribute("blacklist", blacklistVO);
+		return "admin/blacklist/blacklistDetail";
+	}
+	//등록페이지
+	@GetMapping("/form")
+	public String blackListForm(@RequestParam(value = "reportNo", required = false) Integer  reportNo, Model model) {
+		if(reportNo != null) {
+			String memUsername  = blacklistService.getUsernameReportNo(reportNo);
+			if(memUsername != null) {
+				model.addAttribute("memUsername", memUsername);
+			}else {
+				 model.addAttribute("errorMessage", "해당 신고에 대한 회원 정보를 찾을 수 없습니다.");
+			}
+		}
+		return "admin/blacklist/blacklistForm";
+	}
+	
+	//등록하기
+	@PostMapping("/signup")
+	public String blackListInsert(BlacklistVO blacklistVO, Model model, RedirectAttributes ra, Principal principal) {
+		
+		String goPage = "";
+		//관리자 아이디 가져오기
+		String empUsername = principal.getName();
+		log.info("auditionInsert->empUsername : {}", empUsername);
+		//관리자 아이디 blacklistVO에 넣기
+		blacklistVO.setEmpUsername(empUsername);
+		
+		log.info("register->auditionVO : {}", blacklistVO);
+		
+		Map<String, String> errors = new HashMap<>();
+		
+		if(StringUtils.isBlank(blacklistVO.getMemUsername())) {
+			errors.put("MemUsername", "신고아이디를 입력해주세요!");
+		}
+		if(StringUtils.isBlank(blacklistVO.getBanReasonDetail())) {
+			errors.put("BanReasonDetail", "상세내용을 입력해주세요!");
+		}
+		
+		if(errors.size() > 0 ) {
+			model.addAttribute("bodyText", "register-page");
+			model.addAttribute("errors", errors);
+			model.addAttribute("blacklistVO", blacklistVO);
+			goPage = "redirect:/admin/community/blacklist/form";
+		}else {
+			ServiceResult result;
+			try {
+				result = blacklistService.blackSignup(blacklistVO);
+				log.info("=====================================================1 :{}", result);
+				if(result.equals(ServiceResult.OK)) {	//등록하기 성공 시
+					log.info("=====================================================2 ");
+					ra.addFlashAttribute("message", "등록이 완료되었습니다!");
+					goPage = "redirect:/admin/community/blacklist/detail?banNo="+blacklistVO.getBanNo();
+
+				}else if(result.equals(ServiceResult.NOTEXIST)){			//회원아이디 존재하지 않을 때
+					log.info("=====================================================3 ");
+					ra.addFlashAttribute("message", "회원아이디가 존재하지 않습니다.");
+					goPage = "redirect:/admin/community/blacklist/form";
+
+				}else if(result.equals(ServiceResult.EXIST)){
+					log.info("=====================================================4 ");
+					ra.addFlashAttribute("message", "등록 실패: 이미 블랙리스트에 등록되어 있는 사용자입니다.");
+					goPage = "redirect:/admin/community/blacklist/form";
+
+				}else {
+					log.info("=====================================================5 ");
+					ra.addFlashAttribute("message", "등록 실패: 데이터 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+                    goPage = "redirect:/admin/community/blacklist/form";
+
+				}
+			}catch(Exception e) {
+				log.info("=====================================================6 ");
+				e.printStackTrace();
+				model.addAttribute("message",  "데이터 처리 중 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요!");
+				model.addAttribute("blacklistVO", blacklistVO); 
+				goPage = "redirect:/admin/community/blacklist/form";
+			}
+		}
+		log.info("=====================================================7{} ",goPage);
+		return goPage;
+	}
+	
+	//수정페이지 이동
+	@GetMapping("/modForm")
+	public String blackListModForm(int banNo, Model model) {
+		BlacklistVO blacklistVO = blacklistService.blackDetail(banNo);
+		
+		log.info("가져온 신고 리스트: {}", blacklistVO);
+		model.addAttribute("blacklist", blacklistVO);
+		model.addAttribute("status", "u");
+		return "admin/blacklist/blacklistMod";
+	}
+	@PostMapping("/update")
+	public String blackListUpdate(BlacklistVO blacklistVO, Model model, RedirectAttributes ra, Principal principal) throws Exception{
+
+		String goPage = "";
+		String empUsername = principal.getName();
+		log.info("auditionInsert->empUsername : {}", empUsername);
+
+		blacklistVO.setEmpUsername(empUsername); 
+		ServiceResult result = blacklistService.blackUpdate(blacklistVO);
+		if(result.equals(ServiceResult.OK)) {
+			ra.addFlashAttribute("message", " 수정이 완료 되었습니다!");
+			goPage = "redirect:/admin/community/blacklist/detail?banNo="+blacklistVO.getBanNo();
+		}else {
+			model.addAttribute("message", "수정에 실패하였습니다! 다시 시도해주세요...!");
+			model.addAttribute("auditionVO", blacklistVO);
+			goPage = "redirect:/admin/community/blacklist/modForm?banNo="+blacklistVO.getBanNo();
+		}
+		return goPage;
+	}
+	//해제(삭제)하기
+	@PostMapping("delete")
+	public String blackListDelete(BlacklistVO blacklistVO, Model model, RedirectAttributes ra) {
+		String goPage = "";
+		ServiceResult result = blacklistService.blackDelete(blacklistVO);
+		if(result.equals(ServiceResult.OK)) {
+			ra.addFlashAttribute("message", "해제되었습니다!");
+			goPage = "redirect:/admin/community/blacklist/list";
+		}else {
+			ra.addAttribute("message", "서버오류, 다시 시도해주세요!");
+			goPage = "redirect:/admin/community/blacklist/detail?banNo=" + blacklistVO.getBanNo();
+		}
+		return goPage;
+	}
+	
+	
+}

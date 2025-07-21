@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.ddtown.mapper.admin.report.IReportMapper">
+	
+	<sql id="reportSearch">
+		<if test="searchType != null and searchType != '' and searchType != 'all'">
+        	AND R.REPORT_TARGET_TYPE_CODE = #{searchType}
+	    </if>
+	    <if test="searchCode != null and searchCode != '' and searchCode != 'all'">
+        	AND R.REPORT_STAT_CODE = #{searchCode}
+	    </if>
+	    <if test="searchWord != null and searchWord != ''">
+	        AND (R.TARGET_MEM_USERNAME LIKE '%' || #{searchWord} || '%'
+	        OR R.MEM_USERNAME LIKE '%' || #{searchWord} || '%'
+	        OR (P.PEO_LAST_NM || P.PEO_FIRST_NM) LIKE '%' || #{searchWord} || '%'
+	        )
+	    </if>
+	</sql>
+	<!-- 신고목록 리스트 -->
+	<select id="reportList" parameterType="PaginationInfoVO" resultType="kr.or.ddit.vo.report.ReportVO">
+    SELECT A.*
+    FROM (
+        SELECT
+            ROWNUM AS RNUM,  B.*
+        FROM (
+            SELECT R.REPORT_NO,
+                R.ART_GROUP_NO,
+                R.MEM_USERNAME,
+                R.TARGET_MEM_USERNAME,
+                R.REPORT_REASON_CODE,
+                R.REPORT_TARGET_TYPE_CODE,
+                R.REPORT_STAT_CODE,
+                R.REPORT_RESULT_CODE,
+                R.TARGET_COMU_POST_NO,
+                R.TARGET_BOARD_TYPE_CODE,
+                R.TARGET_COMU_REPLY_NO,
+                R.TARGET_CHAT_NO,
+                D.REPORT_DET_NO,
+                D.REPORT_REG_DATE,
+                D.REPORT_RES_DATE,
+                D.REPORT_BAN_YN,
+                P.PEO_FIRST_NM,
+                P.PEO_LAST_NM,
+                count(*) over(
+                    PARTITION BY
+                        R.REPORT_TARGET_TYPE_CODE,
+                        CASE R.REPORT_TARGET_TYPE_CODE
+                            WHEN 'RTTC001' THEN R.TARGET_COMU_POST_NO
+                            WHEN 'RTTC002' THEN R.TARGET_COMU_REPLY_NO
+                            WHEN 'RTTC003' THEN R.TARGET_CHAT_NO
+                            ELSE NULL
+                        END
+                  ) AS reportedCount
+            FROM REPORTS R
+            LEFT JOIN REPORTS_DETAIL D ON R.REPORT_NO = D.REPORT_NO
+            LEFT JOIN PEOPLE P ON R.TARGET_MEM_USERNAME = P.USERNAME
+            WHERE 1=1
+            <include refid="reportSearch"/>
+            ORDER BY 
+            	CASE R.REPORT_STAT_CODE
+            		WHEN 'RSC001' THEN 1 
+            		WHEN 'RSC002' THEN 2
+            	END, 
+            	D.REPORT_REG_DATE ASC) B
+    ) A
+    WHERE A.RNUM BETWEEN #{startRow} AND #{endRow} </select>
+<!-- 총 신고 목록 수(페이징 관련) -->	
+	<select id="selectReportCount" parameterType="kr.or.ddit.vo.PaginationInfoVO" resultType="int">
+ 		select count(R.REPORT_NO)
+ 		from REPORTS R
+ 		LEFT JOIN PEOPLE P ON R.TARGET_MEM_USERNAME = P.USERNAME
+ 		where 1=1
+ 		<include refid="reportSearch"/>
+ 	</select>
+	<!-- 상세보기 페이지 -->
+	<select id="reportDetail1" parameterType="int" resultType="kr.or.ddit.vo.report.ReportVO">
+		select R.REPORT_NO
+			 , R.ART_GROUP_NO
+			 , R.MEM_USERNAME
+			 , R.TARGET_MEM_USERNAME
+			 , R.REPORT_REASON_CODE
+			 , R.REPORT_TARGET_TYPE_CODE
+			 , R.REPORT_STAT_CODE
+			 , R.REPORT_RESULT_CODE
+			 , R.TARGET_COMU_POST_NO
+			 , R.TARGET_BOARD_TYPE_CODE
+			 , R.TARGET_COMU_REPLY_NO
+			 , R.TARGET_CHAT_NO
+			 
+			 , D.REPORT_DET_NO
+			 , D.REPORT_REG_DATE
+			 , D.REPORT_RES_DATE
+			 , D.REPORT_BAN_YN
+			 
+			 , CP.ART_GROUP_NO
+			 , case R.REPORT_TARGET_TYPE_CODE
+			 	when 'RTTC001' THEN TO_CHAR(CP.COMU_POST_CONTENT)  	<!--  'RTTC001' (게시글)일 경우 COMMUNITY_POSTS에서 내용 가져오기 -->
+                  WHEN 'RTTC002' THEN TO_CHAR(CR.COMU_REPLY_CONTENT) 	<!--  'RTTC002' (댓글)일 경우 COMMUNITY_REPLIES에서 내용 가져오기 -->
+                  WHEN 'RTTC003' THEN TO_CHAR(CM.CHAT_CONTENT) 	<!--  'RTTC003' (채팅)일 경우 CHAT_MESSAGES에서 내용 가져오기 -->
+                  END AS reportedContent				<!--  그 값을 reportedContent로 명시하겠다 -->							<!-- 그걸 totalReportCount라 명시하겠다 -->
+		from REPORTS R
+		left join
+			 REPORTS_DETAIL D ON R.REPORT_NO = D.REPORT_NO
+		left join COMMUNITY_POST CP						<!-- COMMUNITY_POST테이블과 조인 -->
+			 ON R.REPORT_TARGET_TYPE_CODE = 'RTTC001'
+			AND R.TARGET_COMU_POST_NO = CP.COMU_POST_NO
+		left join COMMUNITY_REPLY CR					<!-- 댓글 테이블과 조인 -->
+			 ON R.REPORT_TARGET_TYPE_CODE = 'RTTC002'
+			 AND R.TARGET_COMU_REPLY_NO = CR.COMU_REPLY_NO
+		left join	CHAT_MESSAGE CM						<!-- 메세지 테이블과 조인 -->
+			 ON R.REPORT_TARGET_TYPE_CODE = 'RTTC003'
+			 AND R.TARGET_CHAT_NO = CM.CHAT_NO
+		where
+			 R.REPORT_NO = #{reportNo}
+	</select>
+	<!-- 신고된 게시글의 총신고 수, 신고자들 조회, 신고사유들 가지고 오기-->
+	<select id="reportDetail2" parameterType="kr.or.ddit.vo.report.ReportVO" resultType="kr.or.ddit.vo.report.ReportVO">
+		select R.REPORT_NO,
+	           R.MEM_USERNAME,          
+	           R.REPORT_REASON_CODE,    
+	           R.REPORT_TARGET_TYPE_CODE,
+	           R.TARGET_COMU_POST_NO,
+	           R.TARGET_COMU_REPLY_NO,
+	           R.TARGET_CHAT_NO
+    	  FROM REPORTS R
+    	 WHERE 
+    	 	   R.REPORT_TARGET_TYPE_CODE = #{reportTargetTypeCode, javaType=string, jdbcType=VARCHAR} 
+    	  	   AND CASE R.REPORT_TARGET_TYPE_CODE
+                        WHEN 'RTTC001' THEN R.TARGET_COMU_POST_NO
+                        WHEN 'RTTC002' THEN R.TARGET_COMU_REPLY_NO
+                        WHEN 'RTTC003' THEN R.TARGET_CHAT_NO
+                        ELSE NULL
+                    END = 
+                    	CASE #{reportTargetTypeCode, javaType=string, jdbcType=VARCHAR}
+                            WHEN 'RTTC001' THEN #{targetComuPostNo}   
+                            WHEN 'RTTC002' THEN #{targetComuReplyNo}  
+                            WHEN 'RTTC003' THEN #{targetChatNo}       
+                        	ELSE NULL
+                        END 	 	   
+    	 	  
+	</select>
+	<!-- 파일정보가져오기 위한 쿼리-->
+	<select id="reportDetail3" parameterType="kr.or.ddit.vo.report.ReportVO" resultType="kr.or.ddit.vo.file.AttachmentFileDetailVO">
+		select
+			FD.ATTACH_DETAIL_NO,
+			FD.FILE_GROUP_NO,
+			FD.FILE_ORIGINAL_NM,
+			FD.FILE_SAVE_NM,
+			FD.FILE_SAVEPATH,
+			FD.FILE_EXT,
+			FD.FILE_MIME_TYPE,
+			FD.FILE_FANCYSIZE,
+			FD.FILE_SAVE_DATE
+		  FROM COMMUNITY_POST CP
+		  JOIN ATTACHMENT_FILE_DETAIL FD ON CP.FILE_GROUP_NO = FD.FILE_GROUP_NO
+		  WHERE CP.COMU_POST_NO = #{targetComuPostNo}
+		    AND #{reportTargetTypeCode} = 'RTTC001'		  	
+	</select>
+<!-- 1.REPORTS테이블 업데이트(게시물에 대해 동일신고 건수가 있을 시 일괄 처리) -->
+	<update id="reportUpdate" parameterType="kr.or.ddit.vo.report.ReportVO"  >
+		UPDATE REPORTS A
+		SET    A.REPORT_STAT_CODE = 'RSC002'
+     		 , A.REPORT_RESULT_CODE = #{reportResultCode}
+		WHERE  A.TARGET_COMU_POST_NO IN(SELECT B.TARGET_COMU_POST_NO || B.TARGET_COMU_REPLY_NO || B.TARGET_CHAT_NO FROM REPORTS B WHERE B.REPORT_NO = #{reportNo})
+		OR     A.TARGET_COMU_REPLY_NO IN(SELECT C.TARGET_COMU_POST_NO || C.TARGET_COMU_REPLY_NO || C.TARGET_CHAT_NO FROM REPORTS C WHERE C.REPORT_NO = #{reportNo})
+		OR     A.TARGET_CHAT_NO IN(SELECT D.TARGET_COMU_POST_NO || D.TARGET_COMU_REPLY_NO || D.TARGET_CHAT_NO FROM REPORTS D WHERE D.REPORT_NO = #{reportNo})
+
+<!-- 		update REPORTS  -->
+<!-- 		   set  -->
+<!-- 			   REPORT_STAT_CODE = 'RSC002' -->
+<!-- 		     , REPORT_RESULT_CODE = #{reportResultCode} -->
+<!-- 		 where -->
+<!-- 		 	   REPORT_TARGET_TYPE_CODE = #{reportTargetTypeCode} -->
+<!-- 		 <if test="reportTargetTypeCode == 'RTTC001'"> -->
+<!-- 		 	   AND TARGET_COMU_POST_NO = #{targetComuPostNo}  -->
+<!-- 		 </if> -->
+<!-- 		 	   REPORT_TARGET_TYPE_CODE = #{reportTargetTypeCode} -->
+<!-- 		 <if test="reportTargetTypeCode == 'RTTC002'"> -->
+<!-- 		 	   AND TARGET_COMU_REPLY_NO = #{targetComuReplyNo}  -->
+<!-- 		 </if> -->
+<!-- 		 	   REPORT_TARGET_TYPE_CODE = #{reportTargetTypeCode} -->
+<!-- 		 <if test="reportTargetTypeCode == 'RTTC002'"> -->
+<!-- 		 	   AND TARGET_COMU_CHAT_NO = #{targetComuChatNo}  -->
+<!-- 		 </if>		 			 -->
+<!-- 2.REPORTS_DETAIL 업데이트( 신고날짜를 오늘날짜로 업데이트, 총 신고건수가 10건 넘어가면 벤여부 활성화) -->
+<!-- 		update REPORTS_DETAIL		 -->
+<!-- 		set -->
+<!-- 			REPORT_RES_DATE = SYSDATE -->
+<!-- 			REPORT_BAN_YN = -->
+<!-- 				case -->
+<!-- 					when( -->
+<!-- 						select count(*) -->
+<!-- 						from REPORTS RB -->
+<!-- 						where  -->
+<!-- 							RB.TARGET_MEM_USERNAME = #{targetMemUsername} -->
+<!-- 							AND RB.REPORT_STAT_CODE = 'RSC002' -->
+<!-- 					) >= 10 then 'Y' -->
+<!-- 					else 'N' -->
+<!-- 				end -->
+<!-- 		where -->
+<!-- 			REPORT_NO in( -->
+<!-- 				select REPORT_NO -->
+<!-- 				from REPORTS -->
+<!-- 				where -->
+<!-- 					 REPORT_TARGET_TYPE_CODE = #{reportTargetTypeCode} -->
+<!--                 <if test="reportTargetTypeCode == 'RTTC001'"> -->
+<!--                     AND TARGET_COMU_POST_NO = #{targetComuPostNo} -->
+<!--                 </if> -->
+<!--                 <if test="reportTargetTypeCode == 'RTTC002'"> -->
+<!--                     AND TARGET_COMU_REPLY_NO = #{targetComuReplyNo} -->
+<!--                 </if> -->
+<!--                 <if test="reportTargetTypeCode == 'RTTC003'"> -->
+<!--                     AND TARGET_CHAT_NO = #{targetChatNo} -->
+<!--                 </if> -->
+<!-- 			) -->
+	<!-- BLACKLIST 테이블 업데이트 또는 삽입(총 신고 건수가 10건이상이된 사람이 있으면 블랙리스트 목록에 비활성화로 추가 또는 목록에 있지만 처리상태에 있는 목록 업데이트로 다시 불러오기) -->
+	</update>
+	
+	<!-- 2.REPORTS_DETAIL 업데이트( 신고날짜를 오늘날짜로 업데이트) -->
+	<update id="reportUpdate2" parameterType="kr.or.ddit.vo.report.ReportVO"  >
+		UPDATE REPORTS_DETAIL F
+		SET    F.REPORT_RES_DATE = SYSDATE
+		WHERE  F.REPORT_NO IN(
+		    SELECT A.REPORT_NO
+		    FROM   REPORTS A
+		    WHERE  A.TARGET_COMU_POST_NO IN(SELECT B.TARGET_COMU_POST_NO || B.TARGET_COMU_REPLY_NO || B.TARGET_CHAT_NO FROM REPORTS B WHERE B.REPORT_NO = #{reportNo})
+		    OR     A.TARGET_COMU_REPLY_NO IN(SELECT C.TARGET_COMU_POST_NO || C.TARGET_COMU_REPLY_NO || C.TARGET_CHAT_NO FROM REPORTS C WHERE C.REPORT_NO = #{reportNo})
+		    OR     A.TARGET_CHAT_NO IN(SELECT D.TARGET_COMU_POST_NO || D.TARGET_COMU_REPLY_NO || D.TARGET_CHAT_NO FROM REPORTS D WHERE D.REPORT_NO = #{reportNo})
+		)
+	</update>
+<!-- 2-1. reportTargetTypeCode : RTTC001 이면서 reportResultCode : RRTC002(콘텐츠 삭제) 해당 게시글 삭제여부 활성화 -->
+	<update id="updatePostDelYn" parameterType="int">
+	    UPDATE COMMUNITY_POST
+	    SET   COMU_POST_DEL_YN = 'Y'
+	    	, COMU_POST_STAT_CODE = 'CPSC002'
+	    WHERE COMU_POST_NO = #{targetComuPostNo}
+	</update>
+<!-- 2-2. reportTargetTypeCode : RTTC002 이면서 reportResultCode : RRTC002 => 해당 댓글 삭제여부 활성화 -->
+    <update id="updateReplyDelYn" parameterType="int">
+        UPDATE COMMUNITY_REPLY
+        SET COMU_REPLY_DEL_YN = 'Y'
+        WHERE COMU_REPLY_NO = #{targetComuReplyNo}
+    </update>
+<!-- 2-3. reportTargetTypeCode : RTTC003 이면서 reportResultCode : RRTC002 => 해당 채팅메세지 삭제 -->
+    <delete id="deleteChat" parameterType="int">
+        DELETE FROM CHAT_MESSAGE
+        WHERE CHAT_NO = #{targetChatNo}
+    </delete>
+	
+	<!-- 3. 그 사람에 대한 총 신고건수가 10건 넘어가면 벤여부 활성화 -->
+	<update id="reportUpdate3" parameterType="kr.or.ddit.vo.report.ReportVO"  >
+		<selectKey resultType="int" order="BEFORE" keyProperty="reportCnt">
+			SELECT COUNT(G.TARGET_MEM_USERNAME)
+			FROM   REPORTS G
+			WHERE  G.TARGET_MEM_USERNAME IN(
+			    SELECT DISTINCT A.TARGET_MEM_USERNAME
+			    FROM   REPORTS A
+			    WHERE  A.TARGET_COMU_POST_NO IN(SELECT B.TARGET_COMU_POST_NO || B.TARGET_COMU_REPLY_NO || B.TARGET_CHAT_NO FROM REPORTS B WHERE B.REPORT_NO = 5)
+			    OR     A.TARGET_COMU_REPLY_NO IN(SELECT C.TARGET_COMU_POST_NO || C.TARGET_COMU_REPLY_NO || C.TARGET_CHAT_NO FROM REPORTS C WHERE C.REPORT_NO = 5)
+			    OR     A.TARGET_CHAT_NO IN(SELECT D.TARGET_COMU_POST_NO || D.TARGET_COMU_REPLY_NO || D.TARGET_CHAT_NO FROM REPORTS D WHERE D.REPORT_NO = 5)
+			)
+		</selectKey>
+		UPDATE REPORTS_DETAIL F
+		SET    F.REPORT_BAN_YN = 'Y'
+		WHERE  F.REPORT_NO IN(
+		    SELECT A.REPORT_NO
+		    FROM   REPORTS A
+		    WHERE  A.TARGET_COMU_POST_NO IN(SELECT B.TARGET_COMU_POST_NO || B.TARGET_COMU_REPLY_NO || B.TARGET_CHAT_NO FROM REPORTS B WHERE B.REPORT_NO = #{reportNo})
+		    OR     A.TARGET_COMU_REPLY_NO IN(SELECT C.TARGET_COMU_POST_NO || C.TARGET_COMU_REPLY_NO || C.TARGET_CHAT_NO FROM REPORTS C WHERE C.REPORT_NO = #{reportNo})
+		    OR     A.TARGET_CHAT_NO IN(SELECT D.TARGET_COMU_POST_NO || D.TARGET_COMU_REPLY_NO || D.TARGET_CHAT_NO FROM REPORTS D WHERE D.REPORT_NO = #{reportNo})
+		)
+		AND (
+		    SELECT COUNT(G.TARGET_MEM_USERNAME)
+		    FROM   REPORTS G
+		    WHERE  G.TARGET_MEM_USERNAME IN(
+		        SELECT DISTINCT A.TARGET_MEM_USERNAME
+		        FROM   REPORTS A
+		        WHERE  A.TARGET_COMU_POST_NO IN(SELECT B.TARGET_COMU_POST_NO || B.TARGET_COMU_REPLY_NO || B.TARGET_CHAT_NO FROM REPORTS B WHERE B.REPORT_NO = #{reportNo})
+		        OR     A.TARGET_COMU_REPLY_NO IN(SELECT C.TARGET_COMU_POST_NO || C.TARGET_COMU_REPLY_NO || C.TARGET_CHAT_NO FROM REPORTS C WHERE C.REPORT_NO = #{reportNo})
+		        OR     A.TARGET_CHAT_NO IN(SELECT D.TARGET_COMU_POST_NO || D.TARGET_COMU_REPLY_NO || D.TARGET_CHAT_NO FROM REPORTS D WHERE D.REPORT_NO = #{reportNo})
+		    )
+		) >= 10
+	</update>
+	
+<!-- 신고상세에서 블랙리스트 추가 누를시 아이디 불러오기 -->
+	<select id="getUsernameReportNo" parameterType="int" resultType="string">
+    	SELECT TARGET_MEM_USERNAME
+    	FROM REPORTS
+    	WHERE REPORT_NO = #{reportNo}
+    </select>
+<!-- 	
+	 banReasonCode; //신고 당한 유저가 가장많은 사유코드 
+신고당한사람이 가장많이 신고 당한 유형(BLACKLIST 테이블의 #{banReasonCode}에 값 넣기 위한 쿼리)	
+	<select id="selectManyReportReasonCode" parameterType="string" resultType="string">
+		SELECT REPORT_REASON_CODE
+		FROM(
+			SELECT REPORT_REASON_CODE, COUNT(*) AS count
+			FROM REPORTS
+			WHERE TARGET_MEM_USERNAME= #{targetMemUsername}
+			GROUP BY REPORT_REASON_CODE
+			ORDER BY count DESC
+		)
+		WHERE ROWNUM = 1
+	</select>	
+4. BLACKLIST 테이블 삽입(총 신고 건수가 10건이상이된 사람이 있으면 블랙리스트 목록에 비활성화로 자동추가 
+	
+	<insert id="reportUpdate4" parameterType="kr.or.ddit.vo.blacklist.BlacklistVO" useGeneratedKeys="true">
+		<selectKey keyProperty="banNo" resultType="int" order="BEFORE">
+			SELECT BLACKLIST_SEQ.NEXTVAL FROM DUAL
+	    </selectKey>
+		insert into BLACKLIST(
+			BAN_NO, MEM_USERNAME, EMP_USERNAME, BAN_REASON_CODE, BAN_REASON_DETAIL, BAN_START_DATE, BAN_END_DATE, BAN_REG_DATE, BAN_ACT_YN
+		)values(
+			#{banNo}, #{memUsername}, #{empUsername}, #{banReasonCode}, null, sysdate, null, sysdate, 'N'
+		)
+	</insert>
+ -->
+	
+<!-- 
+5-1. BLACKLIST 신고 건수가 10건 이상이면 관리자가 확인 
+ - i) 사유 저장
+ - ii) 
+5-2. 총 신고 건수가 10건이상이된 사람이 있으면 블랙리스트 목록에 비활성화로 인서트	
+ -->
+<!--  미처리 신고 수 -->
+ <select id="reportCnt" resultType="int">
+ 	SELECT COUNT(*)
+ 		FROM REPORTS
+ 		WHERE REPORT_STAT_CODE = 'RSC001'
+ </select>
+ 
+<!--  미처리 중 신고 사유 유형별 수 -->
+	<select id="reportReasonCnt" resultType="map">
+	SELECT
+        REPORT_REASON_CODE AS reasonCode,
+        COUNT(*) AS count
+    FROM REPORTS
+    WHERE REPORT_STAT_CODE = 'RSC001'
+    GROUP BY REPORT_REASON_CODE
+	</select>
+</mapper>

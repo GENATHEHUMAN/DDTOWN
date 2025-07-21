@@ -1,0 +1,19 @@
+package kr.or.ddit.ddtown.service.chat.dm;
+
+import java.util.List;
+
+import kr.or.ddit.vo.chat.dm.ChatMessageVO;
+import kr.or.ddit.vo.file.AttachmentFileDetailVO;
+
+public interface IChatMessageService {
+
+	// processMessage() : 채팅 메세지 저장
+	void saveMessage(ChatMessageVO message);
+	
+	// processMessage() : 과거 메세지 조회
+	List<ChatMessageVO> getMessageHistory(Integer chatChannelNo, int limit);
+	
+	// processMessage() : 파일 첨부 상세 저장
+	void insertAttachFileDetail(AttachmentFileDetailVO fileDetailVO);
+
+}

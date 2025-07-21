@@ -1,0 +1,21 @@
+package kr.or.ddit.ddtown.service.member.membership;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.ddtown.mapper.member.membership.MembershipMapper;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class MembershipServiceImpl implements IMembershipService {
+	
+	private final MembershipMapper membershipMapper;
+	
+	// 멤버십 구독 여부 확인
+	@Override
+	public boolean hasValidMembershipSubscription(String memUsername, int artGroupNo) {
+		int count = membershipMapper.hasValidMembershipSubscription(memUsername, artGroupNo);
+		return count > 0;
+	}
+
+}

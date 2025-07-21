@@ -1,0 +1,941 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="kr.or.ddit.ddtown.mapper.stat.IStatMapper">
+
+	<sql id="userSignupData">
+		<if test="searchType == 'daily'">
+			select
+			    to_char(sevenday.dt,'YYYY/MM/DD') as tdate
+			    , nvl(a.count,0) as count
+			from
+			    (
+			        select
+			            trunc(sysdate) - level + 1 as dt
+			        from
+			            dual
+			        connect by
+			        <![CDATA[
+			            level <= 7
+			        ]]>
+			    ) sevenday
+			left join
+			        (
+			            select
+			                trunc(m.mem_reg_date) as sortdate
+			                ,count(m.mem_username) as count
+			            from
+			                people p
+			            inner join
+			                member m on (p.username = m.mem_username)
+			            where
+			                p.user_type_code != 'UTC002'
+			            group by
+			                trunc(m.mem_reg_date)
+			    ) a on (sevenday.dt = a.sortdate)
+			order by sevenday.dt
+		</if>
+		<if test="searchType == 'weekly'">
+			select
+			    to_char(four_week.dt,'YYYY/MM/DD') as tdate,
+			    nvl(a.count,0) as count
+			from
+			    (
+			        select
+			            trunc(sysdate,'IW') - (level-1) * 7 as dt
+			        from
+			            dual
+			        connect by
+			        <![CDATA[
+			            level <= 7
+			        ]]>
+			    ) four_week
+			left join
+			    (
+			    select
+			         trunc(m.mem_reg_date,'IW') as sortdate
+			         , count(m.mem_username) as count
+			    from
+			        people p
+			    inner join
+			        member m on (p.username = m.mem_username)
+			    where
+			        p.user_type_code != 'UTC002'
+			    group by trunc(mem_reg_date,'IW')
+			    )a on(four_week.dt = a.sortdate)
+			order by tdate
+		</if>
+		<if test="searchType=='monthly'">
+			select
+			    to_char(allMonth.dt,'YYYY"년"MM"월"') as tdate,
+			    nvl(a.count,0) as count
+			from
+			    (
+			        select
+			            trunc(add_months(sysdate,- (level-1)),'MM') as dt
+			        from
+			            dual
+			        connect by
+			        <![CDATA[
+			            level <= 7
+			        ]]>
+			    ) allMonth
+			left join
+			    (
+			    select
+			         trunc(m.mem_reg_date,'MM') as sortdate
+			         , count(m.mem_username) as count
+			    from
+			        people p
+			    inner join
+			        member m on (p.username = m.mem_username)
+			    where
+			        p.user_type_code != 'UTC002'
+			    group by trunc(mem_reg_date,'MM')
+			    )a on(allMonth.dt = a.sortdate)
+			order by tdate
+		</if>
+	</sql>
+
+	<sql id="mostBuyUserData">
+		<if test="searchType =='daily'">
+			select
+				  a.mem_username
+				, a.sortdate
+				, a.totalprice
+				, a.totalqty
+				, a.rank
+			from
+				(
+					SELECT
+					    p.peo_last_nm || p.peo_first_nm || ' ('|| o.mem_username || ')'  as mem_username
+					  , trunc(o.order_date) as sortdate
+					  , sum(go.goods_opt_price * od.order_det_qty) as totalprice
+					  , sum(od.order_det_qty) as totalqty
+					  , rank() over (order by sum(go.goods_opt_price * od.order_det_qty) desc, sum(od.order_det_qty) desc) as rank
+					FROM
+					    orders o
+					inner join
+					    order_detail od on (o.order_no = od.order_no)
+				    inner join
+                        goods_option go on (od.goods_opt_no = go.goods_opt_no)
+					inner join
+				    	people p on (o.mem_username = p.username)
+					where
+					    order_stat_code in ('OSC001','OSC003', 'OSC004', 'OSC005','OSC006')
+					and
+					    order_type_code = 'OTC002'
+					group by
+						trunc(o.order_date), p.peo_last_nm || p.peo_first_nm || ' ('|| o.mem_username || ')'
+					having
+						trunc(o.order_date) = trunc(sysdate)
+					order by rank
+				) a
+			where
+			<![CDATA[
+				a.rank <= 5
+			]]>
+		</if>
+		<if test="searchType == 'weekly'">
+			select
+				  a.mem_username
+				, a.sortdate
+				, a.totalprice
+				, a.totalqty
+				, a.rank
+			from
+				(
+					SELECT
+				        p.peo_last_nm || p.peo_first_nm || ' ('|| o.mem_username || ')'  as mem_username
+				      , to_char(trunc(o.order_date,'IW'),'YYYY/MM/DD') as sortdate
+				      , sum(go.goods_opt_price * od.order_det_qty) as totalprice
+					  , sum(od.order_det_qty) as totalqty
+				      , row_number() over (order by sum(go.goods_opt_price * od.order_det_qty) desc, sum(od.order_det_qty) desc) as rank
+				    FROM
+				        orders o
+				    inner join
+				        order_detail od on (o.order_no = od.order_no)
+					inner join
+                        goods_option go on (od.goods_opt_no = go.goods_opt_no)
+				    inner join
+				    	people p on (o.mem_username = p.username)
+				    where
+				        order_stat_code in ('OSC001','OSC003', 'OSC004', 'OSC005','OSC006')
+				    and
+				        order_type_code = 'OTC002'
+				    group by trunc(o.order_date,'IW'), p.peo_last_nm || p.peo_first_nm || ' ('|| o.mem_username || ')'
+				    having trunc(o.order_date,'IW') = trunc(sysdate,'IW')
+				    order by rank
+			    ) a
+			where
+			<![CDATA[
+				a.rank <= 5
+			]]>
+		</if>
+		<if test="searchType == 'monthly'">
+			select
+				  a.mem_username
+				, a.sortdate
+				, a.totalprice
+				, a.totalqty
+				, a.rank
+			from
+				(
+					SELECT
+				        p.peo_last_nm || p.peo_first_nm || ' ('|| o.mem_username || ')' as mem_username
+				      , to_char(trunc(o.order_date,'MM'),'YYYY"년"MM"월"') as sortdate
+				      , sum(go.goods_opt_price * od.order_det_qty) as totalprice
+					  , sum(od.order_det_qty) as totalqty
+				      , row_number() over (order by sum(go.goods_opt_price * od.order_det_qty) desc, sum(od.order_det_qty) desc) as rank
+				    FROM
+				        orders o
+				    inner join
+				        order_detail od on (o.order_no = od.order_no)
+				    inner join
+				    	people p on (o.mem_username = p.username)
+				    inner join
+                        goods_option go on (od.goods_opt_no = go.goods_opt_no)
+				    where
+				        order_stat_code in ('OSC001','OSC003', 'OSC004', 'OSC005','OSC006')
+				    and
+				        order_type_code = 'OTC002'
+				    group by trunc(o.order_date,'MM'), p.peo_last_nm || p.peo_first_nm || ' ('|| o.mem_username || ')'
+				    having trunc(o.order_date,'MM') = trunc(sysdate,'MM')
+				    order by rank
+			    ) a
+			where
+			<![CDATA[
+				a.rank <= 5
+			]]>
+		</if>
+	</sql>
+
+	<sql id="revenueBySector">
+		<if test="searchType == 'all'">
+			select
+			    (select '전체' from dual) as name
+			    , a.totalprice as totalprice
+			from(
+				SELECT
+				  sum(order_total_price) as totalprice
+				FROM
+				    orders
+				where
+				    order_stat_code in ('OSC001','OSC003', 'OSC004', 'OSC005','OSC006')
+			)a
+			union
+			SELECT
+			    (select substr(description,1, instr(description,' ',1)-1) from common_detail_code cdc where cdc.comm_code_det_no = order_type_code) as nm
+			  , sum(order_total_price) as membershipprice
+			FROM
+			    orders
+			where
+			    order_stat_code in ('OSC001','OSC003', 'OSC004', 'OSC005','OSC006')
+			group by order_type_code
+		</if>
+		<if test="searchType == 'goodsshop'">
+			SELECT
+			     nvl(sum(go.goods_opt_price * od.order_det_qty),0) as totalprice
+			   , ag.art_group_nm as name
+			FROM
+			    artist_group ag
+			left join
+			    goods g on (ag.art_group_no = g.art_group_no)
+			left join
+			    order_detail od on (g.goods_no = od.goods_no)
+			left join
+			    goods_option go on (od.goods_opt_no = go.goods_opt_no)
+			left join
+			    orders o on (od.order_no = o.order_no
+			        and order_type_code = 'OTC002'
+			        and order_stat_code in ('OSC001','OSC003','OSC004','OSC005','OSC006')
+			    )
+			group by
+			    ag.art_group_nm
+			order by
+				ag.art_group_nm
+		</if>
+		<if test="searchType == 'membership'">
+			select
+			      ag.art_group_nm as name
+			    , nvl(sum(o.order_total_price),0) as totalprice
+			from
+			    artist_group ag
+			left join
+			    goods g on(ag.art_group_no = g.art_group_no)
+			left join
+			    order_detail od on(g.goods_no = od.goods_no)
+			left join
+			    orders o on (od.order_no = o.order_no
+			            and
+			                order_type_code = 'OTC001'
+			            and
+			                order_stat_code in ('OSC001','OSC003','OSC004','OSC005','OSC006')
+			    )
+			group by
+				ag.art_group_nm
+			order by
+				ag.art_group_nm
+		</if>
+		<if test="searchType == 'concert'">
+			select
+			      ag.art_group_nm as name
+			    , nvl(sum(o.order_total_price),0) as totalprice
+			from
+			    artist_group ag
+			left join
+			    goods g on(ag.art_group_no = g.art_group_no)
+			left join
+			    order_detail od on(g.goods_no = od.goods_no)
+			left join
+			    orders o on (od.order_no = o.order_no
+			            and
+			                order_type_code = 'OTC003'
+			            and
+			                order_stat_code in ('OSC001','OSC003','OSC004','OSC005','OSC006')
+			    )
+			group by
+				ag.art_group_nm
+			order by
+				ag.art_group_nm
+		</if>
+	</sql>
+
+	<sql id="saleRevenue">
+		<if test="searchType == 'monthly'">
+			select
+			      to_char(month.dt,'YYYY"년"MM"월"') as tdate
+			    , nvl(a.price,0) as totalprice
+			from
+			    (
+			        SELECT
+			            trunc(add_months(sysdate, -(LEVEL - 1)),'MM') as dt
+			        from
+			            dual
+			        connect by
+			        <![CDATA[
+			            LEVEL <= 6
+			        ]]>
+			    ) month
+			left join
+			    (
+			        SELECT
+			            trunc(order_date,'MM') as dt
+			            , sum(order_total_price) as price
+			            , count(order_no) as count
+			        FROM
+			            orders
+			        WHERE
+			            order_type_code = 'OTC002'
+			        and
+			            order_stat_code in ('OSC001','OSC003','OSC004','OSC005','OSC006')
+			        group by trunc(order_date,'MM')
+			    ) a on( month.dt = a.dt)
+			order by month.dt
+		</if>
+		<if test="searchType == 'quarter'">
+			select
+			      to_char(quarter.dt,'YYYY"년"Q"분기"') as tdate
+			    , nvl(a.price,0) as totalprice
+			from
+			    (
+			        SELECT
+			            trunc(add_months(sysdate, -((LEVEL-1) * 3 )),'Q') as dt
+			        from
+			            dual
+			        connect by
+			        <![CDATA[
+			            LEVEL <= 4
+			        ]]>
+			    ) quarter
+			left join
+			    (
+			        SELECT
+			            trunc(order_date,'Q') as dt
+			            , sum(order_total_price) as price
+			            , count(order_no) as count
+			        FROM
+			            orders
+			        WHERE
+			            order_type_code = 'OTC002'
+			        and
+			            order_stat_code in ('OSC001','OSC003','OSC004','OSC005','OSC006')
+			        group by trunc(order_date,'Q')
+			    ) a on( quarter.dt = a.dt)
+			order by quarter.dt
+		</if>
+		<if test="searchType == 'yearly'">
+			select
+			      to_char(yearly.dt,'YYYY"년"') as tdate
+			    , nvl(a.price,0) as totalprice
+			from
+			    (
+			        SELECT
+			            trunc(add_months(sysdate, -((LEVEL-1) * 12 )),'YYYY') as dt
+			        from
+			            dual
+			        connect by
+			        <![CDATA[
+			            LEVEL <= 4
+			        ]]>
+			    ) yearly
+			left join
+			    (
+			        SELECT
+			            trunc(order_date,'YYYY') as dt
+			            , sum(order_total_price) as price
+			            , count(order_no) as count
+			        FROM
+			            orders
+			        WHERE
+			            order_type_code = 'OTC002'
+			        and
+			            order_stat_code in ('OSC001','OSC003','OSC004','OSC005','OSC006')
+			        group by trunc(order_date,'YYYY')
+			    ) a on( yearly.dt = a.dt)
+			order by yearly.dt
+		</if>
+	</sql>
+
+	<sql id="topSaleGoods">
+		<if test="searchType == 'monthly'">
+			select
+			       a.rank
+			     , a.goodsname as name
+			     , a.price as saleprice
+			     , a.count as count
+			     , to_char(a.dt,'YYYY"년"MM"월"') as dt
+			from
+			    (
+			        SELECT
+			            trunc(o.order_date,'MM') as dt
+			            , g.goods_nm as goodsname
+			            , sum( go.goods_opt_price * od.order_det_qty) as price
+			            , sum(od.order_det_qty) as count
+			            , row_number() over(order by sum( go.goods_opt_price * od.order_det_qty) desc,count(od.order_det_no) desc) as rank
+			        FROM
+			            orders o
+			        left join
+			            order_detail od on (o.order_no = od.order_no)
+			        left join
+			            goods g on (od.goods_no = g.goods_no)
+			        left join
+			            goods_option go on ( od.goods_opt_no = go.goods_opt_no)
+			        WHERE
+			            order_type_code = 'OTC002'
+			        and
+			            order_stat_code in ('OSC001','OSC003','OSC004','OSC005','OSC006')
+			        group by trunc(o.order_date,'MM'), g.goods_nm
+			        having trunc(o.order_date,'MM') = trunc(sysdate,'MM')
+			    )a
+			where
+			<![CDATA[
+				rank <=5
+			]]>
+		</if>
+		<if test="searchType == 'quarter'">
+			select
+			       a.rank
+			     , a.goodsname as name
+			     , a.price as saleprice
+			     , a.count as count
+			     , to_char(a.dt,'YYYY"년"Q"분기"') as dt
+			from
+			    (
+			        SELECT
+			            trunc(o.order_date,'Q') as dt
+			            , g.goods_nm as goodsname
+			            , sum( go.goods_opt_price * od.order_det_qty) as price
+			            , sum(od.order_det_qty) as count
+			            , row_number() over(order by sum( go.goods_opt_price * od.order_det_qty) desc,count(od.order_det_no) desc) as rank
+			        FROM
+			            orders o
+			        left join
+			            order_detail od on (o.order_no = od.order_no)
+			        left join
+			            goods g on (od.goods_no = g.goods_no)
+			        left join
+			            goods_option go on ( od.goods_opt_no = go.goods_opt_no)
+			        WHERE
+			            order_type_code = 'OTC002'
+			        and
+			            order_stat_code in ('OSC001','OSC003','OSC004','OSC005','OSC006')
+			        group by trunc(o.order_date,'Q'), g.goods_nm
+			        having trunc(o.order_date,'Q') = trunc(sysdate,'Q')
+			    )a
+			where
+			<![CDATA[
+				rank <=5
+			]]>
+		</if>
+		<if test="searchType == 'yearly'">
+			select
+			       a.rank
+			     , a.goodsname as name
+			     , a.price as saleprice
+			     , a.count as count
+			     , to_char(a.dt,'YYYY"년"') as dt
+			from
+			    (
+			        SELECT
+			            trunc(o.order_date,'YYYY') as dt
+			            , g.goods_nm as goodsname
+			            , sum( go.goods_opt_price * od.order_det_qty) as price
+			            , sum(od.order_det_qty) as count
+			            , row_number() over(order by sum( go.goods_opt_price * od.order_det_qty) desc,count(od.order_det_no) desc) as rank
+			        FROM
+			            orders o
+			        left join
+			            order_detail od on (o.order_no = od.order_no)
+			        left join
+			            goods g on (od.goods_no = g.goods_no)
+			        left join
+			            goods_option go on ( od.goods_opt_no = go.goods_opt_no)
+			        WHERE
+			            order_type_code = 'OTC002'
+			        and
+			            order_stat_code in ('OSC001','OSC003','OSC004','OSC005','OSC006')
+			        group by trunc(o.order_date,'YYYY'), g.goods_nm
+			        having trunc(o.order_date,'YYYY') = trunc(sysdate,'YYYY')
+			    )a
+			where
+			<![CDATA[
+				rank <=5
+			]]>
+		</if>
+	</sql>
+
+
+
+ 	<select id="getUserSignupData" parameterType="string" resultType="map">
+		<include refid="userSignupData"/>
+ 	</select>
+
+ 	<select id="getMostBuyUserData" parameterType="string" resultType="map">
+		<include refid="mostBuyUserData"/>
+ 	</select>
+
+ 	<select id="getRevenueBySector" parameterType="string" resultType="map">
+ 		<include refid="revenueBySector"/>
+ 	</select>
+
+ 	<select id="getMonthlyGoodsStat" resultType="map">
+ 		select
+ 			  profit.price as profitprice
+ 			, profit.count as profitcount
+ 			, cancel.count as cancelcount
+ 		from
+ 		(
+	 		SELECT
+			    trunc(order_date,'MM') as month
+			    , sum(order_total_price) as price
+			    , count(order_no) as count
+			FROM
+			    orders
+			WHERE
+			    order_type_code = 'OTC002'
+			and
+			    order_stat_code in ('OSC001','OSC003','OSC004','OSC005','OSC006')
+			group by trunc(order_date,'MM')
+			having trunc(order_date,'MM') = trunc(sysdate,'MM')
+		) profit
+		,(
+			SELECT
+			      trunc(cancel_req_date,'MM')
+			    , count(cancel_no) as count
+			FROM
+			    order_cancel
+			group by
+			    trunc(cancel_req_date,'MM')
+			having
+			    trunc(cancel_req_date,'MM') = trunc(sysdate,'MM')
+		) cancel
+ 	</select>
+
+ 	<select id="getSaleRevenue" parameterType="string" resultType="map">
+		<include refid="saleRevenue"/>
+ 	</select>
+
+ 	<select id="getTopSaleGoods" parameterType="string" resultType="map">
+		<include refid="topSaleGoods"/>
+ 	</select>
+
+ 	<select id="getCancelStat" resultType="map">
+		SELECT
+		      cdc.description as name
+		    , count(cancel_no) as count
+		FROM
+		    common_detail_code cdc
+		left join
+		    order_cancel oc on (cdc.comm_code_det_no = oc.cancel_reason_code)
+		where
+		    cdc.comm_code_grp_no = 'CANCEL_REASON_CODE'
+		group by cdc.description
+ 	</select>
+
+	<select id="getCancelList" resultType="kr.or.ddit.vo.order.OrderCancelVO">
+	select
+		a.*
+	from
+		(
+			SELECT
+			    oc.cancel_no
+			  , oc.order_no
+			  , g.goods_nm
+			  , oc.goods_no
+			  , oc.cancel_reason_code
+			  , reasoncdc.description as cancel_reason_name
+			  , oc.cancel_stat_code
+			  , statcdc.description as cancel_stat_name
+			  , oc.mem_username
+			  , oc.cancel_reason_detail
+			  , oc.cancel_req_date
+			  , o.order_date
+			  , rownum as rn
+			FROM
+			    order_cancel oc
+			inner join
+			    orders o on (oc.order_no = o.order_no)
+			inner join
+			    goods g on (oc.goods_no = g.goods_no)
+			inner join
+			    common_detail_code statcdc on (oc.cancel_stat_code = statcdc.COMM_CODE_DET_NO)
+			inner join
+			    common_detail_code reasoncdc on (oc.cancel_reason_code = reasoncdc.COMM_CODE_DET_NO)
+			order by
+				oc.cancel_req_date desc
+		) a
+	where
+		<![CDATA[
+			a.rn <= 5
+		]]>
+	</select>
+
+	<select id="getCommunityPostsData" resultType="map">
+		SELECT
+		      to_char(monthly.dt,'YYYY"년"MM"월"') as dt
+		    , nvl(a.count,0) as count
+		from
+		    (
+		        SELECT
+		            trunc(add_months(sysdate,-(level -1)),'MM') as dt
+		        from
+		            dual
+		        connect by
+		        <![CDATA[
+		            level <= 6
+		        ]]>
+		    ) monthly
+		left join
+		    (
+		        SELECT
+		            count(comu_post_no) as count
+		          , trunc(comu_post_reg_date,'MM') as dt
+		        FROM
+		            community_post
+		        group by
+		            trunc(comu_post_reg_date,'MM')
+		    )a on (a.dt = monthly.dt)
+		order by monthly.dt
+	</select>
+
+
+	<select id="getMembershipTotalData" resultType="map">
+		select
+		      art_group_nm as name
+		    , count(mbsp_sub_no) as count
+		from
+		    membership_description md
+		left join
+		    artist_group ag on (md.art_group_no = ag.art_group_no)
+		left join
+		    membership_subscriptions ms on(md.mbsp_no = ms.mbsp_no)
+		where
+		    mbsp_sub_end_date >= sysdate
+		group by
+		    art_group_nm
+		order by
+			count desc
+	</select>
+
+
+	<select id="getConcertDdayData" resultType="map">
+		SELECT
+		    concert_no
+		  , concert_stat_code
+		  , concert_nm
+		  , floor(concert_date - sysdate) as dday
+		  , afd.attach_detail_no
+		  , afd.file_group_no
+		  , afd.file_original_nm
+		  , afd.file_save_nm
+		  , afd.file_savepath
+		  , afd.file_ext
+		  , afd.file_mime_type
+		  , afd.file_fancysize
+		  , afd.file_save_date
+		FROM
+		    concert c
+		left join
+		    attachment_file_detail afd on (c.file_group_no = afd.file_group_no)
+		WHERE
+		    concert_stat_code = 'CTSC001'
+		order by dday
+	</select>
+
+	<select id="getAuditionData" resultType="map">
+		SELECT
+		    a.audi_no
+		  , a.audi_title as name
+		  , count(aa.app_no) as cnt
+		FROM
+		    audition a
+		left join
+		    audition_application aa on(a.audi_no = aa.audi_no)
+		where a.audi_stat_code = 'ADSC002'
+		group by a.audi_no, a.audi_title
+	</select>
+
+	<select id="getConcertRevChart" resultType="map">
+		select
+		      to_char(monthly.dt,'YYYY"년"MM"월"') as dt
+		    , nvl(a.price,0) as price
+		from
+		    (
+		        SELECT
+		            trunc(add_months(sysdate,-(level-1)),'MM') as dt
+		        from
+		            dual
+		        connect by
+		        	<![CDATA[
+			            level <=6
+		        	]]>
+		    ) monthly
+		left join
+		    (
+		        SELECT
+		              trunc(t.ticket_reservation_date,'MM') as dt
+		            , sum(ticket_price) as price
+		        FROM
+		            ticket t
+		        left join
+		            concert c on (t.concert_no = c.concert_no)
+		        where
+		            order_det_no is not null
+		        and
+		            mem_username is not null
+		        and
+		            ticket_reservation_date is not null
+		        group by
+		            trunc(t.ticket_reservation_date,'MM')
+		    ) a on(monthly.dt = a.dt)
+		order by
+		    monthly.dt
+	</select>
+
+	<select id="getMemberGoodsStat" parameterType="int" resultType="kr.or.ddit.vo.goods.goodsVO">
+     	select
+		    c.goods_no
+		    ,c.goods_nm
+		    ,c.total_sales_amount
+		    , '/upload/' || c.file_savepath || '/' ||c.file_save_nm as representative_image_url
+		from
+		(
+		    SELECT
+		          a.goods_no
+		        , a.goods_nm
+		        , a.goods_price
+		        , a.file_group_no
+		        , a.artGroupName
+		        , a.total_sales_amount
+		        , afd.FILE_GROUP_NO
+		        , afd.FILE_ORIGINAL_NM
+		        , afd.FILE_SAVE_NM
+		        , afd.FILE_SAVEPATH
+		        , afd.FILE_EXT
+		        , afd.FILE_MIME_TYPE
+		        , afd.FILE_FANCYSIZE
+		        , afd.FILE_SAVE_DATE
+		        , rank() over (partition by a.goods_no order by afd.ATTACH_DETAIL_NO) as rn
+		    from
+		        (
+		            SELECT
+		                G.GOODS_NO as goods_no
+		                , G.GOODS_NM as goods_nm
+		                , G.GOODS_PRICE as goods_price
+		                , G.FILE_GROUP_NO as file_group_no
+		                , AG.ART_GROUP_NM as artGroupName
+		                , SUM(OD.ORDER_DET_QTY) as TOTAL_SALES_AMOUNT
+		            FROM
+		                ORDER_DETAIL OD
+		            JOIN
+		                GOODS G ON OD.GOODS_NO = G.GOODS_NO
+		            JOIN
+		                ARTIST_GROUP AG ON (G.ART_GROUP_NO = AG.ART_GROUP_NO)
+		            left join
+		                artist_group_map agm on (ag.art_group_no = agm.art_group_no)
+		            WHERE
+		                G.GOODS_DIV_CODE = 'GDC003'
+		            and
+		                agm.art_del_yn = 'N'
+		            and
+		                agm.art_no = #{artNo}
+		            GROUP BY
+		                G.GOODS_NO
+		                , G.GOODS_NM
+		                , G.GOODS_PRICE
+		                , G.FILE_GROUP_NO
+		                , AG.ART_GROUP_NM
+		            ORDER BY
+		                TOTAL_SALES_AMOUNT DESC
+		            FETCH FIRST 3 ROWS ONLY
+		        ) a
+		    left join
+		        attachment_file_detail afd on (a.file_group_no = afd.file_group_no)
+		)c
+		where rn = 1
+		order by total_sales_amount desc
+	</select>
+
+	<select id="getMostLikePostSate" parameterType="int" resultType="kr.or.ddit.vo.community.CommunityPostVO">
+		SELECT
+		    a.*
+		from
+		    (
+		        SELECT
+		            cp.comu_post_no
+		          , cp.comu_post_content
+		          , count(cl.comu_like_no) as comu_post_like
+		          , row_number() over (order by count(cl.comu_like_no) desc) as rn
+		        FROM
+		            artist art
+		        inner join
+		            community_profile cpr on (art.mem_username = cpr.mem_username)
+		        inner join
+		            community_post cp on (cpr.comu_profile_no = cp.comu_profile_no)
+		        inner join
+		            community_like cl on (cp.comu_post_no = cl.comu_post_no)
+		        where
+		            art.art_no = #{artNo}
+		        group by
+		            cp.comu_post_no,cp.comu_post_content
+		        order by comu_post_like desc
+		    )a
+		where
+			<![CDATA[
+				 a.rn <=3
+			]]>
+	</select>
+
+	<select id="getMembershipStat" parameterType="int" resultType="map">
+		select
+		    (select '총 구독 현황' from dual) as name
+		    , total.cnt as ct
+		from
+		    (
+		        select
+		            count(ms.mbsp_sub_no) as cnt
+		        from
+		            membership_description md
+		        inner join
+		            membership_subscriptions ms on (md.mbsp_no = ms.mbsp_no)
+		        where
+		            md.art_group_no = #{artGroupNo}
+		    ) total
+		union all
+		select
+		    (select '이 달의 구독 현황' from dual) as name
+		    ,monthly.cnt as count
+		from
+		    (
+		        select
+		            count(ms.mbsp_sub_no) as cnt
+		        from
+		            membership_description md
+		        inner join
+		            membership_subscriptions ms on (md.mbsp_no = ms.mbsp_no)
+		        where
+		            md.art_group_no = #{artGroupNo}
+		        and
+		            trunc(mbsp_sub_start_date,'MM') = trunc(sysdate,'MM')
+		    ) monthly
+	</select>
+
+	<select id="getMemberGoodsStatByGroup" parameterType="int" resultType="kr.or.ddit.vo.goods.goodsVO">
+		select
+		    c.goods_no
+		    ,c.goods_nm
+		    ,c.total_sales_amount
+		    , '/upload/' || c.file_savepath || '/' ||c.file_save_nm as representative_image_url
+		from
+		(
+		    SELECT
+		          a.goods_no
+		        , a.goods_nm
+		        , a.goods_price
+		        , a.file_group_no
+		        , a.artGroupName
+		        , a.total_sales_amount
+		        , afd.FILE_GROUP_NO
+		        , afd.FILE_ORIGINAL_NM
+		        , afd.FILE_SAVE_NM
+		        , afd.FILE_SAVEPATH
+		        , afd.FILE_EXT
+		        , afd.FILE_MIME_TYPE
+		        , afd.FILE_FANCYSIZE
+		        , afd.FILE_SAVE_DATE
+		        , rank() over (partition by a.goods_no order by afd.ATTACH_DETAIL_NO) as rn
+		    from
+		        (
+		            SELECT
+		                G.GOODS_NO as goods_no
+		                , G.GOODS_NM as goods_nm
+		                , G.GOODS_PRICE as goods_price
+		                , G.FILE_GROUP_NO as file_group_no
+		                , AG.ART_GROUP_NM as artGroupName
+		                , SUM(OD.ORDER_DET_QTY) as TOTAL_SALES_AMOUNT
+		            FROM
+		                ORDER_DETAIL OD
+		            JOIN
+		                GOODS G ON OD.GOODS_NO = G.GOODS_NO
+		            JOIN
+		                ARTIST_GROUP AG ON (G.ART_GROUP_NO = AG.ART_GROUP_NO and ag.art_group_no = #{artGroupNo})
+		            WHERE
+		                G.GOODS_DIV_CODE = 'GDC003'
+		            GROUP BY
+		                G.GOODS_NO
+		                , G.GOODS_NM
+		                , G.GOODS_PRICE
+		                , G.FILE_GROUP_NO
+		                , AG.ART_GROUP_NM
+		            ORDER BY
+		                TOTAL_SALES_AMOUNT DESC
+		            FETCH FIRST 3 ROWS ONLY
+		        ) a
+		    left join
+		        attachment_file_detail afd on (a.file_group_no = afd.file_group_no)
+		)c
+		where rn = 1
+		order by total_sales_amount desc
+	</select>
+
+
+	<select id="getMembershipRecentlyData" resultType="map">
+		select
+		      art_group_nm as name
+		    , count(mbsp_sub_no) as count
+		from
+		    membership_description md
+		left join
+		    artist_group ag on (md.art_group_no = ag.art_group_no)
+		left join
+		    membership_subscriptions ms on(md.mbsp_no = ms.mbsp_no)
+		where
+		    mbsp_sub_end_date >= sysdate
+		and
+			trunc(mbsp_sub_start_date,'MM') = trunc(sysdate,'MM')
+		group by
+		    art_group_nm
+		order by
+			count desc
+	</select>
+ </mapper>

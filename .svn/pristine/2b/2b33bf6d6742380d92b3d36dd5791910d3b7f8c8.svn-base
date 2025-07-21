@@ -1,0 +1,389 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>그룹 관리</title>
+<style>
+table {
+	width: 80%;
+	border-collapse: collapse;
+	margin: 20px auto;
+}
+
+th, td {
+	border: 1px solid #ddd;
+	padding: 8px;
+	text-align: left;
+}
+
+th {
+	background-color: #f2f2f2;
+}
+
+/* 모달 스타일 */
+.modal {
+	display: none; /* 기본적으로 숨김 */
+	position: fixed; /* 화면에 고정 */
+	z-index: 1000; /* 다른 요소들 위에 표시 */
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	overflow: auto; /* 스크롤 가능하도록 */
+	background-color: rgba(0, 0, 0, 0.4); /* 반투명 배경 */
+}
+
+.modal-content {
+	background-color: #fefefe;
+	margin: 10% auto; /* 수직/수평 중앙 정렬 (상단에서 10%) */
+	padding: 20px;
+	border: 1px solid #888;
+	width: 60%; /* 모달 너비 */
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0
+		rgba(0, 0, 0, 0.19);
+	border-radius: 5px;
+}
+
+.close-button {
+	color: #aaa;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+}
+
+.close-button:hover, .close-button:focus {
+	color: black;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.modal-content hr {
+	margin-top: 5px;
+	margin-bottom: 15px;
+}
+
+.modal-content p {
+	margin-bottom: 10px;
+}
+
+.modal-content textarea {
+	width: 95%;
+	padding: 5px;
+	border: 1px solid #ccc;
+	border-radius: 3px;
+	resize: vertical; /* 세로 크기만 조절 가능 */
+}
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+	<h1>그룹 목록</h1>
+
+	<c:if test="${not empty artistGroupList}">
+		<table>
+			<thead>
+				<tr>
+					<th>그룹 번호</th>
+					<th>그룹명</th>
+					<th>데뷔일자</th>
+					<th>최근 수정일</th>
+					<th>관리</th>
+				</tr>
+			</thead>
+			<tbody>
+				<c:forEach items="${artistGroupList}" var="group">
+					<tr>
+						<td>${group.artGroupNo}</td>
+						<td><c:out value="${group.artGroupNm}" /></td>
+						<td>${group.artGroupDebutdate}</td>
+						<td><fmt:formatDate value="${group.artGroupModDate}"
+								pattern="yyyy-MM-dd HH:mm:ss" /></td>
+						<td><c:set var="initialMembersJsonString" value="[]" /> <c:if
+								test="${not empty group.artistVOs}">
+								<c:set var="jsonBuilder">
+									<c:forEach items="${group.artistVOs}" var="artist"
+										varStatus="loopStatus">
+                                        {"artNo": "${artist.artNo}", "artNm": "<c:out
+											value='${artist.artNm}' escapeXml='true' />"}${!loopStatus.last ? ',' : ''}
+                                    </c:forEach>
+								</c:set>
+								<c:set var="initialMembersJsonString" value="[${jsonBuilder}]" />
+							</c:if>
+
+							<button class="action-button edit-group-btn"
+								data-group-no="${group.artGroupNo}"
+								data-group-nm="<c:out value='${group.artGroupNm}'/>"
+								data-group-debutdate="${group.artGroupDebutdate}"
+								data-group-typecode="${group.artGroupTypeCode}"
+								data-group-initial-members='${initialMembersJsonString}'
+								data-group-content="<c:out value='${group.artGroupContent}'/>"
+								data-group-profileimg="${group.artGroupProfileImg}">수정</button>
+						</td>
+					</tr>
+				</c:forEach>
+			</tbody>
+		</table>
+	</c:if>
+	<c:if test="${empty artistGroupList}">
+		<p style="text-align: center;">등록된 그룹이 없습니다.</p>
+	</c:if>
+
+	<div id="editGroupModal" class="modal">
+		<div class="modal-content">
+			<span class="close-button">&times;</span>
+			<h2>그룹 정보 수정</h2>
+			<input type="hidden" id="modalGroupNo" name="artGroupNo">
+			<p>
+				<strong>그룹명:</strong> <input type="text" id="modalGroupName"
+					name="artGroupNm" class="form-control">
+			</p>
+			<p>
+				<strong>데뷔일자:</strong> <input type="text" id="modalDebutDate"
+					name="artGroupDebutdate" class="form-control">
+			</p>
+			<p>
+				<strong>활동유형:</strong> 
+				<span class="radio-group-container" style="display: inline-block; margin-left: 10px;">
+		            <label class="radio-label" for="artGroupTypeGroup" style="margin-right: 15px; cursor:pointer;">
+		                <input type="radio" name="artGroupTypeCode" value="AGTC001" id="artGroupTypeGroup"> 그룹
+		            </label>
+		            <label class="radio-label" for="artGroupTypeSolo" style="cursor:pointer;">
+		                <input type="radio" name="artGroupTypeCode" value="AGTC002" id="artGroupTypeSolo"> 솔로
+		            </label>
+		        </span>
+			</p>
+
+			<p>
+				<strong>소속멤버</strong>
+			</p>
+			<div id="selectedMembersContainer" class="members-container"></div>
+			<div class="input-group-for-member-add">
+				<select id="artistSelect" class="form-control">
+				    <option value="">-- 아티스트 선택 --</option>
+				    <c:forEach items="${allArtists}" var="artist">
+				        <option value="${artist.artNo}"><c:out value="${artist.artNm}"/></option>
+				    </c:forEach>
+				</select>
+				<button type="button" id="addMemberBtn" class="action-button">멤버
+					추가</button>
+			</div>
+			<input type="hidden" id="memberArtNosInput" name="memberArtNos" />
+
+			<p>
+				<strong>소개글:</strong>
+			</p>
+			<textarea id="modalGroupContent" name="artGroupContent" rows="4"
+				class="form-control"></textarea>
+			<p>
+				<strong>프로필 이미지 URL:</strong> <input type="text"
+					id="modalGroupProfileImg" name="artGroupProfileImg"
+					class="form-control">
+			</p>
+
+			<div class="modal-actions">
+				<button type="button" class="action-button" id="saveGroupChangesBtn">저장</button>
+			</div>
+		</div>
+	</div>
+	<script>
+	$(function() { // jQuery의 $(document).ready() 축약형
+	    const $modal = $('#editGroupModal');
+	    if (!$modal.length) { // jQuery 객체의 존재 여부는 length로 확인
+	        console.error("Modal element not found!");
+	        return;
+	    }
+	    const $closeButton = $modal.find('.close-button');
+
+	    // 모달 내부 필드 (활동유형 텍스트 필드는 제거됨)
+	    const $modalGroupNo = $('#modalGroupNo');
+	    const $modalGroupName = $('#modalGroupName');
+	    const $modalDebutDate = $('#modalDebutDate');
+	    // const $modalGroupTypeCode = $('#modalGroupTypeCode'); // 이전에 텍스트 필드였던 변수, 이제 사용 안 함
+	    const $modalGroupProfileImg = $('#modalGroupProfileImg');
+	    const $modalGroupContent = $('#modalGroupContent');
+
+	    // 소속멤버 관련 요소
+	    const $selectedMembersContainer = $('#selectedMembersContainer');
+	    const $artistSelect = $('#artistSelect');
+	    const $addMemberBtn = $('#addMemberBtn');
+	    const $memberArtNosInput = $('#memberArtNosInput');
+
+	    let currentMemberArtNos = []; // 현재 선택된 멤버들의 artNo를 문자열로 저장
+
+	    // 멤버 태그 렌더링 함수
+	    function renderMemberTag(artNo, artNm) {
+	        const artNoStr = String(artNo);
+	        if (currentMemberArtNos.includes(artNoStr)) {
+	            alert("이미 추가된 멤버입니다.");
+	            return;
+	        }
+
+	        const $tag = $('<span></span>')
+	            .addClass('member-tag')
+	            .text(artNm)
+	            .data('artNo', artNoStr); // jQuery의 data 메소드 사용 또는 .attr('data-art-no', artNoStr)
+
+	        const $removeBtn = $('<button></button>')
+	            .addClass('remove-member-btn')
+	            .html('&times;')
+	            .attr('type', 'button');
+
+	        $removeBtn.on('click', function() {
+	            $tag.remove();
+	            currentMemberArtNos = currentMemberArtNos.filter(id => id !== artNoStr);
+	            updateMemberArtNosInput();
+	        });
+
+	        $tag.append($removeBtn);
+	        $selectedMembersContainer.append($tag);
+
+	        currentMemberArtNos.push(artNoStr);
+	        updateMemberArtNosInput();
+	    }
+
+	    // 숨겨진 입력 필드 값 업데이트 함수
+	    function updateMemberArtNosInput() {
+	        if ($memberArtNosInput.length) {
+	            $memberArtNosInput.val(currentMemberArtNos.join(','));
+	        }
+	    }
+
+	    // '멤버 추가' 버튼 이벤트
+	    if ($addMemberBtn.length) {
+	        $addMemberBtn.on('click', function() {
+	            if ($artistSelect.length) {
+	                const $selectedOption = $artistSelect.find('option:selected');
+	                if ($selectedOption.length && $selectedOption.val()) {
+	                    const artNo = $selectedOption.val();
+	                    const artNm = $selectedOption.text();
+	                    renderMemberTag(artNo, artNm);
+	                    $artistSelect.val(""); // 선택 후 드롭다운 초기화
+	                } else {
+	                    alert("아티스트를 선택해주세요.");
+	                }
+	            }
+	        });
+	    }
+
+	    // '수정' 버튼들 이벤트 리스너
+	    // 동적으로 버튼이 추가/삭제될 가능성이 있다면 $(document).on('click', '.edit-group-btn', function() { ... }); 방식이 더 좋습니다.
+	    $('.edit-group-btn').on('click', function () {
+	        const $this = $(this); // 현재 클릭된 버튼
+
+	        // 데이터 가져오기
+	        const groupNo = $this.data('groupNo');
+	        const groupNm = $this.data('groupNm');
+	        const debutDate = $this.data('groupDebutdate');
+	        const typeCode = $this.data('groupTypecode'); // 활동유형 코드
+	        const initialMembersJson = $this.data('groupInitialMembers');
+	        const content = $this.data('groupContent');
+	        const profileImg = $this.data('groupProfileimg');
+
+	        // 모달 필드 채우기
+	        $modalGroupNo.val(groupNo || '');
+	        $modalGroupName.val(groupNm || '');
+	        $modalDebutDate.val(debutDate || '');
+	        $modalGroupContent.val(content || '');
+	        $modalGroupProfileImg.val(profileImg || '');
+
+	        // 활동유형 라디오 버튼 선택 로직
+	        if (typeCode === 'AGTC001') {
+	            $('#artGroupTypeGroup').prop('checked', true);
+	        } else if (typeCode === 'AGTC002') {
+	            $('#artGroupTypeSolo').prop('checked', true);
+	        } else {
+	            // 값이 없거나 예상치 못한 경우 모든 선택 해제
+	            $('input[name="artGroupTypeCode"]').prop('checked', false);
+	        }
+
+	        // 소속멤버 초기화 및 채우기
+	        if ($selectedMembersContainer.length) {
+	            $selectedMembersContainer.empty();
+	        }
+	        currentMemberArtNos = [];
+	        if (initialMembersJson) {
+	            let initialMembers;
+	            try {
+	                if (typeof initialMembersJson === 'string') {
+	                    initialMembers = JSON.parse(initialMembersJson);
+	                } else {
+	                    initialMembers = initialMembersJson; // 이미 객체/배열일 수 있음
+	                }
+
+	                if (Array.isArray(initialMembers)) {
+	                    $.each(initialMembers, function(index, member) {
+	                        if(member && typeof member.artNo !== 'undefined' && typeof member.artNm !== 'undefined') {
+	                            renderMemberTag(member.artNo, member.artNm);
+	                        }
+	                    });
+	                }
+	            } catch (e) {
+	                console.error("초기 멤버 정보 파싱 오류:", e, "\nJSON 데이터:", initialMembersJson);
+	            }
+	        }
+	        updateMemberArtNosInput(); // 초기화 후 숨겨진 필드 업데이트
+
+	        $modal.css('display', 'block'); // 또는 $modal.show();
+	    });
+
+	    // 모달 닫기 로직
+	    if ($closeButton.length) {
+	        $closeButton.on('click', function () {
+	            $modal.css('display', 'none'); // 또는 $modal.hide();
+	        });
+	    }
+
+	    $(window).on('click', function (event) {
+	        if ($modal.length && $modal.is(event.target)) {
+	            $modal.css('display', 'none'); // 또는 $modal.hide();
+	        }
+	    });
+
+	    // '저장' 버튼 이벤트
+	    const $saveButton = $('#saveGroupChangesBtn');
+	    if ($saveButton.length) {
+	        $saveButton.on('click', function() {
+	            // 폼 데이터 구성
+	            const groupData = {
+	                artGroupNo: $modalGroupNo.val(),
+	                artGroupNm: $modalGroupName.val(),
+	                artGroupDebutdate: $modalDebutDate.val(),
+	                artGroupTypeCode: $('input[name="artGroupTypeCode"]:checked').val(), // 선택된 라디오 버튼의 값
+	                artGroupContent: $modalGroupContent.val(),
+	                artGroupProfileImg: $modalGroupProfileImg.val(),
+	                memberArtNos: $memberArtNosInput.val() // 콤마로 구분된 멤버 ID 문자열
+	            };
+
+	            console.log("저장할 그룹 데이터:", groupData);
+	            alert('저장 버튼 클릭됨! 콘솔에서 전송될 데이터를 확인하세요.\n선택된 멤버 ID: ' + (groupData.memberArtNos || '없음') + '\n활동 유형: ' + (groupData.artGroupTypeCode || '선택 안됨'));
+
+	            $.ajax({
+	                url: '${pageContext.request.contextPath}/emp/group/update', // 실제 저장 요청을 처리할 서버 URL
+	                type: 'POST',
+	                contentType: 'application/json', // 서버가 JSON을 기대하는 경우
+	                data: JSON.stringify(groupData), // JavaScript 객체를 JSON 문자열로 변환
+	                // 또는 contentType: 'application/x-www-form-urlencoded; charset=UTF-8' 이고 data: groupData (서버 설정에 따라)
+	                beforeSend : function(xhr) {
+				        xhr.setRequestHeader("${_csrf.headerName}", "${_csrf.token}");
+				    },
+	                success: function(response) {
+	                    alert('그룹 정보가 성공적으로 저장되었습니다.');
+	                    $modal.hide();
+						location.reload();
+	                },
+	                error: function(xhr, status, error) {
+	                    console.error("저장 실패:", status, error, xhr.responseText);
+	                    alert('그룹 정보 저장에 실패했습니다. 서버 로그를 확인해주세요.\n오류: ' + xhr.responseText);
+	                }
+	            });
+	            	$modal.hide();
+	        });
+	    }
+	});
+	</script>
+</body>
+</html>

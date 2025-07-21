@@ -1,0 +1,31 @@
+package kr.or.ddit.ddtown.service.kakaopay;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.vo.order.OrderDetailVO;
+import kr.or.ddit.vo.order.OrdersVO;
+import kr.or.ddit.vo.order.PaymentVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Service
+@Slf4j
+public class OrderServiceImpl implements IOrderService {@Override
+	public int createOrder(OrdersVO order, List<OrderDetailVO> orderDetails) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void savePaymentReadyInfo(PaymentVO payment) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void updateOrderStatus(int createdOrderNo, String string) {
+		// TODO Auto-generated method stub
+		
+	}
+}

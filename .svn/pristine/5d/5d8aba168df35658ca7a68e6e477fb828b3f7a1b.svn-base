@@ -1,0 +1,185 @@
+package kr.or.ddit.ddtown.service.concert.notice;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.mapper.concert.notice.IConcertNoticeMapper;
+import kr.or.ddit.ddtown.service.file.IFileService;
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.concert.ConcertNoticeVO;
+import kr.or.ddit.vo.file.AttachmentFileDetailVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class ConcertNoticeServiceImpl implements IConcertNoticeService { 
+
+    @Autowired
+    private IConcertNoticeMapper noticeMapper;
+    
+    @Autowired
+    private IFileService fileService;
+    
+    private static final String FILETYPECODE = "FITC009";
+
+    @Override
+    public List<ConcertNoticeVO> selectNoticeList(PaginationInfoVO<ConcertNoticeVO> pagingVO) throws Exception {
+        log.info("selectNoticeList() 실행...!");
+        List<ConcertNoticeVO> list = noticeMapper.selectNoticeList(pagingVO);
+        
+        if (list == null) {
+            log.warn("list가 null임!!!");
+        } else {
+            log.info("조회된 공지사항 목록 수: {}", list.size());
+        }
+        return list;
+    }
+
+    @Override
+    public int selectNoticeCount(PaginationInfoVO<ConcertNoticeVO> pagingVO) throws Exception {
+    	log.info("selectNoticeCount() 실행...!");
+        return noticeMapper.selectNoticeCount(pagingVO);
+    }
+
+    @Override
+    public ConcertNoticeVO selectNotice(int concertNotiNo) throws Exception {
+    	log.info("selectNotice() 실행...!");
+    	ConcertNoticeVO noticeVO = noticeMapper.selectNotice(concertNotiNo);
+    	if(noticeVO != null && noticeVO.getFileGroupNo() != null && noticeVO.getFileGroupNo() > 0) {
+    		List<AttachmentFileDetailVO> files = fileService.getFileDetailsByGroupNo(noticeVO.getFileGroupNo());
+    		noticeVO.setAttachmentFileList(files);
+    		log.debug("상세 - 공지 번호 {}: 파일 그룹 {}의 파일 {}개 로드", concertNotiNo, noticeVO.getFileGroupNo(), (files != null ? files.size() : 0));
+    	}
+        return noticeVO;
+    }
+
+    @Transactional
+    @Override
+    public ServiceResult insertNotice(ConcertNoticeVO noticeVO) throws Exception {
+    	log.info("insertNotice() 실행...!");
+    	
+    	// 파일 업로드 처리 및 파일 그룹 번호 생성
+        if (noticeVO.getNoticeFiles() != null && noticeVO.getNoticeFiles().length > 0 && !noticeVO.getNoticeFiles()[0].isEmpty()) {
+            // 공지사항 파일 타입 코드 사용
+            Integer fileGroupNo = fileService.uploadAndProcessFiles(noticeVO.getNoticeFiles(), FILETYPECODE, noticeVO.getEmpUsername());
+            noticeVO.setFileGroupNo(fileGroupNo);
+        } else {
+            noticeVO.setFileGroupNo(null);
+        }
+
+        // 공지사항 정보 DB에 삽입
+        int row = noticeMapper.insertNotice(noticeVO); // 이 때 fileGroupNo도 함께 저장됨
+
+        if (row > 0) {
+            log.info("콘서트 공지사항 DB 등록 성공: {}", noticeVO.getConcertNotiTitle());
+            return ServiceResult.OK;
+        } else {
+        	log.warn("콘서트 공지사항 DB 등록 실패: {}", noticeVO.getConcertNotiTitle());
+        	return ServiceResult.FAILED;
+        }
+    }
+
+    @Transactional
+    @Override
+    public ServiceResult updateNotice(ConcertNoticeVO noticeVO) throws Exception {
+    	log.info("updateNotice() 실행...!");
+    	
+    	// 선택한 게시물의 기존 파일 그룹 번호 조회
+    	ConcertNoticeVO originalNotice = noticeMapper.selectNotice(noticeVO.getConcertNotiNo());
+    	Integer existingFileGroupNo = (originalNotice != null) ? originalNotice.getFileGroupNo() : null;
+    	log.info("기존 파일 그룹 번호 : {}", existingFileGroupNo);
+    	
+    	boolean hasNewFiles = noticeVO.getNoticeFiles() != null &&
+    						  noticeVO.getNoticeFiles().length > 0 &&
+    						  !noticeVO.getNoticeFiles()[0].isEmpty();
+    						  
+    	Integer finalFileGroupNo = existingFileGroupNo;		// DB에 들어갈 최종 파일그룹번호
+    						  
+    	// 개별 파일 삭제처리
+    	if(noticeVO.getDeleteFileNos() != null && !noticeVO.getDeleteFileNos().isEmpty()) {
+    		if(existingFileGroupNo != null) {
+    			fileService.deleteSpecificFiles(noticeVO.getDeleteFileNos());
+    			// 삭제 후 남은 파일 확인
+    			List<AttachmentFileDetailVO> remainingFiles = fileService.getFileDetailsByGroupNo(existingFileGroupNo);
+    			if(remainingFiles == null || remainingFiles.isEmpty()) {
+    				log.info("모든 개별파일 삭제 후 파일그룹 {}도 삭제 : ", existingFileGroupNo);
+    			}
+    		}
+    	}
+    	
+    	
+    	// 새로 첨부된 파일 처리
+    	if(hasNewFiles) {
+    		// 새 파일들로 파일그룹 생성
+    		Integer newFileGroupNo = fileService.uploadAndProcessFiles(noticeVO.getNoticeFiles(), FILETYPECODE,
+    				noticeVO.getEmpUsername());
+    		finalFileGroupNo = newFileGroupNo;
+    		log.info("새 파일 업로드오나료. 새 파일 그룹번호 : {}", newFileGroupNo);
+    	} else {
+    		if(existingFileGroupNo != null && (noticeVO.getDeleteFileNos() != null && !noticeVO.getDeleteFileNos().isEmpty())) {
+    			List<AttachmentFileDetailVO> remainingFiles = fileService.getFileDetailsByGroupNo(existingFileGroupNo);
+    			if(remainingFiles == null || remainingFiles.isEmpty()) {
+    				finalFileGroupNo = null;	// 그룹이 비었으면 게시물에서 파일 그룹 삭제
+    			}
+    		}
+    	}
+    	
+    	// noticeVO의 fileGroupNo 상태 반영
+    	noticeVO.setFileGroupNo(finalFileGroupNo);
+    	
+    	// 콘서트 공지사항 정보 DB업뎃
+        int row = noticeMapper.updateNotice(noticeVO);
+        if (row > 0) {
+	        log.info("콘서트 공지사항 수정 성공 (번호: {})", noticeVO.getConcertNotiNo());
+	        if(existingFileGroupNo != null && (finalFileGroupNo == null || existingFileGroupNo.equals(finalFileGroupNo))) {
+	        	fileService.deleteFilesByGroupNo(existingFileGroupNo);
+	        }
+	        return ServiceResult.OK;
+        }
+        
+        if(hasNewFiles && finalFileGroupNo != null && (existingFileGroupNo == null || !existingFileGroupNo.equals(finalFileGroupNo))) {
+        	try {
+				fileService.deleteFilesByGroupNo(finalFileGroupNo);
+				log.info("업데이트 실패로 파일그룹 {} 삭제시도", finalFileGroupNo);
+			} catch (Exception e) {
+				log.error("업데이트 실패 후 새 파일그룹 {} 삭제 중 오류: ", finalFileGroupNo);
+			}
+        }
+        log.warn("콘서트 공지사항 수정 실패 (번호: {}): {}", noticeVO.getConcertNotiNo());
+        return ServiceResult.FAILED;
+    }
+
+    @Transactional
+    @Override
+    public ServiceResult deleteNotice(int concertNotiNo) throws Exception {
+    	log.info("deleteNotice() 실행...!");
+        
+    	ConcertNoticeVO noticeToDelete = noticeMapper.selectNotice(concertNotiNo);		// 파일 그룹번호 확인을 위해 조회
+    	Integer fileGroupNoToDelete = null;
+    	
+    	if(noticeToDelete != null) {
+    		fileGroupNoToDelete = noticeToDelete.getFileGroupNo();
+    	}
+    	
+        int row = noticeMapper.deleteNotice(concertNotiNo);
+        
+        if (row > 0) {
+        	if(fileGroupNoToDelete != null && fileGroupNoToDelete > 0) {
+        		try {
+					fileService.deleteFilesByGroupNo(fileGroupNoToDelete);
+					log.info("연결된 파일 그룹 {} 및 관련 파일 모두 삭제");
+				} catch (Exception e) {
+					log.error("게시물 삭제 후 파일 그룹 삭제중 오류 발생");
+				}
+        	}
+            return ServiceResult.OK;
+        } else {
+        	log.info("콘서트 공지사항 삭제 실패");
+        	return ServiceResult.FAILED;        	
+        }
+    }
+}

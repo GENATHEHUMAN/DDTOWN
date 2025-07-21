@@ -1,0 +1,343 @@
+package kr.or.ddit.ddtown.service.member.membership;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.mapper.emp.artist.ArtistGroupMapper;
+import kr.or.ddit.ddtown.mapper.member.membership.MembershipMapper;
+import kr.or.ddit.ddtown.service.emp.artist.IArtistGroupService;
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+import kr.or.ddit.vo.member.membership.MembershipDescriptionVO;
+import kr.or.ddit.vo.member.membership.MembershipSubscriptionsVO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class MembershipServiceImpl implements IMembershipService {
+	
+	private final MembershipMapper membershipMapper;
+	
+	@Autowired
+	private IArtistGroupService artistGroupService;
+	
+	@Autowired
+	private ArtistGroupMapper artistGroupMapper;
+	
+	// 멤버십 구독 여부 확인
+	@Override
+	public boolean hasValidMembershipSubscription(String memUsername, int artGroupNo) {
+		int count = membershipMapper.hasValidMembershipSubscription(memUsername, artGroupNo);
+		return count > 0;
+	}
+
+	// 총 레코드 수 조회 ( sub )
+	@Override
+	public int selectTotalRecord(PaginationInfoVO<MembershipSubscriptionsVO> pagingVO, String empUsername, String mbspSubStatCode) {
+		return membershipMapper.selectTotalRecord(pagingVO, empUsername, mbspSubStatCode);
+	}
+
+	// 총 레코드 수 조회 ( des )
+	@Override
+	public int selectTotalDesRecord(PaginationInfoVO<MembershipDescriptionVO> pagingVO) {
+		return membershipMapper.selectTotalDesRecord(pagingVO);
+	}
+	
+	
+	// 멤버십 구독자 목록 조회 ( sub )
+	@Override
+	public List<MembershipSubscriptionsVO> selectMembershipSubList(
+			PaginationInfoVO<MembershipSubscriptionsVO> pagingVO, String empUsername, String mbspSubStatCode) {
+		return membershipMapper.selectMembershipSubList(pagingVO, empUsername, mbspSubStatCode);
+	}
+
+	// 멤버십 구독자 목록 조회 ( des )
+	@Override
+	public List<MembershipDescriptionVO> selectMembershipDesList(
+			PaginationInfoVO<MembershipDescriptionVO> pagingVO, String empUsername) {
+		return membershipMapper.selectMembershipDesList(pagingVO, empUsername);
+	}
+
+	// 아티스트 그룹 목록 조회
+	@Override
+	public List<ArtistGroupVO> getArtistGroupListAll() {
+		return artistGroupMapper.getArtistGroupListAll();
+	}
+
+	// 플랜 생성
+	@Override
+	public Map<String, Object> registerMembershipDes(MembershipDescriptionVO desVO, String logEmpUsername) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			
+			// 선택된 아티스트 그룹 번호의 실제 담당자 ID 조회
+			int selectedArtGroupNo = desVO.getArtGroupNo();
+            if (selectedArtGroupNo < 0) {
+                result.put("success", false);
+                result.put("message", "아티스트 그룹이 선택되지 않았습니다.");
+                return result; // 유효성 검사 실패
+            }
+			
+			// DB에서 해당 아티스트 그룹의 실제 담당자 ID를 조회
+            String actualArtGroupEmpUsername = artistGroupService.getEmpUsernameByArtistGroupNo(selectedArtGroupNo);
+            
+            if (actualArtGroupEmpUsername == null || !actualArtGroupEmpUsername.equals(logEmpUsername)) {
+                result.put("success", false);
+                result.put("message", "선택하신 아티스트 그룹의 담당자가 아닙니다. 멤버십 플랜 등록 권한이 없습니다.");
+                return result; // 권한 검사 실패
+            }
+            
+            // 4. 모든 비즈니스 로직 검증 통과 시 DB 삽입 매퍼 호출
+            int res = membershipMapper.registerMembershipDes(desVO);
+            
+            if (res > 0) {
+                result.put("success", true);
+                result.put("message", "멤버십 플랜이 성공적으로 등록되었습니다.");
+            } else {
+                result.put("success", false);
+                result.put("message", "멤버십 플랜 등록에 실패했습니다.");
+            }
+
+		} catch (Exception e) {
+            log.error("멤버십 플랜 등록 서비스 로직 중 오류 발생: {}", e.getMessage(), e);
+            result.put("success", false);
+            result.put("message", "서버 오류로 인해 멤버십 플랜 등록에 실패했습니다.");
+        }
+        return result;
+	}
+	
+	// 플랜 수정
+	@Override
+	public Map<String, Object> modifyMembershipDes(MembershipDescriptionVO desVO, String logEmpUsername) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			
+			// 선택된 아티스트 그룹 번호의 실제 담당자 ID 조회
+			int selectedArtGroupNo = desVO.getArtGroupNo();
+            if (selectedArtGroupNo < 0) {
+                result.put("success", false);
+                result.put("message", "아티스트 그룹이 선택되지 않았습니다.");
+                return result; // 유효성 검사 실패
+            }
+			
+			// DB에서 해당 아티스트 그룹의 실제 담당자 ID를 조회
+            String actualArtGroupEmpUsername = artistGroupService.getEmpUsernameByArtistGroupNo(selectedArtGroupNo);
+            
+            if (actualArtGroupEmpUsername == null || !actualArtGroupEmpUsername.equals(logEmpUsername)) {
+                result.put("success", false);
+                result.put("message", "선택하신 아티스트 그룹의 담당자가 아닙니다. 멤버십 플랜 등록 권한이 없습니다.");
+                return result; // 권한 검사 실패
+            }
+            
+            // 4. 모든 비즈니스 로직 검증 통과 시 DB 삽입 매퍼 호출
+            int res = membershipMapper.modifyMembershipDes(desVO);
+            
+            if (res > 0) {
+                result.put("success", true);
+                result.put("message", "멤버십 플랜이 성공적으로 수정되었습니다.");
+            } else {
+                result.put("success", false);
+                result.put("message", "멤버십 플랜 수정에 실패했습니다.");
+            }
+
+		} catch (Exception e) {
+            log.error("멤버십 플랜 등록 서비스 로직 중 오류 발생: {}", e.getMessage(), e);
+            result.put("success", false);
+            result.put("message", "서버 오류로 인해 멤버십 플랜 수정에 실패했습니다.");
+        }
+        return result;
+	}
+
+	// 플랜 삭제
+	@Override
+	public ServiceResult deleteMembershipDes(int mbspNo, String currentEmpUsername) {
+		
+		// 단일 플랜 정보 가져오기
+		MembershipDescriptionVO membership = membershipMapper.getMembershipDescription(mbspNo);
+		
+		if(membership == null) {
+			return ServiceResult.FAILED;
+		}
+		
+		// 권한 확인
+		if(!membership.getEmpUsername().equals(currentEmpUsername)) {
+			return ServiceResult.NOTEXIST;
+		}
+		
+		// 삭제 진행
+		try {
+			int res = membershipMapper.deleteMembershipDes(mbspNo);
+			
+			if(res > 0) {
+				return ServiceResult.OK;
+			} else {
+				return ServiceResult.FAILED;
+			}
+		}catch (Exception e) {
+			log.error("멤버십 플랜 삭제 중 DB 오류 : " + e.getMessage());
+			return ServiceResult.FAILED;
+		}
+	}
+
+	// 멤버십 생성
+	@Override
+	@Transactional
+	public void insertMembershipSub(MembershipSubscriptionsVO subscription) {
+		log.info("insertMembershipSub() 호출. 삽입될 멤버십 구독 정보: {}", subscription);
+		int result = membershipMapper.insertMembershipSub(subscription);
+		
+		if(result == 0) {
+			log.warn("멤버십 구독 정보 삽입 실패: 영향을 받은 행 없음. subscription: {}", subscription);
+		} else {
+			log.info("멤버십 구독 정보 삽입 성공! {}", result);
+		}
+	}
+	
+	// 담당 아티스트 그룹 번호 조회
+	@Override
+	public int selectArtGroupNo(String empUsername) {
+		return membershipMapper.selectArtGroupNo(empUsername);
+	}
+
+	// 멤버십 구독자 건수 조회
+	@Override
+	public Map<String, Integer> selectMembershipSubCounts(Integer artGroupNo) {
+		log.info("멤버십 구독자 건수 조회 요청!!");
+		
+		List<Map<String, Object>> rawCounts = membershipMapper.selectMembershipSubCounts(artGroupNo);
+		
+		Map<String, Integer> counts = new HashMap<>();
+		int total = 0;
+		
+		for(Map<String, Object> row : rawCounts) {
+			
+			Set<String> key = row.keySet();
+			Iterator<String> ite_key = key.iterator();
+			while(ite_key.hasNext()) {
+				String i = ite_key.next();
+				log.info("i : {}", i);
+			}
+			
+			String status = (String) row.get("MBSPSUBSTATCODE");
+			
+			log.info("status: {}", status);
+			
+			Object countObj =  row.get("COUNT");
+			Integer count = 0;
+			
+			if(countObj instanceof Number) {
+				count = ((Number) countObj).intValue();
+			} else if(countObj != null) {
+				try {
+					count = Integer.parseInt(countObj.toString());
+					log.info("count: {}", count);
+
+				} catch (NumberFormatException e) {
+	                log.error("Failed to parse count value: {}", countObj, e);
+	            }
+			}
+			
+			counts.put(status, count);
+			total += count;
+		}
+		
+		counts.put("TOTAL", total);
+		
+		log.info("subCounts map: {}", counts);
+		
+		return counts;
+	}
+
+	
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

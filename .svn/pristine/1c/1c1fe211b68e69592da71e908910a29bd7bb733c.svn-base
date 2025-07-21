@@ -1,0 +1,293 @@
+package kr.or.ddit.ddtown.service.concert;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.ServiceResult;
+import kr.or.ddit.ddtown.mapper.community.ICommunityFollowMapper;
+import kr.or.ddit.ddtown.mapper.concert.schedule.IConcertScheduleMapper;
+import kr.or.ddit.ddtown.service.alert.IAlertService;
+import kr.or.ddit.ddtown.service.file.IFileService;
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.alert.AlertVO;
+import kr.or.ddit.vo.concert.ConcertVO;
+import kr.or.ddit.vo.file.AttachmentFileDetailVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class ConcertServiceImpl implements IConcertService {
+
+    @Autowired
+    private IConcertScheduleMapper concertMapper;
+
+    @Autowired
+    private ICommunityFollowMapper followMapper;
+
+    @Autowired
+    private IFileService fileService;
+
+    @Autowired
+    private IAlertService alertService;
+
+    @Autowired
+    private ISeatService seatService;
+
+    private static final String FILETYPECODE = "FITC010";
+
+
+    @Override
+    public List<ConcertVO> selectConcertList(PaginationInfoVO<ConcertVO> pagingVO) throws Exception {
+        log.info("selectConcertList() 실행...!");
+        List<ConcertVO> list = concertMapper.selectConcertList(pagingVO);
+        if (list != null) {
+            for (ConcertVO item : list) {
+                item.setRepresentativeImageUrl(null); // 반복문 시작 시 null 초기화
+                if (item.getFileGroupNo() != null && item.getFileGroupNo() > 0) {
+                    try {
+                        log.debug("콘서트 ID {}의 파일 그룹 {} 대표 이미지 조회", item.getConcertNo(), item.getFileGroupNo());
+                        AttachmentFileDetailVO repFile = fileService.getRepresentativeFileByGroupNo(item.getFileGroupNo());
+                        if (repFile != null && repFile.getWebPath() != null && !repFile.getWebPath().isEmpty()) {
+                            // VO에 대표 이미지 URL 설정
+                            item.setRepresentativeImageUrl(repFile.getWebPath());
+                            log.info("목록 - 콘서트 ID {}: 설정된 대표 이미지 URL: [{}]", item.getConcertNo(), item.getRepresentativeImageUrl());
+                        } else {
+                            log.warn("목록 - 콘서트 ID {}: 대표 이미지 파일 정보를 찾지 못함. FileGroupNo: {}", item.getConcertNo(), item.getFileGroupNo());
+                        }
+                    } catch (Exception e) {
+                        log.error("목록 - 콘서트 ID {}의 대표 이미지 조회 중 오류 발생: {}", item.getConcertNo(), e.getMessage());
+                        // 개별 항목 오류 시 전체 목록 조회를 막지 않도록 해놈
+                    }
+                } else {
+                    // 파일 그룹 번호가 없는 경우
+                    log.debug("목록 - 콘서트 ID {}: 파일 그룹 번호가 없음", item.getConcertNo());
+                }
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public int selectConcertCount(PaginationInfoVO<ConcertVO> pagingVO) throws Exception {
+    	log.info("selectConcertCount() 실행...!");
+        return concertMapper.selectConcertCount(pagingVO);
+    }
+
+    @Override
+    public ConcertVO selectSchedule(int concertNo) throws Exception {
+
+    	log.info("selectSchedule() 실행...!");
+    	ConcertVO concertVO = concertMapper.selectSchedule(concertNo);
+        if (concertVO != null && concertVO.getFileGroupNo() != null && concertVO.getFileGroupNo() > 0) {	// 일정정보가 비어있지 않을때
+            // VO에 전체 첨부파일 목록 설정
+            List<AttachmentFileDetailVO> files = fileService.getFileDetailsByGroupNo(concertVO.getFileGroupNo());
+            AttachmentFileDetailVO repFile = fileService.getRepresentativeFileByGroupNo(concertVO.getFileGroupNo());
+            concertVO.setRepresentativeImageUrl(repFile.getWebPath());
+            concertVO.setAttachmentFileList(files);
+            log.debug("콘서트 번호 {}: 파일 그룹 {}의 파일 {}개 로드", concertNo, concertVO.getFileGroupNo(), (files != null ? files.size() : 0));
+        }
+        return concertVO;
+    }
+
+    @Transactional
+    @Override
+    public ServiceResult insertSchedule(ConcertVO concertVO, String regiUsername) throws Exception {
+    	log.info("insertSchedule() 실행...!");
+
+    	// 파일 업로드 처리 및 파일 그룹 번호 생성
+        if (concertVO.getConcertFiles() != null && concertVO.getConcertFiles().length > 0 && !concertVO.getConcertFiles()[0].isEmpty()) {
+
+            Integer fileGroupNo = fileService.uploadAndProcessFiles(concertVO.getConcertFiles(), FILETYPECODE);
+            concertVO.setFileGroupNo(fileGroupNo); // 생성된 파일 그룹 번호를 ConcertVO에 설정
+        } else {
+            concertVO.setFileGroupNo(null);
+        }
+
+        // 콘서트 일정 정보 DB에 삽입
+        int row = concertMapper.insertSchedule(concertVO); // 이 때 fileGroupNo도 함께 저장됨
+
+        if (row > 0) {
+            log.info("콘서트 일정 DB 등록 성공: {}", concertVO.getConcertNm());
+
+            // 콘서트 시트 매핑 정보 및 티켓정보 추가
+            if("N".equals(concertVO.getConcertOnlineYn())) {
+            	seatService.insertTicket(concertVO);
+            }
+
+            try {
+				AlertVO alert = new AlertVO();
+				alert.setAlertTypeCode("ATC007");		// 공통코드
+				alert.setRelatedItemTypeCode("ITC007");		// 관련 항목 코드
+
+				String artGroupName = concertVO.getArtGroupName();
+				if(artGroupName == null || artGroupName.isEmpty()) {
+					artGroupName = followMapper.selectArtistGroupName(concertVO.getArtGroupNo());
+				}
+
+				String alertMessage = "팔로우하신 아티스트 '" + artGroupName + "'의 새로운 콘서트 [" + concertVO.getConcertNm() + "] 이 등록되었습니다!!";
+				alert.setAlertContent(alertMessage);
+
+				alert.setAlertUrl("/emp/concert/schedule/detail/" + concertVO.getConcertNo());
+				alert.setRelatedItemNo((long) concertVO.getConcertNo());		// 알림과 관련된 콘서트 번호 저장
+
+				// 알림 수신 대상자 설정
+				List<String> recipientUsernames = followMapper.selectFollowersByArtGroup(concertVO.getArtGroupNo());
+
+				if(regiUsername != null) {
+					recipientUsernames.remove(regiUsername);
+				}
+
+				if(recipientUsernames != null && !recipientUsernames.isEmpty()) {
+					alertService.createAlert(alert, recipientUsernames);
+					log.info("새로운 콘서트 일정 알림 생성 및 발송 요청 성공!! 대상 사용자 : {}", recipientUsernames);
+				} else {
+					log.info("콘서트 {}의 팔로워가 없습니다.", concertVO.getConcertNm());
+				}
+			} catch (Exception e) {
+				log.error("콘서트 일정 성공 후 알림 발송중 오류 발생..");
+			}
+            return ServiceResult.OK;
+        } else {
+        	log.warn("콘서트 일정 DB 등록 실패: {}", concertVO.getConcertNm());
+        	return ServiceResult.FAILED;
+        }
+    }
+
+    @Transactional
+    @Override
+    public ServiceResult updateSchedule(ConcertVO concertVO) throws Exception {
+    	log.info("updateSchedule() 실행...!");
+
+    	// 선택한 게시물의 기존 파일 그룹 번호 조회
+        ConcertVO originalConcert = concertMapper.selectSchedule(concertVO.getConcertNo());
+        Integer existingFileGroupNo = (originalConcert != null) ? originalConcert.getFileGroupNo() : null;
+        log.info("기존 파일 그룹 번호: {}", existingFileGroupNo);
+
+        boolean hasNewFiles = concertVO.getConcertFiles() != null &&
+                              concertVO.getConcertFiles().length > 0 &&
+                              !concertVO.getConcertFiles()[0].isEmpty();
+
+        Integer finalFileGroupNo = existingFileGroupNo;		// DB에 들어갈 최종 파일그룹번호
+
+        // 개별 파일 삭제 처리
+        // FileServiceImpl의 deleteSpecificFiles 호출
+        // existingFileGroupNo가 null 될 수 있음 (그룹 내 모든 파일 삭제 시)
+        if (concertVO.getDeleteFileNos() != null && !concertVO.getDeleteFileNos().isEmpty()) {
+            if (existingFileGroupNo != null) {
+                fileService.deleteSpecificFiles(concertVO.getDeleteFileNos()); // 이 메소드는 그룹은 삭제 안함
+                // 삭제 후 남은 파일 확인
+                List<AttachmentFileDetailVO> remainingFiles = fileService.getFileDetailsByGroupNo(existingFileGroupNo);
+                if (remainingFiles == null || remainingFiles.isEmpty()) {
+                    log.info("개별 파일 삭제 결과, 파일 그룹 {}가 비었음. 이 그룹은 새 파일이 없으면 삭제", existingFileGroupNo);
+                    // finalFileGroupNo는 아래 로직에서 새 파일이 없으면 null로 설정 후 그룹 삭제.
+                    // 새 파일이 있으면 기존 그룹은 어차피 삭제됨.
+                }
+            }
+        }
+
+        // 새로 첨부된 파일 처리
+        if (hasNewFiles) {
+            // 새 파일이 있으면, 새로운 파일 그룹을 생성
+            Integer newFileGroupNo = fileService.uploadAndProcessFiles(concertVO.getConcertFiles(), FILETYPECODE);
+            finalFileGroupNo = newFileGroupNo; // 최종 파일 그룹 번호를 새 것으로 설정
+            log.info("새 파일 업로드 완료. 새 파일 그룹 번호: {}", finalFileGroupNo);
+        } else {
+            // 새 파일이 없고, 기존 파일들 중 일부 또는 전부가 삭제되어 그룹이 비었는지 확인
+            if (existingFileGroupNo != null && (concertVO.getDeleteFileNos() != null && !concertVO.getDeleteFileNos().isEmpty())) {
+                 List<AttachmentFileDetailVO> remainingFiles = fileService.getFileDetailsByGroupNo(existingFileGroupNo);
+                 if (remainingFiles == null || remainingFiles.isEmpty()) {
+                     finalFileGroupNo = null; // 그룹이 비었으면 게시물에서 파일 그룹 연결 해제
+                 }
+            }
+        }
+        concertVO.setFileGroupNo(finalFileGroupNo); // 생성된 새 파일 그룹 번호로 ConcertVO 업데이트
+
+        // 콘서트 일정 정보 DB 업뎃
+        int row = concertMapper.updateSchedule(concertVO);
+        if (row > 0) {
+            log.info("콘서트 일정 DB 업데이트 성공 (번호: {}). 최종 fileGroupNo: {}", concertVO.getConcertNo(), finalFileGroupNo);
+            // 게시물 업데이트 성공 후, 기존 파일 그룹 삭제
+            if (existingFileGroupNo != null && (finalFileGroupNo == null || !existingFileGroupNo.equals(finalFileGroupNo))) {
+                log.info("게시물 업데이트 후, 이전 파일 그룹 {} 및 관련 파일들을 삭제", existingFileGroupNo);
+                fileService.deleteFilesByGroupNo(existingFileGroupNo);
+            }
+            return ServiceResult.OK;
+        }
+        if (hasNewFiles && finalFileGroupNo != null && (existingFileGroupNo == null || !existingFileGroupNo.equals(finalFileGroupNo))) {
+            try {
+                fileService.deleteFilesByGroupNo(finalFileGroupNo);
+                log.info("업데이트 실패로 인해 새로 생성된 파일 그룹 {} 삭제 시도", finalFileGroupNo);
+            } catch (Exception e_file) {
+                log.error("업데이트 실패 후 새 파일 그룹 {} 삭제 중 오류: {}", finalFileGroupNo, e_file.getMessage());
+            }
+        }
+        return ServiceResult.FAILED;
+    }
+
+    @Transactional
+    @Override
+    public ServiceResult deleteSchedule(int concertNo) throws Exception {
+    	log.info("deleteSchedule() 실행...!");
+
+    	ConcertVO concertToDelete = concertMapper.selectSchedule(concertNo); // 파일 그룹 번호 확인을 위해 조회
+    	Integer fileGroupNoToDelete = null;
+
+    	if (concertToDelete != null) {
+            fileGroupNoToDelete = concertToDelete.getFileGroupNo();
+        }
+
+        int row = concertMapper.deleteSchedule(concertNo);
+
+        if (row > 0) {
+        	log.info("콘서트 일정 삭제 성공");
+        	if(fileGroupNoToDelete != null && fileGroupNoToDelete > 0) {
+        		try {
+        			fileService.deleteFilesByGroupNo(fileGroupNoToDelete);
+					log.info("연결된 파일 그룹 {} 및 관련 파일 모두 삭제");
+
+				} catch (Exception e) {
+					log.error("게시물 삭제 후 파일 그룹 삭제 중 오류 발생");
+				}
+        	}
+            return ServiceResult.OK;
+        } else {
+        	log.info("콘서트 일정 삭제 실패!!");
+        	return ServiceResult.FAILED;
+        }
+    }
+
+    // 콘서트 일정 불러오기 ( 예정 빼고 ) : 유정
+	@Override
+	public List<ConcertVO> getConcertList(ConcertVO concertVO) {
+		List<ConcertVO> list = concertMapper.getConcertList(concertVO);
+        if (list != null) {
+            for (ConcertVO item : list) {
+                item.setRepresentativeImageUrl(null); // 반복문 시작 시 null 초기화
+                if (item.getFileGroupNo() != null && item.getFileGroupNo() > 0) {
+                    try {
+                        log.debug("콘서트 ID {}의 파일 그룹 {} 대표 이미지 조회", item.getConcertNo(), item.getFileGroupNo());
+                        AttachmentFileDetailVO repFile = fileService.getRepresentativeFileByGroupNo(item.getFileGroupNo());
+                        if (repFile != null && repFile.getWebPath() != null && !repFile.getWebPath().isEmpty()) {
+                            // VO에 대표 이미지 URL 설정
+                            item.setRepresentativeImageUrl(repFile.getWebPath());
+                            log.info("목록 - 콘서트 ID {}: 설정된 대표 이미지 URL: [{}]", item.getConcertNo(), item.getRepresentativeImageUrl());
+                        } else {
+                            log.warn("목록 - 콘서트 ID {}: 대표 이미지 파일 정보를 찾지 못함. FileGroupNo: {}", item.getConcertNo(), item.getFileGroupNo());
+                        }
+                    } catch (Exception e) {
+                        log.error("목록 - 콘서트 ID {}의 대표 이미지 조회 중 오류 발생: {}", item.getConcertNo(), e.getMessage());
+                        // 개별 항목 오류 시 전체 목록 조회를 막지 않도록 해놈
+                    }
+                } else {
+                    // 파일 그룹 번호가 없는 경우
+                    log.debug("목록 - 콘서트 ID {}: 파일 그룹 번호가 없음", item.getConcertNo());
+                }
+            }
+
+        }
+        return list;
+	}
+}

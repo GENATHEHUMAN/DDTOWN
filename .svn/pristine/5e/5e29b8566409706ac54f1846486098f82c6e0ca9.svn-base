@@ -1,0 +1,129 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<%@ taglib uri="http://www.springframework.org/security/tags" prefix="sec" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+<%@ taglib uri="jakarta.tags.core"  prefix="c"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나의 프로필</title>
+<%@ include file="../../modules/headerPart.jsp" %>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/mainservice_common.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/artist_community.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/my_profile.css">
+</head>
+
+<body>
+    
+	<header class="site-header">
+    <div class="logo">
+      <a href="artist_community_main.html">DDTOWN SQUARE</a>
+    </div>
+    <nav class="utility-nav">
+      <ul id="loggedOutNav">
+        <li><a href="#" id="loginBtn" class="auth-link">로그인</a></li>
+        <li><a href="signup.html" class="signup-link">회원가입</a></li>
+      </ul>
+      <ul id="loggedInNav" style="display: none">
+        <li><a href="#" id="notificationBtn" class="icon-btn" title="알림">🔔</a></li>
+        <li><a href="#" id="myPageBtn" class="icon-btn" title="마이페이지">👤</a></li>
+        <li><a href="#" class="icon-btn" title="컬렉션">🌟</a></li>
+        <li><a href="#" class="icon-btn special-icon" title="스페셜">J</a></li>
+        <li><a href="#" class="icon-btn" title="더보기">🛍️</a></li>
+        <li><a href="#" id="logoutBtn" class="auth-link">로그아웃</a></li>
+      </ul>
+    </nav>
+  </header>
+  <nav class="main-navigation">
+    <ul>
+      <li><a href="#">굿즈샵</a></li>
+      <li>
+        <a href="preference_vote.html">선호도 조사</a>
+        <ul class="submenu">
+          <li><a href="preference_vote.html" style="color: #8a2be2; font-weight:bold;">인기 투표</a></li>
+        </ul>
+      </li>
+    </ul>
+  </nav>
+	${profileVO}
+  <main class="profile-main">
+    <header class="profile-header">
+      <div class="profile-header-inner">
+        <div class="profile-avatar">
+          <img src="${profileVO.comuProfileImg}" alt="프로필 이미지">
+        </div>
+        <div class="profile-nickname" id="profileNickname">${profileVO.comuNicknm}</div>
+      </div>
+    </header>
+    <nav class="profile-tabs">
+      <button class="tab active" data-tab="posts">포스트</button>
+      <button class="tab" data-tab="comments">댓글</button>
+    </nav>
+    <section class="profile-tab-content" id="postsTab" style="display:block;">
+    	<c:choose>
+    		<c:when test="${empty profileVO.postList}">
+		      <div class="no-content">아직 작성한 포스트가 없습니다.</div>
+    		</c:when>
+    		<c:otherwise>
+    			<c:forEach items="${profileVO.postList}" var="post">
+    				${post}
+    			</c:forEach>
+    		</c:otherwise>
+    	</c:choose>
+    </section>
+    <section class="profile-tab-content" id="commentsTab" style="display:none;">
+      <div class="no-content">아직 작성한 댓글이 없습니다.</div>
+    </section>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+</body>
+<script type="text/javascript">
+// 탭 전환
+document.querySelectorAll('.profile-tabs .tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.profile-tabs .tab').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('postsTab').style.display = this.dataset.tab === 'posts' ? 'block' : 'none';
+    document.getElementById('commentsTab').style.display = this.dataset.tab === 'comments' ? 'block' : 'none';
+  });
+});
+
+// 로그인 상태 관리 (공통)
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const loggedOutNav = document.getElementById("loggedOutNav");
+const loggedInNav = document.getElementById("loggedInNav");
+let isLoggedIn = JSON.parse(localStorage.getItem("isUserLoggedIn")) || false;
+function updateNav() {
+  if (isLoggedIn) {
+    loggedOutNav.style.display = "none";
+    loggedInNav.style.display = "flex";
+  } else {
+    loggedOutNav.style.display = "flex";
+    loggedInNav.style.display = "none";
+  }
+}
+if (loginBtn) {
+  loginBtn.addEventListener("click", function (event) {
+    event.preventDefault();
+    isLoggedIn = true;
+    localStorage.setItem("isUserLoggedIn", JSON.stringify(isLoggedIn));
+    updateNav();
+  });
+}
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", function (event) {
+    event.preventDefault();
+    isLoggedIn = false;
+    localStorage.setItem("isUserLoggedIn", JSON.stringify(isLoggedIn));
+    updateNav();
+  });
+}
+updateNav();
+</script>
+</html>

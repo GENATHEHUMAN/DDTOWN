@@ -1,0 +1,135 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신고 관리 - DDTOWN 관리자</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section id="reportListSection" class="ea-section active-section">
+                    <div class="ea-section-header">
+                        <h2>신고 관리</h2>
+ <!-- 신고검색부분 -->                       
+                        <div class="ea-header-actions">
+                            <input type="text" class="ea-search-input" id="reportSearchInput" placeholder="신고 대상, 신고자 검색...">
+                            <select id="reportTypeFilter" class="ea-filter-select" title="신고 유형 필터">
+                                <option value="">전체 유형</option>
+                                <option value="게시물">게시물</option>
+                                <option value="댓글">댓글</option>
+                                <option value="회원 프로필">회원 프로필</option>
+                            </select>
+                            <select id="reportStatusFilter" class="ea-filter-select" title="처리 상태 필터">
+                                <option value="">전체 상태</option>
+                                <option value="신규">신규</option>
+                                <option value="확인/처리중">확인/처리중</option>
+                                <option value="처리완료">처리완료</option>
+                                <option value="반려">반려</option>
+                            </select>
+                        </div>
+                    </div>
+<!-- 신고 목록 부분 -->
+                    <table class="ea-table">
+                        <thead>
+                            <tr>
+                                <th class="col-report-id">신고번호</th>
+                                <th class="col-report-type">신고유형</th>
+                                <th class="col-reported-writer">신고대상</th>
+                                <th class="col-reason">신고 사유 (요약)</th>
+                                <th class="col-reporter">신고자</th>
+                                <th class="col-report-date">신고일</th>
+                                <th class="col-status">처리상태</th>
+                                <th class="col-status">동일 신고 수</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody">
+                       		<c:forEach items="${reportList}" var="report">
+                        		<tr data-report-id="RPT001">
+	                                <td>${report.reportNo }</td>
+	                                <td>
+	                                	<c:choose>
+	                                			<c:when test="${report.reportTargetTypeCode eq 'RTTC001'}">게시글</c:when>
+				                       			<c:when test="${report.reportTargetTypeCode eq 'RTTC002'}">댓글</c:when>
+				                       			<c:when test="${report.reportTargetTypeCode eq 'RTTC003'}">채팅</c:when>
+	                                	</c:choose>
+	                                </td>
+	                                <td class="col-reported-writer">
+	                                	<a href="/admin/community/report/detail?reportNo=${report.reportNo }">
+	                                		${report.targetMemUsername}
+	                                	</a>
+	                                </td>
+	                                <td class="col-reason">
+	                                	<c:choose>
+	                                			<c:when test="${report.reportReasonCode eq 'RRC001'}">스팸</c:when>
+				                       			<c:when test="${report.reportReasonCode eq 'RRC002'}">욕설</c:when>
+				                       			<c:when test="${report.reportReasonCode eq 'RRC003'}">음란물</c:when>
+				                       			<c:when test="${report.reportReasonCode eq 'RRC004'}">기타</c:when>
+	                                	</c:choose>
+	                                </td>
+	                                <td>${report.memUsername}</td>
+	                                <td>
+	                                	<c:set value="${fn:split(report.reportRegDate, ' ')}" var="reportRegDate"/> 
+	                                	${reportRegDate[0]}
+	                                </td>
+	                                <td><span class="report-status-badge new">
+	                                	<c:choose>
+	                                			<c:when test="${report.reportStatCode eq 'RSC001'}">접수됨</c:when>
+				                       			<c:when test="${report.reportStatCode eq 'RSC002'}">처리 완료</c:when>
+	                                	</c:choose>
+	                                </span></td>
+	                                <td>${report.reportedCount}</td>
+                            	</tr>
+                       		</c:forEach>
+                       		<c:if test="${empty reportList}">
+					                <tr>
+					                    <td colspan="9">신고 내역이 없습니다.</td>
+					                </tr>
+					            </c:if>
+                        </tbody>
+                    </table>
+                    <div class="ea-pagination">
+                        <a href="#">&laquo;</a> <a href="#" class="active">1</a> <a href="#">2</a> <a href="#">3</a> <a href="#">&raquo;</a>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+<script>
+
+   	// 페이지네이션 로직
+      const pagingArea = $('#pagingArea');
+      if(pagingArea.length > 0) {
+          pagingArea.on('click', 'a', function(event) { 
+              event.preventDefault();
+              const page = $(this).data('page');
+              
+              // 현재 URL에서 검색 파라미터 유지
+              const currentSearchUrl = new URL(window.location.href);
+              const searchType = currentSearchUrl.searchParams.get("searchType");
+              const searchWord = currentSearchUrl.searchParams.get("searchWord");
+
+              let targetPageUrl = '${pageContext.request.contextPath}/emp/artist/artist-management?page=' + page;
+
+              if (searchType && searchWord) {
+                  targetPageUrl += '&searchType=' + encodeURIComponent(searchType);
+                  targetPageUrl += '&searchWord=' + encodeURIComponent(searchWord);
+              }
+              window.location.href = targetPageUrl;
+          });
+      }
+  });
+       
+</script>
+</body>
+<%@ include file="../../modules/footerPart.jsp" %>
+
+<%@ include file="../../modules/sidebar.jsp" %>
+</html> 

@@ -1,0 +1,36 @@
+package kr.or.ddit.ddtown.controller.admin.blacklist;
+
+import java.time.LocalDate;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import kr.or.ddit.ddtown.mapper.admin.blacklist.IBlacklistMapper;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Component
+public class blacklistScheduler {
+//블랙리스트 활성 상태 자동 변경	
+	@Autowired
+	public IBlacklistMapper blacklistMapper;
+	//매일 정각에 실행
+	@Scheduled(cron = "0 0 0 * * ?")//"*/30 * * * * *"(30초)
+	public void  blacklistScheduler() {
+		LocalDate today = LocalDate.now();	//현재시간
+			
+		try {
+			int uploadBlackScheduler = blacklistMapper.uploadBlackScheduler(today);
+			
+			if(uploadBlackScheduler > 0) {
+				log.info("블랙리스트 업데이트에 성공하였습니다.");
+			}else {
+				log.info("업데이트할 정보가 없습니다.");
+			}
+		}catch (Exception e) {
+				log.error("블릭리트스 만료 해제중 오류발생: {}", e.getMessage(), e);
+		}
+		
+	}
+}

@@ -1,0 +1,319 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신고 관리 - DDTOWN 관리자</title>
+    <%@ include file="../../modules/headerPart.jsp" %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+     <style>
+        .report-detail-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        .report-main-content, .report-processing-panel { background-color: #fff; border: 1px solid #e7eaf3; border-radius: 8px; padding: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .report-main-content h3, .report-processing-panel h3 { font-size: 1.3em; color: #2c3e50; margin-top: 0; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .report-info-section dt { font-weight: 500; color: #555; width: 100px; float: left; clear: left; margin-bottom: 10px; }
+        .report-info-section dd { margin-left: 110px; margin-bottom: 10px; color: #333; }
+        .report-content-preview { border: 1px solid #eee; padding: 15px; border-radius: 4px; background-color: #f9f9f9; margin-top: 10px; min-height: 80px; line-height: 1.6; }
+        .report-content-preview img { max-width: 100%; margin-top: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="emp-container">
+        <%@ include file="../modules/header.jsp" %>
+        <div class="emp-body-wrapper">
+            <%@ include file="../modules/aside.jsp" %>
+            <main class="emp-content">
+                <section id="reportDetailSection" class="ea-section active-section">
+                    <div class="ea-section-header">
+                        <h2 id="reportDetailTitle">신고 내용 상세</h2>
+                        <a href="/admin/community/report/list" class="ea-btn outline sm"><i class="fas fa-list"></i> 목록으로</a>
+                    </div>
+                    <div class="report-detail-grid">
+                        <div class="report-main-content">
+                            <h3>신고 정보</h3>
+                            <dl class="report-info-section">
+                            <input type="hidden" id="targetComuPostNo" name="targetComuPostNo" value="${report.targetComuPostNo}" />
+                            <input type="hidden" id="targetComuReplyNo" name="targetComuReplyNo" value="${report.targetComuReplyNo}" />
+                            <input type="hidden" id="targetChatNo" name="targetChatNo" value="${report.targetChatNo}" />
+                            <input type="hidden" id="targetMemUsername" name="targetMemUsername" value="${report.targetMemUsername}" />
+                            <input type="hidden" id="artGroupNo" name="artGroupNo" value="${report.artGroupNo}" />
+                                <dt>신고 번호:</dt><dd id="reportNo">${report.reportNo }</dd>
+                                <dt>신고 유형:</dt>
+                                <dd id="reportTargetTypeCodeName">
+                                	<c:choose>
+                                		<c:when test="${report.reportTargetTypeCode eq 'RTTC001'}">게시글</c:when>
+                                		<c:when test="${report.reportTargetTypeCode eq 'RTTC002'}">댓글</c:when>
+                                		<c:when test="${report.reportTargetTypeCode eq 'RTTC003'}">채팅</c:when>
+                                	</c:choose>
+	                            </dd>
+	                            <input type="hidden" id="reportTargetTypeCode" value="${report.reportTargetTypeCode}" />
+                                <dt>신고 대상:</dt><dd id="detailReportedTarget">${report.targetMemUsername }</dd>
+                                <dt>신고자:</dt><dd id="reported-writer">${report.memUsername }</dd>
+                                <dt>신고일:</dt><dd id="detailReportDate">${report.reportRegDate }</dd>
+                                <dt>처리 상태:</dt><dd>
+                                	<span class="report-status-badge new" id="detailReportStatus">
+	                                	<c:choose>
+	                                			<c:when test="${report.reportStatCode eq 'RSC001'}">접수됨</c:when>
+				                       			<c:when test="${report.reportStatCode eq 'RSC002'}">처리 완료</c:when>
+	                                	</c:choose>
+                                </span></dd>
+                                <input type="hidden" id="reportStatusCodeName" value="${report.reportStatCode}" />
+                                <dt>게시물 내용:</dt><dd id="detailReportDate"> ${report.reportedContent}</dd>                
+                            </dl>
+                            <ul class="mailbox-attachments d-flex flex-wrap align-items-stretch clearfix">
+	                             <c:choose>
+	                             	<c:when test="${not empty report.fileList}">
+		                             	 <c:forEach var="file" items="${report.fileList}">
+		                             	 	<li style="margin-right: 10px; margin-bottom: 10px;">
+			                             	 	<span class="mailbox-attachment-icon">
+			                                		<img width="100px" src="${file.webPath}" alt="신고된 이미지"/>
+			                            		</span>
+			                            	</li>
+			                            </c:forEach>
+	               				 	</c:when>
+               					</c:choose>
+               				</ul>
+               				<c:if test="${report.reportTargetTypeCode ne 'RTTC003'}">
+               				<button type="button" id="goBtn" class="ea-btn primary" data-post-id="${report.targetComuPostNo}" data-reply-id="${report.targetComuReplyNo}"
+               				 		data-chat-id="${report.targetChatNo}" data-type="${report.reportTargetTypeCode}" data-parent-post-id="${report.targetComuPostNo}"
+               				 		 data-apt-group-no="${report.artGroupNo}"  data-bs-toggle="modal"                         data-bs-target="#detailPostModal">게시물 보기
+               				</button><br/><br/>
+							</c:if>
+                            <h3>신고 사유</h3>
+                            <div class="report-content-preview" id="detailReportReason">
+                                <p><strong>사유:</strong>
+                                	<c:choose>
+                                			<c:when test="${report.reportReasonCode eq 'RRC001'}">스팸</c:when>
+			                       			<c:when test="${report.reportReasonCode eq 'RRC002'}">욕설</c:when>
+			                       			<c:when test="${report.reportReasonCode eq 'RRC003'}">음란물</c:when>
+			                       			<c:when test="${report.reportReasonCode eq 'RRC004'}">기타</c:when>
+                                	</c:choose>
+                                </p>
+                               <!--  <p><strong>상세 내용:</strong> 게시물 본문에 심한 욕설과 비방이 포함되어 있어 신고합니다. 확인 후 조치 부탁드립니다.</p> -->
+                            </div>
+                        </div>
+                        <div class="report-processing-panel">
+                            <h3>신고 처리</h3>
+                            <form id="reportProcessForm" class="ea-form">
+                                <div class="form-group">
+                                    <label for="processAction">처리 조치 선택</label>
+                                    <select id="reportResultCode" name="reportResultCode">
+                                        <option value="">조치 선택</option> 
+                                        <option value="RRTC002" ${report.reportResultCode == 'RRTC002' ? 'selected' : ''}>콘텐츠 삭제</option>
+                                        <option value="RRTC001" ${report.reportResultCode == 'RRTC001' ? 'selected' : ''}>조치 없음</option>
+                                    </select>
+                                </div>
+                                <input type="hidden" id="currentReportResultCode" value="${report.reportResultCode}" />
+                                <div class="ea-form-actions" style="text-align:left;">
+                                    <button type="submit" id="TreatBtn" class="ea-btn primary">처리 하기</button>
+                                </div>
+                            </form>
+                            <hr style="margin:25px 0;">
+                            <h4>신고 누적 회원 조치</h4>
+                            <p id="reportedUserAccumulatedInfo" style="font-size:0.9em; margin-bottom:10px;">
+                                신고 대상 회원 (<strong id="reportedUserIdDisplay">${report.targetMemUsername }</strong>) 누적 신고 횟수: <strong id="reportedUserTotalReports">${report.reportedCount }</strong>회
+                            </p>
+                            <div id="reportersListContainer" style="max-height: 120px; overflow-y: auto; border: 1px solid #eee; padding: 8px; border-radius: 5px; background-color: #f9f9f9; margin-bottom: 15px;">
+							    <strong>신고자 목록:</strong>
+							    <p id="reporterUsernamesDisplay" style="margin: 0; white-space: pre-wrap; word-break: break-all;">${report.reporterUsernames }<br/></p>
+							</div>
+                            <button class="ea-btn danger sm" id="forceAddToBlacklistBtn"><a href="/admin/community/blacklist/form?reportNo=${report.reportNo }">즉시 블랙리스트 추가</a></button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+    
+    <!-- 포스트 상세 모달 ver2 -->
+<div class="modal fade" id="detailPostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen-custom">
+         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <div class="d-flex h-100">
+
+                    <div class="post-pane" id="postBox">
+                    </div>
+
+                    <div class="comment-pane">
+					    <div class="comment-pane-header">
+					        <strong class="mx-auto" id="replyCount"></strong>
+					    </div>
+
+					    <div class="comment-pane-body" id="replyList">
+
+					    </div>
+
+					    <div class="comment-pane-footer">
+					    	<form action="/community/reply/insert" method="get" id="replyForm">
+								<input type="hidden" id="boardTypeCode" name="boardTypeCode" />
+								<input type="hidden" id="comuPostNo" name="comuPostNo" />
+								<input type="hidden" id="artGroupNo" name="artGroupNo" value="${artistGroupVO.artGroupNo }" />
+							    <div class="input-group">
+						        	<textarea id="comuReplyContent" onkeyup="replyContentLengthCheck(this)" name="comuReplyContent" class="form-control" placeholder="댓글을 입력하세요." aria-label="댓글 입력" rows="1" style="resize: none;"></textarea>
+						        	<button class="btn btn-primary" type="button" id="replyBtn">등록</button>
+							    </div>
+							</form>
+						</div>
+						<div class="text-right pt-2">
+							<span class="pt-1"><span class="cmt-sub-size">0</span>/300</span>
+						</div>
+					</div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <script>
+        
+    	let goBtn = $("#goBtn");	//게시물 바로가기 버튼
+        //신고 처리 버튼 클릭
+        let TreatBtn = $("#TreatBtn");	//처리완료 버튼
+        let reportResultCodeSelect = $("#reportResultCode");	//처리조치 드롭다운
+        
+        let reportStatusCodeName = $("#reportStatusCodeName").val();
+        let currentReportResultCode = $("#currentReportResultCode").val();
+        
+        if (reportStatusCodeName === 'RSC002') {
+            TreatBtn.prop('disabled', true); // '처리 완료' 버튼 비활성화
+            TreatBtn.text('처리 완료됨');     // 버튼 텍스트 변경
+            reportResultCodeSelect.prop('disabled', true); // '처리 조치 선택' 드롭다운 비활성화
+            
+            if (currentReportResultCode) {
+                reportResultCodeSelect.val(currentReportResultCode);
+            }
+        }
+        
+        
+
+        
+        TreatBtn.on("click", function(event){
+        	event.preventDefault();	//폼제출 기본동작 방지
+        	
+        	let reportNo = $("#reportNo").text();
+        	let reportTargetTypeCode = $("#reportTargetTypeCode").val();
+        	let reportResultCode = $("#reportResultCode").val();
+        	let targetMemUsername = $("#targetMemUsername").val();
+        	
+        	let targetComuPostNo = $("#targetComuPostNo").val();
+        	let targetComuReplyNo = $("#targetComuReplyNo").val();
+        	let targetChatNo = $("#targetChatNo").val();
+        	
+        	 if (reportResultCode == null || reportResultCode === "") {
+    	        sweetAlert("error", "처리 조치를 선택해주세요!");
+    	        $("#reportResultCode").focus();
+    	        return false;
+    	    } 
+        	 
+        	let data = {
+        			reportNo: reportNo,								//신고번호
+        			reportTargetTypeCode : reportTargetTypeCode,	//글 유형
+        			reportResultCode : reportResultCode,			//처리코드
+        			targetMemUsername : targetMemUsername,
+        			targetComuPostNo : targetComuPostNo,			//게시글 번호
+        			targetComuReplyNo : targetComuReplyNo,			//댓글번호
+        			targetChatNo : targetChatNo						//채팅메세지 번호
+        			
+        	}
+        	console.log(data);
+        	
+        	$.ajax({
+        		url:"/admin/community/report/update",
+        		type:"post",
+        		data: JSON.stringify(data),
+        		contentType: "application/json; charset=utf-8",
+        		beforeSend : function(xhr) {
+        	    	xhr.setRequestHeader("${_csrf.headerName}", "${_csrf.token}");
+        	    },
+        		success: function(res){
+        			console.log(res);
+        			if(res == "EXIST"){
+        				 Swal.fire({
+        			            icon: 'success',
+        			            title: '성공적으로 처리되었습니다!',
+        			            showConfirmButton: false, // 선택 사항: 확인 버튼 숨기기
+        			            timer: 1500 // 선택 사항: 1.5초 후 자동으로 닫기
+        			        });
+        				 
+         				 TreatBtn.prop('disabled', true); // '처리 완료' 버튼 비활성화
+                         TreatBtn.text('처리 완료됨'); // 버튼 텍스트 변경
+                         reportResultCodeSelect.prop('disabled', true); // '처리 조치 선택' 드롭다운 비활성화 
+        				
+        			}else{
+        				Swal.fire({
+        		            icon: 'error',
+        		            title: '처리 실패',
+        		            text: res.message || "알 수 없는 오류"
+        		        });
+        			}
+        		}
+        	})
+        })
+ //게시물 보기 버튼       
+/* $(document).ready(function() { 
+            goBtn.on("click", function(event){
+                 // postType, targetId, parentPostId, aptGroupNo 변수들은 goBtn의 data- 속성에서 가져옵니다.
+                let postType = $(this).data('type');
+                let targetId = null;
+                let parentPostId = $(this).data('parentPostId'); // 댓글인 경우 부모 게시글 ID
+                let aptGroupNo = $(this).data('aptGroupNo');
+                
+                console.log("goBtn clicked!");
+                console.log("data-type:", postType);
+                console.log("data-post-id:", $(this).data('postId'));
+                console.log("data-reply-id:", $(this).data('replyId'));
+                console.log("data-chat-id:", $(this).data('chatId'));
+                console.log("data-parent-post-id:", parentPostId);
+                console.log("data-apt-group-no (JS에서 읽은 값):", aptGroupNo);
+
+                let redirectUrl = `http://localhost:6688/community/gate/\${aptGroupNo}/apt`; 
+            
+                if(postType === 'RTTC001'){ // 게시글 유형
+                    targetId = $(this).data('postId');
+                    if(targetId) {
+                        redirectUrl += '?postNo=' + targetId;
+                    } else {
+                        alert('게시글 번호를 찾을 수 없습니다.');
+                        return;
+                    }
+                } else if(postType ==='RTTC002'){ // 댓글 유형
+                    targetId = $(this).data('replyId');
+
+                    if(targetId && parentPostId) {
+                        redirectUrl += '?postNo=' + parentPostId + '&replyNo=' + targetId;
+                    } else if (targetId) {
+
+                        alert('댓글 번호는 있으나 관련 게시글 정보를 찾을 수 없습니다.');
+                        return; // 처리 중단
+                    } else {
+                        alert('댓글 번호 또는 관련 게시글 번호를 찾을 수 없습니다.');
+                        return;
+                    }
+                }else {
+                    alert('알 수 없는 게시물 유형입니다.');
+                    return;
+                }
+                
+                // 최종적으로 유효한 redirectUrl이 생성되었다면 페이지 이동
+                if(redirectUrl){
+                    window.location.href = redirectUrl;
+                } else {
+                    // 이 else 블록은 위의 if/else if에서 return 처리되므로 사실상 도달하지 않습니다.
+                    alert('이동할 경로를 생성할 수 없습니다. 유형 및 ID를 확인해주세요.');
+                }
+            }); 
+        }); 
+        
+         */
+    </script>
+</body>
+<%@ include file="../../modules/footerPart.jsp" %>
+
+<%@ include file="../../modules/sidebar.jsp" %>
+</html> 

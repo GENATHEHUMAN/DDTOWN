@@ -1,0 +1,55 @@
+package kr.or.ddit.ddtown.controller.admin.member;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import kr.or.ddit.ddtown.service.admin.member.IMemberAdminService;
+import kr.or.ddit.vo.member.MemberAdminVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/admin/community/member")
+public class AdminMemberController {
+
+	@Autowired
+	private IMemberAdminService memberAdminService;
+	
+	@GetMapping("/main")
+	public String memberList(Model model){
+		
+		log.info("목록 요청 중...");
+		
+		List<MemberAdminVO> memberVO = memberAdminService.getMemberList();
+		
+		log.info("memberVO : " + memberVO);
+		
+		
+		
+		model.addAttribute("memberVO", memberVO);
+		
+		return "admin/member/main";
+	}
+	
+	@GetMapping("/detail/{memUsername}")
+	public String detailMember(@PathVariable String memUsername, Model model) {
+		
+		log.info("회원 상세페이지 요청 중...");
+		
+		MemberAdminVO memberVO = memberAdminService.getMember(memUsername);
+		
+		model.addAttribute("memberVO", memberVO);
+		
+		log.info("memberVO : " + memberVO);
+		
+		return "admin/member/detail";
+	}
+}

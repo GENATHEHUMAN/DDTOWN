@@ -1,0 +1,140 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>취소/환불 상세</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <%@ include file="../../../modules/headerPart.jsp" %>
+</head>
+<body>
+    <div class="emp-container">
+        <!-- 헤더 -->
+        <%@ include file="../../modules/header.jsp" %>
+          
+        <div class="emp-body-wrapper">
+            <%@ include file="../../modules/aside.jsp" %>
+            <main class="emp-content">
+                <div class="ea-section">
+                    <div class="ea-section-header">
+                        <h2>취소/환불 상세</h2>
+                        <a href="/admin/goods/cancelRefund/list" class="ea-btn outline">목록으로</a>
+                    </div>
+                    <form id="detailForm" class="ea-form">
+                        <div class="form-group">
+                            <label>취소번호</label>
+                            <input type="text" id="cancelNo" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>주문번호</label>
+                            <input type="text" id="orderNo" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>회원ID</label>
+                            <input type="text" id="memUsername" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>상품명</label>
+                            <input type="text" id="goodsName" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>유형</label>
+                            <input type="text" id="cancelType" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>상태</label>
+                            <select id="cancelStatCode" class="ea-filter-select">
+                                <option value="REQ">요청접수</option>
+                                <option value="APPR">승인</option>
+                                <option value="PROC">처리중</option>
+                                <option value="DONE">환불완료</option>
+                                <option value="REJ">요청거부</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>요청일</label>
+                            <input type="text" id="cancelReqDate" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>처리일</label>
+                            <input type="text" id="cancelResDate" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>환불 계좌번호</label>
+                            <input type="text" id="cancelAccountNo" maxlength="60">
+                        </div>
+                        <div class="form-group">
+                            <label>환불 계좌 예금주</label>
+                            <input type="text" id="cancelAccountHol" maxlength="30">
+                        </div>
+                        <div class="form-group">
+                            <label>상세 사유</label>
+                            <textarea id="cancelReasonDetail" maxlength="1000" rows="3"></textarea>
+                        </div>
+                        <div class="ea-form-actions">
+                            <button type="button" class="ea-btn primary" onclick="saveDetail()">저장</button>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+        <footer class="emp-footer">
+            <p>&copy; 2025 DDTOWN Entertainment. All rights reserved. (관리자 전용)</p>
+        </footer>
+    </div>
+    <script>
+    // 더미 데이터 (목록과 동일하게 유지)
+    const cancelRefundData = [
+        {cancel_no:101, order_no:2023001, mem_username:'user01', goods_name:'아티스트 포토카드', cancel_type:'주문취소', cancel_stat_code:'REQ', cancel_req_date:'2025-05-10', cancel_res_date:'', cancel_account_no:'', cancel_account_hol:'', cancel_reason_detail:''},
+        {cancel_no:102, order_no:2023002, mem_username:'user02', goods_name:'굿즈 티셔츠', cancel_type:'환불', cancel_stat_code:'APPR', cancel_req_date:'2025-05-11', cancel_res_date:'2025-05-12', cancel_account_no:'110-1234-5678', cancel_account_hol:'홍길동', cancel_reason_detail:'단순 변심'},
+        {cancel_no:103, order_no:2023003, mem_username:'user03', goods_name:'아크릴 키링', cancel_type:'주문취소', cancel_stat_code:'PROC', cancel_req_date:'2025-05-12', cancel_res_date:'', cancel_account_no:'', cancel_account_hol:'', cancel_reason_detail:''},
+        {cancel_no:104, order_no:2023004, mem_username:'user04', goods_name:'스티커 세트', cancel_type:'환불', cancel_stat_code:'DONE', cancel_req_date:'2025-05-13', cancel_res_date:'2025-05-14', cancel_account_no:'333-2222-1111', cancel_account_hol:'이몽룡', cancel_reason_detail:'상품 불량'},
+        {cancel_no:105, order_no:2023005, mem_username:'user05', goods_name:'포스터', cancel_type:'주문취소', cancel_stat_code:'REJ', cancel_req_date:'2025-05-14', cancel_res_date:'2025-05-15', cancel_account_no:'', cancel_account_hol:'', cancel_reason_detail:'고객 요청철회'},
+    ];
+    // 쿼리스트링 파싱
+    function getQueryParam(name) {
+        const url = new URL(window.location.href);
+        return url.searchParams.get(name);
+    }
+    // 상세 데이터 렌더링
+    function renderDetail() {
+        const cancelNo = Number(getQueryParam('cancel_no'));
+        const data = cancelRefundData.find(row => row.cancel_no === cancelNo);
+        if (!data) {
+            alert('데이터를 찾을 수 없습니다.');
+            window.location.href = 'cancel_refund_list.html';
+            return;
+        }
+        document.getElementById('cancelNo').value = data.cancel_no;
+        document.getElementById('orderNo').value = data.order_no;
+        document.getElementById('memUsername').value = data.mem_username;
+        document.getElementById('goodsName').value = data.goods_name;
+        document.getElementById('cancelType').value = data.cancel_type;
+        document.getElementById('cancelStatCode').value = data.cancel_stat_code;
+        document.getElementById('cancelReqDate').value = data.cancel_req_date;
+        document.getElementById('cancelResDate').value = data.cancel_res_date;
+        document.getElementById('cancelAccountNo').value = data.cancel_account_no||'';
+        document.getElementById('cancelAccountHol').value = data.cancel_account_hol||'';
+        document.getElementById('cancelReasonDetail').value = data.cancel_reason_detail||'';
+    }
+    // 저장
+    function saveDetail() {
+        alert('저장되었습니다.');
+    }
+    // 로그아웃 기능 복사
+    const logoutButton = document.querySelector('.emp-logout-btn');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('로그아웃 하시겠습니까?')) {
+                alert('로그아웃 되었습니다.');
+            }
+        });
+    }
+    // 렌더링
+    renderDetail();
+    </script>
+</body>
+</html> 

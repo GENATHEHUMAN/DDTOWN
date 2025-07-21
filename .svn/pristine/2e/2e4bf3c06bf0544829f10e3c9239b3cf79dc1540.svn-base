@@ -1,0 +1,14 @@
+package kr.or.ddit.ddtown.service.order.payment;
+
+import java.util.Map;
+
+public interface IKakaoPayService {
+	
+	//카카오페이 ready API 호출
+	public Map<String, String> kakaoPayReady(String goodsName, Integer totalAmount, Integer totalQuantity, String username,
+			String valueOf);
+	
+	//가맹점 번호 가져오기
+	public String getCid();
+
+}

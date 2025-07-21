@@ -1,0 +1,178 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DD TOWN - Welcome to the World of Dreams!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <%-- CSS 파일 경로: 웹 애플리케이션 루트를 기준으로 'css' 폴더를 가정합니다. --%>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/common/reset.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/common/variables.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/common/base.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/common/layout.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/components/navigation.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/components/buttons.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/components/footer.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/pages/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .has-submenu {
+            position: relative;
+        }
+        .has-submenu:hover .submenu {
+            display: block;
+        }
+        .submenu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 4px;
+            padding: 8px 0;
+            z-index: 1000;
+        }
+        .submenu li {
+            padding: 0;
+        }
+        .submenu a {
+            display: block;
+            padding: 8px 16px;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        .submenu a:hover {
+            background-color: #f5f5f5;
+        }
+        /* 푸터의 서브메뉴 스타일 */
+        .footer-links .has-submenu {
+            position: relative;
+        }
+        .footer-links .submenu {
+            position: static;
+            box-shadow: none;
+            padding-left: 16px;
+            margin-top: 8px;
+        }
+        .footer-links .submenu a {
+            color: #fff;
+            opacity: 0.8;
+        }
+        .footer-links .submenu a:hover {
+            opacity: 1;
+            background: none;
+        }
+    </style>
+</head>
+<body>
+    <%@ include file="./modules/header.jsp" %>
+
+    <main>
+        <div class="dynamic-background-wrapper interactive-gradient-bg">
+            <video class="background-video" autoplay muted loop playsinline>
+                <%-- 비디오 파일 경로: 웹 애플리케이션 루트를 기준으로 'assets/videos' 폴더를 가정합니다. --%>
+                <source src="${pageContext.request.contextPath}/resources/assets/videos/background.mp4" type="video/mp4">
+            </video>
+            <div class="mouse-aura"></div>
+            <section class="hero-section section-on-dynamic-bg">
+                <div class="hero-content">
+                    <h2 class="hero-title">DDTOWN</h2>
+                    <p class="hero-phrase"><strong>D</strong>ynamic <strong>D</strong>reams, <strong>T</strong>ogether <strong>O</strong>ur <strong>W</strong>orld <strong>N</strong>urtures.</p>
+                    <p class="hero-subphrase">역동적인 꿈들이 모여, 함께 세상을 키워나가는 디디타운입니다.</p>
+                    <a href="${pageContext.request.contextPath}/corporate/about" class="btn btn-hero">DD TOWN 더 알아보기</a>
+                </div>
+            </section>
+            
+            <section id="about-teaser-section" class="content-section section-on-dynamic-bg">
+                <div class="container content-on-bg-container">
+                    <h3 class="section-title-on-bg">새로운 엔터테인먼트의 중심</h3>
+                    <p>DD TOWN은 창의성과 열정을 바탕으로 아티스트와 팬 모두에게 최고의 경험을 선사합니다. 우리는 혁신적인 콘텐츠와 글로벌 네트워크를 통해 K-Culture의 미래를 만들어갑니다.</p>
+                </div>
+            </section>
+        </div>
+
+        <section id="business-section" class="content-section bg-dark text-light">
+            <div class="container">
+                <h2 class="section-title text-center">Our Business</h2>
+                <p class="section-subtitle text-center">DD TOWN은 다음과 같은 핵심 사업을 통해 엔터테인먼트 산업을 선도합니다.</p>
+                <div class="business-areas">
+                    <div class="business-area-item">
+                        <img src="${pageContext.request.contextPath}/resources/assets/images/artist-management.jpg" alt="아티스트 매니지먼트">
+                        <h4>아티스트 매니지먼트</h4>
+                        <p>아티스트의 성장과 활동을 체계적으로 지원하며, 잠재력을 최대한 발휘할 수 있도록 돕습니다.</p>
+                    </div>
+                    <div class="business-area-item">
+                        <img src="${pageContext.request.contextPath}/resources/assets/images/contents-producing.jpg" alt="콘텐츠 제작"> <%-- 예시 이미지 경로 --%>
+                        <h4>콘텐츠 제작</h4>
+                        <p>음악, 영상, 공연 등 다양한 형태의 콘텐츠를 기획하고 제작하여 팬들에게 다채로운 즐거움을 제공합니다.</p>
+                    </div>
+                    <div class="business-area-item">
+                        <img src="${pageContext.request.contextPath}/resources/assets/images/events.png" alt="공연 및 이벤트"> <%-- 예시 이미지 경로 --%>
+                        <h4>공연 및 이벤트</h4>
+                        <p>국내외 팬들과 직접 만나는 감동적인 공연과 특별한 이벤트를 기획하여 잊지 못할 경험을 선사합니다.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-info">
+                    <div class="footer-logo">DD TOWN</div>
+                    <p class="footer-description">
+                        DD TOWN은 창의성과 열정을 바탕으로 아티스트와 팬 모두에게 최고의 경험을 선사합니다. 
+                        우리는 혁신적인 콘텐츠와 글로벌 네트워크를 통해 K-Culture의 미래를 만들어갑니다.
+                    </p>
+                    <div class="footer-contact">
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>서울특별시 강남구 테헤란로 123 DD TOWN 빌딩</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <span>02-123-4567</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>contact@ddtown.com</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h3>바로가기</h3>
+                    <ul>
+                        <li class="has-submenu">
+                            <a href="#">기업 정보</a>
+                            <li class="has-submenu">
+                            <a href="#">기업 정보</a>
+                            <ul class="submenu">
+                                <li><a href="${pageContext.request.contextPath}/corporate/finance">재무정보</a></li>
+                                <li><a href="${pageContext.request.contextPath}/corporate/about">기업소개</a></li>
+                                <li><a href="${pageContext.request.contextPath}/corporate/notice/list">기업 공지</a></li>
+                                <li><a href="${pageContext.request.contextPath}/corporate/location">기업 위치</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="${pageContext.request.contextPath}/corporate/audition/schedule">오디션</a></li>
+                        <li><a href="${pageContext.request.contextPath}/corporate/artist/profile">아티스트 프로필</a></li>
+                        <li><a href="${pageContext.request.contextPath}/community/artist/main">아티스트 커뮤니티</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 DD TOWN Entertainment. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <%-- JS 파일 경로: 웹 애플리케이션 루트를 기준으로 'js' 폴더를 가정합니다. --%>
+    <script src="${pageContext.request.contextPath}/resources/js/common/main.js"></script>
+</body>
+</html>

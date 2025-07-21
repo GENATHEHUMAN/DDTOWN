@@ -1,0 +1,39 @@
+package kr.or.ddit.config.websocket;
+
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import kr.or.ddit.ddtown.service.chat.dm.IChatChannelService;
+import kr.or.ddit.ddtown.service.chat.dm.IChatMessageService;
+import kr.or.ddit.vo.chat.dm.ChatMessageVO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+@Component
+public class WebSocketChatHandler extends TextWebSocketHandler {
+	
+	private final ObjectMapper objectMapper;
+	
+	private final IChatChannelService chatChannelService;
+	
+	private final IChatMessageService chatMessageSerivce;
+	
+	@Override
+	protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+		String payload = message.getPayload();
+		log.info("payload: {}", payload);
+		
+		ChatMessageVO chatMessage = objectMapper.readValue(payload, ChatMessageVO.class);
+		
+		int chatChannelNo = chatMessage.getChatChannelNo();
+		
+		chatMessageSerivce.saveMessage(chatMessage);
+		chatChannelService.updateChatLastDate(chatChannelNo);
+	}
+}

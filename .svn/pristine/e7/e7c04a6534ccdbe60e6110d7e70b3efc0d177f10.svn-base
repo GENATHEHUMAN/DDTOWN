@@ -1,0 +1,24 @@
+package kr.or.ddit.ddtown.mapper.admin.group;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import kr.or.ddit.vo.PaginationInfoVO;
+import kr.or.ddit.vo.artist.AlbumVO;
+import kr.or.ddit.vo.artist.ArtistGroupVO;
+
+@Mapper
+public interface IAdminArtistGroupMapper {
+
+	public int getTotalRecord(PaginationInfoVO<ArtistGroupVO> pagingVO);
+
+	public List<ArtistGroupVO> getGroupList(PaginationInfoVO<ArtistGroupVO> pagingVO);
+
+	public ArtistGroupVO getGroupDetailWithArtist(int artGroupNo);
+
+	public List<AlbumVO> getAlbumList(int artGroupNo);
+
+	public List<AlbumVO> getAlbumListAll();
+
+}

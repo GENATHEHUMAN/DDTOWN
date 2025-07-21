@@ -1,0 +1,217 @@
+package kr.or.ddit.ddtown.service.alert;
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.or.ddit.ddtown.mapper.alert.IAlertMapper;
+import kr.or.ddit.ddtown.mapper.common.ICommonCodeMapper;
+import kr.or.ddit.vo.alert.AlertReceiverVO;
+import kr.or.ddit.vo.alert.AlertSettingVO;
+import kr.or.ddit.vo.alert.AlertVO;
+import kr.or.ddit.vo.common.CommonCodeDetailVO;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class AlertServiceImpl implements IAlertService {
+	
+	@Autowired
+	private IAlertMapper alertMapper;
+	
+	@Autowired
+	private SimpMessagingTemplate messagingTemplate;
+	
+	@Autowired
+	private ICommonCodeMapper commonCodeMapper;
+
+	@Override
+	@Transactional
+	public void createAlert(AlertVO alert, List<String> recipientUsernames) throws Exception {
+		log.info("createAlert() 실행...! 알림내용: {}", alert.getAlertContent());
+		
+		// 알림 정보 저장
+		if(alert.getAlertCreateDate() == null) {
+			alert.setAlertCreateDate(new Timestamp(System.currentTimeMillis()));		// 알림 밀리초로 생성
+		}
+		
+		int result = alertMapper.insertAlert(alert);
+		
+		if(result == 0) {
+			log.error("알림 정보 저장 실패!!");
+		}
+		
+		long generatedAlertNo = alert.getAlertNo();
+		
+		if(generatedAlertNo == 0) {
+			log.error("알림 생성 실패 -> 알림 ID 못가져옴");
+		}
+		
+		// 수신자 정보 저장 후 실시간 알림 발송
+		for(String username : recipientUsernames) {
+			List<AlertSettingVO> userSettings = alertMapper.selectAlertSettings(username);		// 회원의 알림세팅 가져오기
+			boolean canSendAlert = userSettings.stream()
+					.filter(s -> s.getAlertTypeCode()
+					.equals(alert.getAlertTypeCode()))		// 알림유형코드가 일치할때
+					.findFirst()
+					.map(s -> "Y".equalsIgnoreCase(s.getAlertEnabledYn()))		// 알림설정 Y일때 보내도록 설정
+					.orElse(true);		// 해당 타입에 대한 설정이 없으면 기본값 전송
+			
+			if(!canSendAlert) {
+				log.info("회원 {}는 {}유형 알림 안받습니당", username, alert.getAlertTypeCode());
+				continue;		// 다음 수신자로 넘어가기
+			}
+			
+			AlertReceiverVO receiver = new AlertReceiverVO();
+			receiver.setAlertNo(generatedAlertNo);		// 알림 번호 설정
+			receiver.setMemUsername(username);			// 회원 아이디 설정
+			receiver.setAlertGetDate(null);				
+			receiver.setAlertReadYn("N");				// 기본값 'N' (안읽음)
+			receiver.setAlertDelYn("N");				// 기본값 'N' (삭제안됨)
+			int receiverResult = alertMapper.insertAlertReceiver(receiver);
+			
+			if(receiverResult == 0) {
+				log.warn("회원 {}에 대한 알림 수신자 저장 실패, 알림번호: {}", username, generatedAlertNo);
+				continue;
+			}
+			
+			
+			try {
+				messagingTemplate.convertAndSendToUser(username, "/queue/alerts", alert);		// alert객체 전송
+				log.info("WebSocket 알림 전송 완료: 회원 -{}, 알림 번호 - {}", username, generatedAlertNo);
+				
+			} catch (Exception e) {
+				log.error("WebSocket 알림 전송 실패: 회원 -{}, 알림 번호 - {}", username, generatedAlertNo);
+			}
+		}
+	}
+
+	@Override
+	public List<AlertVO> getAlertsByUsername(String memUsername, int alertNo, int cnt, Integer artGroupNo) throws Exception {
+		log.debug("getAlertsByUsername() 실행...! 회원: {}, alertNo: {}, cnt: {}, artGroupNo: {}", memUsername, alertNo, cnt, artGroupNo);
+
+		
+		Map<String, Object> params = new HashMap<>();
+		  
+		params.put("memUsername", memUsername);
+		params.put("alertNo", alertNo);
+		params.put("cnt", cnt);
+		params.put("artGroupNo", artGroupNo);
+		
+		return alertMapper.selectAlertsByUsername(params);
+	}
+	
+	@Override
+	public List<AlertVO> getLatestAlertsByUsername(String memUsername, int cnt, Integer artGroupNo) throws Exception {
+		log.debug("getLatestAlertsByUsername() 실행...! 회원: {}, 개수: {}", memUsername, cnt);
+		
+		Map<String, Object> params = new HashMap<>();
+		params.put("memUsername", memUsername);
+		params.put("cnt", cnt);
+		params.put("artGroupNo", artGroupNo);
+		
+		return alertMapper.selectLatestAlertsByUsername(memUsername, cnt, artGroupNo);
+	}
+
+
+	@Override
+	public int getUnreadAlertCnt(String memUsername) throws Exception {
+		log.debug("getUnreadAlertCnt() 실행...! 회원: {}", memUsername);
+		return alertMapper.cntUnreadAlerts(memUsername);
+	}
+
+	@Override
+	@Transactional
+	public boolean markAsRead(long alertNo, String memUsername) throws Exception {
+		log.debug("markAsRead() 실행...! 알림번호: {}, 회원: {}", alertNo, memUsername);
+		int updatedRows = alertMapper.markAsRead(alertNo, memUsername);
+		return updatedRows > 0;
+	}
+
+	@Override
+	@Transactional
+	public void markAllAsRead(String memUsername) throws Exception {
+		log.debug("markAllAsRead() 실행..! 회원: {}", memUsername);
+		alertMapper.markAllAsRead(memUsername);
+	}
+
+	@Override
+	@Transactional
+	public boolean markAsDeleted(long alertNo, String memUsername) throws Exception {
+		log.debug("markAsDeleted() 실행..! 알림번호: {}, 회원: {}", alertNo, memUsername);
+		int updatedRows = alertMapper.markAsDeleted(alertNo, memUsername);
+		return updatedRows > 0;
+	}
+
+	@Override
+	public List<AlertSettingVO> getAlertSettings(String memUsername) throws Exception {	
+		log.debug("getAlertSettings() 실행..! 회원: {}", memUsername);
+		
+		List<AlertSettingVO> savedSettings = alertMapper.selectAlertSettings(memUsername);		// 사용자에 저장된 설정 가져오기
+		Map<String, AlertSettingVO> savedSettingsMap = savedSettings.stream()
+				.collect(Collectors.toMap(AlertSettingVO::getAlertTypeCode, setting -> setting));
+		
+		String alertTypeGroupCode = "ALERT_TYPE_CODE";
+		List<CommonCodeDetailVO> allAlertTypes = commonCodeMapper.selectCommonCodeDetails(alertTypeGroupCode);		// 모든 알림유형코드 조회
+		
+		List<AlertSettingVO> finalSettings = new ArrayList<>();		// 최종 알림설정 저장할 배열 생성
+		Timestamp currentTime = new Timestamp(System.currentTimeMillis());		// 수정시간을 담을 변수 생성
+		
+		for(CommonCodeDetailVO alertType : allAlertTypes) {
+			String typeCode = alertType.getCommCodeDetNo();
+			
+			AlertSettingVO finalSetting = savedSettingsMap.get(typeCode);
+			
+			if(finalSetting == null) {
+				// 저장된 설정이 없으면 기본값 'Y'로 새로운 설정 생성
+				finalSetting = new AlertSettingVO();			// 새로운 알림 설정 생성
+				finalSetting.setMemUsername(memUsername);		// 설정할 회원아이디
+				finalSetting.setAlertTypeCode(typeCode);		// 타입
+				finalSetting.setAlertEnabledYn("Y");			// 사용 여부
+				finalSetting.setAlertModDate(currentTime);		// 수정 시간
+			}
+			
+			finalSetting.setAlertDescription(alertType.getDescription());
+			finalSettings.add(finalSetting);
+		}
+		
+		return finalSettings;
+	}
+
+	@Override
+	public void saveAlertSettings(List<AlertSettingVO> settings, String memUsername) throws Exception {
+		log.debug("saveAlertSettings() 실행..! 알림 설정: {}, 회원: {}", settings, memUsername);
+		// 개별 알림 설정
+		for(AlertSettingVO setting: settings) {
+			
+			setting.setMemUsername(memUsername);
+			
+			if(setting.getAlertModDate() == null) {
+				setting.setAlertModDate(new Timestamp(System.currentTimeMillis()));
+			}
+			
+			alertMapper.insertAlertSetting(setting);
+		}
+	}
+
+	@Override
+	@Transactional
+	public List<AlertSettingVO> createDefalutAlertForUser(String username) throws Exception {
+		log.debug("createDefalutAlertForUser() 실행...! 회원: {}", username);
+		
+		List<AlertSettingVO> settingsToSave = getAlertSettings(username);
+		
+		saveAlertSettings(settingsToSave, username);
+		return settingsToSave;
+	}
+
+	
+}
