@@ -1,7 +1,0 @@
-package kr.or.ddit.ddtown.service.community;
-
-public interface ICommunityProfileService {
-
-	String getComuNicknmByUsername(String currentUser);
-
-}
