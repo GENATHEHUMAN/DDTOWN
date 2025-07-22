@@ -21,17 +21,17 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @EnableAsync
 public class WebMvcConfig implements WebMvcConfigurer{
-	
+
 	@Value("${kr.or.ddit.upload.path.mac}")
 	private String macUploadBasePath;
-	
+
 	@Value("${kr.or.ddit.upload.path}")
 	private String windowUploadBasePath;
-	
+
 	@Override
     public void addCorsMappings(@NonNull CorsRegistry registry) {
         registry.addMapping("/**")
-            .allowedOrigins("http://localhost:8080", "http://192.168.35.22:8080")
+            .allowedOrigins("http://localhost:8080", "http://[IP]:8080")
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
             .allowCredentials(true);
     }
@@ -44,7 +44,7 @@ public class WebMvcConfig implements WebMvcConfigurer{
 		resolver.setOrder(1);
 		return resolver;
 	}
-	
+
 	@Bean
 	protected ViewResolver JSPViewResolver() {
 		InternalResourceViewResolver resolver = new InternalResourceViewResolver();
@@ -53,24 +53,24 @@ public class WebMvcConfig implements WebMvcConfigurer{
 		resolver.setOrder(0);
 		return resolver;
 	}
-	
+
 	@Override
-	public void addResourceHandlers(ResourceHandlerRegistry registry) {
-		
+	public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
+
 		String os = System.getProperty("os.name").toLowerCase();
-		System.out.println("Detected OS : " + os);
+		log.info("Detected OS : " + os);
 		String currentUploadPath = "";
-		
+
 		if(os.contains("mac") || os.contains("darwin")) {
 			currentUploadPath = macUploadBasePath;
 		} else if(os.contains("win")) {
 			currentUploadPath = windowUploadBasePath;
 		}
-		
+
 		if(!currentUploadPath.endsWith(File.separator)) {
 			currentUploadPath += File.separator;
 		}
-		
+
 		registry.addResourceHandler("/upload/**")
 				.addResourceLocations("file:///" + currentUploadPath);
 		log.info("currentUploadPath  : {}", currentUploadPath);
