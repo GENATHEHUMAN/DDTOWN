@@ -49,7 +49,7 @@ PL로서 단순한 일정 관리를 넘어, 팀의 기술적/비기술적 문제
 #### 1. WebRTC 기반 실시간 라이브 스트리밍
 > 아티스트와 팬이 1초 미만의 지연 시간으로 소통할 수 있는 라이브 방송 기능입니다.
 
-![라이브 스트리밍 GIF](여기에_라이브_스트리밍_관련_GIF_링크)
+![라이브 스트리밍 GIF](https://github.com/user-attachments/assets/714e81e1-699d-4a51-8aa2-61ab8d9eb78c)
 
 -   **[My Contribution]** P2P 연결의 핵심인 `PeerConnection` 생성부터 `offer`, `answer`, `ICE Candidate` 교환까지, WebRTC의 전체 연결 수립 과정을 직접 구현하여 안정적인 방송 송출 기반을 마련했습니다.
 
