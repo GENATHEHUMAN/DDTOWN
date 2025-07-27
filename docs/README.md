@@ -149,10 +149,10 @@
     </tr>
     <tr>
       <th>
-        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/GIF/DDTOWN_Schedule.gif">
       </th>
       <th>
-        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/GIF/DDTOWN_Schedule.gif">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
