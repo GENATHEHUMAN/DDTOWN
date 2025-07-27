@@ -8,7 +8,7 @@
 
 ### 🎥 프로젝트 시연 영상
 
-[![프로젝트 시연 영상](여기에_영상_썸네일_이미지_링크)](여기에_유튜브_영상_링크)
+[![프로젝트 시연 영상](https://github.com/user-attachments/assets/8480e8c4-7fcb-41e2-ad03-160e973e7fde)](https://youtu.be/dAuoKMYXm2g)
 **(▲ 이미지를 클릭하면 시연 영상을 보실 수 있습니다.)**
 
 ---
