@@ -228,7 +228,7 @@
     <caption align="center"><strong>2. 실시간 메세지(DM)</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/GIF/DDTOWN_DM.gif">
       </th>
     </tr>
     <tr>
@@ -248,7 +248,7 @@
     <caption align="center"><strong>1. 멤버십 관리</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/GIF/DDTOWN_MembershipPlan.gif">
       </th>
     </tr>
     <tr>
@@ -265,7 +265,7 @@
     <caption align="center"><strong>2. 일정 관리</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/GIF/DDTOWN_Shedule.gif">
       </th>
     </tr>
     <tr>
@@ -340,7 +340,7 @@
     <caption align="center"><strong>1. 신고 및 블랙리스트 관리</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/GIF/DDTOWN_ReportAndBlackList.gif">
       </th>
     </tr>
     <tr>
