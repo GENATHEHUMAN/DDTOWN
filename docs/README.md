@@ -101,7 +101,7 @@
     <caption align="center"><strong>2. 콘서트 예매</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/DDTOWN_Concert.gif">
       </th>
     </tr>
     <tr>
