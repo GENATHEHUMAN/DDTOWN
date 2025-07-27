@@ -119,7 +119,7 @@
     <caption align="center"><strong>3. 실시간 알림</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/GIF/DDTOWN_Alert.gif">
       </th>
     </tr>
     <tr>
@@ -152,7 +152,7 @@
         <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
       <th>
-        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/GIF/DDTOWN_Schedule.gif">
       </th>
     </tr>
     <tr>
@@ -185,7 +185,7 @@
     </tr>
     <tr>
       <th>
-        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/GIF/DDTOWN_DM.gif">
       </th>
       <th>
         <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
