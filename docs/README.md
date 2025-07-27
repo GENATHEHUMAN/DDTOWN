@@ -29,7 +29,7 @@
 # 🕒개발 기간
 **2025-04-30 ~ 2025-07-04 총66일**
 
-<img src="https://github.com/pcs1231/Project/blob/main/images/projectSchedule.png" >
+<img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/projectSchedule.png" >
 
 - **1주차** : 프로젝트 팀 구성 및 주제선정, **요구사항 분석 시작**
 - **2주차** : 요구사항 분석 완료, **산출물 설계 및 아키텍쳐 수립 시작**, 착수 발표
@@ -52,12 +52,12 @@
     <th>ERD</th>
   </tr>
   <tr>
-    <td><img src="https://github.com/pcs1231/Project/blob/main/images/workPlan.png"></td>
-    <td><img src="https://github.com/pcs1231/Project/blob/main/images/RDD.png"></td>
-    <td><img src="https://github.com/pcs1231/Project/blob/main/images/usecase.png"></td>
-    <td><img src="https://github.com/pcs1231/Project/blob/main/images/MenuStructureDiagram.png"></td>
-    <td><img src="https://github.com/pcs1231/Project/blob/main/images/ScreenDefinitionDocument.png"></td>
-    <td><img src="https://github.com/pcs1231/Project/blob/main/images/ERD.png"></td>
+    <td><img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/workPlan.png"></td>
+    <td><img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/RDD.png"></td>
+    <td><img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/usecase.png"></td>
+    <td><img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/MenuStructureDiagram.png"></td>
+    <td><img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/ScreenDefinitionDocument.png"></td>
+    <td><img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/ERD.png"></td>
   </tr>
   <tr>
     <td><strong>4개의 액터</strong>를 기준으로 각 기능을 구분시킴</td>
@@ -83,7 +83,7 @@
     <caption align="center"><strong>1. 카카오페이 간편 결제</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -101,7 +101,7 @@
     <caption align="center"><strong>2. 콘서트 예매</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -119,7 +119,7 @@
     <caption align="center"><strong>3. 실시간 알림</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -137,10 +137,10 @@
     <caption align="center"><strong>4. 그 외 기능</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -149,10 +149,10 @@
     </tr>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -161,10 +161,10 @@
     </tr>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -173,10 +173,10 @@
     </tr>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -185,10 +185,10 @@
     </tr>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -197,7 +197,7 @@
     </tr>
     <tr>
       <th colspan="2">
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -211,7 +211,7 @@
     <caption align="center"><strong>1. 라이브 스트리밍</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -228,7 +228,7 @@
     <caption align="center"><strong>2. 실시간 메세지(DM)</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -248,7 +248,7 @@
     <caption align="center"><strong>1. 멤버십 관리</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -265,7 +265,7 @@
     <caption align="center"><strong>2. 일정 관리</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -282,7 +282,7 @@
     <caption align="center"><strong>3. 그 외 기능</strong></caption>
     <tr>
       <th colspan="2">
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -290,10 +290,10 @@
     </tr>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -302,10 +302,10 @@
     </tr>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -314,10 +314,10 @@
     </tr>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -326,7 +326,7 @@
     </tr>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -340,7 +340,7 @@
     <caption align="center"><strong>1. 신고 및 블랙리스트 관리</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -357,7 +357,7 @@
     <caption align="center"><strong>2. 굿즈샵 관리</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -374,7 +374,7 @@
     <caption align="center"><strong>3. 고객센터 관리</strong></caption>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https:/github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -391,7 +391,7 @@
     <caption align="center"><strong>4. 그 외 기능</strong></caption>
     <tr>
       <th colspan="2">
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -399,10 +399,10 @@
     </tr>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -411,10 +411,10 @@
     </tr>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -423,10 +423,10 @@
     </tr>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
@@ -435,10 +435,10 @@
     </tr>
     <tr>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
       <th>
-        <img src="https://github.com/pcs1231/Project/blob/main/images/mainPage.png">
+        <img src="https://github.com/GENATHEHUMAN/DDTOWN/blob/main/docs/images/mainPage.png">
       </th>
     </tr>
     <tr>
