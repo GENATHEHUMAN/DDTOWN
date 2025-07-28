@@ -86,3 +86,42 @@ PL로서 단순한 일정 관리를 넘어, 팀의 기술적/비기술적 문제
 #### **만약 다시 한다면 (If I Did It Again)**
 
 * 프로젝트의 프론트엔드 부분을 **Vue.js나 Svelte와 같은 경량 프론트엔드 프레임워크를 학습하여 적용**해보고 싶습니다. 이를 통해 컴포넌트 기반 개발 방식에 대한 이해도를 높이고, 더욱 인터랙티브하고 빠른 UI를 사용자에게 제공하는 도전을 해보고 싶습니다.
+
+---
+
+### 📦 주요 산출물 (Key Deliverables)
+
+> 체계적인 방법론에 따라 프로젝트를 진행했으며, 주요 산출물은 다음과 같습니다.
+
+<table>
+  <tr align="center">
+    <th>요구사항 정의서</th>
+    <th>ERD</th>
+    <th>화면 정의서</th>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/GENATHEHUMAN/DDTOWN/main/docs/images/RDD.png"></td>
+    <td><img src="https://raw.githubusercontent.com/GENATHEHUMAN/DDTOWN/main/docs/images/ERD.png"></td>
+    <td><img src="https://raw.githubusercontent.com/GENATHEHUMAN/DDTOWN/main/docs/images/ScreenDefinitionDocument.png"></td>
+  </tr>
+  <tr align="center">
+    <td>클라이언트의 요구 기능을 정의하고, 액터별 활성 여부를 체크</td>
+    <td>총 60개의 테이블을 사용하여 데이터 관계를 설계</td>
+    <td>카카오페이를 이용한 결제 서비스 화면을 정의</td>
+  </tr>
+  <tr align="center">
+    <th>유스케이스</th>
+    <th>메뉴 구조도</th>
+    <th>수행계획서</th>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/GENATHEHUMAN/DDTOWN/main/docs/images/usecase.png"></td>
+    <td><img src="https://raw.githubusercontent.com/GENATHEHUMAN/DDTOWN/main/docs/images/MenuStructureDiagram.png"></td>
+    <td><img src="https://raw.githubusercontent.com/GENATHEHUMAN/DDTOWN/main/docs/images/workPlan.png"></td>
+  </tr>
+  <tr align="center">
+    <td>관리자 액터의 커뮤니티 관리 서비스 이용 시나리오</td>
+    <td>팬, 아티스트 액터가 이용할 메뉴 구성</td>
+    <td>4개의 액터를 기준으로 기능 및 역할을 구분</td>
+  </tr>
+</table>
