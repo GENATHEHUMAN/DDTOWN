@@ -16,7 +16,7 @@
 ### 📖 프로젝트 개요
 
 - **개발 기간:** 2025.04.30 ~ 2025.07.04 (총 66일)
-- **참여 인원:** 6인 팀 프로젝트
+- **참여 인원:** 7인 팀 프로젝트
 - **나의 역할:** **Project Leader (PL) 및 핵심 기능 개발**
 - **GitHub:** [메인 서버 (DDTOWN)](https://github.com/GENATHEHUMAN/DDTOWN) | [미디어 서버 (my-live-stream)](https://github.com/GENATHEHUMAN/my-live-stream)
 
